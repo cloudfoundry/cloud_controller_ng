@@ -4,9 +4,9 @@ module VCAP::CloudController
   RSpec.describe ProcessModelAccess, type: :access do
     subject(:access) { ProcessModelAccess.new(Security::AccessContext.new) }
     let(:token) { { 'scope' => ['cloud_controller.read', 'cloud_controller.write'] } }
-    let(:user) { VCAP::CloudController::User.make }
-    let(:org) { VCAP::CloudController::Organization.make }
-    let(:space) { VCAP::CloudController::Space.make(organization: org) }
+    let(:user) { create(:user) }
+    let(:org) { create(:organization) }
+    let(:space) { create(:space, organization: org) }
     let(:object) { VCAP::CloudController::ProcessModelFactory.make(space:) }
 
     before do
@@ -20,7 +20,7 @@ module VCAP::CloudController
     context 'admin' do
       include_context 'admin setup'
 
-      before { FeatureFlag.make(name: 'app_bits_upload', enabled: false) }
+      before { create(:feature_flag, name: 'app_bits_upload', enabled: false) }
 
       it_behaves_like 'full access'
 
@@ -37,7 +37,7 @@ module VCAP::CloudController
     context 'global auditor only' do
       include_context 'global auditor setup'
 
-      before { FeatureFlag.make(name: 'app_bits_upload', enabled: false) }
+      before { create(:feature_flag, name: 'app_bits_upload', enabled: false) }
 
       it_behaves_like 'read only access'
 
@@ -53,7 +53,7 @@ module VCAP::CloudController
     context 'admin read only' do
       include_context 'admin read only setup'
 
-      before { FeatureFlag.make(name: 'app_bits_upload', enabled: false) }
+      before { create(:feature_flag, name: 'app_bits_upload', enabled: false) }
 
       it_behaves_like 'read only access'
 
@@ -88,7 +88,7 @@ module VCAP::CloudController
 
       context 'app_bits_upload FeatureFlag' do
         it 'disallows when enabled' do
-          FeatureFlag.make(name: 'app_bits_upload', enabled: false, error_message: nil)
+          create(:feature_flag, name: 'app_bits_upload', enabled: false, error_message: nil)
           expect { subject.upload?(object) }.to raise_error(CloudController::Errors::ApiError, /app_bits_upload/)
         end
       end
@@ -100,7 +100,7 @@ module VCAP::CloudController
       end
 
       context 'when the app_scaling feature flag is disabled' do
-        before { FeatureFlag.make(name: 'app_scaling', enabled: false, error_message: nil) }
+        before { create(:feature_flag, name: 'app_scaling', enabled: false, error_message: nil) }
 
         it 'cannot scale' do
           expect { subject.read_for_update?(object, { 'memory' => 2 }) }.to raise_error(CloudController::Errors::ApiError, /app_scaling/)

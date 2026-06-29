@@ -4,24 +4,23 @@ require 'cloud_controller/deployment_updater/dispatcher'
 
 module VCAP::CloudController
   RSpec.describe DeploymentCancel do
-    let(:space) { Space.make }
+    let(:space) { create(:space) }
     let(:instance_count) { 6 }
-    let(:app) { AppModel.make }
-    let(:old_droplet) { DropletModel.make(app: app, process_types: { 'web' => 'the internet' }) }
-    let(:new_droplet) { DropletModel.make(app: app, process_types: { 'web' => 'the net' }) }
+    let(:app) { create(:app_model) }
+    let(:old_droplet) { create(:droplet_model, app: app, process_types: { 'web' => 'the internet' }) }
+    let(:new_droplet) { create(:droplet_model, app: app, process_types: { 'web' => 'the net' }) }
     let(:original_web_process) { ProcessModelFactory.make(space: space, instances: 1, state: 'STARTED', app: app) }
     let(:deploying_web_process) { ProcessModelFactory.make(space: space, instances: instance_count, state: 'STARTED', app: app, type: 'web-deployment-deployment-guid') }
     let(:status_reason) { nil }
     let!(:deployment) do
-      VCAP::CloudController::DeploymentModel.make(
-        state: state,
-        status_value: status_value,
-        status_reason: status_reason,
-        app: original_web_process.app,
-        deploying_web_process: deploying_web_process,
-        droplet: new_droplet,
-        previous_droplet: old_droplet
-      )
+      create(:deployment_model,
+             state: state,
+             status_value: status_value,
+             status_reason: status_reason,
+             app: original_web_process.app,
+             deploying_web_process: deploying_web_process,
+             droplet: new_droplet,
+             previous_droplet: old_droplet)
     end
 
     before do

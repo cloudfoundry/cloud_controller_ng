@@ -4,7 +4,7 @@ module VCAP
   module CloudController
     module Repositories
       RSpec.describe TaskEventRepository do
-        let(:task) { TaskModel.make }
+        let(:task) { create(:task_model) }
         let(:user_guid) { 'user-guid' }
         let(:user_email) { 'user-email' }
         let(:user_name) { 'user-name' }

@@ -39,7 +39,7 @@ module CloudController
       end
 
       describe '#admin_buildpack_download_url' do
-        let(:buildpack) { VCAP::CloudController::Buildpack.make }
+        let(:buildpack) { create(:buildpack) }
 
         it 'gives out signed url to remote blobstore for admin buildpack' do
           expect(url_generator.admin_buildpack_download_url(buildpack)).to eql(internal_url)
@@ -72,7 +72,7 @@ module CloudController
       end
 
       describe '#droplet_download_url' do
-        let(:droplet) { VCAP::CloudController::DropletModel.make }
+        let(:droplet) { create(:droplet_model) }
 
         it 'gives out signed url to remote blobstore from the blob' do
           expect(url_generator.droplet_download_url(droplet)).to eql(internal_url)
@@ -135,7 +135,7 @@ module CloudController
       end
 
       describe '#package_download_url' do
-        let(:package) { VCAP::CloudController::PackageModel.make }
+        let(:package) { create(:package_model) }
 
         it 'gives out signed url to remote blobstore for package' do
           expect(url_generator.package_download_url(package)).to eql(internal_url)

@@ -25,8 +25,8 @@ module VCAP::CloudController
           let(:time_after_expiration) { Time.now.utc + (cutoff_age_in_days + 1).days }
 
           it 'deletes succeeded and failed tasks' do
-            failed_task    = TaskModel.make(state: TaskModel::FAILED_STATE)
-            succeeded_task = TaskModel.make(state: TaskModel::SUCCEEDED_STATE)
+            failed_task    = create(:task_model, state: TaskModel::FAILED_STATE)
+            succeeded_task = create(:task_model, state: TaskModel::SUCCEEDED_STATE)
 
             Timecop.travel(time_after_expiration) do
               expect(failed_task).to exist
@@ -38,9 +38,9 @@ module VCAP::CloudController
           end
 
           it 'deletes tasks with labels' do
-            labeled_task = TaskModel.make(state: TaskModel::FAILED_STATE)
+            labeled_task = create(:task_model, state: TaskModel::FAILED_STATE)
 
-            TaskLabelModel.make(key_name: 'cool', value: 'stuff', task: labeled_task)
+            create(:task_label_model, key_name: 'cool', value: 'stuff', task: labeled_task)
 
             Timecop.travel(time_after_expiration) do
               expect(labeled_task).to exist
@@ -50,8 +50,8 @@ module VCAP::CloudController
           end
 
           it 'deletes tasks with annotations' do
-            annotated_task = TaskModel.make(state: TaskModel::FAILED_STATE)
-            TaskAnnotationModel.make(key_name: 'cool', value: 'stuff', task: annotated_task)
+            annotated_task = create(:task_model, state: TaskModel::FAILED_STATE)
+            create(:task_annotation_model, key_name: 'cool', value: 'stuff', task: annotated_task)
 
             Timecop.travel(time_after_expiration) do
               expect(annotated_task).to exist
@@ -61,8 +61,8 @@ module VCAP::CloudController
           end
 
           it 'does not delete pending or running tasks' do
-            running_task = TaskModel.make(state: TaskModel::RUNNING_STATE)
-            pending_task = TaskModel.make(state: TaskModel::PENDING_STATE)
+            running_task = create(:task_model, state: TaskModel::RUNNING_STATE)
+            pending_task = create(:task_model, state: TaskModel::PENDING_STATE)
 
             Timecop.travel(time_after_expiration) do
               expect(running_task).to exist
@@ -75,9 +75,9 @@ module VCAP::CloudController
 
           describe 'logging' do
             it 'logs the number of deleted tasks' do
-              TaskModel.make(state: TaskModel::FAILED_STATE)
-              TaskModel.make(state: TaskModel::FAILED_STATE)
-              TaskModel.make(state: TaskModel::SUCCEEDED_STATE)
+              create(:task_model, state: TaskModel::FAILED_STATE)
+              create(:task_model, state: TaskModel::FAILED_STATE)
+              create(:task_model, state: TaskModel::SUCCEEDED_STATE)
 
               Timecop.travel(time_after_expiration) do
                 expect(logger).to receive(:info).with('Cleaned up 3 TaskModel rows')
@@ -86,8 +86,8 @@ module VCAP::CloudController
             end
 
             it 'logs the number of deleted labels' do
-              labeled_task = TaskModel.make(state: TaskModel::FAILED_STATE)
-              TaskLabelModel.make(key_name: 'cool', value: 'stuff', task: labeled_task)
+              labeled_task = create(:task_model, state: TaskModel::FAILED_STATE)
+              create(:task_label_model, key_name: 'cool', value: 'stuff', task: labeled_task)
 
               Timecop.travel(time_after_expiration) do
                 expect(logger).to receive(:info).with('Cleaned up 1 TaskLabelModel rows')
@@ -96,8 +96,8 @@ module VCAP::CloudController
             end
 
             it 'logs the number of deleted annotations' do
-              annotated_task = TaskModel.make(state: TaskModel::FAILED_STATE)
-              TaskAnnotationModel.make(key_name: 'cool', value: 'stuff', task: annotated_task)
+              annotated_task = create(:task_model, state: TaskModel::FAILED_STATE)
+              create(:task_annotation_model, key_name: 'cool', value: 'stuff', task: annotated_task)
 
               Timecop.travel(time_after_expiration) do
                 expect(logger).to receive(:info).with('Cleaned up 1 TaskAnnotationModel rows')
@@ -111,10 +111,10 @@ module VCAP::CloudController
           let(:time_before_expiration) { Time.now.utc + (cutoff_age_in_days - 1).days }
 
           it 'does not delete succeeded, failed, pending, or running tasks' do
-            running_task   = TaskModel.make(state: TaskModel::RUNNING_STATE)
-            pending_task   = TaskModel.make(state: TaskModel::PENDING_STATE)
-            failed_task    = TaskModel.make(state: TaskModel::FAILED_STATE)
-            succeeded_task = TaskModel.make(state: TaskModel::SUCCEEDED_STATE)
+            running_task   = create(:task_model, state: TaskModel::RUNNING_STATE)
+            pending_task   = create(:task_model, state: TaskModel::PENDING_STATE)
+            failed_task    = create(:task_model, state: TaskModel::FAILED_STATE)
+            succeeded_task = create(:task_model, state: TaskModel::SUCCEEDED_STATE)
 
             Timecop.travel(time_before_expiration) do
               expect(running_task).to exist

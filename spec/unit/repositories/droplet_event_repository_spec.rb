@@ -4,10 +4,10 @@ require 'repositories/droplet_event_repository'
 module VCAP::CloudController
   module Repositories
     RSpec.describe DropletEventRepository do
-      let(:app) { AppModel.make(name: 'popsicle') }
-      let(:user) { User.make }
-      let(:package) { PackageModel.make(app_guid: app.guid) }
-      let(:droplet) { DropletModel.make(app_guid: app.guid, package: package) }
+      let(:app) { create(:app_model, name: 'popsicle') }
+      let(:user) { create(:user) }
+      let(:package) { create(:package_model, app_guid: app.guid) }
+      let(:droplet) { create(:droplet_model, app_guid: app.guid, package: package) }
       let(:email) { 'user-email' }
       let(:user_name) { 'user-name' }
       let(:user_audit_info) { UserAuditInfo.new(user_email: email, user_name: user_name, user_guid: user.guid) }

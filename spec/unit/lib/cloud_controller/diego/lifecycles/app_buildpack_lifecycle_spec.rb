@@ -12,7 +12,7 @@ module VCAP::CloudController
     it_behaves_like 'a app lifecycle'
 
     describe '#create_lifecycle_data_model' do
-      let!(:app) { AppModel.make }
+      let!(:app) { create(:app_model) }
 
       it 'creates BuildpackLifecycleDataModel' do
         expect do
@@ -34,7 +34,7 @@ module VCAP::CloudController
           let(:lifecycle_request_data) { { buildpacks: ['custom-bp'] } }
 
           before do
-            Buildpack.make(name: 'custom-bp')
+            create(:buildpack, name: 'custom-bp')
           end
 
           it 'uses the requested buildpack' do
@@ -47,7 +47,7 @@ module VCAP::CloudController
           let(:lifecycle_request_data) { { buildpacks: ['custom-bp', 'http://buildpack.com', 'http://other.com'] } }
 
           before do
-            Buildpack.make(name: 'custom-bp')
+            create(:buildpack, name: 'custom-bp')
           end
 
           it 'uses all of the buildpacks' do
@@ -86,8 +86,8 @@ module VCAP::CloudController
     end
 
     describe '#update_lifecycle_data_model' do
-      let(:app) { AppModel.make }
-      let!(:ruby_buildpack) { Buildpack.make(name: 'ruby_buildpack') }
+      let(:app) { create(:app_model) }
+      let!(:ruby_buildpack) { create(:buildpack, name: 'ruby_buildpack') }
       let(:lifecycle_request_data) { { buildpacks: ['http://oj.com', 'ruby_buildpack'], stack: 'sweetness' } }
 
       it 'updates the BuildpackLifecycleDataModel' do

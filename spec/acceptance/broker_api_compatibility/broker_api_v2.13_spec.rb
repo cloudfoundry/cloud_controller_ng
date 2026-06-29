@@ -227,7 +227,7 @@ RSpec.describe 'Service Broker API integration' do
       let(:catalog) { default_catalog(plan_updateable: true) }
 
       context 'service broker registration' do
-        let(:user) { VCAP::CloudController::User.make }
+        let(:user) { create(:user) }
 
         before do
           setup_broker_with_user(user)
@@ -246,7 +246,7 @@ RSpec.describe 'Service Broker API integration' do
       end
 
       context 'service provision request' do
-        let(:user) { VCAP::CloudController::User.make }
+        let(:user) { create(:user) }
 
         before do
           provision_service(user:)
@@ -264,7 +264,7 @@ RSpec.describe 'Service Broker API integration' do
       end
 
       context 'service deprovision request' do
-        let(:user) { VCAP::CloudController::User.make }
+        let(:user) { create(:user) }
 
         before do
           provision_service(user:)
@@ -283,7 +283,7 @@ RSpec.describe 'Service Broker API integration' do
       end
 
       context 'service update request' do
-        let(:user) { VCAP::CloudController::User.make }
+        let(:user) { create(:user) }
 
         before do
           provision_service(user:)
@@ -302,7 +302,7 @@ RSpec.describe 'Service Broker API integration' do
       end
 
       context 'service binding request' do
-        let(:user) { VCAP::CloudController::User.make }
+        let(:user) { create(:user) }
 
         before do
           provision_service
@@ -322,7 +322,7 @@ RSpec.describe 'Service Broker API integration' do
       end
 
       context 'service unbind request' do
-        let(:user) { VCAP::CloudController::User.make }
+        let(:user) { create(:user) }
         let(:async) { false }
 
         before do
@@ -367,7 +367,7 @@ RSpec.describe 'Service Broker API integration' do
       end
 
       context 'create service key request' do
-        let(:user) { VCAP::CloudController::User.make }
+        let(:user) { create(:user) }
 
         before do
           provision_service
@@ -386,7 +386,7 @@ RSpec.describe 'Service Broker API integration' do
       end
 
       context 'delete service key request' do
-        let(:user) { VCAP::CloudController::User.make }
+        let(:user) { create(:user) }
 
         before do
           provision_service
@@ -407,8 +407,8 @@ RSpec.describe 'Service Broker API integration' do
 
       context 'create route binding' do
         let(:catalog) { default_catalog(plan_updateable: true, requires: ['route_forwarding']) }
-        let(:user) { VCAP::CloudController::User.make }
-        let(:route) { VCAP::CloudController::Route.make(space: @space) }
+        let(:user) { create(:user) }
+        let(:route) { create(:route, space: @space) }
 
         before do
           provision_service
@@ -428,8 +428,8 @@ RSpec.describe 'Service Broker API integration' do
 
       context 'delete route binding' do
         let(:catalog) { default_catalog(plan_updateable: true, requires: ['route_forwarding']) }
-        let(:user) { VCAP::CloudController::User.make }
-        let(:route) { VCAP::CloudController::Route.make(space: @space) }
+        let(:user) { create(:user) }
+        let(:route) { create(:route, space: @space) }
 
         before do
           provision_service
@@ -449,9 +449,9 @@ RSpec.describe 'Service Broker API integration' do
       end
 
       context 'when multiple users operate on a service instance' do
-        let(:user_a) { VCAP::CloudController::User.make }
-        let(:user_b) { VCAP::CloudController::User.make }
-        let(:user_c) { VCAP::CloudController::User.make }
+        let(:user_a) { create(:user) }
+        let(:user_b) { create(:user) }
+        let(:user_c) { create(:user) }
 
         before do
           provision_service(user: user_a)
@@ -547,7 +547,7 @@ RSpec.describe 'Service Broker API integration' do
 
       context 'for bind route service' do
         let(:catalog) { default_catalog(requires: ['route_forwarding']) }
-        let(:route) { VCAP::CloudController::Route.make(space: @space) }
+        let(:route) { create(:route, space: @space) }
 
         before do
           provision_service

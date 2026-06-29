@@ -4,10 +4,10 @@ require 'permissions_spec_helper'
 ## NOTICE: Prefer request specs over controller specs as per ADR #0003 ##
 
 RSpec.describe SidecarsController, type: :controller do
-  let!(:app_model) { VCAP::CloudController::AppModel.make(space:) }
-  let(:user) { VCAP::CloudController::User.make }
-  let!(:org) { VCAP::CloudController::Organization.make(name: "Lyle's Farm") }
-  let!(:space) { VCAP::CloudController::Space.make(name: 'Cat', organization: org) }
+  let!(:app_model) { create(:app_model, space:) }
+  let(:user) { create(:user) }
+  let!(:org) { create(:organization, name: "Lyle's Farm") }
+  let!(:space) { create(:space, name: 'Cat', organization: org) }
 
   before do
     set_current_user(user)
@@ -15,7 +15,8 @@ RSpec.describe SidecarsController, type: :controller do
 
   describe 'index' do
     let!(:process1) do
-      VCAP::CloudController::ProcessModel.make(
+      create(
+        :process_model,
         :process,
         app: app_model,
         type: 'web'
@@ -157,7 +158,7 @@ RSpec.describe SidecarsController, type: :controller do
 
       role_to_expected_http_response.each do |role, expected_return_value|
         context "as an #{role}" do
-          let(:new_user) { VCAP::CloudController::User.make }
+          let(:new_user) { create(:user) }
 
           before do
             set_current_user(new_user)
@@ -176,7 +177,7 @@ RSpec.describe SidecarsController, type: :controller do
 
     describe 'when attempting to create a sidecar with duplicate name' do
       let(:sidecar_name) { 'my_sidecar' }
-      let!(:sidecar) { VCAP::CloudController::SidecarModel.make(name: 'my_sidecar', app: app_model) }
+      let!(:sidecar) { create(:sidecar_model, name: 'my_sidecar', app: app_model) }
 
       it 'returns 422' do
         post :create, params: sidecar_params, as: :json
@@ -196,7 +197,7 @@ RSpec.describe SidecarsController, type: :controller do
   end
 
   describe '#update' do
-    let(:sidecar) { VCAP::CloudController::SidecarModel.make(app: app_model) }
+    let(:sidecar) { create(:sidecar_model, app: app_model) }
     let(:sidecar_params) do
       {
         guid: sidecar.guid,
@@ -207,7 +208,7 @@ RSpec.describe SidecarsController, type: :controller do
     end
 
     describe 'permissions by role' do
-      let(:new_user) { VCAP::CloudController::User.make }
+      let(:new_user) { create(:user) }
 
       role_to_expected_http_response = {
         'admin' => 200,
@@ -239,7 +240,7 @@ RSpec.describe SidecarsController, type: :controller do
   end
 
   describe '#show' do
-    let(:sidecar) { VCAP::CloudController::SidecarModel.make(app: app_model, name: 'sidecar', command: 'smarch') }
+    let(:sidecar) { create(:sidecar_model, app: app_model, name: 'sidecar', command: 'smarch') }
 
     context 'the sidecar is not found' do
       it 'returns a 404' do
@@ -268,7 +269,7 @@ RSpec.describe SidecarsController, type: :controller do
   end
 
   describe '#delete' do
-    let!(:sidecar) { VCAP::CloudController::SidecarModel.make(app: app_model, name: 'sidecar', command: 'smarch') }
+    let!(:sidecar) { create(:sidecar_model, app: app_model, name: 'sidecar', command: 'smarch') }
 
     context 'as a space developer' do
       before do

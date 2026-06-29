@@ -4,7 +4,7 @@ require 'cloud_controller/diego/task_environment_variable_collector'
 module VCAP::CloudController
   module Diego
     RSpec.describe TaskEnvironmentVariableCollector do
-      let(:task) { TaskModel.make command: command, name: 'my-task' }
+      let(:task) { create(:task_model, command: command, name: 'my-task') }
       let(:command) { 'echo "hello"' }
       let(:environment_json) { { 'RIZ' => 'shirt' } }
 

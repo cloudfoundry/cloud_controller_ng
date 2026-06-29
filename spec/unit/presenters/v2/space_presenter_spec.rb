@@ -17,18 +17,16 @@ module CloudController::Presenters::V2
         allow(RelationsPresenter).to receive(:new).and_return(relations_presenter)
       end
 
-      let(:organization) { VCAP::CloudController::Organization.make }
-      let(:space_quota_definition) { VCAP::CloudController::SpaceQuotaDefinition.make(organization:) }
+      let(:organization) { create(:organization) }
+      let(:space_quota_definition) { create(:space_quota_definition, organization:) }
 
       context 'when a space is associated to an isolation segment' do
-        let(:isolation_segment_model) { VCAP::CloudController::IsolationSegmentModel.make }
+        let(:isolation_segment_model) { create(:isolation_segment_model) }
         let(:space) do
-          VCAP::CloudController::Space.make(
-            name: 'no_unicorns_no_rainbows',
-            organization: organization,
-            space_quota_definition: space_quota_definition,
-            allow_ssh: true
-          )
+          create(:space, name: 'no_unicorns_no_rainbows',
+                         organization: organization,
+                         space_quota_definition: space_quota_definition,
+                         allow_ssh: true)
         end
 
         before do
@@ -56,11 +54,9 @@ module CloudController::Presenters::V2
 
       context 'when a space is not associated to an isolation segment' do
         let(:space) do
-          VCAP::CloudController::Space.make(
-            name: 'no_unicorns_no_rainbows',
-            organization: organization,
-            allow_ssh: true
-          )
+          create(:space, name: 'no_unicorns_no_rainbows',
+                         organization: organization,
+                         allow_ssh: true)
         end
 
         it 'returns the space and does not show isolation segment url' do

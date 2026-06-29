@@ -4,27 +4,27 @@ require 'actions/services/service_instance_delete'
 module VCAP::CloudController
   RSpec.describe ServiceInstanceDelete do
     let(:event_repository) { Repositories::ServiceEventRepository.new(UserAuditInfo.new(user_guid: user.guid, user_email: user_email)) }
-    let(:user) { User.make }
+    let(:user) { create(:user) }
     let(:user_email) { 'user@example.com' }
 
     subject(:service_instance_delete) { ServiceInstanceDelete.new(event_repository:) }
 
     describe '#delete' do
-      let!(:route_service_instance) { ManagedServiceInstance.make(:routing) }
-      let!(:managed_service_instance) { ManagedServiceInstance.make }
-      let!(:user_provided_service_instance) { UserProvidedServiceInstance.make }
+      let!(:route_service_instance) { create(:managed_service_instance, :routing) }
+      let!(:managed_service_instance) { create(:managed_service_instance) }
+      let!(:user_provided_service_instance) { create(:user_provided_service_instance) }
 
-      let!(:service_binding_1) { ServiceBinding.make(service_instance: managed_service_instance) }
-      let!(:service_binding_2) { ServiceBinding.make(service_instance: managed_service_instance) }
-      let!(:service_binding_3) { ServiceBinding.make(service_instance: user_provided_service_instance) }
-      let!(:service_binding_4) { ServiceBinding.make(service_instance: user_provided_service_instance) }
+      let!(:service_binding_1) { create(:service_binding, service_instance: managed_service_instance) }
+      let!(:service_binding_2) { create(:service_binding, service_instance: managed_service_instance) }
+      let!(:service_binding_3) { create(:service_binding, service_instance: user_provided_service_instance) }
+      let!(:service_binding_4) { create(:service_binding, service_instance: user_provided_service_instance) }
 
-      let!(:route_1) { Route.make(space: route_service_instance.space) }
-      let!(:route_2) { Route.make(space: route_service_instance.space) }
-      let!(:route_binding_1) { RouteBinding.make(route: route_1, service_instance: route_service_instance) }
-      let!(:route_binding_2) { RouteBinding.make(route: route_2, service_instance: route_service_instance) }
+      let!(:route_1) { create(:route, space: route_service_instance.space) }
+      let!(:route_2) { create(:route, space: route_service_instance.space) }
+      let!(:route_binding_1) { create(:route_binding, route: route_1, service_instance: route_service_instance) }
+      let!(:route_binding_2) { create(:route_binding, route: route_2, service_instance: route_service_instance) }
 
-      let!(:service_key) { ServiceKey.make(service_instance: managed_service_instance) }
+      let!(:service_key) { create(:service_key, service_instance: managed_service_instance) }
 
       let(:service_instance_dataset) { ServiceInstance.dataset }
 
@@ -61,7 +61,7 @@ module VCAP::CloudController
       end
 
       it 'deletes associated labels' do
-        labels = service_instance_dataset.map { |si| ServiceInstanceLabelModel.make(resource_guid: si.guid, key_name: 'test', value: 'bommel') }
+        labels = service_instance_dataset.map { |si| create(:service_instance_label_model, resource_guid: si.guid, key_name: 'test', value: 'bommel') }
 
         expect do
           service_instance_delete.delete(service_instance_dataset)
@@ -70,7 +70,7 @@ module VCAP::CloudController
       end
 
       it 'deletes associated annotations' do
-        annotations = service_instance_dataset.map { |si| ServiceInstanceAnnotationModel.make(resource_guid: si.guid, key_name: 'test', value: 'bommel') }
+        annotations = service_instance_dataset.map { |si| create(:service_instance_annotation_model, resource_guid: si.guid, key_name: 'test', value: 'bommel') }
 
         expect do
           service_instance_delete.delete(service_instance_dataset)
@@ -79,7 +79,7 @@ module VCAP::CloudController
       end
 
       it 'deletes user provided service instances' do
-        user_provided_instance = UserProvidedServiceInstance.make
+        user_provided_instance = create(:user_provided_service_instance)
         errors, warnings = service_instance_delete.delete(service_instance_dataset)
         expect(errors).to be_empty
         expect(warnings).to be_empty
@@ -94,7 +94,7 @@ module VCAP::CloudController
       end
 
       it 'unshares shared managed service instance and records only one unshare event' do
-        shared_to_space = Space.make
+        shared_to_space = create(:space)
         managed_service_instance.add_shared_space(shared_to_space)
 
         expect(managed_service_instance).to receive(:remove_shared_space)
@@ -105,7 +105,7 @@ module VCAP::CloudController
       end
 
       it 'deletes the last operation for each managed service instance' do
-        instance_operation_1 = ServiceInstanceOperation.make(state: 'succeeded')
+        instance_operation_1 = create(:service_instance_operation, state: 'succeeded')
         route_service_instance.service_instance_operation = instance_operation_1
         route_service_instance.save
 
@@ -124,7 +124,7 @@ module VCAP::CloudController
       end
 
       context 'when accepts_incomplete is true' do
-        let(:service_instance) { ManagedServiceInstance.make }
+        let(:service_instance) { create(:managed_service_instance) }
 
         subject(:service_instance_delete) do
           ServiceInstanceDelete.new(
@@ -144,7 +144,7 @@ module VCAP::CloudController
         end
 
         context 'when there is a service binding' do
-          let(:service_binding) { ServiceBinding.make(service_instance:) }
+          let(:service_binding) { create(:service_binding, service_instance:) }
 
           context 'when the broker responds asynchronously to the unbind call' do
             before do
@@ -190,8 +190,8 @@ module VCAP::CloudController
         end
 
         context 'when there are multiple service bindings' do
-          let(:service_binding) { ServiceBinding.make(service_instance:) }
-          let(:service_binding2) { ServiceBinding.make(service_instance:) }
+          let(:service_binding) { create(:service_binding, service_instance:) }
+          let(:service_binding2) { create(:service_binding, service_instance:) }
 
           context 'when the broker responds asynchronously to all unbind calls' do
             before do
@@ -234,9 +234,9 @@ module VCAP::CloudController
         end
 
         context 'when there is a binding with operation in progress' do
-          let(:service_binding_1) { ServiceBinding.make(service_instance:) }
-          let!(:service_binding_operation) { ServiceBindingOperation.make(state: 'in progress', service_binding_id: service_binding_1.id) }
-          let(:service_binding_2) { ServiceBinding.make(service_instance:) }
+          let(:service_binding_1) { create(:service_binding, service_instance:) }
+          let!(:service_binding_operation) { create(:service_binding_operation, state: 'in progress', service_binding_id: service_binding_1.id) }
+          let(:service_binding_2) { create(:service_binding, service_instance:) }
 
           before do
             stub_unbind(service_binding_1, accepts_incomplete: true, status: 202, body: {}.to_json)
@@ -333,10 +333,9 @@ module VCAP::CloudController
 
       context 'when a service instance has an update operation in progress' do
         before do
-          route_service_instance.service_instance_operation = ServiceInstanceOperation.make(
-            state: 'in progress',
-            type: 'update'
-          )
+          route_service_instance.service_instance_operation = create(:service_instance_operation,
+                                                                     state: 'in progress',
+                                                                     type: 'update')
         end
 
         it 'returns an operation in progress error for route and service bindings' do
@@ -353,13 +352,12 @@ module VCAP::CloudController
       end
 
       context 'when a service instance has a create operation in progress' do
-        let(:service_instance) { ManagedServiceInstance.make }
+        let(:service_instance) { create(:managed_service_instance) }
 
         before do
-          service_instance.service_instance_operation = ServiceInstanceOperation.make(
-            state: 'in progress',
-            type: 'create'
-          )
+          service_instance.service_instance_operation = create(:service_instance_operation,
+                                                               state: 'in progress',
+                                                               type: 'create')
         end
 
         context 'when service instance deprovision happen to be synchronous' do
@@ -553,7 +551,7 @@ module VCAP::CloudController
         end
 
         it 'does not attempt to unshare the service instance' do
-          shared_to_space = Space.make
+          shared_to_space = create(:space)
           managed_service_instance.add_shared_space(shared_to_space)
 
           expect_any_instance_of(ServiceInstanceUnshare).not_to receive(:unshare)
@@ -582,7 +580,7 @@ module VCAP::CloudController
 
       context 'when unsharing fails for a shared service instance' do
         before do
-          shared_to_space = Space.make
+          shared_to_space = create(:space)
           managed_service_instance.add_shared_space(shared_to_space)
 
           allow(managed_service_instance).to receive(:remove_shared_space).and_raise('Unsharing failed')

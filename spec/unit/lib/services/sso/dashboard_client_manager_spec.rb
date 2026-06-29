@@ -3,7 +3,7 @@ require 'spec_helper'
 module VCAP::Services::SSO
   RSpec.describe DashboardClientManager do
     let(:client_manager) { double('client_manager') }
-    let(:user) { VCAP::CloudController::User.make }
+    let(:user) { create(:user) }
     let(:email) { 'email@example.com' }
     let(:security_context) { double(:security_context, current_user: user, current_user_email: email) }
     let(:services_event_repository) do
@@ -13,7 +13,7 @@ module VCAP::Services::SSO
     end
 
     context 'for service brokers' do
-      let(:service_broker) { VCAP::CloudController::ServiceBroker.make }
+      let(:service_broker) { create(:service_broker) }
       let(:manager) { DashboardClientManager.new(service_broker, services_event_repository) }
 
       describe '#synchronize_clients_with_catalog' do
@@ -613,7 +613,7 @@ module VCAP::Services::SSO
     end
 
     context 'for service instances' do
-      let(:service_instance) { VCAP::CloudController::ManagedServiceInstance.make }
+      let(:service_instance) { create(:managed_service_instance) }
       let(:service_broker) { service_instance.service_plan.service.service_broker }
       let(:dashboard_client) { VCAP::CloudController::ServiceInstanceDashboardClient }
       let(:manager) { DashboardClientManager.new(service_instance, services_event_repository, dashboard_client) }

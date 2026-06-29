@@ -3,13 +3,13 @@ require 'request_spec_shared_examples'
 
 RSpec.describe 'Packages' do
   let(:email) { 'potato@house.com' }
-  let(:user) { VCAP::CloudController::User.make }
+  let(:user) { create(:user) }
   let(:user_name) { 'clarence' }
   let(:user_header) { headers_for(user, email:, user_name:) }
-  let(:org) { VCAP::CloudController::Organization.make(created_at: 3.days.ago) }
-  let(:space) { VCAP::CloudController::Space.make(organization: org) }
+  let(:org) { create(:organization, created_at: 3.days.ago) }
+  let(:space) { create(:space, organization: org) }
   let(:space_guid) { space.guid }
-  let(:app_model) { VCAP::CloudController::AppModel.make(:docker, space_guid:) }
+  let(:app_model) { create(:app_model, :docker, space_guid:) }
 
   describe 'POST /v3/packages' do
     let(:guid) { app_model.guid }
@@ -99,9 +99,9 @@ RSpec.describe 'Packages' do
         end
 
         let(:api_call) { ->(user_headers) { post '/v3/packages', { type:, data:, relationships:, metadata: }.to_json, user_headers } }
-        let(:space) { VCAP::CloudController::Space.make }
+        let(:space) { create(:space) }
         let(:org) { space.organization }
-        let(:user) { VCAP::CloudController::User.make }
+        let(:user) { create(:user) }
         let(:expected_codes_and_responses) do
           h = Hash.new({ code: 201 }.freeze)
           h['org_auditor'] = { code: 422 }
@@ -132,10 +132,10 @@ RSpec.describe 'Packages' do
     end
 
     describe 'copying' do
-      let!(:source_package) { VCAP::CloudController::PackageModel.make(type: 'docker', app_guid: app_model.guid, docker_image: 'http://awesome-sauce.com') }
+      let!(:source_package) { create(:package_model, type: 'docker', app: app_model, docker_image: 'http://awesome-sauce.com') }
       let(:target_space) { space }
       let(:target_org) { target_space.organization }
-      let(:target_app) { VCAP::CloudController::AppModel.make(space: target_space) }
+      let(:target_app) { create(:app_model, space: target_space) }
 
       it 'copies a package' do
         expect do
@@ -240,7 +240,7 @@ RSpec.describe 'Packages' do
         end
 
         context 'when source organization is suspended' do
-          let(:target_space) { VCAP::CloudController::Space.make(organization: VCAP::CloudController::Organization.make) }
+          let(:target_space) { create(:space, organization: create(:organization)) }
           let(:source_org) { org }
 
           let(:expected_codes_and_responses) do
@@ -262,8 +262,8 @@ RSpec.describe 'Packages' do
   end
 
   describe 'GET /v3/apps/:guid/packages' do
-    let!(:package) { VCAP::CloudController::PackageModel.make(app_guid: app_model.guid) }
-    let(:app_model) { VCAP::CloudController::AppModel.make(space_guid: space.guid) }
+    let!(:package) { create(:package_model, app: app_model) }
+    let(:app_model) { create(:app_model, space: space) }
     let(:guid) { app_model.guid }
     let(:page) { 1 }
     let(:per_page) { 2 }
@@ -313,7 +313,7 @@ RSpec.describe 'Packages' do
       end
 
       it 'lists paginated results' do
-        package2 = VCAP::CloudController::PackageModel.make(app_guid: app_model.guid, created_at: package.created_at + 1.hour)
+        package2 = create(:package_model, app: app_model, created_at: package.created_at + 1.hour)
 
         expected_response = {
           'pagination' => {
@@ -391,10 +391,10 @@ RSpec.describe 'Packages' do
       end
 
       it 'filters by types' do
-        VCAP::CloudController::PackageModel.make(app_guid: app_model.guid, type: VCAP::CloudController::PackageModel::BITS_TYPE)
-        VCAP::CloudController::PackageModel.make(app_guid: app_model.guid, type: VCAP::CloudController::PackageModel::BITS_TYPE)
-        VCAP::CloudController::PackageModel.make(app_guid: app_model.guid, type: VCAP::CloudController::PackageModel::DOCKER_TYPE)
-        VCAP::CloudController::PackageModel.make(type: VCAP::CloudController::PackageModel::BITS_TYPE)
+        create(:package_model, app: app_model, type: VCAP::CloudController::PackageModel::BITS_TYPE)
+        create(:package_model, app: app_model, type: VCAP::CloudController::PackageModel::BITS_TYPE)
+        create(:package_model, app: app_model, type: VCAP::CloudController::PackageModel::DOCKER_TYPE)
+        create(:package_model, type: VCAP::CloudController::PackageModel::BITS_TYPE)
 
         get '/v3/packages?types=bits', {}, user_header
 
@@ -416,10 +416,10 @@ RSpec.describe 'Packages' do
       end
 
       it 'filters by states' do
-        VCAP::CloudController::PackageModel.make(app_guid: app_model.guid, state: VCAP::CloudController::PackageModel::PENDING_STATE)
-        VCAP::CloudController::PackageModel.make(app_guid: app_model.guid, state: VCAP::CloudController::PackageModel::PENDING_STATE)
-        VCAP::CloudController::PackageModel.make(app_guid: app_model.guid, state: VCAP::CloudController::PackageModel::READY_STATE)
-        VCAP::CloudController::PackageModel.make(state: VCAP::CloudController::PackageModel::PENDING_STATE)
+        create(:package_model, app: app_model, state: VCAP::CloudController::PackageModel::PENDING_STATE)
+        create(:package_model, app: app_model, state: VCAP::CloudController::PackageModel::PENDING_STATE)
+        create(:package_model, app: app_model, state: VCAP::CloudController::PackageModel::READY_STATE)
+        create(:package_model, state: VCAP::CloudController::PackageModel::PENDING_STATE)
 
         get "/v3/apps/#{app_model.guid}/packages?states=PROCESSING_UPLOAD", {}, user_header
 
@@ -441,9 +441,9 @@ RSpec.describe 'Packages' do
       end
 
       it 'filters by package guids' do
-        package1 = VCAP::CloudController::PackageModel.make(app_guid: app_model.guid)
-        package2 = VCAP::CloudController::PackageModel.make(app_guid: app_model.guid)
-        VCAP::CloudController::PackageModel.make
+        package1 = create(:package_model, app: app_model)
+        package2 = create(:package_model, app: app_model)
+        create(:package_model)
 
         get "/v3/apps/#{app_model.guid}/packages?guids=#{package1.guid},#{package2.guid}", {}, user_header
 
@@ -486,14 +486,13 @@ RSpec.describe 'Packages' do
         updated_ats: { gt: Time.now.utc.iso8601 }
       }
     end
-    let(:bits_package) { VCAP::CloudController::PackageModel.make(type: bits_type, app_guid: app_model.guid) }
+    let(:bits_package) { create(:package_model, type: bits_type, app: app_model) }
     let(:docker_package) do
-      VCAP::CloudController::PackageModel.make(
-        type: docker_type,
-        app_guid: app_model.guid,
-        state: VCAP::CloudController::PackageModel::READY_STATE,
-        docker_image: 'http://location-of-image.com'
-      )
+      create(:package_model,
+             type: docker_type,
+             app_guid: app_model.guid,
+             state: VCAP::CloudController::PackageModel::READY_STATE,
+             docker_image: 'http://location-of-image.com')
     end
     let(:packages_response_objects) do
       [
@@ -584,12 +583,12 @@ RSpec.describe 'Packages' do
 
       context 'faceted search' do
         it 'filters by types' do
-          VCAP::CloudController::PackageModel.make(app_guid: app_model.guid, type: VCAP::CloudController::PackageModel::BITS_TYPE)
-          VCAP::CloudController::PackageModel.make(app_guid: app_model.guid, type: VCAP::CloudController::PackageModel::BITS_TYPE)
-          VCAP::CloudController::PackageModel.make(app_guid: app_model.guid, type: VCAP::CloudController::PackageModel::DOCKER_TYPE)
+          create(:package_model, app: app_model, type: VCAP::CloudController::PackageModel::BITS_TYPE)
+          create(:package_model, app: app_model, type: VCAP::CloudController::PackageModel::BITS_TYPE)
+          create(:package_model, app: app_model, type: VCAP::CloudController::PackageModel::DOCKER_TYPE)
 
-          another_app_in_same_space = VCAP::CloudController::AppModel.make(space_guid:)
-          VCAP::CloudController::PackageModel.make(app_guid: another_app_in_same_space.guid, type: VCAP::CloudController::PackageModel::BITS_TYPE)
+          another_app_in_same_space = create(:app_model, space_guid:)
+          create(:package_model, app: another_app_in_same_space, type: VCAP::CloudController::PackageModel::BITS_TYPE)
 
           get '/v3/packages?types=bits', {}, user_header
 
@@ -611,12 +610,12 @@ RSpec.describe 'Packages' do
         end
 
         it 'filters by states' do
-          VCAP::CloudController::PackageModel.make(app_guid: app_model.guid, state: VCAP::CloudController::PackageModel::PENDING_STATE)
-          VCAP::CloudController::PackageModel.make(app_guid: app_model.guid, state: VCAP::CloudController::PackageModel::PENDING_STATE)
-          VCAP::CloudController::PackageModel.make(app_guid: app_model.guid, state: VCAP::CloudController::PackageModel::READY_STATE)
+          create(:package_model, app: app_model, state: VCAP::CloudController::PackageModel::PENDING_STATE)
+          create(:package_model, app: app_model, state: VCAP::CloudController::PackageModel::PENDING_STATE)
+          create(:package_model, app: app_model, state: VCAP::CloudController::PackageModel::READY_STATE)
 
-          another_app_in_same_space = VCAP::CloudController::AppModel.make(space_guid:)
-          VCAP::CloudController::PackageModel.make(app_guid: another_app_in_same_space.guid, state: VCAP::CloudController::PackageModel::PENDING_STATE)
+          another_app_in_same_space = create(:app_model, space_guid:)
+          create(:package_model, app: another_app_in_same_space, state: VCAP::CloudController::PackageModel::PENDING_STATE)
 
           get '/v3/packages?states=PROCESSING_UPLOAD', {}, user_header
 
@@ -638,10 +637,10 @@ RSpec.describe 'Packages' do
         end
 
         it 'filters by app guids' do
-          app_model2 = VCAP::CloudController::AppModel.make(space_guid:)
-          package1 = VCAP::CloudController::PackageModel.make(app_guid: app_model.guid)
-          package2 = VCAP::CloudController::PackageModel.make(app_guid: app_model2.guid)
-          VCAP::CloudController::PackageModel.make
+          app_model2 = create(:app_model, space_guid:)
+          package1 = create(:package_model, app: app_model)
+          package2 = create(:package_model, app: app_model2)
+          create(:package_model)
 
           get "/v3/packages?app_guids=#{app_model.guid},#{app_model2.guid}", {}, user_header
 
@@ -662,10 +661,10 @@ RSpec.describe 'Packages' do
         end
 
         it 'filters by package guids' do
-          app_model2 = VCAP::CloudController::AppModel.make(space_guid:)
-          package1 = VCAP::CloudController::PackageModel.make(app_guid: app_model2.guid)
-          package2 = VCAP::CloudController::PackageModel.make(app_guid: app_model2.guid)
-          VCAP::CloudController::PackageModel.make
+          app_model2 = create(:app_model, space_guid:)
+          package1 = create(:package_model, app: app_model2)
+          package2 = create(:package_model, app: app_model2)
+          create(:package_model)
 
           get "/v3/packages?guids=#{package1.guid},#{package2.guid}", {}, user_header
 
@@ -686,17 +685,17 @@ RSpec.describe 'Packages' do
         end
 
         it 'filters by space guids' do
-          package_on_space1 = VCAP::CloudController::PackageModel.make(app_guid: app_model.guid)
+          package_on_space1 = create(:package_model, app: app_model)
 
-          space2 = VCAP::CloudController::Space.make(organization: space.organization)
+          space2 = create(:space, organization: space.organization)
           space2.add_developer(user)
-          app_model2 = VCAP::CloudController::AppModel.make(space_guid: space2.guid)
-          package_on_space2 = VCAP::CloudController::PackageModel.make(app_guid: app_model2.guid)
+          app_model2 = create(:app_model, space: space2)
+          package_on_space2 = create(:package_model, app: app_model2)
 
-          space3 = VCAP::CloudController::Space.make(organization: space.organization)
+          space3 = create(:space, organization: space.organization)
           space3.add_developer(user)
-          app_model3 = VCAP::CloudController::AppModel.make(space_guid: space3.guid)
-          VCAP::CloudController::PackageModel.make(app_guid: app_model3.guid)
+          app_model3 = create(:app_model, space: space3)
+          create(:package_model, app: app_model3)
 
           get "/v3/packages?space_guids=#{space2.guid},#{space_guid}", {}, user_header
 
@@ -719,22 +718,22 @@ RSpec.describe 'Packages' do
         it 'filters by org guids' do
           org1_guid = space.organization.guid
 
-          package_in_org1 = VCAP::CloudController::PackageModel.make(app_guid: app_model.guid)
+          package_in_org1 = create(:package_model, app: app_model)
 
-          space2 = VCAP::CloudController::Space.make
+          space2 = create(:space)
           org2_guid = space2.organization.guid
-          app_model2 = VCAP::CloudController::AppModel.make(space_guid: space2.guid)
+          app_model2 = create(:app_model, space: space2)
 
           space2.organization.add_user(user)
           space2.add_developer(user)
 
-          package_in_org2 = VCAP::CloudController::PackageModel.make(app_guid: app_model2.guid)
+          package_in_org2 = create(:package_model, app: app_model2)
 
-          space3 = VCAP::CloudController::Space.make
+          space3 = create(:space)
           space3.organization.add_user(user)
           space3.add_developer(user)
-          app_model3 = VCAP::CloudController::AppModel.make(space_guid: space3.guid)
-          VCAP::CloudController::PackageModel.make(app_guid: app_model3.guid)
+          app_model3 = create(:app_model, space: space3)
+          create(:package_model, app: app_model3)
 
           get "/v3/packages?organization_guids=#{org1_guid},#{org2_guid}", {}, user_header
 
@@ -755,10 +754,10 @@ RSpec.describe 'Packages' do
         end
 
         it 'filters by label selectors' do
-          target = VCAP::CloudController::PackageModel.make(app_guid: app_model.guid)
-          VCAP::CloudController::PackageModel.make(app_guid: app_model.guid)
-          VCAP::CloudController::PackageModel.make(app_guid: app_model.guid)
-          VCAP::CloudController::PackageLabelModel.make(key_name: 'fruit', value: 'strawberry', package: target)
+          target = create(:package_model, app: app_model)
+          create(:package_model, app: app_model)
+          create(:package_model, app: app_model)
+          create(:package_label_model, key_name: 'fruit', value: 'strawberry', package: target)
 
           get '/v3/packages?label_selector=fruit=strawberry', {}, user_header
 
@@ -785,7 +784,7 @@ RSpec.describe 'Packages' do
   describe 'GET /v3/packages/:guid' do
     let(:api_call) { ->(user_headers) { get "v3/packages/#{guid}", nil, user_headers } }
     let(:package_model) do
-      VCAP::CloudController::PackageModel.make(app_guid: app_model.guid)
+      create(:package_model, app: app_model)
     end
     let(:guid) { package_model.guid }
     let(:package_model_response_object) do
@@ -823,10 +822,10 @@ RSpec.describe 'Packages' do
   describe 'POST /v3/packages/:guid/upload' do
     let(:type) { 'bits' }
     let!(:package_model) do
-      VCAP::CloudController::PackageModel.make(app_guid: app_model.guid, type: type)
+      create(:package_model, app: app_model, type: type)
     end
-    let(:space) { VCAP::CloudController::Space.make }
-    let(:app_model) { VCAP::CloudController::AppModel.make(guid: 'woof', space_guid: space.guid, name: 'meow') }
+    let(:space) { create(:space) }
+    let(:app_model) { create(:app_model, guid: 'woof', space: space, name: 'meow') }
     let(:guid) { package_model.guid }
     let(:tmpdir) { Dir.mktmpdir }
     let(:test_config_overrides) do
@@ -956,9 +955,9 @@ RSpec.describe 'Packages' do
       end
 
       let(:api_call) { ->(user_headers) { post "/v3/packages/#{guid}/upload", packages_params.to_json, user_headers } }
-      let(:space) { VCAP::CloudController::Space.make }
+      let(:space) { create(:space) }
       let(:org) { space.organization }
-      let(:user) { VCAP::CloudController::User.make }
+      let(:user) { create(:user) }
       let(:package_model_response_object) do
         {
           'type' => package_model.type,
@@ -1012,12 +1011,12 @@ RSpec.describe 'Packages' do
   describe 'GET /v3/packages/:guid/download' do
     let(:type) { 'bits' }
     let!(:package_model) do
-      VCAP::CloudController::PackageModel.make(app_guid: app_model.guid, type: type)
+      create(:package_model, app: app_model, type: type)
     end
     let(:app_model) do
-      VCAP::CloudController::AppModel.make(guid: 'woof-guid', space_guid: space.guid, name: 'meow')
+      create(:app_model, guid: 'woof-guid', space: space, name: 'meow')
     end
-    let(:space) { VCAP::CloudController::Space.make }
+    let(:space) { create(:space) }
     let(:bits_download_url) { CloudController::DependencyLocator.instance.blobstore_url_generator.package_download_url(package_model) }
     let(:guid) { package_model.guid }
     let(:temp_file) do
@@ -1073,9 +1072,9 @@ RSpec.describe 'Packages' do
       end
 
       let(:api_call) { ->(user_headers) { get "/v3/packages/#{guid}/download", nil, user_headers } }
-      let(:space) { VCAP::CloudController::Space.make }
+      let(:space) { create(:space) }
       let(:org) { space.organization }
-      let(:user) { VCAP::CloudController::User.make }
+      let(:user) { create(:user) }
       let(:expected_codes_and_responses) do
         h = Hash.new({ code: 302 }.freeze)
         h['global_auditor'] = { code: 403 }
@@ -1096,10 +1095,10 @@ RSpec.describe 'Packages' do
   describe 'PATCH /v3/packages/:guid' do
     let(:app_name) { 'sir meow' }
     let(:app_guid) { 'meow-the-guid' }
-    let(:space) { VCAP::CloudController::Space.make }
-    let(:app_model) { VCAP::CloudController::AppModel.make(space_guid: space.guid, name: app_name, guid: app_guid) }
+    let(:space) { create(:space) }
+    let(:app_model) { create(:app_model, space: space, name: app_name, guid: app_guid) }
     let!(:package_model) do
-      VCAP::CloudController::PackageModel.make(app_guid: app_model.guid)
+      create(:package_model, app: app_model)
     end
     let(:metadata) do
       {
@@ -1141,9 +1140,9 @@ RSpec.describe 'Packages' do
       end
 
       let(:api_call) { ->(user_headers) { patch "/v3/packages/#{guid}", { metadata: }.to_json, user_headers } }
-      let(:space) { VCAP::CloudController::Space.make }
+      let(:space) { create(:space) }
       let(:org) { space.organization }
-      let(:user) { VCAP::CloudController::User.make }
+      let(:user) { create(:user) }
       let(:expected_codes_and_responses) do
         h = Hash.new({ code: 200 }.freeze)
         h['org_auditor'] = { code: 404 }
@@ -1176,10 +1175,10 @@ RSpec.describe 'Packages' do
   describe 'DELETE /v3/packages/:guid' do
     let(:app_name) { 'sir meow' }
     let(:app_guid) { 'meow-the-guid' }
-    let(:space) { VCAP::CloudController::Space.make }
-    let(:app_model) { VCAP::CloudController::AppModel.make(space_guid: space.guid, name: app_name, guid: app_guid) }
+    let(:space) { create(:space) }
+    let(:app_model) { create(:app_model, space: space, name: app_name, guid: app_guid) }
     let!(:package_model) do
-      VCAP::CloudController::PackageModel.make(app_guid: app_model.guid)
+      create(:package_model, app: app_model)
     end
 
     let(:guid) { package_model.guid }
@@ -1233,9 +1232,9 @@ RSpec.describe 'Packages' do
       end
 
       let(:api_call) { ->(user_headers) { delete "/v3/packages/#{guid}", nil, user_headers } }
-      let(:space) { VCAP::CloudController::Space.make }
+      let(:space) { create(:space) }
       let(:org) { space.organization }
-      let(:user) { VCAP::CloudController::User.make }
+      let(:user) { create(:user) }
       let(:expected_codes_and_responses) do
         h = Hash.new({ code: 202 }.freeze)
         h['org_auditor'] = { code: 404 }
@@ -1265,7 +1264,7 @@ RSpec.describe 'Packages' do
   end
 
   describe 'PATCH /internal/v4/packages/:guid' do
-    let!(:package_model) { VCAP::CloudController::PackageModel.make(state: VCAP::CloudController::PackageModel::PENDING_STATE) }
+    let!(:package_model) { create(:package_model, state: VCAP::CloudController::PackageModel::PENDING_STATE) }
     let(:body) do
       {
         'state' => 'READY',

@@ -5,47 +5,47 @@ module VCAP::CloudController
     describe '#perform' do
       context 'rotation' do
         # Apps are an example of a single encrypted field
-        let(:historical_app) { AppModel.make }
-        let(:historical_app_with_no_environment) { AppModel.make }
-        let(:app) { AppModel.make(:all_fields) }
-        let(:app_the_second) { AppModel.make }
-        let(:app_new_key_label) { AppModel.make }
+        let(:historical_app) { create(:app_model) }
+        let(:historical_app_with_no_environment) { create(:app_model) }
+        let(:app) { create(:app_model, :all_fields) }
+        let(:app_the_second) { create(:app_model) }
+        let(:app_new_key_label) { create(:app_model) }
         let(:env_vars) { { 'environment' => 'vars', 'PORT' => 344, 'longstring' => 'x' * 4097 } } # PORT is invalid!
         let(:env_vars_2) { { 'vars' => 'environment' } }
 
         # Service bindings are an example of multiple encrypted fields
-        let(:service_binding) { ServiceBinding.make(syslog_drain_url: Sham.url, name: Sham.name) }
-        let(:service_binding_new_key_label) { ServiceBinding.make }
+        let(:service_binding) { create(:service_binding, syslog_drain_url: Sham.url, name: Sham.name) }
+        let(:service_binding_new_key_label) { create(:service_binding) }
         let(:credentials) { { 'secret' => 'creds' } }
         let(:credentials_2) { { 'more' => 'secrets' } }
 
         # Service instances are an example of single table inheritance
-        let(:service_instance) { ManagedServiceInstance.make(:all_fields) }
-        let(:service_instance_new_key_label) { ManagedServiceInstance.make }
+        let(:service_instance) { create(:managed_service_instance, :all_fields) }
+        let(:service_instance_new_key_label) { create(:managed_service_instance) }
         let(:instance_credentials) { { 'instance' => 'credentials' } }
         let(:instance_credentials_2) { { 'instance_credentials' => 'live here' } }
-        let(:task) { TaskModel.make(disk_in_mb: 256, failure_reason: 'error') }
-        let(:task_the_second) { TaskModel.make }
+        let(:task) { create(:task_model, disk_in_mb: 256, failure_reason: 'error') }
+        let(:task_the_second) { create(:task_model) }
 
-        let(:service_broker) { ServiceBroker.make(:space_scoped) }
-        let(:service_broker_update_request) { ServiceBrokerUpdateRequest.make(service_broker_id: service_broker.id, fk_service_brokers_id: service_broker.id) }
+        let(:service_broker) { create(:service_broker, :space_scoped) }
+        let(:service_broker_update_request) { create(:service_broker_update_request, service_broker_id: service_broker.id, fk_service_brokers_id: service_broker.id) }
 
         let(:encrypted_models) do
           {
             'VCAP::CloudController::AppModel' => app,
-            'VCAP::CloudController::PackageModel' => PackageModel.make(:docker, package_hash: Sham.guid, error: 'a-error', docker_image: 'image', docker_username: 'user'),
-            'VCAP::CloudController::DropletModel' => DropletModel.make(:all_fields),
-            'VCAP::CloudController::CNBLifecycleDataModel' => CNBLifecycleDataModel.make(:all_fields),
-            'VCAP::CloudController::BuildpackLifecycleDataModel' => BuildpackLifecycleDataModel.make(:all_fields),
-            'VCAP::CloudController::BuildpackLifecycleBuildpackModel' => BuildpackLifecycleBuildpackModel.make(:all_fields),
+            'VCAP::CloudController::PackageModel' => create(:package_model, :docker, package_hash: Sham.guid, error: 'a-error', docker_image: 'image', docker_username: 'user'),
+            'VCAP::CloudController::DropletModel' => create(:droplet_model, :all_fields),
+            'VCAP::CloudController::CNBLifecycleDataModel' => create(:cnb_lifecycle_data_model, :all_fields),
+            'VCAP::CloudController::BuildpackLifecycleDataModel' => create(:buildpack_lifecycle_data_model, :all_fields),
+            'VCAP::CloudController::BuildpackLifecycleBuildpackModel' => create(:buildpack_lifecycle_buildpack_model, :all_fields),
             'VCAP::CloudController::TaskModel' => task,
-            'VCAP::CloudController::EnvironmentVariableGroup' => EnvironmentVariableGroup.make,
-            'VCAP::CloudController::RevisionModel' => RevisionModel.make,
+            'VCAP::CloudController::EnvironmentVariableGroup' => create(:environment_variable_group),
+            'VCAP::CloudController::RevisionModel' => create(:revision_model),
             'VCAP::CloudController::ServiceBinding' => service_binding,
             'VCAP::CloudController::ServiceInstance' => service_instance,
             'VCAP::CloudController::ServiceBroker' => service_broker,
             'VCAP::CloudController::ServiceBrokerUpdateRequest' => service_broker_update_request,
-            'VCAP::CloudController::ServiceKey' => ServiceKey.make
+            'VCAP::CloudController::ServiceKey' => create(:service_key)
           }
         end
 
@@ -217,8 +217,8 @@ module VCAP::CloudController
         end
 
         context 'batching so we do not load entire tables into memory' do
-          let(:app2) { AppModel.make }
-          let(:app3) { AppModel.make }
+          let(:app2) { create(:app_model) }
+          let(:app3) { create(:app_model) }
 
           before do
             allow(Encryptor).to receive(:current_encryption_key_label) { 'old' }
@@ -294,7 +294,7 @@ module VCAP::CloudController
               # is distinct from the db connection that `RotateDatabaseKey.perform` is using, not to attempt to update
               # the TaskModel concurrently
               Thread.new do
-                encrypted_new_env_vars = TaskModel.make(salt: task_model.salt, environment_variables: new_environment_variables).environment_variables_without_encryption
+                encrypted_new_env_vars = create(:task_model, salt: task_model.salt, environment_variables: new_environment_variables).environment_variables_without_encryption
                 db = Sequel.connect(task_model.db.opts)
                 db.run("UPDATE tasks SET encryption_key_label = 'new', encrypted_environment_variables = '#{encrypted_new_env_vars}' where guid = '#{task_model.guid}';")
               end.join
@@ -315,10 +315,10 @@ module VCAP::CloudController
 
       describe 'logging' do
         let(:logger) { instance_double(Steno::Logger, info: nil, error: nil) }
-        let!(:app) { AppModel.make }
-        let!(:task) { TaskModel.make(app:) }
-        let!(:task_jr) { TaskModel.make(app:) }
-        let!(:task_the_third) { TaskModel.make(app:) }
+        let!(:app) { create(:app_model) }
+        let!(:task) { create(:task_model, app:) }
+        let!(:task_jr) { create(:task_model, app:) }
+        let!(:task_the_third) { create(:task_model, app:) }
 
         before do
           allow(Steno).to receive(:logger).and_return(logger)

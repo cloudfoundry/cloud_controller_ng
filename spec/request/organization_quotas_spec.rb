@@ -3,10 +3,10 @@ require 'request_spec_shared_examples'
 
 module VCAP::CloudController
   RSpec.describe 'organization_quotas' do
-    let(:user) { VCAP::CloudController::User.make(guid: 'user-guid') }
-    let(:organization_quota) { VCAP::CloudController::QuotaDefinition.make(guid: 'org-quota-guid') }
-    let!(:org) { VCAP::CloudController::Organization.make(guid: 'organization-guid', quota_definition: organization_quota) }
-    let(:space) { VCAP::CloudController::Space.make(guid: 'space-guid', organization: org) }
+    let(:user) { create(:user, guid: 'user-guid') }
+    let(:organization_quota) { create(:quota_definition, guid: 'org-quota-guid') }
+    let!(:org) { create(:organization, guid: 'organization-guid', quota_definition: organization_quota) }
+    let(:space) { create(:space, guid: 'space-guid', organization: org) }
     let(:admin_header) { headers_for(user, scopes: %w[cloud_controller.admin]) }
 
     describe 'POST /v3/organization_quotas' do
@@ -198,7 +198,7 @@ module VCAP::CloudController
       let(:api_call) { ->(user_headers) { get '/v3/organization_quotas', nil, user_headers } }
 
       context 'when listing organization_quotas' do
-        let!(:other_org) { VCAP::CloudController::Organization.make(guid: 'other-organization-guid', quota_definition: organization_quota) }
+        let!(:other_org) { create(:organization, guid: 'other-organization-guid', quota_definition: organization_quota) }
         let(:other_org_response) { { guid: 'other-organization-guid' } }
         let(:org_response) { { guid: 'organization-guid' } }
 
@@ -222,8 +222,8 @@ module VCAP::CloudController
         end
 
         context 'with filters' do
-          let!(:organization_quota_2) { VCAP::CloudController::QuotaDefinition.make(guid: 'second-guid', name: 'second-name') }
-          let!(:organization_quota_3) { VCAP::CloudController::QuotaDefinition.make(guid: 'third-guid', name: 'third-name') }
+          let!(:organization_quota_2) { create(:quota_definition, guid: 'second-guid', name: 'second-name') }
+          let!(:organization_quota_3) { create(:quota_definition, guid: 'third-guid', name: 'third-name') }
 
           before do
             org.quota_definition = organization_quota
@@ -265,7 +265,7 @@ module VCAP::CloudController
       let(:api_call) { ->(user_headers) { get "/v3/organization_quotas/#{organization_quota.guid}", nil, user_headers } }
 
       context 'when getting an organization_quota' do
-        let!(:other_org) { VCAP::CloudController::Organization.make(guid: 'other-organization-guid', quota_definition: organization_quota) }
+        let!(:other_org) { create(:organization, guid: 'other-organization-guid', quota_definition: organization_quota) }
         let(:other_org_response) { { guid: 'other-organization-guid' } }
         let(:org_response) { { guid: 'organization-guid' } }
 
@@ -282,7 +282,7 @@ module VCAP::CloudController
       end
 
       context 'when the organization_quota had no associated organizations' do
-        let(:unused_organization_quota) { VCAP::CloudController::QuotaDefinition.make }
+        let(:unused_organization_quota) { create(:quota_definition) }
 
         it 'returns a quota with an empty array of org guids' do
           get "/v3/organization_quotas/#{unused_organization_quota.guid}", nil, admin_header
@@ -398,12 +398,11 @@ module VCAP::CloudController
 
       context 'update partial values' do
         let(:org_quota_to_update) do
-          VCAP::CloudController::QuotaDefinition.make(
-            guid: 'org_quota_to_update_guid',
-            name: 'update-me',
-            memory_limit: 8,
-            non_basic_services_allowed: true
-          )
+          create(:quota_definition,
+                 guid: 'org_quota_to_update_guid',
+                 name: 'update-me',
+                 memory_limit: 8,
+                 non_basic_services_allowed: true)
         end
         let(:partial_params) do
           {
@@ -447,7 +446,7 @@ module VCAP::CloudController
       end
 
       context 'when trying to update name to a pre-existing name' do
-        let(:new_org_quota) { QuotaDefinition.make }
+        let(:new_org_quota) { create(:quota_definition) }
 
         let(:params) do
           {
@@ -464,8 +463,8 @@ module VCAP::CloudController
       end
 
       context 'when trying to set a log rate limit and there are apps with unlimited log rates' do
-        let!(:app_model) { VCAP::CloudController::AppModel.make(name: 'name1', space: space) }
-        let!(:process_model) { VCAP::CloudController::ProcessModel.make(app: app_model, log_rate_limit: -1) }
+        let!(:app_model) { create(:app_model, name: 'name1', space: space) }
+        let!(:process_model) { create(:process_model, app: app_model, log_rate_limit: -1) }
 
         it 'returns 422' do
           patch "/v3/organization_quotas/#{organization_quota.guid}", params.to_json, admin_header
@@ -482,8 +481,8 @@ module VCAP::CloudController
     describe 'POST /v3/organization_quotas/:guid/relationships/organizations' do
       let(:api_call) { ->(user_headers) { post "/v3/organization_quotas/#{org_quota.guid}/relationships/organizations", params.to_json, user_headers } }
 
-      let(:org) { VCAP::CloudController::Organization.make }
-      let(:org_quota) { VCAP::CloudController::QuotaDefinition.make }
+      let(:org) { create(:organization) }
+      let(:org_quota) { create(:quota_definition) }
 
       let(:params) do
         {
@@ -541,9 +540,9 @@ module VCAP::CloudController
       end
 
       context 'when the quota has a finite log rate limit and there are apps with unlimited log rates' do
-        let(:org_quota) { VCAP::CloudController::QuotaDefinition.make(log_rate_limit: 100) }
-        let!(:app_model) { VCAP::CloudController::AppModel.make(name: 'name1', space: space) }
-        let!(:process_model) { VCAP::CloudController::ProcessModel.make(app: app_model, log_rate_limit: -1) }
+        let(:org_quota) { create(:quota_definition, log_rate_limit: 100) }
+        let!(:app_model) { create(:app_model, name: 'name1', space: space) }
+        let!(:process_model) { create(:process_model, app: app_model, log_rate_limit: -1) }
 
         it 'returns 422' do
           post "/v3/organization_quotas/#{org_quota.guid}/relationships/organizations", params.to_json, admin_header
@@ -556,7 +555,7 @@ module VCAP::CloudController
     end
 
     describe 'DELETE /v3/organization_quotas/:guid/' do
-      let(:org_quota) { VCAP::CloudController::QuotaDefinition.make }
+      let(:org_quota) { create(:quota_definition) }
       let(:api_call) { ->(user_headers) { delete "/v3/organization_quotas/#{org_quota.guid}", nil, user_headers } }
       let(:db_check) do
         lambda do
@@ -588,7 +587,7 @@ module VCAP::CloudController
       end
 
       context 'when an organization quota is applied to an organization' do
-        let(:org) { VCAP::CloudController::Organization.make }
+        let(:org) { create(:organization) }
 
         let(:params) do
           {

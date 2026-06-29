@@ -31,9 +31,9 @@ module VCAP
 
     describe 'when the fluentd client is set' do
       let(:fluent_emitter) { instance_double(FluentEmitter) }
-      let(:org) { VCAP::CloudController::Organization.make }
-      let(:space) { VCAP::CloudController::Space.make(organization: org) }
-      let(:app) { VCAP::CloudController::AppModel.make(space:) }
+      let(:org) { create(:organization) }
+      let(:space) { create(:space, organization: org) }
+      let(:app) { create(:app_model, space:) }
 
       before do
         AppLogEmitter.fluent_emitter = fluent_emitter
@@ -60,9 +60,9 @@ module VCAP
     end
 
     describe 'when the loggregator emitter is set' do
-      let(:org) { VCAP::CloudController::Organization.make }
-      let(:space) { VCAP::CloudController::Space.make(organization: org) }
-      let(:app) { VCAP::CloudController::AppModel.make(space:) }
+      let(:org) { create(:organization) }
+      let(:space) { create(:space, organization: org) }
+      let(:app) { create(:app_model, space:) }
       let(:emitter) { instance_double(LoggregatorEmitter::Client) }
 
       before do

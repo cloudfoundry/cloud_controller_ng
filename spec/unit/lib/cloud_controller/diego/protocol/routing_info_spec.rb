@@ -8,16 +8,16 @@ module VCAP::CloudController
           subject(:routing_info) { RoutingInfo.new(process) }
           let(:ri) { routing_info.routing_info }
 
-          let(:org) { Organization.make }
-          let(:space_quota) { SpaceQuotaDefinition.make(organization: org) }
-          let(:space) { Space.make(organization: org, space_quota_definition: space_quota) }
-          let(:domain) { PrivateDomain.make(name: 'mydomain.com', owning_organization: org) }
+          let(:org) { create(:organization) }
+          let(:space_quota) { create(:space_quota_definition, organization: org) }
+          let(:space) { create(:space, organization: org, space_quota_definition: space_quota) }
+          let(:domain) { create(:private_domain, name: 'mydomain.com', owning_organization: org) }
           let(:process) { ProcessModelFactory.make(space: space, diego: true) }
-          let(:route_without_service) { Route.make(host: 'host2', domain: domain, space: space, path: '/my%20path') }
+          let(:route_without_service) { create(:route, host: 'host2', domain: domain, space: space, path: '/my%20path') }
           let(:route_with_service) do
-            route            = Route.make(host: 'myhost', domain: domain, space: space, path: '/my%20path')
-            service_instance = ManagedServiceInstance.make(:routing, space:)
-            RouteBinding.make(route:, service_instance:)
+            route            = create(:route, host: 'myhost', domain: domain, space: space, path: '/my%20path')
+            service_instance = create(:managed_service_instance, :routing, space:)
+            create(:route_binding, route:, service_instance:)
             route
           end
 
@@ -42,8 +42,9 @@ module VCAP::CloudController
           context 'http routes' do
             context 'with protocol' do
               before do
-                RouteMappingModel.make(app: process.app, route: route_with_service, process_type: process.type, app_port: ProcessModel::NO_APP_PORT_SPECIFIED, protocol: 'http2')
-                RouteMappingModel.make(app: process.app, route: route_without_service, process_type: process.type, app_port: ProcessModel::NO_APP_PORT_SPECIFIED)
+                create(:route_mapping_model, app: process.app, route: route_with_service, process_type: process.type, app_port: ProcessModel::NO_APP_PORT_SPECIFIED,
+                                             protocol: 'http2')
+                create(:route_mapping_model, app: process.app, route: route_without_service, process_type: process.type, app_port: ProcessModel::NO_APP_PORT_SPECIFIED)
               end
 
               it 'returns the mapped http routes associated with the app with protocol' do
@@ -59,8 +60,8 @@ module VCAP::CloudController
 
             context 'with no app ports specified in route mapping' do
               before do
-                RouteMappingModel.make(app: process.app, route: route_with_service, process_type: process.type, app_port: ProcessModel::NO_APP_PORT_SPECIFIED)
-                RouteMappingModel.make(app: process.app, route: route_without_service, process_type: process.type, app_port: ProcessModel::NO_APP_PORT_SPECIFIED)
+                create(:route_mapping_model, app: process.app, route: route_with_service, process_type: process.type, app_port: ProcessModel::NO_APP_PORT_SPECIFIED)
+                create(:route_mapping_model, app: process.app, route: route_without_service, process_type: process.type, app_port: ProcessModel::NO_APP_PORT_SPECIFIED)
               end
 
               context 'and app has no ports' do
@@ -90,17 +91,15 @@ module VCAP::CloudController
               end
 
               describe 'docker ports' do
-                let(:parent_app) { AppModel.make(:docker, space:) }
-                let(:process) { ProcessModel.make(app: parent_app, diego: true, state: ProcessModel::STARTED) }
+                let(:parent_app) { create(:app_model, :docker, space:) }
+                let(:process) { create(:process_model, app: parent_app, diego: true, state: ProcessModel::STARTED) }
                 let(:droplet) do
-                  DropletModel.make(
-                    :docker,
-                    state: DropletModel::STAGED_STATE,
-                    app: parent_app,
-                    execution_metadata: execution_metadata,
-                    docker_receipt_image: 'foo/bar',
-                    package: PackageModel.make(app: parent_app)
-                  )
+                  create(:droplet_model, :docker,
+                         state: DropletModel::STAGED_STATE,
+                         app: parent_app,
+                         execution_metadata: execution_metadata,
+                         docker_receipt_image: 'foo/bar',
+                         package: create(:package_model, app: parent_app))
                 end
 
                 before do
@@ -137,7 +136,7 @@ module VCAP::CloudController
 
                   context 'when there is a newer droplet (e.g. due to a canceled deployment)' do
                     before do
-                      DropletModel.make(app: parent_app, created_at: droplet.created_at + 1)
+                      create(:droplet_model, app: parent_app, created_at: droplet.created_at + 1, set_as_current_droplet: false)
                     end
 
                     it 'still uses the correct docker port' do
@@ -150,7 +149,7 @@ module VCAP::CloudController
 
             context 'with app port specified in route mapping' do
               let(:process) { ProcessModelFactory.make(space: space, diego: true, ports: [9090]) }
-              let!(:route_mapping) { RouteMappingModel.make(app: process.app, route: route_with_service, app_port: 9090) }
+              let!(:route_mapping) { create(:route_mapping_model, app: process.app, route: route_with_service, app_port: 9090) }
 
               it 'returns the app port in routing info' do
                 expected_http = [
@@ -164,8 +163,8 @@ module VCAP::CloudController
 
             context 'with multiple route mapping to same route with different app ports' do
               let(:process) { ProcessModelFactory.make(space: space, diego: true, ports: [8080, 9090]) }
-              let!(:route_mapping1) { RouteMappingModel.make(app: process.app, route: route_with_service, app_port: 8080) }
-              let!(:route_mapping2) { RouteMappingModel.make(app: process.app, route: route_with_service, app_port: 9090) }
+              let!(:route_mapping1) { create(:route_mapping_model, app: process.app, route: route_with_service, app_port: 8080) }
+              let!(:route_mapping2) { create(:route_mapping_model, app: process.app, route: route_with_service, app_port: 9090) }
 
               it 'returns the app port in routing info' do
                 expected_http = [
@@ -180,8 +179,8 @@ module VCAP::CloudController
 
             context 'with multiple route mapping to different route with same app port' do
               let(:process) { ProcessModelFactory.make(space: space, diego: true, ports: [9090]) }
-              let!(:route_mapping1) { RouteMappingModel.make(app: process.app, route: route_without_service, app_port: 9090) }
-              let!(:route_mapping2) { RouteMappingModel.make(app: process.app, route: route_with_service, app_port: 9090) }
+              let!(:route_mapping1) { create(:route_mapping_model, app: process.app, route: route_without_service, app_port: 9090) }
+              let!(:route_mapping2) { create(:route_mapping_model, app: process.app, route: route_with_service, app_port: 9090) }
 
               it 'returns the app port in routing info' do
                 expected_http = [
@@ -196,8 +195,8 @@ module VCAP::CloudController
 
             context 'with multiple route mapping to different route with different app ports' do
               let(:process) { ProcessModelFactory.make(space: space, diego: true, ports: [8080, 9090]) }
-              let!(:route_mapping1) { RouteMappingModel.make(app: process.app, route: route_without_service, app_port: 8080) }
-              let!(:route_mapping2) { RouteMappingModel.make(app: process.app, route: route_with_service, app_port: 9090) }
+              let!(:route_mapping1) { create(:route_mapping_model, app: process.app, route: route_without_service, app_port: 8080) }
+              let!(:route_mapping2) { create(:route_mapping_model, app: process.app, route: route_with_service, app_port: 9090) }
 
               it 'returns the app port in routing info' do
                 expected_http = [
@@ -212,8 +211,8 @@ module VCAP::CloudController
             context 'with multiple route mapping to the same route with different apps' do
               let(:process) { ProcessModelFactory.make(space: space, diego: true) }
               let(:process2) { ProcessModelFactory.make(space: space, diego: true) }
-              let!(:route_mapping1) { RouteMappingModel.make(app: process.app, route: route_without_service) }
-              let!(:route_mapping2) { RouteMappingModel.make(app: process2.app, route: route_without_service) }
+              let!(:route_mapping1) { create(:route_mapping_model, app: process.app, route: route_without_service) }
+              let!(:route_mapping2) { create(:route_mapping_model, app: process2.app, route: route_without_service) }
 
               it 'returns only one route without duplications' do
                 expected_http = { 'hostname' => route_without_service.uri, 'port' => 8080, 'protocol' => 'http1', 'options' => {} }
@@ -225,9 +224,9 @@ module VCAP::CloudController
 
             context 'when using a router group' do
               let(:router_group_type) { 'http' }
-              let(:domain) { SharedDomain.make(name: 'httpdomain.com', router_group_guid: router_group_guid) }
-              let(:http_route) { Route.make(domain: domain, space: space, port: 8080) }
-              let!(:route_mapping) { RouteMappingModel.make(app: process.app, route: http_route) }
+              let(:domain) { create(:shared_domain, name: 'httpdomain.com', router_group_guid: router_group_guid) }
+              let(:http_route) { create(:route, domain: domain, space: space, port: 8080) }
+              let!(:route_mapping) { create(:route_mapping_model, app: process.app, route: http_route) }
 
               it 'returns the router group guid in the http routing info' do
                 expect(ri.keys).to contain_exactly('http_routes', 'internal_routes')
@@ -240,11 +239,11 @@ module VCAP::CloudController
             end
 
             context 'when internal routes exist' do
-              let(:shared_internal_domain) { SharedDomain.make(name: 'apps.internal', internal: true) }
-              let!(:internal_route) { Route.make(host: 'myroute', domain: shared_internal_domain) }
+              let(:shared_internal_domain) { create(:shared_domain, name: 'apps.internal', internal: true) }
+              let!(:internal_route) { create(:route, host: 'myroute', domain: shared_internal_domain) }
 
               before do
-                RouteMappingModel.make(app: process.app, route: internal_route, process_type: process.type)
+                create(:route_mapping_model, app: process.app, route: internal_route, process_type: process.type)
               end
 
               it 'does not include the internal routes' do
@@ -254,14 +253,13 @@ module VCAP::CloudController
             context 'when the route domain has enforce_route_policies enabled' do
               let(:valid_uuid) { '11111111-2222-3333-4444-555555555555' }
               let(:enforce_domain) do
-                PrivateDomain.make(
-                  name: 'mtls.example.com',
-                  owning_organization: org,
-                  enforce_route_policies: true,
-                  route_policies_scope: 'space'
-                )
+                create(:private_domain,
+                       name: 'mtls.example.com',
+                       owning_organization: org,
+                       enforce_route_policies: true,
+                       route_policies_scope: 'space')
               end
-              let(:mtls_route) { Route.make(host: 'myapp', domain: enforce_domain, space: space) }
+              let(:mtls_route) { create(:route, host: 'myapp', domain: enforce_domain, space: space) }
               let!(:access_rule1) do
                 RoutePolicy.create(
                   guid: SecureRandom.uuid,
@@ -278,7 +276,7 @@ module VCAP::CloudController
               end
 
               before do
-                RouteMappingModel.make(app: process.app, route: mtls_route, process_type: process.type)
+                create(:route_mapping_model, app: process.app, route: mtls_route, process_type: process.type)
               end
 
               it 'injects access_scope and access_rules into route options' do
@@ -309,12 +307,12 @@ module VCAP::CloudController
           end
 
           context 'tcp routes' do
-            let!(:domain) { SharedDomain.make(name: 'tcpdomain.com', router_group_guid: 'router-group-guid-1') }
+            let!(:domain) { create(:shared_domain, name: 'tcpdomain.com', router_group_guid: 'router-group-guid-1') }
             let(:process) { ProcessModelFactory.make(space: space, diego: true, ports: [9090]) }
-            let(:tcp_route) { Route.make(domain: domain, space: space, port: 52_000) }
+            let(:tcp_route) { create(:route, domain: domain, space: space, port: 52_000) }
 
             context 'with only one app port mapped to route' do
-              let!(:route_mapping) { RouteMappingModel.make(app: process.app, route: tcp_route, app_port: 9090) }
+              let!(:route_mapping) { create(:route_mapping_model, app: process.app, route: tcp_route, app_port: 9090) }
 
               it 'returns the app port in routing info' do
                 expected_tcp = [
@@ -328,8 +326,8 @@ module VCAP::CloudController
 
             context 'with multiple app ports Îmapped to same route' do
               let(:process) { ProcessModelFactory.make(space: space, diego: true, ports: [9090, 5555]) }
-              let!(:route_mapping_1) { RouteMappingModel.make(app: process.app, route: tcp_route, app_port: 9090) }
-              let!(:route_mapping_2) { RouteMappingModel.make(app: process.app, route: tcp_route, app_port: 5555) }
+              let!(:route_mapping_1) { create(:route_mapping_model, app: process.app, route: tcp_route, app_port: 9090) }
+              let!(:route_mapping_2) { create(:route_mapping_model, app: process.app, route: tcp_route, app_port: 5555) }
 
               it 'returns the app ports in routing info' do
                 expected_tcp = [
@@ -343,10 +341,10 @@ module VCAP::CloudController
             end
 
             context 'with same app port mapped to different routes' do
-              let(:tcp_route_1) { Route.make(domain: domain, space: space, port: 52_000) }
-              let(:tcp_route_2) { Route.make(domain: domain, space: space, port: 52_001) }
-              let!(:route_mapping_1) { RouteMappingModel.make(app: process.app, route: tcp_route_1, app_port: 9090) }
-              let!(:route_mapping_2) { RouteMappingModel.make(app: process.app, route: tcp_route_2, app_port: 9090) }
+              let(:tcp_route_1) { create(:route, domain: domain, space: space, port: 52_000) }
+              let(:tcp_route_2) { create(:route, domain: domain, space: space, port: 52_001) }
+              let!(:route_mapping_1) { create(:route_mapping_model, app: process.app, route: tcp_route_1, app_port: 9090) }
+              let!(:route_mapping_2) { create(:route_mapping_model, app: process.app, route: tcp_route_2, app_port: 9090) }
 
               it 'returns the app ports in routing info' do
                 expected_routes = [
@@ -361,10 +359,10 @@ module VCAP::CloudController
 
             context 'with different app ports mapped to different routes' do
               let(:process) { ProcessModelFactory.make(space: space, diego: true, ports: [9090, 5555]) }
-              let(:tcp_route_1) { Route.make(domain: domain, space: space, port: 52_000) }
-              let(:tcp_route_2) { Route.make(domain: domain, space: space, port: 52_001) }
-              let!(:route_mapping_1) { RouteMappingModel.make(app: process.app, route: tcp_route_1, app_port: 9090) }
-              let!(:route_mapping_2) { RouteMappingModel.make(app: process.app, route: tcp_route_2, app_port: 5555) }
+              let(:tcp_route_1) { create(:route, domain: domain, space: space, port: 52_000) }
+              let(:tcp_route_2) { create(:route, domain: domain, space: space, port: 52_001) }
+              let!(:route_mapping_1) { create(:route_mapping_model, app: process.app, route: tcp_route_1, app_port: 9090) }
+              let!(:route_mapping_2) { create(:route_mapping_model, app: process.app, route: tcp_route_2, app_port: 5555) }
 
               it 'returns the multiple route mappings in routing info' do
                 expected_routes = [
@@ -380,8 +378,8 @@ module VCAP::CloudController
             context 'with multiple route mappings to the same route with different apps' do
               let(:process) { ProcessModelFactory.make(space: space, diego: true) }
               let(:process2) { ProcessModelFactory.make(space: space, diego: true) }
-              let!(:route_mapping1) { RouteMappingModel.make(app: process.app, route: tcp_route, app_port: 9090) }
-              let!(:route_mapping2) { RouteMappingModel.make(app: process2.app, route: tcp_route, app_port: 9090) }
+              let!(:route_mapping1) { create(:route_mapping_model, app: process.app, route: tcp_route, app_port: 9090) }
+              let!(:route_mapping2) { create(:route_mapping_model, app: process2.app, route: tcp_route, app_port: 9090) }
 
               it 'returns only one route without duplications' do
                 expected_route = { 'router_group_guid' => domain.router_group_guid, 'external_port' => tcp_route.port, 'container_port' => 9090 }
@@ -393,12 +391,12 @@ module VCAP::CloudController
           end
 
           context 'internal routes' do
-            let(:shared_internal_domain) { SharedDomain.make(name: 'apps.internal', internal: true) }
+            let(:shared_internal_domain) { create(:shared_domain, name: 'apps.internal', internal: true) }
 
-            let!(:internal_route) { Route.make(host: 'myroute', domain: shared_internal_domain) }
+            let!(:internal_route) { create(:route, host: 'myroute', domain: shared_internal_domain) }
 
             before do
-              RouteMappingModel.make(app: process.app, route: internal_route, process_type: process.type)
+              create(:route_mapping_model, app: process.app, route: internal_route, process_type: process.type)
             end
 
             it 'returns multiple internal route hostnames' do
@@ -418,15 +416,15 @@ module VCAP::CloudController
           context 'with both http and tcp routes' do
             let(:process) { ProcessModelFactory.make(space: space, diego: true, ports: [8080, 9090, 5555]) }
 
-            let(:http_domain) { SharedDomain.make(name: 'httpdomain.com', router_group_guid: router_group_guid_1) }
-            let(:http_route) { Route.make(domain: domain, space: space, port: 8080) }
+            let(:http_domain) { create(:shared_domain, name: 'httpdomain.com', router_group_guid: router_group_guid_1) }
+            let(:http_route) { create(:route, domain: domain, space: space, port: 8080) }
 
-            let(:tcp_domain) { SharedDomain.make(name: 'tcpdomain.com', router_group_guid: router_group_guid_2) }
-            let(:tcp_route) { Route.make(domain: tcp_domain, space: space, port: 52_000) }
+            let(:tcp_domain) { create(:shared_domain, name: 'tcpdomain.com', router_group_guid: router_group_guid_2) }
+            let(:tcp_route) { create(:route, domain: tcp_domain, space: space, port: 52_000) }
 
-            let!(:route_mapping_1) { RouteMappingModel.make(app: process.app, route: http_route, app_port: 8080) }
-            let!(:route_mapping_2) { RouteMappingModel.make(app: process.app, route: http_route, app_port: 9090) }
-            let!(:tcp_route_mapping) { RouteMappingModel.make(app: process.app, route: tcp_route, app_port: 5555) }
+            let!(:route_mapping_1) { create(:route_mapping_model, app: process.app, route: http_route, app_port: 8080) }
+            let!(:route_mapping_2) { create(:route_mapping_model, app: process.app, route: http_route, app_port: 9090) }
+            let!(:tcp_route_mapping) { create(:route_mapping_model, app: process.app, route: tcp_route, app_port: 5555) }
 
             let(:router_group_guid_1) { 'router-group-guid-1' }
             let(:router_group_guid_2) { 'router-group-guid-2' }

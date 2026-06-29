@@ -3,8 +3,8 @@ require 'presenters/v3/space_usage_summary_presenter'
 
 module VCAP::CloudController::Presenters::V3
   RSpec.describe SpaceUsageSummaryPresenter do
-    let(:org) { VCAP::CloudController::Organization.make }
-    let(:space) { VCAP::CloudController::Space.make(organization: org) }
+    let(:org) { create(:organization) }
+    let(:space) { create(:space, organization: org) }
 
     context 'empty space' do
       describe '#to_hash' do
@@ -33,18 +33,18 @@ module VCAP::CloudController::Presenters::V3
         allow(CloudController::DependencyLocator).to receive(:instance).and_return(double(:api_client, routing_api_client:))
       end
 
-      let(:app_model) { VCAP::CloudController::AppModel.make(name: 'App Model', space: space) }
-      let!(:process) { VCAP::CloudController::ProcessModel.make(:process, state: VCAP::CloudController::ProcessModel::STARTED, memory: 512, app: app_model) }
-      let!(:task) { VCAP::CloudController::TaskModel.make(app: app_model, state: VCAP::CloudController::TaskModel::RUNNING_STATE, memory_in_mb: 512) }
-      let(:shared_domain) { VCAP::CloudController::SharedDomain.make(router_group_guid: '123') }
-      let!(:private_domain) { VCAP::CloudController::PrivateDomain.make(owning_organization: org) }
-      let!(:route) { VCAP::CloudController::Route.make(host: '', domain: shared_domain, space: space, port: 4444) }
-      let(:broker) { VCAP::CloudController::ServiceBroker.make }
-      let(:service) { VCAP::CloudController::Service.make(service_broker: broker) }
-      let(:service_plan) { VCAP::CloudController::ServicePlan.make(service: service, public: true) }
-      let!(:user_provided_service_instance) { VCAP::CloudController::UserProvidedServiceInstance.make(space:) }
-      let(:managed_service_instance) { VCAP::CloudController::ManagedServiceInstance.make(space:, service_plan:) }
-      let!(:service_key) { VCAP::CloudController::ServiceKey.make(service_instance: managed_service_instance) }
+      let(:app_model) { create(:app_model, name: 'App Model', space: space) }
+      let!(:process) { create(:process_model, :process, state: VCAP::CloudController::ProcessModel::STARTED, memory: 512, app: app_model) }
+      let!(:task) { create(:task_model, app: app_model, state: VCAP::CloudController::TaskModel::RUNNING_STATE, memory_in_mb: 512) }
+      let(:shared_domain) { create(:shared_domain, router_group_guid: '123') }
+      let!(:private_domain) { create(:private_domain, owning_organization: org) }
+      let!(:route) { create(:route, host: '', domain: shared_domain, space: space, port: 4444) }
+      let(:broker) { create(:service_broker) }
+      let(:service) { create(:service, service_broker: broker) }
+      let(:service_plan) { create(:service_plan, service: service, public: true) }
+      let!(:user_provided_service_instance) { create(:user_provided_service_instance, space:) }
+      let(:managed_service_instance) { create(:managed_service_instance, space:, service_plan:) }
+      let!(:service_key) { create(:service_key, service_instance: managed_service_instance) }
 
       describe '#to_hash' do
         let(:result) { SpaceUsageSummaryPresenter.new(space).to_hash }

@@ -4,13 +4,13 @@ require 'fetchers/space_user_roles_fetcher'
 module VCAP::CloudController
   RSpec.describe SpaceUserRolesFetcher do
     describe '#fetch' do
-      let(:org) { Organization.make }
-      let(:space) { Space.make(organization: org) }
-      let(:everything_user) { User.make }
-      let(:manager) { User.make }
-      let(:auditor) { User.make }
-      let(:developer) { User.make }
-      let(:not_a_user) { User.make }
+      let(:org) { create(:organization) }
+      let(:space) { create(:space, organization: org) }
+      let(:everything_user) { create(:user) }
+      let(:manager) { create(:user) }
+      let(:auditor) { create(:user) }
+      let(:developer) { create(:user) }
+      let(:not_a_user) { create(:user) }
 
       before do
         org.add_user(everything_user)

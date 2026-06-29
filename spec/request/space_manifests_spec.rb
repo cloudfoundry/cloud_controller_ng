@@ -2,24 +2,24 @@ require 'spec_helper'
 require 'request_spec_shared_examples'
 
 RSpec.describe 'Space Manifests' do
-  let(:user) { VCAP::CloudController::User.make }
+  let(:user) { create(:user) }
   let(:user_header) { headers_for(user, email: Sham.email, user_name: 'some-username') }
-  let(:space) { VCAP::CloudController::Space.make }
-  let(:shared_domain) { VCAP::CloudController::SharedDomain.make }
-  let(:route) { VCAP::CloudController::Route.make(domain: shared_domain, space: space, host: 'a_host') }
+  let(:space) { create(:space) }
+  let(:shared_domain) { create(:shared_domain) }
+  let(:route) { create(:route, domain: shared_domain, space: space, host: 'a_host') }
   let(:second_route) do
-    VCAP::CloudController::Route.make(domain: shared_domain, space: space, path: '/path', host: 'b_host')
+    create(:route, domain: shared_domain, space: space, path: '/path', host: 'b_host')
   end
 
   describe 'POST /v3/spaces/:guid/actions/apply_manifest' do
-    let(:buildpack) { VCAP::CloudController::Buildpack.make }
-    let(:service_instance_1) { VCAP::CloudController::ManagedServiceInstance.make(space:) }
-    let(:service_instance_2) { VCAP::CloudController::ManagedServiceInstance.make(space:) }
+    let(:buildpack) { create(:buildpack) }
+    let(:service_instance_1) { create(:managed_service_instance, space:) }
+    let(:service_instance_2) { create(:managed_service_instance, space:) }
     let(:binding_name) { Sham.name }
-    let(:app1_model) { VCAP::CloudController::AppModel.make(name: 'Tryggvi', space: space) }
-    let!(:process1) { VCAP::CloudController::ProcessModel.make(app: app1_model) }
-    let(:app2_model) { VCAP::CloudController::AppModel.make(name: 'Sigurlaug', space: space) }
-    let!(:process2) { VCAP::CloudController::ProcessModel.make(app: app2_model) }
+    let(:app1_model) { create(:app_model, name: 'Tryggvi', space: space) }
+    let!(:process1) { create(:process_model, app: app1_model) }
+    let(:app2_model) { create(:app_model, name: 'Sigurlaug', space: space) }
+    let!(:process2) { create(:process_model, app: app2_model) }
     let(:yml_manifest) do
       {
         'applications' => [
@@ -221,7 +221,7 @@ RSpec.describe 'Space Manifests' do
     context 'when the manifest contains binary-encoded URL(s) for the buildpack(s)' do
       context 'and it contains non-valid data' do
         context 'in the buildpacks section' do
-          let(:app1_model) { VCAP::CloudController::AppModel.make(space:) }
+          let(:app1_model) { create(:app_model, space:) }
           let(:yml_manifest_with_binary_invalid_buildpacks) do
             "---
             applications:
@@ -240,7 +240,7 @@ RSpec.describe 'Space Manifests' do
         end
 
         context 'in the buildpack part' do
-          let(:app1_model) { VCAP::CloudController::AppModel.make(space:) }
+          let(:app1_model) { create(:app_model, space:) }
           let(:yml_manifest_with_binary_invalid_buildpack) do
             "---
             applications:
@@ -258,7 +258,7 @@ RSpec.describe 'Space Manifests' do
         end
 
         context 'mixed with valid data for the buildpacks' do
-          let(:app1_model) { VCAP::CloudController::AppModel.make(space:) }
+          let(:app1_model) { create(:app_model, space:) }
           let(:yml_manifest_with_binary_buildpacks) do
             "---
             applications:
@@ -281,7 +281,7 @@ RSpec.describe 'Space Manifests' do
 
       context 'and it contains valid data' do
         context 'for the buildpacks' do
-          let(:app1_model) { VCAP::CloudController::AppModel.make(space:) }
+          let(:app1_model) { create(:app_model, space:) }
           let(:yml_manifest_with_binary_valid_buildpacks) do
             "---
             applications:
@@ -310,7 +310,7 @@ RSpec.describe 'Space Manifests' do
         end
 
         context 'for single buildpack' do
-          let(:app1_model) { VCAP::CloudController::AppModel.make(space:) }
+          let(:app1_model) { create(:app_model, space:) }
           let(:yml_manifest_with_binary_valid_buildpack) do
             "---
             applications:
@@ -445,8 +445,8 @@ RSpec.describe 'Space Manifests' do
     end
 
     context 'when there is an existing app with Docker lifecycle-type' do
-      let!(:docker_route) { VCAP::CloudController::Route.make(domain: shared_domain, space: space) }
-      let!(:docker_app) { VCAP::CloudController::AppModel.make(:docker, name: 'docker-app', space: space) }
+      let!(:docker_route) { create(:route, domain: shared_domain, space: space) }
+      let!(:docker_app) { create(:app_model, :docker, name: 'docker-app', space: space) }
       let!(:yml_manifest) do
         {
           'applications' => [
@@ -480,7 +480,7 @@ RSpec.describe 'Space Manifests' do
     end
 
     context 'when the app name is not a valid host name and the default-route flag is set to true' do
-      let(:app1_model) { VCAP::CloudController::AppModel.make(name: 'a' * 64, space: space) }
+      let(:app1_model) { create(:app_model, name: 'a' * 64, space: space) }
       let(:yml_manifest) do
         {
           'applications' => [
@@ -606,7 +606,7 @@ RSpec.describe 'Space Manifests' do
       before do
         app1_model.web_processes.first.update(state: VCAP::CloudController::ProcessModel::STARTED, instances: 4)
         space.update(space_quota_definition:
-                       VCAP::CloudController::SpaceQuotaDefinition.make(organization: space.organization, log_rate_limit: 0))
+                       create(:space_quota_definition, organization: space.organization, log_rate_limit: 0))
       end
 
       it 'successfully applies the manifest' do
@@ -960,10 +960,10 @@ Cannot use loadbalancing value 'unsupported-lb-algorithm' for Route 'https://#{r
   end
 
   describe 'POST /v3/spaces/:guid/manifest_diff' do
-    let(:app1_model) { VCAP::CloudController::AppModel.make(name: 'app-1', space: space) }
-    let!(:process1) { VCAP::CloudController::ProcessModel.make(app: app1_model) }
-    let!(:process2) { VCAP::CloudController::ProcessModel.make(app: app1_model, type: 'worker', memory: 2048, disk_quota: 2048) }
-    let!(:route_mapping) { VCAP::CloudController::RouteMappingModel.make(app: app1_model, process_type: process1.type, route: route) }
+    let(:app1_model) { create(:app_model, name: 'app-1', space: space) }
+    let!(:process1) { create(:process_model, app: app1_model) }
+    let!(:process2) { create(:process_model, app: app1_model, type: 'worker', memory: 2048, disk_quota: 2048) }
+    let!(:route_mapping) { create(:route_mapping_model, app: app1_model, process_type: process1.type, route: route) }
     let!(:default_manifest) do
       {
         'applications' => [

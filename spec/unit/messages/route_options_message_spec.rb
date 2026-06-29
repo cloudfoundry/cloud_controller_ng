@@ -66,7 +66,7 @@ module VCAP::CloudController
 
       context 'when hash_based_routing feature flag is enabled' do
         before do
-          VCAP::CloudController::FeatureFlag.make(name: 'hash_based_routing', enabled: true)
+          create(:feature_flag, name: 'hash_based_routing', enabled: true)
         end
 
         describe 'loadbalancing algorithm' do

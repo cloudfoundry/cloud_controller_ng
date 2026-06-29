@@ -18,7 +18,7 @@ module VCAP::CloudController
           }
         }
       end
-      let(:package) { PackageModel.make }
+      let(:package) { create(:package_model) }
       let(:message) { PackageUpdateMessage.new(body) }
 
       it 'updates the package metadata' do
@@ -38,7 +38,7 @@ module VCAP::CloudController
           password: 'It is a secret'
         }
       end
-      let(:package) { PackageModel.make(type: 'docker', docker_image: 'image-magick.com') }
+      let(:package) { create(:package_model, type: 'docker', docker_image: 'image-magick.com') }
       let(:message) { PackageUpdateMessage.new(body) }
 
       it "updates the package's docker credentials"  do
@@ -57,7 +57,7 @@ module VCAP::CloudController
           username: 'Walz'
         }
       end
-      let(:package) { PackageModel.make(type: 'docker', docker_image: 'image-magick.com') }
+      let(:package) { create(:package_model, type: 'docker', docker_image: 'image-magick.com') }
       let(:message) { PackageUpdateMessage.new(body) }
 
       it "updates the package's docker username" do
@@ -76,7 +76,7 @@ module VCAP::CloudController
           password: 'Absolutely secret'
         }
       end
-      let(:package) { PackageModel.make(type: 'docker', docker_image: 'image-magick.com') }
+      let(:package) { create(:package_model, type: 'docker', docker_image: 'image-magick.com') }
       let(:message) { PackageUpdateMessage.new(body) }
 
       it "updates the package's docker password" do

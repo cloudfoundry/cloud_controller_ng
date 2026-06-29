@@ -4,8 +4,8 @@ module VCAP::CloudController
   RSpec.describe ProcessMemoryCalculator do
     subject { ProcessMemoryCalculator.new(process) }
     let(:process_guid) { 'i-do-not-match-the-app-guid' }
-    let(:app_model) { AppModel.make }
-    let(:process) { ProcessModel.make(guid: process_guid, app: app_model) }
+    let(:app_model) { create(:app_model) }
+    let(:process) { create(:process_model, guid: process_guid, app: app_model) }
     let(:stopped_state) { 'STOPPED' }
     let(:started_state) { 'STARTED' }
 
@@ -22,7 +22,7 @@ module VCAP::CloudController
       end
 
       context 'when the app state is STARTED' do
-        let(:process) { ProcessModel.make(state: started_state, guid: process_guid, app: app_model) }
+        let(:process) { create(:process_model, state: started_state, guid: process_guid, app: app_model) }
 
         context 'and the app is already in the db' do
           it 'raises ApplicationMissing if the app no longer exists in the db' do

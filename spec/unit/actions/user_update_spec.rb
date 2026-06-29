@@ -39,7 +39,7 @@ module VCAP::CloudController
         }
       end
 
-      let(:user) { User.make }
+      let(:user) { create(:user) }
       let(:message) { UserUpdateMessage.new(body) }
 
       context 'when there is no current metadata' do

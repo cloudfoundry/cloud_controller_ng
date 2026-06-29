@@ -2,8 +2,8 @@ require 'spec_helper'
 require 'diego/lrp_constants'
 
 RSpec.describe 'Apps' do
-  let(:user) { VCAP::CloudController::User.make }
-  let(:space) { VCAP::CloudController::Space.make }
+  let(:user) { create(:user) }
+  let(:space) { create(:space) }
   let(:build_client) { instance_double(HTTPClient, post: nil) }
 
   before do
@@ -15,14 +15,12 @@ RSpec.describe 'Apps' do
 
   describe 'GET /v2/apps' do
     let(:shared_app_model) do
-      VCAP::CloudController::AppModel.make(
-        space: space,
-        environment_variables: { 'RAILS_ENV' => 'staging' }
-      )
+      create(:app_model,
+             space: space,
+             environment_variables: { 'RAILS_ENV' => 'staging' })
     end
     let!(:process) do
-      VCAP::CloudController::ProcessModelFactory.make(:unstaged,
-                                                      app: shared_app_model,
+      VCAP::CloudController::ProcessModelFactory.make(app: shared_app_model,
                                                       command: 'hello_world',
                                                       health_check_type: 'http',
                                                       health_check_http_endpoint: '/health',
@@ -112,25 +110,21 @@ RSpec.describe 'Apps' do
 
       let(:one_day_from_now) { 1.day.from_now }
       let!(:newer_web_process) do
-        VCAP::CloudController::ProcessModel.make(
-          app: shared_app_model,
-          created_at: one_day_from_now,
-          guid: 'newer_web_process-for-same-app'
-        )
+        create(:process_model,
+               app: shared_app_model,
+               created_at: one_day_from_now,
+               guid: 'newer_web_process-for-same-app')
       end
       let!(:newer_web_process_same_time) do
-        VCAP::CloudController::ProcessModel.make(
-          app: shared_app_model,
-          created_at: one_day_from_now,
-          guid: 'newer_web_process-for-same-app-same-time'
-        )
+        create(:process_model,
+               app: shared_app_model,
+               created_at: one_day_from_now,
+               guid: 'newer_web_process-for-same-app-same-time')
       end
       let!(:web_process_for_different_app) do
-        VCAP::CloudController::ProcessModelFactory.make(:unstaged,
-                                                        app: VCAP::CloudController::AppModel.make(
-                                                          space: space,
-                                                          environment_variables: { 'RAILS_ENV' => 'staging' }
-                                                        ),
+        VCAP::CloudController::ProcessModelFactory.make(app: create(:app_model,
+                                                                    space: space,
+                                                                    environment_variables: { 'RAILS_ENV' => 'staging' }),
                                                         command: 'hello_world',
                                                         health_check_type: 'http',
                                                         health_check_http_endpoint: '/health',
@@ -149,11 +143,9 @@ RSpec.describe 'Apps' do
 
       context 'pagination' do
         let!(:another_new_process) do
-          VCAP::CloudController::ProcessModelFactory.make(:unstaged,
-                                                          app: VCAP::CloudController::AppModel.make(
-                                                            space: space,
-                                                            environment_variables: { 'RAILS_ENV' => 'staging' }
-                                                          ),
+          VCAP::CloudController::ProcessModelFactory.make(app: create(:app_model,
+                                                                      space: space,
+                                                                      environment_variables: { 'RAILS_ENV' => 'staging' }),
                                                           guid: 'another_new_process-guid',
                                                           command: 'hello_world',
                                                           health_check_type: 'http',
@@ -177,11 +169,10 @@ RSpec.describe 'Apps' do
 
     context 'when there is one web and a non-web process' do
       let!(:worker_process) do
-        VCAP::CloudController::ProcessModel.make(
-          app: shared_app_model,
-          created_at: 2.days.ago,
-          type: 'worker'
-        )
+        create(:process_model,
+               app: shared_app_model,
+               created_at: 2.days.ago,
+               type: 'worker')
       end
 
       it 'does not filter out the web process even if it is older than the worker process' do
@@ -193,9 +184,9 @@ RSpec.describe 'Apps' do
 
     context 'with inline-relations-depth' do
       it 'includes related records' do
-        route = VCAP::CloudController::Route.make(space:)
-        VCAP::CloudController::RouteMappingModel.make(app: process.app, route: route, process_type: process.type)
-        service_binding = VCAP::CloudController::ServiceBinding.make(app: process.app, service_instance: VCAP::CloudController::ManagedServiceInstance.make(space:))
+        route = create(:route, space:)
+        create(:route_mapping_model, app: process.app, route: route, process_type: process.type)
+        service_binding = create(:service_binding, app: process.app, service_instance: create(:managed_service_instance, space:))
 
         get '/v2/apps?inline-relations-depth=1', nil, headers_for(user)
         expect(last_response.status).to eq(200)
@@ -416,11 +407,9 @@ RSpec.describe 'Apps' do
 
   describe 'GET /v2/apps/:guid' do
     let!(:process) do
-      VCAP::CloudController::ProcessModelFactory.make(
-        space: space,
-        name: 'app-name',
-        command: 'app-command'
-      )
+      VCAP::CloudController::ProcessModelFactory.make(space: space,
+                                                      name: 'app-name',
+                                                      command: 'app-command')
     end
 
     it 'displays the app' do
@@ -492,7 +481,7 @@ RSpec.describe 'Apps' do
 
   describe 'POST /v2/apps' do
     it 'creates an app' do
-      stack       = VCAP::CloudController::Stack.make
+      stack       = create(:stack)
       post_params = Oj.dump({
                               name: 'maria',
                               space_guid: space.guid,
@@ -590,7 +579,7 @@ RSpec.describe 'Apps' do
       end
 
       let(:post_params) do
-        stack = VCAP::CloudController::Stack.make
+        stack = create(:stack)
         {
           name: 'maria',
           space_guid: space.guid,
@@ -692,7 +681,7 @@ RSpec.describe 'Apps' do
 
     describe 'stack state validation' do
       context 'when stack is DISABLED' do
-        let(:disabled_stack) { VCAP::CloudController::Stack.make(name: 'disabled-stack', state: 'DISABLED') }
+        let(:disabled_stack) { create(:stack, name: 'disabled-stack', state: 'DISABLED') }
 
         it 'returns 422 with error message' do
           post_params = Oj.dump({
@@ -710,7 +699,7 @@ RSpec.describe 'Apps' do
       end
 
       context 'when stack is RESTRICTED' do
-        let(:restricted_stack) { VCAP::CloudController::Stack.make(name: 'restricted-stack', state: 'RESTRICTED') }
+        let(:restricted_stack) { create(:stack, name: 'restricted-stack', state: 'RESTRICTED') }
 
         it 'returns 422 with error message for new apps' do
           post_params = Oj.dump({
@@ -728,7 +717,7 @@ RSpec.describe 'Apps' do
       end
 
       context 'when stack is DEPRECATED' do
-        let(:deprecated_stack) { VCAP::CloudController::Stack.make(name: 'deprecated-stack', state: 'DEPRECATED') }
+        let(:deprecated_stack) { create(:stack, name: 'deprecated-stack', state: 'DEPRECATED') }
 
         it 'creates the app with warnings in X-Cf-Warnings header' do
           post_params = Oj.dump({
@@ -747,7 +736,7 @@ RSpec.describe 'Apps' do
       end
 
       context 'when stack is ACTIVE' do
-        let(:active_stack) { VCAP::CloudController::Stack.make(name: 'active-stack', state: 'ACTIVE') }
+        let(:active_stack) { create(:stack, name: 'active-stack', state: 'ACTIVE') }
 
         it 'creates the app without warnings' do
           post_params = Oj.dump({
@@ -767,12 +756,10 @@ RSpec.describe 'Apps' do
 
   describe 'PUT /v2/apps/:guid' do
     let!(:process) do
-      VCAP::CloudController::ProcessModelFactory.make(
-        space: space,
-        name: 'mario',
-        environment_json: { 'RAILS_ENV' => 'staging' },
-        command: 'hello_world'
-      )
+      VCAP::CloudController::ProcessModelFactory.make(space: space,
+                                                      name: 'mario',
+                                                      environment_json: { 'RAILS_ENV' => 'staging' },
+                                                      command: 'hello_world')
     end
     let(:update_params) do
       Oj.dump({
@@ -1006,12 +993,12 @@ RSpec.describe 'Apps' do
       before do
         allow_any_instance_of(VCAP::CloudController::Stagers).to receive(:validate_process)
         allow_any_instance_of(VCAP::CloudController::Stagers).to receive(:stager_for_build).and_return(stager)
-        VCAP::CloudController::Buildpack.make
-        VCAP::CloudController::PackageModel.make(app: process.app, state: VCAP::CloudController::PackageModel::READY_STATE)
+        create(:buildpack)
+        create(:package_model, app: process.app, state: VCAP::CloudController::PackageModel::READY_STATE)
       end
 
       context 'when stack is DISABLED' do
-        let(:disabled_stack) { VCAP::CloudController::Stack.make(name: 'cflinuxfs2', state: 'DISABLED', description: 'Migrate to cflinuxfs4') }
+        let(:disabled_stack) { create(:stack, name: 'cflinuxfs2', state: 'DISABLED', description: 'Migrate to cflinuxfs4') }
         let(:update_params) { Oj.dump({ state: 'STARTED' }) }
 
         before do
@@ -1031,7 +1018,7 @@ RSpec.describe 'Apps' do
       end
 
       context 'when stack is DEPRECATED' do
-        let(:deprecated_stack) { VCAP::CloudController::Stack.make(name: 'cflinuxfs3', state: 'DEPRECATED', description: 'EOL Dec 2025') }
+        let(:deprecated_stack) { create(:stack, name: 'cflinuxfs3', state: 'DEPRECATED', description: 'EOL Dec 2025') }
         let(:update_params) { Oj.dump({ state: 'STARTED' }) }
 
         before do
@@ -1054,18 +1041,16 @@ RSpec.describe 'Apps' do
 
     context 'when process memory is being decreased and the new memory allocation is lower than memory of associated sidecars' do
       let!(:process) do
-        VCAP::CloudController::ProcessModelFactory.make(
-          space: space,
-          name: 'mario',
-          environment_json: { 'RAILS_ENV' => 'staging' },
-          command: 'hello_world',
-          memory: 400
-        )
+        VCAP::CloudController::ProcessModelFactory.make(space: space,
+                                                        name: 'mario',
+                                                        environment_json: { 'RAILS_ENV' => 'staging' },
+                                                        command: 'hello_world',
+                                                        memory: 400)
       end
-      let(:sidecar1) { VCAP::CloudController::SidecarModel.make(app: process.app, memory: 20) }
+      let(:sidecar1) { create(:sidecar_model, app: process.app, memory: 20) }
 
       before do
-        VCAP::CloudController::SidecarProcessTypeModel.make(sidecar: sidecar1, type: process.type)
+        create(:sidecar_process_type_model, sidecar: sidecar1, type: process.type)
       end
 
       it 'throws an error' do
@@ -1082,16 +1067,14 @@ RSpec.describe 'Apps' do
     end
 
     describe 'docker apps' do
-      let(:app_model) { VCAP::CloudController::AppModel.make(:docker, name: 'mario', space: space, environment_variables: { 'RAILS_ENV' => 'staging' }) }
+      let(:app_model) { create(:app_model, :docker, name: 'mario', space: space, environment_variables: { 'RAILS_ENV' => 'staging' }) }
       let!(:process) do
-        VCAP::CloudController::ProcessModelFactory.make(
-          app: app_model,
-          docker_image: 'cloudfoundry/diego-docker-app:latest'
-        )
+        VCAP::CloudController::ProcessModelFactory.make(app: app_model,
+                                                        docker_image: 'cloudfoundry/diego-docker-app:latest')
       end
 
       before do
-        VCAP::CloudController::FeatureFlag.make(name: 'diego_docker', enabled: true)
+        create(:feature_flag, name: 'diego_docker', enabled: true)
         allow_any_instance_of(VCAP::CloudController::V2::AppStage).to receive(:stage).and_return(nil)
         process.latest_package.update(docker_username: 'bob', docker_password: 'password')
       end
@@ -1280,7 +1263,7 @@ RSpec.describe 'Apps' do
     end
 
     describe 'docker apps' do
-      let(:app_model) { VCAP::CloudController::AppModel.make(:docker, space:) }
+      let(:app_model) { create(:app_model, :docker, space:) }
       let!(:process) { VCAP::CloudController::ProcessModelFactory.make(app: app_model, docker_image: 'cloudfoundry/diego-docker-app:latest') }
 
       it 'deletes the specified app' do
@@ -1357,29 +1340,25 @@ RSpec.describe 'Apps' do
 
   describe 'GET /v2/apps/:guid/env' do
     let(:process) do
-      VCAP::CloudController::ProcessModelFactory.make(
-        space: space,
-        name: 'potato',
-        detected_buildpack: 'buildpack-name',
-        environment_json: { env_var: 'env_val' },
-        memory: 1024,
-        disk_quota: 1024
-      )
+      VCAP::CloudController::ProcessModelFactory.make(space: space,
+                                                      name: 'potato',
+                                                      detected_buildpack: 'buildpack-name',
+                                                      environment_json: { env_var: 'env_val' },
+                                                      memory: 1024,
+                                                      disk_quota: 1024)
     end
 
     let!(:revision) do
-      VCAP::CloudController::RevisionModel.make(
-        app: process.app,
-        environment_variables: {}
-      )
+      create(:revision_model,
+             app: process.app,
+             environment_variables: {})
     end
 
     before do
-      VCAP::CloudController::RouteMappingModel.make(
-        app: process.app,
-        process_type: process.type,
-        route: VCAP::CloudController::Route.make(space: space, host: 'potato', domain: VCAP::CloudController::SharedDomain.first)
-      )
+      create(:route_mapping_model,
+             app: process.app,
+             process_type: process.type,
+             route: create(:route, space: space, host: 'potato', domain: VCAP::CloudController::SharedDomain.first))
 
       process.revision_guid = revision.guid
       process.save
@@ -1580,7 +1559,7 @@ RSpec.describe 'Apps' do
     before do
       allow_any_instance_of(VCAP::CloudController::Stagers).to receive(:validate_process)
       allow_any_instance_of(VCAP::CloudController::Stagers).to receive(:stager_for_build).and_return(stager)
-      VCAP::CloudController::Buildpack.make
+      create(:buildpack)
     end
 
     it 'restages the app' do
@@ -1664,7 +1643,7 @@ RSpec.describe 'Apps' do
         let(:process) { VCAP::CloudController::ProcessModelFactory.make(name: 'maria', space: space, docker_image: 'some-image') }
 
         before do
-          VCAP::CloudController::FeatureFlag.make(name: 'diego_docker', enabled: true, error_message: nil)
+          create(:feature_flag, name: 'diego_docker', enabled: true, error_message: nil)
         end
 
         it 'logs the required fields when the app is restaged' do
@@ -1697,11 +1676,11 @@ RSpec.describe 'Apps' do
       before do
         allow_any_instance_of(VCAP::CloudController::Stagers).to receive(:validate_process)
         allow_any_instance_of(VCAP::CloudController::Stagers).to receive(:stager_for_build).and_return(stager)
-        VCAP::CloudController::Buildpack.make
+        create(:buildpack)
       end
 
       context 'when stack is DISABLED' do
-        let(:disabled_stack) { VCAP::CloudController::Stack.make(name: 'cflinuxfs2', state: 'DISABLED', description: 'Migrate to cflinuxfs4') }
+        let(:disabled_stack) { create(:stack, name: 'cflinuxfs2', state: 'DISABLED', description: 'Migrate to cflinuxfs4') }
 
         before do
           process.app.buildpack_lifecycle_data.update(stack: disabled_stack.name)
@@ -1728,7 +1707,7 @@ RSpec.describe 'Apps' do
       end
 
       context 'when stack is RESTRICTED' do
-        let(:restricted_stack) { VCAP::CloudController::Stack.make(name: 'cflinuxfs3', state: 'RESTRICTED', description: 'No new apps') }
+        let(:restricted_stack) { create(:stack, name: 'cflinuxfs3', state: 'RESTRICTED', description: 'No new apps') }
 
         before do
           process.app.buildpack_lifecycle_data.update(stack: restricted_stack.name)
@@ -1754,7 +1733,7 @@ RSpec.describe 'Apps' do
 
         context 'for restaging existing app' do
           before do
-            VCAP::CloudController::BuildModel.make(app: process.app, state: 'STAGED')
+            create(:build_model, app: process.app, state: 'STAGED')
           end
 
           it 'allows restaging without errors' do
@@ -1772,7 +1751,7 @@ RSpec.describe 'Apps' do
       end
 
       context 'when stack is DEPRECATED' do
-        let(:deprecated_stack) { VCAP::CloudController::Stack.make(name: 'cflinuxfs3', state: 'DEPRECATED', description: 'EOL Dec 2025') }
+        let(:deprecated_stack) { create(:stack, name: 'cflinuxfs3', state: 'DEPRECATED', description: 'EOL Dec 2025') }
 
         before do
           process.app.buildpack_lifecycle_data.update(stack: deprecated_stack.name)
@@ -1805,7 +1784,7 @@ RSpec.describe 'Apps' do
       end
 
       context 'when stack is ACTIVE' do
-        let(:active_stack) { VCAP::CloudController::Stack.make(name: 'cflinuxfs5', state: 'ACTIVE') }
+        let(:active_stack) { create(:stack, name: 'cflinuxfs5', state: 'ACTIVE') }
 
         before do
           process.app.buildpack_lifecycle_data.update(stack: active_stack.name)
@@ -1938,13 +1917,12 @@ RSpec.describe 'Apps' do
 
   describe 'GET /v2/apps/:guid/service_bindings' do
     let!(:process) { VCAP::CloudController::ProcessModelFactory.make(space:) }
-    let!(:service_instance) { VCAP::CloudController::ManagedServiceInstance.make(space: process.space) }
+    let!(:service_instance) { create(:managed_service_instance, space: process.space) }
     let!(:service_binding) do
-      VCAP::CloudController::ServiceBinding.make(
-        service_instance: service_instance,
-        app: process.app,
-        credentials: { 'creds-key' => 'creds-val' }
-      )
+      create(:service_binding,
+             service_instance: service_instance,
+             app: process.app,
+             credentials: { 'creds-key' => 'creds-val' })
     end
 
     before do
@@ -2001,8 +1979,8 @@ RSpec.describe 'Apps' do
 
   describe 'DELETE /v2/apps/:guid/service_binding/:guid' do
     let!(:process) { VCAP::CloudController::ProcessModelFactory.make(space:) }
-    let!(:service_instance) { VCAP::CloudController::ManagedServiceInstance.make(space: process.space) }
-    let!(:service_binding) { VCAP::CloudController::ServiceBinding.make(service_instance: service_instance, app: process.app) }
+    let!(:service_instance) { create(:managed_service_instance, space: process.space) }
+    let!(:service_binding) { create(:service_binding, service_instance: service_instance, app: process.app) }
 
     before do
       service_instance.add_service_binding(service_binding)
@@ -2029,8 +2007,8 @@ RSpec.describe 'Apps' do
 
   describe 'GET /v2/apps/:guid/routes' do
     let!(:process) { VCAP::CloudController::ProcessModelFactory.make(space:) }
-    let!(:route) { VCAP::CloudController::Route.make(space: space, host: 'youdontknowme') }
-    let!(:route_mapping) { VCAP::CloudController::RouteMappingModel.make(app: process.app, process_type: process.type, route: route) }
+    let!(:route) { create(:route, space: space, host: 'youdontknowme') }
+    let!(:route_mapping) { create(:route_mapping_model, app: process.app, process_type: process.type, route: route) }
 
     it 'shows the routes associated with an app' do
       get "/v2/apps/#{process.guid}/routes", nil, headers_for(user)
@@ -2071,7 +2049,7 @@ RSpec.describe 'Apps' do
 
   describe 'PUT /v2/apps/:guid/routes/:route_guid' do
     let!(:process) { VCAP::CloudController::ProcessModelFactory.make(space:) }
-    let!(:route) { VCAP::CloudController::Route.make(space:) }
+    let!(:route) { create(:route, space:) }
 
     it 'associates an app and a route' do
       put "/v2/apps/#{process.guid}/routes/#{route.guid}", nil, headers_for(user)
@@ -2139,10 +2117,10 @@ RSpec.describe 'Apps' do
 
   describe 'DELETE /v2/apps/:guid/routes/:guid' do
     let!(:process) { VCAP::CloudController::ProcessModelFactory.make(space:) }
-    let!(:route1) { VCAP::CloudController::Route.make(space: space, host: 'youdontknowme') }
-    let!(:route2) { VCAP::CloudController::Route.make(space: space, host: 'andyouneverwill') }
-    let!(:route_mapping1) { VCAP::CloudController::RouteMappingModel.make(app: process.app, process_type: process.type, route: route1) }
-    let!(:route_mapping2) { VCAP::CloudController::RouteMappingModel.make(app: process.app, process_type: process.type, route: route2) }
+    let!(:route1) { create(:route, space: space, host: 'youdontknowme') }
+    let!(:route2) { create(:route, space: space, host: 'andyouneverwill') }
+    let!(:route_mapping1) { create(:route_mapping_model, app: process.app, process_type: process.type, route: route1) }
+    let!(:route_mapping2) { create(:route_mapping_model, app: process.app, process_type: process.type, route: route2) }
 
     it 'removes the associated route' do
       expect(process.routes).to include(route1)
@@ -2158,8 +2136,8 @@ RSpec.describe 'Apps' do
 
   describe 'GET /v2/apps/:guid/route_mappings' do
     let!(:process) { VCAP::CloudController::ProcessModelFactory.make(space:) }
-    let!(:route) { VCAP::CloudController::Route.make(space:) }
-    let!(:route_mapping) { VCAP::CloudController::RouteMappingModel.make(app: process.app, process_type: process.type, route: route) }
+    let!(:route) { create(:route, space:) }
+    let!(:route_mapping) { create(:route_mapping_model, app: process.app, process_type: process.type, route: route) }
 
     it 'lists associated route_mappings' do
       get "/v2/apps/#{process.guid}/route_mappings", nil, headers_for(user)

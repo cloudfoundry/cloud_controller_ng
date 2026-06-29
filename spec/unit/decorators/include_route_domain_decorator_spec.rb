@@ -4,9 +4,9 @@ require 'decorators/include_route_domain_decorator'
 module VCAP::CloudController
   RSpec.describe IncludeRouteDomainDecorator do
     subject(:decorator) { IncludeRouteDomainDecorator }
-    let(:domain1) { SharedDomain.make(name: 'z-first-domain.example.com') }
-    let(:domain2) { SharedDomain.make(name: 'a-second-domain.example.com') }
-    let(:routes) { [Route.make(domain: domain1), Route.make(domain: domain2), Route.make(domain: domain1)] }
+    let(:domain1) { create(:shared_domain, name: 'z-first-domain.example.com') }
+    let(:domain2) { create(:shared_domain, name: 'a-second-domain.example.com') }
+    let(:routes) { [create(:route, domain: domain1), create(:route, domain: domain2), create(:route, domain: domain1)] }
 
     it 'decorates the given hash with domains from routes in asciibetical order' do
       undecorated_hash = { i_am: 'tim' }

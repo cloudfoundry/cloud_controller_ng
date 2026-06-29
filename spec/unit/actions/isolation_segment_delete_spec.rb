@@ -4,7 +4,7 @@ require 'isolation_segment_assign'
 
 module VCAP::CloudController
   RSpec.describe IsolationSegmentDelete do
-    let(:isolation_segment_model) { IsolationSegmentModel.make }
+    let(:isolation_segment_model) { create(:isolation_segment_model) }
     let(:shared_isolation_segment_model) { IsolationSegmentModel.first(guid: VCAP::CloudController::IsolationSegmentModel::SHARED_ISOLATION_SEGMENT_GUID) }
     let(:assigner) { IsolationSegmentAssign.new }
 
@@ -22,7 +22,7 @@ module VCAP::CloudController
     end
 
     context 'when the segment is assigned as an orgs default' do
-      let(:org) { Organization.make }
+      let(:org) { create(:organization) }
 
       before do
         assigner.assign(isolation_segment_model, [org])
@@ -38,8 +38,8 @@ module VCAP::CloudController
     end
 
     context 'when the segment is assigned as a spaces default' do
-      let(:org) { Organization.make }
-      let(:space) { Space.make(organization: org) }
+      let(:org) { create(:organization) }
+      let(:space) { create(:space, organization: org) }
 
       before do
         assigner.assign(isolation_segment_model, [org])

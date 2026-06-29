@@ -5,10 +5,10 @@ require 'isolation_segment_unassign'
 module VCAP::CloudController
   RSpec.describe IsolationSegmentUnassign do
     let(:assigner) { IsolationSegmentAssign.new }
-    let(:isolation_segment_model) { IsolationSegmentModel.make }
-    let(:isolation_segment_model_2) { IsolationSegmentModel.make }
-    let(:org) { Organization.make }
-    let(:org2) { Organization.make }
+    let(:isolation_segment_model) { create(:isolation_segment_model) }
+    let(:isolation_segment_model_2) { create(:isolation_segment_model) }
+    let(:org) { create(:organization) }
+    let(:org2) { create(:organization) }
 
     context 'when an Isolation Segment is not assigned to any Orgs' do
       it 'is idempotent' do
@@ -43,7 +43,7 @@ module VCAP::CloudController
       end
 
       context 'and the Organization has a space assigned' do
-        let!(:space) { Space.make(organization: org) }
+        let!(:space) { create(:space, organization: org) }
 
         it 'allows the isolation segment to remove the organization' do
           subject.unassign(isolation_segment_model, org)
@@ -52,7 +52,7 @@ module VCAP::CloudController
 
         context 'and the space has an app' do
           before do
-            AppModel.make(space:)
+            create(:app_model, space:)
           end
 
           it 'removes the Organization from the Isolation Segment' do

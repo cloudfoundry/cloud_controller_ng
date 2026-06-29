@@ -5,12 +5,12 @@ module VCAP::CloudController
   RSpec.describe ProcessDelete do
     subject(:process_delete) { ProcessDelete.new(user_audit_info) }
     let(:user_audit_info) { instance_double(UserAuditInfo).as_null_object }
-    let(:space) { Space.make }
-    let(:app) { AppModel.make(space:) }
+    let(:space) { create(:space) }
+    let(:app) { create(:app_model, space:) }
 
     describe '#delete' do
       context 'when the process exists' do
-        let!(:process) { ProcessModel.make(app: app, type: 'potato') }
+        let!(:process) { create(:process_model, app: app, type: 'potato') }
 
         it 'deletes the process record' do
           expect do
@@ -28,7 +28,7 @@ module VCAP::CloudController
         end
 
         it 'deletes associated labels' do
-          label = ProcessLabelModel.make(resource_guid: process.guid, key_name: 'test1', value: 'bommel')
+          label = create(:process_label_model, resource_guid: process.guid, key_name: 'test1', value: 'bommel')
           expect do
             process_delete.delete([process])
           end.to change(ProcessLabelModel, :count).by(-1)
@@ -37,7 +37,7 @@ module VCAP::CloudController
         end
 
         it 'deletes associated annotations' do
-          annotation = ProcessAnnotationModel.make(resource_guid: process.guid, key_name: 'test1', value: 'bommel')
+          annotation = create(:process_annotation_model, resource_guid: process.guid, key_name: 'test1', value: 'bommel')
           expect do
             process_delete.delete([process])
           end.to change(ProcessAnnotationModel, :count).by(-1)
@@ -47,8 +47,8 @@ module VCAP::CloudController
       end
 
       context 'when deleting multiple' do
-        let!(:process1) { ProcessModel.make(:process, app:) }
-        let!(:process2) { ProcessModel.make(:process, app:) }
+        let!(:process1) { create(:process_model, :process, app:) }
+        let!(:process2) { create(:process_model, :process, app:) }
 
         it 'deletes the process record' do
           expect do

@@ -12,7 +12,7 @@ module VCAP::CloudController
                        enumerate: 7
     end
 
-    let(:developer) { make_developer_for_space(Space.make) }
+    let(:developer) { make_developer_for_space(create(:space)) }
 
     describe 'Query Parameters' do
       it { expect(ServicePlansController).to be_queryable_by(:active) }
@@ -60,9 +60,9 @@ module VCAP::CloudController
       include_context 'permissions'
 
       before do
-        5.times { ServicePlan.make }
-        @obj_a = ServicePlan.make
-        @obj_b = ServicePlan.make
+        create_list(:service_plan, 5)
+        @obj_a = create(:service_plan)
+        @obj_b = create(:service_plan)
       end
 
       describe 'Org Level Permissions' do
@@ -126,7 +126,7 @@ module VCAP::CloudController
     end
 
     describe 'non public service plans' do
-      let!(:private_plan) { ServicePlan.make(public: false) }
+      let!(:private_plan) { create(:service_plan, public: false) }
       let(:plan_guids) do
         decoded_response.fetch('resources').collect do |r|
           r.fetch('metadata').fetch('guid')
@@ -158,7 +158,7 @@ module VCAP::CloudController
     end
 
     describe 'GET', '/v2/service_plans/:guid' do
-      let(:service_plan) { ServicePlan.make }
+      let(:service_plan) { create(:service_plan) }
 
       it 'returns the plan' do
         set_current_user_as_admin
@@ -198,7 +198,7 @@ module VCAP::CloudController
       end
 
       context 'when the plan does not set bindable' do
-        let(:service_plan) { ServicePlan.make(bindable: nil) }
+        let(:service_plan) { create(:service_plan, bindable: nil) }
 
         it 'inherits bindable from the service' do
           set_current_user_as_admin
@@ -214,7 +214,7 @@ module VCAP::CloudController
       end
 
       context 'non-admin user' do
-        let(:user) { User.make }
+        let(:user) { create(:user) }
 
         before do
           set_current_user(user)
@@ -232,7 +232,7 @@ module VCAP::CloudController
         end
 
         context 'when the plan is inactive' do
-          let(:inactive_plan) { ServicePlan.make(:v2, active: false, public: true) }
+          let(:inactive_plan) { create(:service_plan, :v2, active: false, public: true) }
 
           it 'returns a 403' do
             get "/v2/service_plans/#{inactive_plan.guid}"
@@ -240,8 +240,8 @@ module VCAP::CloudController
           end
 
           context 'and the user has a service instance associated with that plan' do
-            let(:organization) { Organization.make }
-            let(:space) { Space.make(organization:) }
+            let(:organization) { create(:organization) }
+            let(:space) { create(:space, organization:) }
 
             before do
               space.organization.add_user(user)
@@ -250,10 +250,10 @@ module VCAP::CloudController
             end
 
             it 'returns the plan' do
-              broker = ServiceBroker.make
-              service = Service.make(service_broker: broker)
-              service_plan = ServicePlan.make(service: service, public: false, active: false)
-              ManagedServiceInstance.make(space:, service_plan:)
+              broker = create(:service_broker)
+              service = create(:service, service_broker: broker)
+              service_plan = create(:service_plan, service: service, public: false, active: false)
+              create(:managed_service_instance, space:, service_plan:)
               service_plan.reload
 
               set_current_user(user)
@@ -271,10 +271,10 @@ module VCAP::CloudController
             end
 
             it 'returns the unbindable plan' do
-              broker = ServiceBroker.make
-              service = Service.make(:v2, service_broker: broker)
-              service_plan = ServicePlan.make(:v2, service: service, public: true, active: true)
-              ManagedServiceInstance.make(:v2, space:, service_plan:)
+              broker = create(:service_broker)
+              service = create(:service, :v2, service_broker: broker)
+              service_plan = create(:service_plan, :v2, service: service, public: true, active: true)
+              create(:managed_service_instance, :v2, space:, service_plan:)
               service_plan.update(public: false)
               service_plan.reload
 
@@ -300,21 +300,21 @@ module VCAP::CloudController
         @services = {
           public:
             [
-              ServicePlan.make(:v2, active: true, public: true),
-              ServicePlan.make(:v2, active: true, public: true),
-              ServicePlan.make(:v2, active: false, public: true)
+              create(:service_plan, :v2, active: true, public: true),
+              create(:service_plan, :v2, active: true, public: true),
+              create(:service_plan, :v2, active: false, public: true)
             ],
           private: [
-            ServicePlan.make(:v2, active: true, public: false),
-            ServicePlan.make(:v2, active: false, public: false)
+            create(:service_plan, :v2, active: true, public: false),
+            create(:service_plan, :v2, active: false, public: false)
           ]
         }
       end
 
       context 'as a space developer' do
-        let(:space) { Space.make }
-        let(:user) { User.make }
-        let(:different_service_plan) { ServicePlan.make }
+        let(:space) { create(:space) }
+        let(:user) { create(:user) }
+        let(:different_service_plan) { create(:service_plan) }
 
         before do
           space.organization.add_user(user)
@@ -345,9 +345,9 @@ module VCAP::CloudController
 
         context 'with private service brokers' do
           it 'returns service plans from private brokers that are in the same space as the user' do
-            private_broker = ServiceBroker.make(space:)
-            service = Service.make(service_broker: private_broker)
-            private_broker_service_plan = ServicePlan.make(service: service, public: false)
+            private_broker = create(:service_broker, space:)
+            service = create(:service, service_broker: private_broker)
+            private_broker_service_plan = create(:service_plan, service: service, public: false)
 
             set_current_user(user)
             get '/v2/service_plans'
@@ -363,9 +363,9 @@ module VCAP::CloudController
 
         context 'when a service instance is associated with an inactive plan' do
           it 'does not list the inactive service plan' do
-            service = Service.make
-            service_plan = ServicePlan.make(service: service, public: true, active: true)
-            ManagedServiceInstance.make(service_plan:)
+            service = create(:service)
+            service_plan = create(:service_plan, service: service, public: true, active: true)
+            create(:managed_service_instance, service_plan:)
             service_plan.update(public: false)
             service_plan.reload
 
@@ -383,8 +383,8 @@ module VCAP::CloudController
       end
 
       context 'as an admin' do
-        let(:different_service) { Service.make(service_broker: ServiceBroker.make) }
-        let(:different_service_plan) { ServicePlan.make }
+        let(:different_service) { create(:service, service_broker: create(:service_broker)) }
+        let(:different_service_plan) { create(:service_plan) }
 
         before do
           set_current_user_as_admin
@@ -568,7 +568,7 @@ module VCAP::CloudController
     describe 'PUT', '/v2/service_plans/:guid' do
       context 'when fields other than public are requested' do
         it 'only updates the public field' do
-          service_plan = ServicePlan.make(name: 'old-name', public: true)
+          service_plan = create(:service_plan, name: 'old-name', public: true)
           payload = Oj.dump({ 'name' => 'new-name', 'public' => false })
 
           set_current_user_as_admin
@@ -583,11 +583,11 @@ module VCAP::CloudController
     end
 
     describe 'DELETE', '/v2/service_plans/:guid' do
-      let(:service_plan) { ServicePlan.make }
+      let(:service_plan) { create(:service_plan) }
 
       it 'prevents recursive deletions if there are any instances' do
         set_current_user_as_admin
-        ManagedServiceInstance.make(service_plan:)
+        create(:managed_service_instance, service_plan:)
         delete "/v2/service_plans/#{service_plan.guid}?recursive=true"
         expect(last_response).to have_status_code(400)
 

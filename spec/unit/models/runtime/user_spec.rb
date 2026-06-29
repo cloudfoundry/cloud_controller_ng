@@ -10,7 +10,7 @@ module VCAP::CloudController
 
       it do
         expect(subject).to have_associated :managed_organizations, associated_instance: lambda { |user|
-          org = Organization.make
+          org = create(:organization)
           user.add_organization(org)
           org
         }
@@ -18,7 +18,7 @@ module VCAP::CloudController
 
       it do
         expect(subject).to have_associated :billing_managed_organizations, associated_instance: lambda { |user|
-          org = Organization.make
+          org = create(:organization)
           user.add_organization(org)
           org
         }
@@ -26,7 +26,7 @@ module VCAP::CloudController
 
       it do
         expect(subject).to have_associated :audited_organizations, associated_instance: lambda { |user|
-          org = Organization.make
+          org = create(:organization)
           user.add_organization(org)
           org
         }
@@ -38,7 +38,7 @@ module VCAP::CloudController
       it { is_expected.to have_associated :supported_spaces, class: Space }
 
       describe 'destroy dependent associations' do
-        let(:user) { User.make }
+        let(:user) { create(:user) }
 
         [
           SpaceSupporter,
@@ -52,7 +52,7 @@ module VCAP::CloudController
         ].each do |role_class|
           context role_class.to_s do
             it 'deletes the association' do
-              role_class.make(user:)
+              create(role_class.name.demodulize.underscore.to_sym, user:)
 
               expect { user.destroy }.to change { role_class.count }.by(-1)
             end
@@ -63,7 +63,7 @@ module VCAP::CloudController
 
     describe 'uniqueness' do
       it 'enforces uniqueness of guid' do
-        existing_user = User.make
+        existing_user = create(:user)
         expect do
           User.create(guid: existing_user.guid)
         end.to raise_error(Sequel::ValidationFailed, /unique/)
@@ -85,9 +85,9 @@ module VCAP::CloudController
     end
 
     describe '#remove_spaces' do
-      let(:org) { Organization.make }
-      let(:user) { User.make }
-      let(:space) { Space.make }
+      let(:org) { create(:organization) }
+      let(:user) { create(:user) }
+      let(:space) { create(:space) }
 
       before do
         org.add_user(user)
@@ -162,8 +162,8 @@ module VCAP::CloudController
     end
 
     describe 'relationships' do
-      let(:org) { Organization.make }
-      let(:user) { User.make }
+      let(:org) { create(:organization) }
+      let(:user) { create(:user) }
 
       context 'when a user is a member of organzation' do
         before do
@@ -262,7 +262,7 @@ module VCAP::CloudController
     end
 
     describe '#export_attrs' do
-      let(:user) { User.make }
+      let(:user) { create(:user) }
 
       it 'does not include username when username has not been set' do
         expect(user.export_attrs).not_to include(:username)
@@ -298,61 +298,61 @@ module VCAP::CloudController
 
     describe '.readable_users_for_current_user' do
       # See Miro board https://miro.com/app/board/o9J_kwAiqsc=/ for graphical explanation of test
-      let(:org_1) { Organization.make }
-      let(:org_2) { Organization.make }
+      let(:org_1) { create(:organization) }
+      let(:org_2) { create(:organization) }
 
-      let(:space_1a) { Space.make(organization: org_1) }
-      let(:space_2a) { Space.make(organization: org_2) }
-      let(:space_2b) { Space.make(organization: org_2) }
+      let(:space_1a) { create(:space, organization: org_1) }
+      let(:space_2a) { create(:space, organization: org_2) }
+      let(:space_2b) { create(:space, organization: org_2) }
 
-      let(:org_1_manager) { User.make(guid: 'org_1_manager') }
-      let(:org_1_billing_manager) { User.make(guid: 'org_1_billing_manager') }
-      let(:org_1_auditor) { User.make(guid: 'org_1_auditor') }
-      let(:org_1_user) { User.make(guid: 'org_1_user') }
+      let(:org_1_manager) { create(:user, guid: 'org_1_manager') }
+      let(:org_1_billing_manager) { create(:user, guid: 'org_1_billing_manager') }
+      let(:org_1_auditor) { create(:user, guid: 'org_1_auditor') }
+      let(:org_1_user) { create(:user, guid: 'org_1_user') }
 
-      let(:space_1a_manager) { User.make(guid: 'space_1a_manager') }
-      let(:space_1a_auditor) { User.make(guid: 'space_1a_auditor') }
-      let(:space_1a_developer) { User.make(guid: 'space_1a_developer') }
+      let(:space_1a_manager) { create(:user, guid: 'space_1a_manager') }
+      let(:space_1a_auditor) { create(:user, guid: 'space_1a_auditor') }
+      let(:space_1a_developer) { create(:user, guid: 'space_1a_developer') }
 
-      let(:space_2a_manager) { User.make(guid: 'space_2a_manager') }
-      let(:space_2a_auditor) { User.make(guid: 'space_2a_auditor') }
-      let(:space_2a_developer) { User.make(guid: 'space_2a_developer') }
+      let(:space_2a_manager) { create(:user, guid: 'space_2a_manager') }
+      let(:space_2a_auditor) { create(:user, guid: 'space_2a_auditor') }
+      let(:space_2a_developer) { create(:user, guid: 'space_2a_developer') }
 
-      let(:space_2b_manager) { User.make(guid: 'space_2b_manager') }
-      let(:space_2b_auditor) { User.make(guid: 'space_2b_auditor') }
-      let(:space_2b_developer) { User.make(guid: 'space_2b_developer') }
+      let(:space_2b_manager) { create(:user, guid: 'space_2b_manager') }
+      let(:space_2b_auditor) { create(:user, guid: 'space_2b_auditor') }
+      let(:space_2b_developer) { create(:user, guid: 'space_2b_developer') }
 
       before do
-        OrganizationManager.make(user: org_1_manager, organization: org_1)
-        OrganizationBillingManager.make(user: org_1_billing_manager, organization: org_1)
-        OrganizationAuditor.make(user: org_1_auditor, organization: org_1)
-        OrganizationUser.make(user: org_1_user, organization: org_1)
+        create(:organization_manager, user: org_1_manager, organization: org_1)
+        create(:organization_billing_manager, user: org_1_billing_manager, organization: org_1)
+        create(:organization_auditor, user: org_1_auditor, organization: org_1)
+        create(:organization_user, user: org_1_user, organization: org_1)
 
-        SpaceManager.make(user: space_1a_manager, space: space_1a)
-        OrganizationUser.make(user: space_1a_manager, organization: org_1)
-        SpaceAuditor.make(user: space_1a_auditor, space: space_1a)
-        OrganizationUser.make(user: space_1a_auditor, organization: org_1)
-        SpaceDeveloper.make(user: space_1a_developer, space: space_1a)
-        OrganizationUser.make(user: space_1a_developer, organization: org_1)
+        create(:space_manager, user: space_1a_manager, space: space_1a)
+        create(:organization_user, user: space_1a_manager, organization: org_1)
+        create(:space_auditor, user: space_1a_auditor, space: space_1a)
+        create(:organization_user, user: space_1a_auditor, organization: org_1)
+        create(:space_developer, user: space_1a_developer, space: space_1a)
+        create(:organization_user, user: space_1a_developer, organization: org_1)
 
-        SpaceManager.make(user: space_2a_manager, space: space_2a)
-        OrganizationUser.make(user: space_2a_manager, organization: org_2)
-        SpaceAuditor.make(user: space_2a_auditor, space: space_2a)
-        OrganizationUser.make(user: space_2a_auditor, organization: org_2)
-        SpaceDeveloper.make(user: space_2a_developer, space: space_2a)
-        OrganizationUser.make(user: space_2a_developer, organization: org_2)
+        create(:space_manager, user: space_2a_manager, space: space_2a)
+        create(:organization_user, user: space_2a_manager, organization: org_2)
+        create(:space_auditor, user: space_2a_auditor, space: space_2a)
+        create(:organization_user, user: space_2a_auditor, organization: org_2)
+        create(:space_developer, user: space_2a_developer, space: space_2a)
+        create(:organization_user, user: space_2a_developer, organization: org_2)
 
-        SpaceManager.make(user: space_2b_manager, space: space_2b)
-        OrganizationUser.make(user: space_2b_manager, organization: org_2)
-        SpaceAuditor.make(user: space_2b_auditor, space: space_2b)
-        OrganizationUser.make(user: space_2b_auditor, organization: org_2)
-        SpaceDeveloper.make(user: space_2b_developer, space: space_2b)
-        OrganizationUser.make(user: space_2b_developer, organization: org_2)
+        create(:space_manager, user: space_2b_manager, space: space_2b)
+        create(:organization_user, user: space_2b_manager, organization: org_2)
+        create(:space_auditor, user: space_2b_auditor, space: space_2b)
+        create(:organization_user, user: space_2b_auditor, organization: org_2)
+        create(:space_developer, user: space_2b_developer, space: space_2b)
+        create(:organization_user, user: space_2b_developer, organization: org_2)
       end
 
       context 'when an {admin, read_only_admin, global_auditor} lists users' do
         it 'sees all the org users in managed org' do
-          expect(User.make(guid: 'global-user').readable_users(true).map(&:guid)).
+          expect(create(:user, guid: 'global-user').readable_users(true).map(&:guid)).
             to(match_array(%w[
               global-user
               org_1_manager
@@ -445,12 +445,12 @@ module VCAP::CloudController
     end
 
     describe '#membership_spaces' do
-      let(:user) { User.make }
-      let(:organization) { Organization.make }
+      let(:user) { create(:user) }
+      let(:organization) { create(:organization) }
 
-      let(:developer_space) { Space.make organization: }
-      let(:auditor_space) { Space.make organization: }
-      let(:manager_space) { Space.make organization: }
+      let(:developer_space) { create(:space, organization:) }
+      let(:auditor_space) { create(:space, organization:) }
+      let(:manager_space) { create(:space, organization:) }
 
       before do
         organization.add_user user
@@ -466,10 +466,10 @@ module VCAP::CloudController
       end
 
       it "omits spaces that the user isn't a member of" do
-        outside_user = User.make guid: 'outside_user_guid'
+        outside_user = create(:user, guid: 'outside_user_guid')
         organization.add_user outside_user
 
-        different_space = Space.make(organization:)
+        different_space = create(:space, organization:)
 
         different_space.add_developer outside_user
 
@@ -479,11 +479,11 @@ module VCAP::CloudController
     end
 
     describe '#membership_organizations' do
-      let(:user) { User.make }
-      let(:user_organization) { Organization.make }
-      let(:manager_organization) { Organization.make }
-      let(:auditor_organization) { Organization.make }
-      let(:billing_manager_organization) { Organization.make }
+      let(:user) { create(:user) }
+      let(:user_organization) { create(:organization) }
+      let(:manager_organization) { create(:organization) }
+      let(:auditor_organization) { create(:organization) }
+      let(:billing_manager_organization) { create(:organization) }
 
       before do
         user_organization.add_user user
@@ -515,17 +515,17 @@ module VCAP::CloudController
     end
 
     describe '#visible_users_in_my_orgs' do
-      let(:user_organization) { Organization.make }
-      let(:manager_organization) { Organization.make }
-      let(:auditor_organization) { Organization.make }
-      let(:billing_manager_organization) { Organization.make }
-      let(:outside_organization) { Organization.make }
+      let(:user_organization) { create(:organization) }
+      let(:manager_organization) { create(:organization) }
+      let(:auditor_organization) { create(:organization) }
+      let(:billing_manager_organization) { create(:organization) }
+      let(:outside_organization) { create(:organization) }
 
-      let(:other_user1) { User.make(guid: 'other_user1-guid') }
-      let(:other_user2) { User.make(guid: 'other_user2-guid') }
-      let(:other_user3) { User.make(guid: 'other_user3-guid') }
-      let(:other_user4) { User.make(guid: 'other_user4-guid') }
-      let(:outside_other_user) { User.make(guid: 'outside_other_user-guid') }
+      let(:other_user1) { create(:user, guid: 'other_user1-guid') }
+      let(:other_user2) { create(:user, guid: 'other_user2-guid') }
+      let(:other_user3) { create(:user, guid: 'other_user3-guid') }
+      let(:other_user4) { create(:user, guid: 'other_user4-guid') }
+      let(:outside_other_user) { create(:user, guid: 'outside_other_user-guid') }
 
       before do
         user_organization.add_user(other_user1)
@@ -537,10 +537,10 @@ module VCAP::CloudController
       end
 
       it 'returns a list of ids for users in the same orgs that the user is a member of' do
-        user = User.make
-        org_manager = User.make
-        org_auditor = User.make
-        org_billing_manager = User.make
+        user = create(:user)
+        org_manager = create(:user)
+        org_auditor = create(:user)
+        org_billing_manager = create(:user)
 
         user_organization.add_user(user)
         manager_organization.add_manager(org_manager)

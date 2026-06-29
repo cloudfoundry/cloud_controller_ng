@@ -34,26 +34,25 @@ module VCAP::CloudController
       end
       let(:original_name) { 'foo' }
       let!(:service_instance) do
-        si = VCAP::CloudController::UserProvidedServiceInstance.make(
-          guid: 'bommel',
-          name: original_name,
-          credentials: {
-            foo: 'bar',
-            baz: 'qux'
-          },
-          syslog_drain_url: 'https://foo.com',
-          route_service_url: 'https://bar.com',
-          tags: %w[accounting mongodb]
-        )
-        VCAP::CloudController::ServiceInstanceLabelModel.make(service_instance: si, key_prefix: 'pre.fix', key_name: 'to_delete', value: 'value')
-        VCAP::CloudController::ServiceInstanceLabelModel.make(service_instance: si, key_prefix: 'pre.fix', key_name: 'tail', value: 'fluffy')
-        VCAP::CloudController::ServiceInstanceAnnotationModel.make(service_instance: si, key_prefix: 'pre.fix', key_name: 'to_delete', value: 'value')
-        VCAP::CloudController::ServiceInstanceAnnotationModel.make(service_instance: si, key_prefix: 'pre.fix', key_name: 'fox', value: 'bushy')
-        si.service_instance_operation = VCAP::CloudController::ServiceInstanceOperation.make(type: 'create', state: 'succeeded')
+        si = create(:user_provided_service_instance,
+                    guid: 'bommel',
+                    name: original_name,
+                    credentials: {
+                      foo: 'bar',
+                      baz: 'qux'
+                    },
+                    syslog_drain_url: 'https://foo.com',
+                    route_service_url: 'https://bar.com',
+                    tags: %w[accounting mongodb])
+        create(:service_instance_label_model, service_instance: si, key_prefix: 'pre.fix', key_name: 'to_delete', value: 'value')
+        create(:service_instance_label_model, service_instance: si, key_prefix: 'pre.fix', key_name: 'tail', value: 'fluffy')
+        create(:service_instance_annotation_model, service_instance: si, key_prefix: 'pre.fix', key_name: 'to_delete', value: 'value')
+        create(:service_instance_annotation_model, service_instance: si, key_prefix: 'pre.fix', key_name: 'fox', value: 'bushy')
+        si.service_instance_operation = create(:service_instance_operation, type: 'create', state: 'succeeded')
         si
       end
-      let!(:service_binding) { VCAP::CloudController::ServiceBinding.make(service_instance: service_instance, credentials: { foo: 'bar', baz: 'qux' }) }
-      let!(:route_binding) { VCAP::CloudController::RouteBinding.make(service_instance: service_instance, route_service_url: 'https://bar.com') }
+      let!(:service_binding) { create(:service_binding, service_instance: service_instance, credentials: { foo: 'bar', baz: 'qux' }) }
+      let!(:route_binding) { create(:route_binding, service_instance: service_instance, route_service_url: 'https://bar.com') }
       let(:message) { ServiceInstanceUpdateUserProvidedMessage.new(body) }
 
       it 'updates the values in the service instance in the database' do
@@ -170,7 +169,7 @@ module VCAP::CloudController
           end
 
           describe 'when already taken' do
-            let!(:other_service_instance) { UserProvidedServiceInstance.make(name: 'already_taken', space: service_instance.space) }
+            let!(:other_service_instance) { create(:user_provided_service_instance, name: 'already_taken', space: service_instance.space) }
             let(:body) do
               { name: 'already_taken' }
             end

@@ -10,7 +10,7 @@ module VCAP
 
         describe 'update' do
           context 'when the plan visibility is currently "admin"' do
-            let(:service_plan) { ServicePlan.make(public: false) }
+            let(:service_plan) { create(:service_plan, public: false) }
 
             context 'and its being updated to "public"' do
               let(:message) { ServicePlanVisibilityUpdateMessage.new({ type: 'public' }) }
@@ -22,8 +22,8 @@ module VCAP
             end
 
             context 'and its being updated do "organization"' do
-              let(:org_guid) { Organization.make.guid }
-              let(:other_org_guid) { Organization.make.guid }
+              let(:org_guid) { create(:organization).guid }
+              let(:other_org_guid) { create(:organization).guid }
               let(:params) do
                 { type: 'organization', organizations: [{ guid: org_guid }, { guid: other_org_guid }] }
               end
@@ -42,7 +42,7 @@ module VCAP
           end
 
           context 'when the plan visibility is currently "public"' do
-            let(:service_plan) { ServicePlan.make(public: false) }
+            let(:service_plan) { create(:service_plan, public: false) }
 
             context 'and its being updated to "admin"' do
               let(:message) { ServicePlanVisibilityUpdateMessage.new({ type: 'admin' }) }
@@ -54,8 +54,8 @@ module VCAP
             end
 
             context 'and its being updated do "organization"' do
-              let(:org_guid) { Organization.make.guid }
-              let(:other_org_guid) { Organization.make.guid }
+              let(:org_guid) { create(:organization).guid }
+              let(:other_org_guid) { create(:organization).guid }
               let(:params) do
                 { type: 'organization', organizations: [{ guid: org_guid }, { guid: other_org_guid }] }
               end
@@ -74,18 +74,18 @@ module VCAP
           end
 
           context 'when the plan visibility is currently "organization"' do
-            let(:org) { Organization.make }
-            let(:other_org) { Organization.make }
+            let(:org) { create(:organization) }
+            let(:other_org) { create(:organization) }
 
             let(:service_plan) do
-              plan = ServicePlan.make(public: false)
-              ServicePlanVisibility.make(organization: org, service_plan: plan)
-              ServicePlanVisibility.make(organization: other_org, service_plan: plan)
+              plan = create(:service_plan, public: false)
+              create(:service_plan_visibility, organization: org, service_plan: plan)
+              create(:service_plan_visibility, organization: other_org, service_plan: plan)
               plan
             end
 
             context 'and its being updated to "organization"' do
-              let(:new_org_guid) { Organization.make.guid }
+              let(:new_org_guid) { create(:organization).guid }
               let(:params) do
                 { type: 'organization', organizations: [{ guid: new_org_guid }] }
               end
@@ -152,12 +152,10 @@ module VCAP
 
           context 'when the plan visibility is currently "space"' do
             let(:service_plan) do
-              ServicePlan.make(
-                public: false,
-                service: Service.make(
-                  service_broker: ServiceBroker.make(space: Space.make)
-                )
-              )
+              create(:service_plan,
+                     public: false,
+                     service: create(:service,
+                                     service_broker: create(:service_broker, space: create(:space))))
             end
             let(:message) { ServicePlanVisibilityUpdateMessage.new({ type: 'admin' }) }
 
@@ -171,7 +169,7 @@ module VCAP
           end
 
           context 'when the model fails to update' do
-            let(:service_plan) { ServicePlan.make(public: false) }
+            let(:service_plan) { create(:service_plan, public: false) }
             let(:message) { ServicePlanVisibilityUpdateMessage.new({ type: 'public' }) }
 
             before do
@@ -189,7 +187,7 @@ module VCAP
           end
 
           context 'when the organization does not exist' do
-            let(:service_plan) { ServicePlan.make(public: false) }
+            let(:service_plan) { create(:service_plan, public: false) }
             let(:message) { ServicePlanVisibilityUpdateMessage.new({ type: 'organization', organizations: [{ guid: 'some-fake-org' }] }) }
 
             it 'errors nicely' do

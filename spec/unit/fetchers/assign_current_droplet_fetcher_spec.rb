@@ -4,9 +4,9 @@ require 'fetchers/assign_current_droplet_fetcher'
 module VCAP::CloudController
   RSpec.describe AssignCurrentDropletFetcher do
     describe '#fetch' do
-      let(:app) { AppModel.make }
+      let(:app) { create(:app_model) }
       let(:space) { app.space }
-      let(:droplet) { DropletModel.make }
+      let(:droplet) { create(:droplet_model) }
 
       before do
         app.add_droplet(droplet)

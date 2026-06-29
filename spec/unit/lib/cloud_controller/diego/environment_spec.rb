@@ -5,7 +5,7 @@ require_relative '../../../../../lib/vcap/vars_builder'
 module VCAP::CloudController::Diego
   RSpec.describe Environment do
     let(:process) { VCAP::CloudController::ProcessModelFactory.make(environment_json: environment, memory: 200) }
-    let!(:binding) { VCAP::CloudController::ServiceBinding.make(app: process.app, service_instance: VCAP::CloudController::ManagedServiceInstance.make(space: process.space)) }
+    let!(:binding) { create(:service_binding, app: process.app, service_instance: create(:managed_service_instance, space: process.space)) }
     let(:environment) do
       {
         'APP_KEY1' => 'APP_VAL1',
@@ -70,10 +70,10 @@ module VCAP::CloudController::Diego
     end
 
     context 'when the process has sidecars' do
-      let!(:sidecar0) { VCAP::CloudController::SidecarModel.make(app: process.app, name: 'my_sidecar1', command: 'athenz', memory: 10) }
-      let!(:sidecar1) { VCAP::CloudController::SidecarModel.make(app: process.app, name: 'my_sidecar2', command: 'newrelic', memory: 20) }
-      let!(:sidecar_process_type0) { VCAP::CloudController::SidecarProcessTypeModel.make(sidecar: sidecar0, type: 'web') }
-      let!(:sidecar_process_type1) { VCAP::CloudController::SidecarProcessTypeModel.make(sidecar: sidecar1, type: 'web') }
+      let!(:sidecar0) { create(:sidecar_model, app: process.app, name: 'my_sidecar1', command: 'athenz', memory: 10) }
+      let!(:sidecar1) { create(:sidecar_model, app: process.app, name: 'my_sidecar2', command: 'newrelic', memory: 20) }
+      let!(:sidecar_process_type0) { create(:sidecar_process_type_model, sidecar: sidecar0, type: 'web') }
+      let!(:sidecar_process_type1) { create(:sidecar_process_type_model, sidecar: sidecar1, type: 'web') }
 
       it 'can produce environment variables for those sidecars' do
         expect(Environment.new(process).as_json_for_sidecar(sidecar0)).
@@ -98,12 +98,10 @@ module VCAP::CloudController::Diego
 
       context 'when a sidecar doesnt have a memory limit' do
         let!(:unconstrained_sidecar) do
-          VCAP::CloudController::SidecarModel.make(
-            app: process.app,
-            name: 'unconstrained',
-            command: 'consul_agent',
-            memory: nil
-          )
+          create(:sidecar_model, app: process.app,
+                                 name: 'unconstrained',
+                                 command: 'consul_agent',
+                                 memory: nil)
         end
 
         it 'sidecar env vars inherit the main actions limit' do

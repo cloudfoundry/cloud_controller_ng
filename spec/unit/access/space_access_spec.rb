@@ -5,11 +5,11 @@ module VCAP::CloudController
     let(:queryer) { instance_spy(VCAP::CloudController::Permissions) }
 
     subject(:access) { SpaceAccess.new(Security::AccessContext.new(queryer)) }
-    let(:org) { VCAP::CloudController::Organization.make }
-    let(:user) { VCAP::CloudController::User.make }
+    let(:org) { create(:organization) }
+    let(:user) { create(:user) }
     let(:scopes) { nil }
 
-    let(:object) { VCAP::CloudController::Space.make(organization: org) }
+    let(:object) { create(:space, organization: org) }
     let(:space) { object }
 
     describe 'when the parent organization is suspended' do

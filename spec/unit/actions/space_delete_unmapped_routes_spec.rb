@@ -9,17 +9,17 @@ module VCAP::CloudController
     let(:user_email) { 'cool_dude@hoopy_frood.com' }
     let(:user_audit_info) { UserAuditInfo.new(user_email:, user_guid:) }
 
-    let(:org) { Organization.make }
-    let(:space) { Space.make(organization: org) }
-    let(:app) { AppModel.make(space:) }
-    let(:domain) { PrivateDomain.make(owning_organization: org) }
+    let(:org) { create(:organization) }
+    let(:space) { create(:space, organization: org) }
+    let(:app) { create(:app_model, space:) }
+    let(:domain) { create(:private_domain, owning_organization: org) }
 
     describe '#delete' do
       context 'when there are some mapped routes and some unmapped routes' do
-        let!(:mapped_route) { Route.make(domain: domain, space: space, host: 'mapped') }
-        let!(:destination) { RouteMappingModel.make(app: app, route: mapped_route) }
-        let!(:unmapped_route_1) { Route.make(domain: domain, space: space, host: 'unmapped1') }
-        let!(:unmapped_route_2) { Route.make(domain: domain, space: space, host: 'unmapped2') }
+        let!(:mapped_route) { create(:route, domain: domain, space: space, host: 'mapped') }
+        let!(:destination) { create(:route_mapping_model, app: app, route: mapped_route) }
+        let!(:unmapped_route_1) { create(:route, domain: domain, space: space, host: 'unmapped1') }
+        let!(:unmapped_route_2) { create(:route, domain: domain, space: space, host: 'unmapped2') }
 
         it 'deletes only unmapped routes' do
           expect do
@@ -32,11 +32,11 @@ module VCAP::CloudController
       end
 
       context 'when there are some bound routes and some unbound routes' do
-        let!(:bound_route) { Route.make(domain: domain, space: space, host: 'bound') }
-        let!(:service_instance) { ManagedServiceInstance.make(:routing, space:) }
-        let!(:_) { RouteBinding.make(service_instance: service_instance, route: bound_route) }
-        let!(:unbound_route_1) { Route.make(domain: domain, space: space, host: 'unbound1') }
-        let!(:unbound_route_2) { Route.make(domain: domain, space: space, host: 'unbound2') }
+        let!(:bound_route) { create(:route, domain: domain, space: space, host: 'bound') }
+        let!(:service_instance) { create(:managed_service_instance, :routing, space:) }
+        let!(:_) { create(:route_binding, service_instance: service_instance, route: bound_route) }
+        let!(:unbound_route_1) { create(:route, domain: domain, space: space, host: 'unbound1') }
+        let!(:unbound_route_2) { create(:route, domain: domain, space: space, host: 'unbound2') }
 
         it 'deletes only unbound routes' do
           expect do
@@ -49,19 +49,19 @@ module VCAP::CloudController
       end
 
       context 'when there is a mix of bound and mapped routes' do
-        let!(:service_instance) { ManagedServiceInstance.make(:routing, space:) }
+        let!(:service_instance) { create(:managed_service_instance, :routing, space:) }
 
-        let!(:bound_and_mapped_route) { Route.make(domain: domain, space: space, host: 'bound', path: '/mapped') }
-        let!(:_0) { RouteBinding.make(service_instance: service_instance, route: bound_and_mapped_route) }
-        let!(:_1) { RouteMappingModel.make(app: app, route: bound_and_mapped_route) }
+        let!(:bound_and_mapped_route) { create(:route, domain: domain, space: space, host: 'bound', path: '/mapped') }
+        let!(:_0) { create(:route_binding, service_instance: service_instance, route: bound_and_mapped_route) }
+        let!(:_1) { create(:route_mapping_model, app: app, route: bound_and_mapped_route) }
 
-        let!(:bound_and_unmapped_route) { Route.make(domain: domain, space: space, host: 'bound', path: '/unmapped') }
-        let!(:_2) { RouteBinding.make(service_instance: service_instance, route: bound_and_unmapped_route) }
+        let!(:bound_and_unmapped_route) { create(:route, domain: domain, space: space, host: 'bound', path: '/unmapped') }
+        let!(:_2) { create(:route_binding, service_instance: service_instance, route: bound_and_unmapped_route) }
 
-        let!(:unbound_and_unmapped_route) { Route.make(domain: domain, space: space, host: 'unbound', path: '/unmapped') }
+        let!(:unbound_and_unmapped_route) { create(:route, domain: domain, space: space, host: 'unbound', path: '/unmapped') }
 
-        let!(:unbound_and_mapped_route) { Route.make(domain: domain, space: space, host: 'unbound', path: '/mapped') }
-        let!(:_3) { RouteMappingModel.make(app: app, route: unbound_and_mapped_route) }
+        let!(:unbound_and_mapped_route) { create(:route, domain: domain, space: space, host: 'unbound', path: '/mapped') }
+        let!(:_3) { create(:route_mapping_model, app: app, route: unbound_and_mapped_route) }
 
         it 'deletes only BOTH unmapped and unbound routes' do
           expect do
@@ -73,9 +73,9 @@ module VCAP::CloudController
       end
 
       context 'when the unmapped routes have labels and annotations' do
-        let!(:unmapped_route_1) { Route.make(domain: domain, space: space, host: 'unmapped1') }
-        let!(:label_1) { RouteLabelModel.make(key_name: 'k1', value: 'v1', resource_guid: unmapped_route_1.guid) }
-        let!(:annot_1) { RouteAnnotationModel.make(key_name: 'k1', value: 'v1', resource_guid: unmapped_route_1.guid) }
+        let!(:unmapped_route_1) { create(:route, domain: domain, space: space, host: 'unmapped1') }
+        let!(:label_1) { create(:route_label_model, key_name: 'k1', value: 'v1', resource_guid: unmapped_route_1.guid) }
+        let!(:annot_1) { create(:route_annotation_model, key_name: 'k1', value: 'v1', resource_guid: unmapped_route_1.guid) }
 
         it 'deletes the labels, annotations and routes' do
           expect do

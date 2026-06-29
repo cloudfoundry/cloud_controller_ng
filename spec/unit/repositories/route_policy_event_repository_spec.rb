@@ -4,10 +4,10 @@ require 'repositories/route_policy_event_repository'
 module VCAP::CloudController
   module Repositories
     RSpec.describe RoutePolicyEventRepository do
-      let(:user)             { User.make }
-      let(:space)            { Space.make }
-      let(:domain)           { SharedDomain.make(name: 'apps.identity', enforce_route_policies: true) }
-      let(:route)            { Route.make(space:, domain:) }
+      let(:user)             { create(:user) }
+      let(:space)            { create(:space) }
+      let(:domain)           { create(:shared_domain, name: 'apps.identity', enforce_route_policies: true) }
+      let(:route)            { create(:route, space:, domain:) }
       let(:route_policy)     { RoutePolicy.create(source: 'cf:any', route: route) }
       let(:user_email)       { 'user@example.com' }
       let(:user_name)        { 'some-user' }

@@ -2,9 +2,9 @@ require 'spec_helper'
 
 module VCAP::CloudController
   RSpec.describe Permissions do
-    let(:user) { User.make }
-    let(:space) { Space.make(organization: org) }
-    let(:org) { Organization.make }
+    let(:user) { create(:user) }
+    let(:space) { create(:space, organization: org) }
+    let(:org) { create(:organization) }
     let(:space_guid) { space.guid }
     let(:org_guid) { org.guid }
     let(:permissions) { Permissions.new(user) }
@@ -853,9 +853,9 @@ module VCAP::CloudController
     end
 
     describe '#readable_event_dataset' do
-      let!(:unscoped_event) { Event.make(actee: 'dir/key', type: 'blob.remove_orphan', organization_guid: '') }
-      let!(:org_scoped_event) { Event.make(created_at: Time.now + 100, type: 'audit.organization.create', actee: org_guid, organization_guid: org_guid) }
-      let!(:space_scoped_event) { Event.make(space_guid: space_guid, actee: space_guid, type: 'audit.app.restart') }
+      let!(:unscoped_event) { create(:event, actee: 'dir/key', type: 'blob.remove_orphan', organization_guid: '') }
+      let!(:org_scoped_event) { create(:event, created_at: Time.now + 100, type: 'audit.organization.create', actee: org_guid, organization_guid: org_guid) }
+      let!(:space_scoped_event) { create(:event, space_guid: space_guid, actee: space_guid, type: 'audit.app.restart') }
 
       it 'returns all events for admins' do
         user = set_current_user_as_admin
@@ -904,7 +904,7 @@ module VCAP::CloudController
     end
 
     describe '#can_read_from_isolation_segment?' do
-      let(:isolation_segment) { IsolationSegmentModel.make }
+      let(:isolation_segment) { create(:isolation_segment_model) }
       let(:assigner) { IsolationSegmentAssign.new }
 
       before do
@@ -1139,12 +1139,12 @@ module VCAP::CloudController
         user = set_current_user_as_admin
         subject = Permissions.new(user)
 
-        org1 = Organization.make
-        space1 = Space.make(organization: org1)
-        app1 = AppModel.make(space: space1)
-        org2 = Organization.make
-        space2 = Space.make(organization: org2)
-        app2 = AppModel.make(space: space2)
+        org1 = create(:organization)
+        space1 = create(:space, organization: org1)
+        app1 = create(:app_model, space: space1)
+        org2 = create(:organization)
+        space2 = create(:space, organization: org2)
+        app2 = create(:app_model, space: space2)
 
         app_guids = subject.readable_app_guids
 
@@ -1156,12 +1156,12 @@ module VCAP::CloudController
         user = set_current_user_as_admin_read_only
         subject = Permissions.new(user)
 
-        org1 = Organization.make
-        space1 = Space.make(organization: org1)
-        app1 = AppModel.make(space: space1)
-        org2 = Organization.make
-        space2 = Space.make(organization: org2)
-        app2 = AppModel.make(space: space2)
+        org1 = create(:organization)
+        space1 = create(:space, organization: org1)
+        app1 = create(:app_model, space: space1)
+        org2 = create(:organization)
+        space2 = create(:space, organization: org2)
+        app2 = create(:app_model, space: space2)
 
         app_guids = subject.readable_app_guids
 
@@ -1173,12 +1173,12 @@ module VCAP::CloudController
         user = set_current_user_as_global_auditor
         subject = Permissions.new(user)
 
-        org1 = Organization.make
-        space1 = Space.make(organization: org1)
-        app1 = AppModel.make(space: space1)
-        org2 = Organization.make
-        space2 = Space.make(organization: org2)
-        app2 = AppModel.make(space: space2)
+        org1 = create(:organization)
+        space1 = create(:space, organization: org1)
+        app1 = create(:app_model, space: space1)
+        org2 = create(:organization)
+        space2 = create(:space, organization: org2)
+        app2 = create(:app_model, space: space2)
 
         app_guids = subject.readable_app_guids
 
@@ -1187,24 +1187,24 @@ module VCAP::CloudController
       end
 
       it 'returns app guids where the user has an appropriate org membership' do
-        manager_org = Organization.make
-        manager_space = Space.make(organization: manager_org)
-        manager_app = AppModel.make(space: manager_space)
+        manager_org = create(:organization)
+        manager_space = create(:space, organization: manager_org)
+        manager_app = create(:app_model, space: manager_space)
         manager_org.add_manager(user)
 
-        auditor_org = Organization.make
-        auditor_space = Space.make(organization: auditor_org)
-        auditor_app = AppModel.make(space: auditor_space)
+        auditor_org = create(:organization)
+        auditor_space = create(:space, organization: auditor_org)
+        auditor_app = create(:app_model, space: auditor_space)
         auditor_org.add_auditor(user)
 
-        billing_manager_org = Organization.make
-        billing_manager_space = Space.make(organization: billing_manager_org)
-        billing_manager_app = AppModel.make(space: billing_manager_space)
+        billing_manager_org = create(:organization)
+        billing_manager_space = create(:space, organization: billing_manager_org)
+        billing_manager_app = create(:app_model, space: billing_manager_space)
         billing_manager_org.add_billing_manager(user)
 
-        member_org = Organization.make
-        member_space = Space.make(organization: member_org)
-        member_app = AppModel.make(space: member_space)
+        member_org = create(:organization)
+        member_space = create(:space, organization: member_org)
+        member_app = create(:app_model, space: member_space)
         member_org.add_user(user)
 
         app_guids = permissions.readable_app_guids
@@ -1216,19 +1216,19 @@ module VCAP::CloudController
       end
 
       it 'returns app guids where the user has an appropriate space membership' do
-        org = Organization.make
+        org = create(:organization)
         org.add_user(user)
 
-        developer_space = Space.make(organization: org)
-        developer_app = AppModel.make(space: developer_space)
+        developer_space = create(:space, organization: org)
+        developer_app = create(:app_model, space: developer_space)
         developer_space.add_developer(user)
 
-        manager_space = Space.make(organization: org)
-        manager_app = AppModel.make(space: manager_space)
+        manager_space = create(:space, organization: org)
+        manager_app = create(:app_model, space: manager_space)
         manager_space.add_manager(user)
 
-        auditor_space = Space.make(organization: org)
-        auditor_app = AppModel.make(space: auditor_space)
+        auditor_space = create(:space, organization: org)
+        auditor_app = create(:app_model, space: auditor_space)
         auditor_space.add_auditor(user)
 
         app_guids = permissions.readable_app_guids
@@ -1241,7 +1241,7 @@ module VCAP::CloudController
       context 'when user is an admin' do
         it 'returns all users' do
           set_current_user(user, { admin: true })
-          other_user = User.make
+          other_user = create(:user)
 
           result = permissions.readable_users_query
           guids = result.select_map(:guid)
@@ -1253,7 +1253,7 @@ module VCAP::CloudController
       context 'when user is a read-only admin' do
         it 'returns all users' do
           set_current_user(user, { admin_read_only: true })
-          other_user = User.make
+          other_user = create(:user)
 
           guids = permissions.readable_users_query.select_map(:guid)
           expect(guids).to include(user.guid)
@@ -1262,9 +1262,9 @@ module VCAP::CloudController
       end
 
       context 'when user has an org membership' do
-        let(:other_user) { User.make }
-        let(:unrelated_user) { User.make }
-        let(:other_org) { Organization.make }
+        let(:other_user) { create(:user) }
+        let(:unrelated_user) { create(:user) }
+        let(:other_org) { create(:organization) }
 
         before do
           org.add_user(user)
@@ -1350,13 +1350,13 @@ module VCAP::CloudController
     end
 
     describe '#readable_space_quota_guids' do
-      let(:org1) { Organization.make }
-      let(:org2) { Organization.make }
-      let(:squota1) { SpaceQuotaDefinition.make(organization: org1, guid: 'q1') }
-      let!(:squota2) { SpaceQuotaDefinition.make(organization: org1, guid: 'q2') }
-      let(:squota3) { SpaceQuotaDefinition.make(organization: org2, guid: 'q3') }
-      let!(:space1) { Space.make(organization: org1, space_quota_definition: squota1) }
-      let!(:space2) { Space.make(organization: org2, space_quota_definition: squota3) }
+      let(:org1) { create(:organization) }
+      let(:org2) { create(:organization) }
+      let(:squota1) { create(:space_quota_definition, organization: org1, guid: 'q1') }
+      let!(:squota2) { create(:space_quota_definition, organization: org1, guid: 'q2') }
+      let(:squota3) { create(:space_quota_definition, organization: org2, guid: 'q3') }
+      let!(:space1) { create(:space, organization: org1, space_quota_definition: squota1) }
+      let!(:space2) { create(:space, organization: org2, space_quota_definition: squota3) }
 
       it 'returns all the space quota guids for any global read role' do
         global_roles = [set_current_user_as_admin, set_current_user_as_global_auditor, set_current_user_as_admin_read_only]

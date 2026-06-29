@@ -3,7 +3,7 @@ require 'isolation_segment_update'
 
 module VCAP::CloudController
   RSpec.describe IsolationSegmentUpdate do
-    let!(:isolation_segment) { IsolationSegmentModel.make name: 'Old Name' }
+    let!(:isolation_segment) { create(:isolation_segment_model, name: 'Old Name') }
 
     it 'updates the name of the isolation segment' do
       new_name = 'New Name'
@@ -27,8 +27,8 @@ module VCAP::CloudController
     end
 
     context 'when there is metadata' do
-      let!(:label) { IsolationSegmentLabelModel.make(resource_guid: isolation_segment.guid, key_name: 'freaky', value: 'tuesday') }
-      let!(:annotation) { IsolationSegmentAnnotationModel.make(resource_guid: isolation_segment.guid, key_name: 'hello', value: 'general kenobi') }
+      let!(:label) { create(:isolation_segment_label_model, resource_guid: isolation_segment.guid, key_name: 'freaky', value: 'tuesday') }
+      let!(:annotation) { create(:isolation_segment_annotation_model, resource_guid: isolation_segment.guid, key_name: 'hello', value: 'general kenobi') }
 
       it 'updates the metadata' do
         message = VCAP::CloudController::IsolationSegmentUpdateMessage.new({
@@ -98,7 +98,7 @@ module VCAP::CloudController
 
     context 'when the isolation segment is set as the org default' do
       let(:assigner) { IsolationSegmentAssign.new }
-      let(:org) { Organization.make }
+      let(:org) { create(:organization) }
 
       before do
         assigner.assign(isolation_segment, [org])
@@ -118,7 +118,7 @@ module VCAP::CloudController
 
     context 'when the isolation segment is assigned to an org' do
       let(:assigner) { IsolationSegmentAssign.new }
-      let(:org) { Organization.make }
+      let(:org) { create(:organization) }
 
       before do
         assigner.assign(isolation_segment, [org])
@@ -132,7 +132,7 @@ module VCAP::CloudController
       end
 
       context 'and the segment is assigned to a space in the org' do
-        let!(:space) { Space.make(organization: org, isolation_segment_guid: isolation_segment.guid) }
+        let!(:space) { create(:space, organization: org, isolation_segment_guid: isolation_segment.guid) }
 
         it 'does not allow updating the iso seg name' do
           message = IsolationSegmentUpdateMessage.new(name: 'New Name')

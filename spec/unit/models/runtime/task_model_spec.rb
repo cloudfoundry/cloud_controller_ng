@@ -2,11 +2,11 @@ require 'spec_helper'
 
 module VCAP::CloudController
   RSpec.describe TaskModel do
-    let(:parent_app) { AppModel.make }
+    let(:parent_app) { create(:app_model) }
 
     describe 'after create' do
       it 'does not create a TASK_STARTED event' do
-        task = TaskModel.make(app: parent_app, state: TaskModel::PENDING_STATE)
+        task = create(:task_model, app: parent_app, state: TaskModel::PENDING_STATE)
 
         event = AppUsageEvent.find(task_guid: task.guid, state: 'TASK_STARTED')
         expect(event).to be_nil
@@ -14,11 +14,11 @@ module VCAP::CloudController
     end
 
     describe 'after update' do
-      let(:task) { TaskModel.make(app: parent_app, state: TaskModel::PENDING_STATE) }
+      let(:task) { create(:task_model, app: parent_app, state: TaskModel::PENDING_STATE) }
 
       context 'when the task is moving to the SUCCEEDED_STATE' do
-        let(:task) { TaskModel.make(app: parent_app, state: TaskModel::RUNNING_STATE) }
-        let!(:start_event) { AppUsageEvent.make(task_guid: task.guid, state: 'TASK_STARTED') }
+        let(:task) { create(:task_model, app: parent_app, state: TaskModel::RUNNING_STATE) }
+        let!(:start_event) { create(:app_usage_event, task_guid: task.guid, state: 'TASK_STARTED') }
 
         it 'creates a TASK_STOPPED event' do
           task.update(state: TaskModel::SUCCEEDED_STATE)
@@ -32,8 +32,8 @@ module VCAP::CloudController
 
       context 'when the task is moving to the FAILED_STATE' do
         context 'when the task is moving from the RUNNING state' do
-          let!(:start_event) { AppUsageEvent.make(task_guid: task.guid, state: 'TASK_STARTED') }
-          let(:task) { TaskModel.make(app: parent_app, state: TaskModel::RUNNING_STATE) }
+          let!(:start_event) { create(:app_usage_event, task_guid: task.guid, state: 'TASK_STARTED') }
+          let(:task) { create(:task_model, app: parent_app, state: TaskModel::RUNNING_STATE) }
 
           it 'creates a TASK_STOPPED event' do
             task.update(state: TaskModel::FAILED_STATE)
@@ -46,7 +46,7 @@ module VCAP::CloudController
         end
 
         context 'when the task is moving from the PENDING state' do
-          let(:task) { TaskModel.make(app: parent_app, state: TaskModel::PENDING_STATE) }
+          let(:task) { create(:task_model, app: parent_app, state: TaskModel::PENDING_STATE) }
 
           it 'does not create a TASK_STOPPED event' do
             task.update(state: TaskModel::FAILED_STATE)
@@ -57,10 +57,10 @@ module VCAP::CloudController
         end
 
         context 'when the task is moving from the CANCELING state' do
-          let(:task) { TaskModel.make(app: parent_app, state: TaskModel::CANCELING_STATE) }
+          let(:task) { create(:task_model, app: parent_app, state: TaskModel::CANCELING_STATE) }
 
           context 'when the task has a TASK_STARTED event' do
-            let!(:start_event) { AppUsageEvent.make(task_guid: task.guid, state: 'TASK_STARTED') }
+            let!(:start_event) { create(:app_usage_event, task_guid: task.guid, state: 'TASK_STARTED') }
 
             it 'creates a TASK_STOPPED event' do
               task.update(state: TaskModel::FAILED_STATE)
@@ -85,10 +85,10 @@ module VCAP::CloudController
         end
 
         context 'when the task already has a TASK_STOPPED event' do
-          let!(:start_event) { AppUsageEvent.make(task_guid: task.guid, state: 'TASK_STARTED') }
+          let!(:start_event) { create(:app_usage_event, task_guid: task.guid, state: 'TASK_STARTED') }
 
           before do
-            AppUsageEvent.make(task_guid: task.guid, state: 'TASK_STOPPED')
+            create(:app_usage_event, task_guid: task.guid, state: 'TASK_STOPPED')
           end
 
           it 'does not create additional TASK_STOPPED event' do
@@ -119,8 +119,8 @@ module VCAP::CloudController
       end
 
       context 'when the state is not changing' do
-        let!(:start_event) { AppUsageEvent.make(task_guid: task.guid, state: 'TASK_STARTED') }
-        let(:task) { TaskModel.make(app: parent_app, state: TaskModel::FAILED_STATE) }
+        let!(:start_event) { create(:app_usage_event, task_guid: task.guid, state: 'TASK_STARTED') }
+        let(:task) { create(:task_model, app: parent_app, state: TaskModel::FAILED_STATE) }
 
         it 'does not create a TASK_STOPPED event' do
           task.update(name: 'some-new-name', state: TaskModel::FAILED_STATE)
@@ -132,7 +132,7 @@ module VCAP::CloudController
     end
 
     describe 'after destroy' do
-      let(:task) { TaskModel.make(app: parent_app, state: TaskModel::PENDING_STATE) }
+      let(:task) { create(:task_model, app: parent_app, state: TaskModel::PENDING_STATE) }
 
       it 'creates a TASK_STOPPED event' do
         task.destroy
@@ -145,7 +145,7 @@ module VCAP::CloudController
 
       context 'when the task is already in a terminal state (and thus already has a stop event)' do
         describe 'when the task is failed' do
-          let(:task) { TaskModel.make(app: parent_app, state: TaskModel::FAILED_STATE) }
+          let(:task) { create(:task_model, app: parent_app, state: TaskModel::FAILED_STATE) }
 
           it 'does not create an additional stop event' do
             task.destroy
@@ -154,7 +154,7 @@ module VCAP::CloudController
         end
 
         describe 'when the task is succeeded' do
-          let(:task) { TaskModel.make(app: parent_app, state: TaskModel::SUCCEEDED_STATE) }
+          let(:task) { create(:task_model, app: parent_app, state: TaskModel::SUCCEEDED_STATE) }
 
           it 'does not create an additional stop event' do
             task.destroy
@@ -165,13 +165,13 @@ module VCAP::CloudController
     end
 
     describe '#run_action_user' do
-      let(:task) { TaskModel.make(app: parent_app, droplet: droplet, state: TaskModel::SUCCEEDED_STATE) }
-      let(:droplet) { DropletModel.make(app: parent_app) }
+      let(:task) { create(:task_model, app: parent_app, droplet: droplet, state: TaskModel::SUCCEEDED_STATE) }
+      let(:droplet) { create(:droplet_model, app: parent_app) }
 
       context 'when the task belongs to a CNB lifecycle app' do
-        let(:parent_app) { AppModel.make(:cnb) }
-        let(:task) { TaskModel.make(app: parent_app, droplet: droplet, state: TaskModel::SUCCEEDED_STATE) }
-        let(:droplet) { DropletModel.make(:cnb, app: parent_app) }
+        let(:parent_app) { create(:app_model, :cnb) }
+        let(:task) { create(:task_model, app: parent_app, droplet: droplet, state: TaskModel::SUCCEEDED_STATE) }
+        let(:droplet) { create(:droplet_model, :cnb, app: parent_app) }
 
         context 'when the task has a user specified' do
           before do
@@ -195,9 +195,9 @@ module VCAP::CloudController
       end
 
       context 'when the task belongs to a Docker lifecycle app' do
-        let(:parent_app) { AppModel.make(:docker) }
-        let(:task) { TaskModel.make(app: parent_app, droplet: droplet, state: TaskModel::SUCCEEDED_STATE) }
-        let(:droplet) { DropletModel.make(:docker, app: parent_app) }
+        let(:parent_app) { create(:app_model, :docker) }
+        let(:task) { create(:task_model, app: parent_app, droplet: droplet, state: TaskModel::SUCCEEDED_STATE) }
+        let(:droplet) { create(:droplet_model, :docker, app: parent_app) }
         let(:droplet_execution_metadata) { '{"entrypoint":["/image-entrypoint.sh"],"user":"some-user"}' }
 
         before do
@@ -270,6 +270,8 @@ module VCAP::CloudController
           end
 
           context 'when there is no droplet for the task' do
+            let(:droplet) { create(:droplet_model, app: parent_app, set_as_current_droplet: false) }
+
             before do
               task.droplet.delete
               task.reload
@@ -285,9 +287,9 @@ module VCAP::CloudController
 
     describe 'docker?' do
       context 'when there is a droplet and it has the docker lifecycle' do
-        let(:parent_app) { AppModel.make(:docker) }
-        let(:task) { TaskModel.make(app: parent_app, droplet: droplet, state: TaskModel::SUCCEEDED_STATE) }
-        let(:droplet) { DropletModel.make(:docker, app: parent_app) }
+        let(:parent_app) { create(:app_model, :docker) }
+        let(:task) { create(:task_model, app: parent_app, droplet: droplet, state: TaskModel::SUCCEEDED_STATE) }
+        let(:droplet) { create(:droplet_model, :docker, app: parent_app) }
 
         it 'returns true' do
           expect(task.docker?).to be(true)
@@ -295,9 +297,9 @@ module VCAP::CloudController
       end
 
       context 'when there is a droplet and it does not have the docker lifecycle' do
-        let(:parent_app) { AppModel.make(:docker) }
-        let(:task) { TaskModel.make(app: parent_app, droplet: droplet, state: TaskModel::SUCCEEDED_STATE) }
-        let(:droplet) { DropletModel.make(app: parent_app) }
+        let(:parent_app) { create(:app_model, :docker) }
+        let(:task) { create(:task_model, app: parent_app, droplet: droplet, state: TaskModel::SUCCEEDED_STATE) }
+        let(:droplet) { create(:droplet_model, app: parent_app) }
 
         it 'returns false' do
           expect(task.docker?).to be(false)
@@ -305,9 +307,9 @@ module VCAP::CloudController
       end
 
       context 'when there is not a droplet for the task' do
-        let(:parent_app) { AppModel.make(:docker) }
-        let(:task) { TaskModel.make(app: parent_app, droplet: droplet, state: TaskModel::SUCCEEDED_STATE) }
-        let(:droplet) { DropletModel.make(:docker, app: parent_app) }
+        let(:parent_app) { create(:app_model, :docker) }
+        let(:task) { create(:task_model, app: parent_app, droplet: droplet, state: TaskModel::SUCCEEDED_STATE) }
+        let(:droplet) { create(:droplet_model, :docker, app: parent_app, set_as_current_droplet: false) }
 
         before do
           task.droplet.delete
@@ -322,9 +324,9 @@ module VCAP::CloudController
 
     describe 'cnb?' do
       context 'when there is a droplet and it has the cnb lifecycle' do
-        let(:parent_app) { AppModel.make(:cnb) }
-        let(:task) { TaskModel.make(app: parent_app, droplet: droplet, state: TaskModel::SUCCEEDED_STATE) }
-        let(:droplet) { DropletModel.make(:cnb, app: parent_app) }
+        let(:parent_app) { create(:app_model, :cnb) }
+        let(:task) { create(:task_model, app: parent_app, droplet: droplet, state: TaskModel::SUCCEEDED_STATE) }
+        let(:droplet) { create(:droplet_model, :cnb, app: parent_app) }
 
         it 'returns true' do
           expect(task.cnb?).to be(true)
@@ -332,9 +334,9 @@ module VCAP::CloudController
       end
 
       context 'when there is a droplet and it does not have the cnb lifecycle' do
-        let(:parent_app) { AppModel.make(:cnb) }
-        let(:task) { TaskModel.make(app: parent_app, droplet: droplet, state: TaskModel::SUCCEEDED_STATE) }
-        let(:droplet) { DropletModel.make(app: parent_app) }
+        let(:parent_app) { create(:app_model, :cnb) }
+        let(:task) { create(:task_model, app: parent_app, droplet: droplet, state: TaskModel::SUCCEEDED_STATE) }
+        let(:droplet) { create(:droplet_model, app: parent_app) }
 
         it 'returns false' do
           expect(task.cnb?).to be(false)
@@ -342,9 +344,9 @@ module VCAP::CloudController
       end
 
       context 'when there is not a droplet for the task' do
-        let(:parent_app) { AppModel.make(:cnb) }
-        let(:task) { TaskModel.make(app: parent_app, droplet: droplet, state: TaskModel::SUCCEEDED_STATE) }
-        let(:droplet) { DropletModel.make(:cnb, app: parent_app) }
+        let(:parent_app) { create(:app_model, :cnb) }
+        let(:task) { create(:task_model, app: parent_app, droplet: droplet, state: TaskModel::SUCCEEDED_STATE) }
+        let(:droplet) { create(:droplet_model, :cnb, app: parent_app, set_as_current_droplet: false) }
 
         before do
           task.droplet.delete
@@ -358,11 +360,11 @@ module VCAP::CloudController
     end
 
     describe 'validations' do
-      let(:task) { TaskModel.make }
-      let(:org) { Organization.make }
-      let(:space) { Space.make organization: org }
-      let(:app) { AppModel.make space_guid: space.guid }
-      let(:droplet) { DropletModel.make(app_guid: app.guid) }
+      let(:task) { create(:task_model) }
+      let(:org) { create(:organization) }
+      let(:space) { create(:space, organization: org) }
+      let(:app) { create(:app_model, space_guid: space.guid) }
+      let(:droplet) { create(:droplet_model, app_guid: app.guid, set_as_current_droplet: false) }
 
       describe 'name' do
         it 'allows standard ascii characters' do
@@ -457,7 +459,7 @@ module VCAP::CloudController
           task.save
 
           expect do
-            TaskModel.make app: task.app, sequence_id: 0
+            create(:task_model, app: task.app, sequence_id: 0)
           end.to raise_exception Sequel::UniqueConstraintViolation
         end
 
@@ -465,10 +467,10 @@ module VCAP::CloudController
           task.sequence_id = 0
           task.save
 
-          other_app = AppModel.make space_guid: space.guid
+          other_app = create(:app_model, space_guid: space.guid)
 
           expect do
-            TaskModel.make app: other_app, sequence_id: 0
+            create(:task_model, app: other_app, sequence_id: 0)
           end.not_to raise_exception
         end
       end
@@ -476,7 +478,7 @@ module VCAP::CloudController
       describe 'environment_variables' do
         it 'validates them' do
           expect do
-            TaskModel.make(environment_variables: '')
+            create(:task_model, environment_variables: '')
           end.to raise_error(Sequel::ValidationFailed, /must be an object/)
         end
 
@@ -487,7 +489,7 @@ module VCAP::CloudController
 
           it 'limits the length' do
             expect do
-              TaskModel.make(environment_variables: { 123 => 123 }).save
+              create(:task_model, environment_variables: { 123 => 123 }).save
             end.to raise_error(Sequel::ValidationFailed, /exceeded the maximum length allowed of 5 characters as json/)
           end
         end
@@ -496,19 +498,19 @@ module VCAP::CloudController
       describe 'presence' do
         it 'must have an app' do
           expect do
-            TaskModel.make(name: 'name',
-                           droplet: droplet,
-                           app: nil,
-                           command: 'bundle exec rake db:migrate')
+            create(:task_model, name: 'name',
+                                droplet: droplet,
+                                app: nil,
+                                command: 'bundle exec rake db:migrate')
           end.to raise_error(Sequel::ValidationFailed, /app presence/)
         end
 
         it 'must have a command' do
           expect do
-            TaskModel.make(name: 'name',
-                           droplet: droplet,
-                           app: app,
-                           command: nil)
+            create(:task_model, name: 'name',
+                                droplet: droplet,
+                                app: app,
+                                command: nil)
           end.to raise_error(Sequel::ValidationFailed, /command presence/)
         end
 
@@ -516,20 +518,21 @@ module VCAP::CloudController
           context 'when creating the task' do
             it 'must have a droplet' do
               expect do
-                TaskModel.make(name: 'name',
-                               droplet: nil,
-                               app: app,
-                               command: 'bundle exec rake db:migrate')
+                create(:task_model, name: 'name',
+                                    droplet: nil,
+                                    skip_default_droplet: true,
+                                    app: app,
+                                    command: 'bundle exec rake db:migrate')
               end.to raise_error(Sequel::ValidationFailed, /droplet presence/)
             end
           end
 
           context 'when updating the task' do
             it 'does not need a droplet' do
-              task = TaskModel.make(name: 'name',
-                                    droplet: droplet,
-                                    app: app,
-                                    command: 'bundle exec rake db:migrate')
+              task = create(:task_model, name: 'name',
+                                         droplet: droplet,
+                                         app: app,
+                                         command: 'bundle exec rake db:migrate')
 
               droplet.delete
               task.reload
@@ -540,10 +543,10 @@ module VCAP::CloudController
 
         it 'must have a name' do
           expect do
-            TaskModel.make(name: nil,
-                           droplet: droplet,
-                           app: app,
-                           command: 'bundle exec rake db:migrate')
+            create(:task_model, name: nil,
+                                droplet: droplet,
+                                app: app,
+                                command: 'bundle exec rake db:migrate')
           end.to raise_error(Sequel::ValidationFailed, /name presence/)
         end
       end
@@ -551,85 +554,71 @@ module VCAP::CloudController
       describe 'quotas' do
         it 'errors when log_rate_limit is below -1' do
           expect do
-            TaskModel.make(
-              log_rate_limit: -2,
-              app: app
-            )
+            create(:task_model, log_rate_limit: -2,
+                                app: app)
           end.to raise_error(Sequel::ValidationFailed, /log_rate_limit must be greater than or equal to -1/)
         end
 
         describe 'space quotas' do
-          let(:space) { Space.make organization: org, space_quota_definition: quota }
+          let(:space) { create(:space, organization: org, space_quota_definition: quota) }
 
           context 'when there is no quota' do
             let(:quota) { nil }
 
             it 'allows tasks of any size' do
               expect do
-                TaskModel.make(
-                  memory_in_mb: 21,
-                  app: app
-                )
+                create(:task_model, memory_in_mb: 21,
+                                    app: app)
               end.not_to raise_error
             end
           end
 
           describe 'when the log rate limit quota is unlimited' do
-            let(:quota) { SpaceQuotaDefinition.make(log_rate_limit: -1, organization: org) }
+            let(:quota) { create(:space_quota_definition, log_rate_limit: -1, organization: org) }
 
             it 'allows tasks to run with unlimited rate limits' do
               expect do
-                TaskModel.make(
-                  log_rate_limit: -1,
-                  app: app
-                )
+                create(:task_model, log_rate_limit: -1,
+                                    app: app)
               end.not_to raise_error
             end
 
             it 'allows tasks to run with rate limits' do
               expect do
-                TaskModel.make(
-                  log_rate_limit: 1_000_000_000_000,
-                  app: app
-                )
+                create(:task_model, log_rate_limit: 1_000_000_000_000,
+                                    app: app)
               end.not_to raise_error
             end
           end
 
           describe 'when the quota has a log_rate_limit' do
-            let(:quota) { SpaceQuotaDefinition.make(log_rate_limit: 200, organization: org) }
+            let(:quota) { create(:space_quota_definition, log_rate_limit: 200, organization: org) }
 
             it 'allows tasks that fit in the available log rate' do
               expect do
-                TaskModel.make(
-                  log_rate_limit: 100,
-                  app: app
-                )
+                create(:task_model, log_rate_limit: 100,
+                                    app: app)
               end.not_to raise_error
             end
 
             it 'raises an error if the task does not fit in the remaining space' do
               expect do
-                TaskModel.make(
-                  log_rate_limit: 201,
-                  app: app
-                )
+                create(:task_model, log_rate_limit: 201,
+                                    app: app)
               end.to raise_error Sequel::ValidationFailed, 'log_rate_limit exceeds space log rate quota'
             end
 
             it 'raises an error if the task has an unlimited rate limit' do
               expect do
-                TaskModel.make(
-                  log_rate_limit: -1,
-                  app: app
-                )
+                create(:task_model, log_rate_limit: -1,
+                                    app: app)
               end.to raise_error Sequel::ValidationFailed, "log_rate_limit cannot be unlimited in space '#{space.name}'."
             end
 
             it 'considers running and pending tasks but still allows state changes' do
-              task = TaskModel.make(log_rate_limit: 200, app: app, state: TaskModel::PENDING_STATE)
+              task = create(:task_model, log_rate_limit: 200, app: app, state: TaskModel::PENDING_STATE)
               expect do
-                TaskModel.make(log_rate_limit: 1, app: app, state: TaskModel::RUNNING_STATE)
+                create(:task_model, log_rate_limit: 1, app: app, state: TaskModel::RUNNING_STATE)
               end.to raise_error Sequel::ValidationFailed, 'log_rate_limit exceeds space log rate quota'
 
               expect { task.update(state: TaskModel::RUNNING_STATE) }.not_to raise_error
@@ -637,28 +626,28 @@ module VCAP::CloudController
           end
 
           describe 'when the quota has a memory_limit' do
-            let(:quota) { SpaceQuotaDefinition.make(memory_limit: 20, organization: org) }
+            let(:quota) { create(:space_quota_definition, memory_limit: 20, organization: org) }
 
             it 'allows tasks that fit in the available space' do
-              expect { TaskModel.make(memory_in_mb: 10, app: app) }.not_to raise_error
+              expect { create(:task_model, memory_in_mb: 10, app: app) }.not_to raise_error
             end
 
             it 'raises an error if the task does not fit in the remaining space' do
-              expect { TaskModel.make(memory_in_mb: 21, app: app) }.to raise_error Sequel::ValidationFailed, 'memory_in_mb exceeds space memory quota'
+              expect { create(:task_model, memory_in_mb: 21, app: app) }.to raise_error Sequel::ValidationFailed, 'memory_in_mb exceeds space memory quota'
             end
 
             it 'does not raise errors when canceling task above quota' do
-              task = TaskModel.make(memory_in_mb: 10, app: app)
-              space.update(space_quota_definition: SpaceQuotaDefinition.make(memory_limit: 5, organization: org))
+              task = create(:task_model, memory_in_mb: 10, app: app)
+              space.update(space_quota_definition: create(:space_quota_definition, memory_limit: 5, organization: org))
 
               task.update(state: TaskModel::CANCELING_STATE)
               expect(task.reload).to be_valid
             end
 
             it 'considers running and pending tasks but still allows state changes' do
-              task = TaskModel.make(memory_in_mb: 20, app: app, state: TaskModel::PENDING_STATE)
+              task = create(:task_model, memory_in_mb: 20, app: app, state: TaskModel::PENDING_STATE)
               expect do
-                TaskModel.make(memory_in_mb: 1, app: app, state: TaskModel::RUNNING_STATE)
+                create(:task_model, memory_in_mb: 1, app: app, state: TaskModel::RUNNING_STATE)
               end.to raise_error Sequel::ValidationFailed, 'memory_in_mb exceeds space memory quota'
 
               expect { task.update(state: TaskModel::RUNNING_STATE) }.not_to raise_error
@@ -666,42 +655,36 @@ module VCAP::CloudController
           end
 
           describe 'when the quota has an instance_memory_limit' do
-            let(:quota) { SpaceQuotaDefinition.make(instance_memory_limit: 2, organization: org) }
+            let(:quota) { create(:space_quota_definition, instance_memory_limit: 2, organization: org) }
 
             it 'allows tasks that fit in the instance memory limit' do
               expect do
-                TaskModel.make(
-                  memory_in_mb: 1,
-                  app: app
-                )
+                create(:task_model, memory_in_mb: 1,
+                                    app: app)
               end.not_to raise_error
             end
 
             it 'raises an error if the task is larger than the instance memory limit' do
               expect do
-                TaskModel.make(
-                  memory_in_mb: 3,
-                  app: app
-                )
+                create(:task_model, memory_in_mb: 3,
+                                    app: app)
               end.to raise_error Sequel::ValidationFailed, 'memory_in_mb exceeds space instance memory quota'
             end
 
             context 'when the quota is unlimited' do
-              let(:quota) { SpaceQuotaDefinition.make(instance_memory_limit: QuotaDefinition::UNLIMITED, organization: org) }
+              let(:quota) { create(:space_quota_definition, instance_memory_limit: QuotaDefinition::UNLIMITED, organization: org) }
 
               it 'allows tasks of all sizes' do
                 expect do
-                  TaskModel.make(
-                    memory_in_mb: 500,
-                    app: app
-                  )
+                  create(:task_model, memory_in_mb: 500,
+                                      app: app)
                 end.not_to raise_error
               end
             end
           end
 
           describe 'user' do
-            subject(:task) { TaskModel.make(user: task_user) }
+            subject(:task) { create(:task_model, user: task_user) }
             let(:task_user) { 'vcap' }
 
             before do
@@ -744,14 +727,14 @@ module VCAP::CloudController
           end
 
           describe 'when the quota has an app_task_limit' do
-            let(:quota) { SpaceQuotaDefinition.make(app_task_limit: 1, organization: org) }
+            let(:quota) { create(:space_quota_definition, app_task_limit: 1, organization: org) }
 
             it 'allows tasks that is within app tasks limit' do
-              expect { TaskModel.make(app:) }.not_to raise_error
+              expect { create(:task_model, app:) }.not_to raise_error
             end
 
             it 'allows tasks to be updated if the limit is reached' do
-              task = TaskModel.make(app: app, state: TaskModel::PENDING_STATE)
+              task = create(:task_model, app: app, state: TaskModel::PENDING_STATE)
 
               task.state = TaskModel::RUNNING_STATE
 
@@ -760,58 +743,52 @@ module VCAP::CloudController
 
             context 'when the number of running tasks is equal to the app task limit' do
               before do
-                TaskModel.make(state: TaskModel::RUNNING_STATE, app: app)
+                create(:task_model, state: TaskModel::RUNNING_STATE, app: app)
               end
 
               it 'raises an error' do
-                expect { TaskModel.make(app:) }.to raise_error Sequel::ValidationFailed, 'app_task_limit quota exceeded'
+                expect { create(:task_model, app:) }.to raise_error Sequel::ValidationFailed, 'app_task_limit quota exceeded'
               end
             end
           end
         end
 
         describe 'org quotas' do
-          let(:org) { Organization.make quota_definition: quota }
+          let(:org) { create(:organization, quota_definition: quota) }
 
           context 'when there is no quota' do
             let(:quota) { nil }
 
             it 'allows tasks of any size' do
               expect do
-                TaskModel.make(
-                  memory_in_mb: 21,
-                  log_rate_limit: 21_000,
-                  app: app
-                )
+                create(:task_model, memory_in_mb: 21,
+                                    log_rate_limit: 21_000,
+                                    app: app)
               end.not_to raise_error
             end
           end
 
           describe 'when the quota has a log_rate_limit' do
-            let(:quota) { QuotaDefinition.make(log_rate_limit: 200) }
+            let(:quota) { create(:quota_definition, log_rate_limit: 200) }
 
             it 'does allow a task that fits in the limit to start' do
               expect do
-                TaskModel.make(
-                  log_rate_limit: 199,
-                  app: app
-                )
+                create(:task_model, log_rate_limit: 199,
+                                    app: app)
               end.not_to raise_error
             end
 
             it 'does not allow a task that exceeds the limit to start' do
               expect do
-                TaskModel.make(
-                  log_rate_limit: 10_000,
-                  app: app
-                )
+                create(:task_model, log_rate_limit: 10_000,
+                                    app: app)
               end.to raise_error(/log_rate_limit exceeds organization log rate/)
             end
 
             it 'considers running and pending tasks but still allows state changes' do
-              task = TaskModel.make(log_rate_limit: 200, app: app, state: TaskModel::PENDING_STATE)
+              task = create(:task_model, log_rate_limit: 200, app: app, state: TaskModel::PENDING_STATE)
               expect do
-                TaskModel.make(log_rate_limit: 1, app: app, state: TaskModel::RUNNING_STATE)
+                create(:task_model, log_rate_limit: 1, app: app, state: TaskModel::RUNNING_STATE)
               end.to raise_error Sequel::ValidationFailed, 'log_rate_limit exceeds organization log rate quota'
 
               expect { task.update(state: TaskModel::RUNNING_STATE) }.not_to raise_error
@@ -819,28 +796,28 @@ module VCAP::CloudController
           end
 
           describe 'when the quota has a memory_limit' do
-            let(:quota) { QuotaDefinition.make(memory_limit: 20) }
+            let(:quota) { create(:quota_definition, memory_limit: 20) }
 
             it 'allows tasks that fit in the available space' do
-              expect { TaskModel.make(memory_in_mb: 10, app: app) }.not_to raise_error
+              expect { create(:task_model, memory_in_mb: 10, app: app) }.not_to raise_error
             end
 
             it 'raises an error if the task does not fit in the remaining space' do
-              expect { TaskModel.make(memory_in_mb: 21, app: app) }.to raise_error Sequel::ValidationFailed, 'memory_in_mb exceeds organization memory quota'
+              expect { create(:task_model, memory_in_mb: 21, app: app) }.to raise_error Sequel::ValidationFailed, 'memory_in_mb exceeds organization memory quota'
             end
 
             it 'does not raise errors when canceling task above quota' do
-              task = TaskModel.make(memory_in_mb: 10, app: app)
-              org.update(quota_definition: QuotaDefinition.make(memory_limit: 5))
+              task = create(:task_model, memory_in_mb: 10, app: app)
+              org.update(quota_definition: create(:quota_definition, memory_limit: 5))
 
               task.update(state: TaskModel::CANCELING_STATE)
               expect(task.reload).to be_valid
             end
 
             it 'considers running and pending tasks but still allows state changes' do
-              task = TaskModel.make(memory_in_mb: 20, app: app, state: TaskModel::PENDING_STATE)
+              task = create(:task_model, memory_in_mb: 20, app: app, state: TaskModel::PENDING_STATE)
               expect do
-                TaskModel.make(memory_in_mb: 1, app: app, state: TaskModel::RUNNING_STATE)
+                create(:task_model, memory_in_mb: 1, app: app, state: TaskModel::RUNNING_STATE)
               end.to raise_error Sequel::ValidationFailed, 'memory_in_mb exceeds organization memory quota'
 
               expect { task.update(state: TaskModel::RUNNING_STATE) }.not_to raise_error
@@ -848,49 +825,43 @@ module VCAP::CloudController
           end
 
           describe 'when the quota has an instance_memory_limit' do
-            let(:quota) { QuotaDefinition.make(instance_memory_limit: 2) }
+            let(:quota) { create(:quota_definition, instance_memory_limit: 2) }
 
             it 'allows tasks that fit in the instance memory limit' do
               expect do
-                TaskModel.make(
-                  memory_in_mb: 1,
-                  app: app
-                )
+                create(:task_model, memory_in_mb: 1,
+                                    app: app)
               end.not_to raise_error
             end
 
             it 'raises an error if the task is larger than the instance memory limit' do
               expect do
-                TaskModel.make(
-                  memory_in_mb: 3,
-                  app: app
-                )
+                create(:task_model, memory_in_mb: 3,
+                                    app: app)
               end.to raise_error Sequel::ValidationFailed, 'memory_in_mb exceeds organization instance memory quota'
             end
 
             context 'when the quota is unlimited' do
-              let(:quota) { QuotaDefinition.make(instance_memory_limit: QuotaDefinition::UNLIMITED) }
+              let(:quota) { create(:quota_definition, instance_memory_limit: QuotaDefinition::UNLIMITED) }
 
               it 'allows tasks of all sizes' do
                 expect do
-                  TaskModel.make(
-                    memory_in_mb: 500,
-                    app: app
-                  )
+                  create(:task_model, memory_in_mb: 500,
+                                      app: app)
                 end.not_to raise_error
               end
             end
           end
 
           describe 'when the quota has an app_task_limit' do
-            let(:quota) { QuotaDefinition.make(app_task_limit: 1) }
+            let(:quota) { create(:quota_definition, app_task_limit: 1) }
 
             it 'allows tasks that is within app tasks limit' do
-              expect { TaskModel.make(app:) }.not_to raise_error
+              expect { create(:task_model, app:) }.not_to raise_error
             end
 
             it 'allows tasks to be updated if the limit is reached' do
-              task = TaskModel.make(app: app, state: TaskModel::PENDING_STATE)
+              task = create(:task_model, app: app, state: TaskModel::PENDING_STATE)
 
               task.state = TaskModel::RUNNING_STATE
 
@@ -899,11 +870,11 @@ module VCAP::CloudController
 
             context 'when the number of running tasks is equal to the app task limit' do
               before do
-                TaskModel.make(state: TaskModel::RUNNING_STATE, app: app)
+                create(:task_model, state: TaskModel::RUNNING_STATE, app: app)
               end
 
               it 'raises an error' do
-                expect { TaskModel.make(app:) }.to raise_error Sequel::ValidationFailed, 'app_task_limit quota exceeded'
+                expect { create(:task_model, app:) }.to raise_error Sequel::ValidationFailed, 'app_task_limit quota exceeded'
               end
             end
           end

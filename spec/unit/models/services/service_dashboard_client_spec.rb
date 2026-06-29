@@ -2,8 +2,8 @@ require 'spec_helper'
 
 module VCAP::CloudController
   RSpec.describe ServiceDashboardClient do
-    let(:service_broker) { ServiceBroker.make }
-    let(:other_broker) { ServiceBroker.make }
+    let(:service_broker) { create(:service_broker) }
+    let(:other_broker) { create(:service_broker) }
     let(:uaa_id) { 'claimed_client_id' }
 
     it { is_expected.to have_timestamp_columns }
@@ -14,7 +14,7 @@ module VCAP::CloudController
 
     describe 'uniqueness' do
       it 'enforces uniqueness of uaa_id' do
-        existing = ServiceDashboardClient.make(service_broker:)
+        existing = create(:service_dashboard_client, service_broker:)
         expect do
           ServiceDashboardClient.create(uaa_id: existing.uaa_id, service_broker: other_broker)
         end.to raise_error(Sequel::ValidationFailed, /unique/)
@@ -25,7 +25,7 @@ module VCAP::CloudController
       it { is_expected.to validate_presence :uaa_id }
 
       context 'when all fields are valid' do
-        let(:client) { ServiceDashboardClient.make_unsaved(service_broker:) }
+        let(:client) { build(:service_dashboard_client, service_broker:) }
 
         it 'is valid' do
           expect(client).to be_valid
@@ -60,7 +60,7 @@ module VCAP::CloudController
 
       context 'when a claim without a broker id exists' do
         before do
-          ServiceDashboardClient.make(service_broker: nil, uaa_id: uaa_id)
+          create(:service_dashboard_client, service_broker: nil, uaa_id: uaa_id)
         end
 
         it 'claims the client for the broker' do
@@ -120,7 +120,7 @@ module VCAP::CloudController
 
       context 'when one client exists with the specified uaa_id' do
         let!(:client) do
-          ServiceDashboardClient.make(uaa_id: 'some-uaa-id', service_broker: nil)
+          create(:service_dashboard_client, uaa_id: 'some-uaa-id', service_broker: nil)
         end
 
         it 'returns the client' do

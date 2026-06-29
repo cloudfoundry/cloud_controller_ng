@@ -5,10 +5,10 @@ require 'field_decorator_spec_shared_examples'
 module VCAP::CloudController
   RSpec.describe FieldServiceOfferingServiceBrokerDecorator do
     describe '.decorate' do
-      let(:broker1) { ServiceBroker.make(created_at: Time.now.utc - 1.second) }
+      let(:broker1) { create(:service_broker, created_at: Time.now.utc - 1.second) }
 
-      let(:offering1) { Service.make(service_broker: broker1) }
-      let(:offering2) { Service.make }
+      let(:offering1) { create(:service, service_broker: broker1) }
+      let(:offering2) { create(:service) }
 
       it 'decorated the given hash with broker name and guid' do
         undecorated_hash = { foo: 'bar', included: { monkeys: %w[zach greg] } }
@@ -35,7 +35,7 @@ module VCAP::CloudController
       end
 
       context 'when offerings are from the same broker' do
-        let(:offering3) { Service.make(service_broker: offering1.service_broker) }
+        let(:offering3) { create(:service, service_broker: offering1.service_broker) }
 
         it 'does not duplicate the broker' do
           decorator = described_class.new({ service_broker: ['name'] })

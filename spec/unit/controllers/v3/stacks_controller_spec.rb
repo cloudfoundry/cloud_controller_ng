@@ -8,7 +8,7 @@ RSpec.describe StacksController, type: :controller do
   describe '#index' do
     before { VCAP::CloudController::Stack.dataset.destroy }
 
-    let(:user) { VCAP::CloudController::User.make }
+    let(:user) { create(:user) }
 
     describe 'permissions by role' do
       role_to_expected_http_response = {
@@ -36,8 +36,8 @@ RSpec.describe StacksController, type: :controller do
     end
 
     context 'when the user is logged in' do
-      let!(:stack1) { VCAP::CloudController::Stack.make }
-      let!(:stack2) { VCAP::CloudController::Stack.make }
+      let!(:stack1) { create(:stack) }
+      let!(:stack2) { create(:stack) }
 
       before do
         set_current_user(user)
@@ -70,7 +70,7 @@ RSpec.describe StacksController, type: :controller do
   end
 
   describe '#show' do
-    let(:user) { VCAP::CloudController::User.make }
+    let(:user) { create(:user) }
 
     describe 'permissions by role' do
       role_to_expected_http_response = {
@@ -103,7 +103,7 @@ RSpec.describe StacksController, type: :controller do
       end
 
       context 'when the stack exists' do
-        let!(:stack) { VCAP::CloudController::Stack.make }
+        let!(:stack) { create(:stack) }
 
         it 'renders a single stack details' do
           get :show, params: { guid: stack.guid }
@@ -124,7 +124,7 @@ RSpec.describe StacksController, type: :controller do
   end
 
   describe '#create' do
-    let(:user) { VCAP::CloudController::User.make }
+    let(:user) { create(:user) }
     let(:req_body) do
       { name: 'the-name' }
     end
@@ -180,13 +180,13 @@ RSpec.describe StacksController, type: :controller do
   end
 
   describe '#destroy' do
-    let(:user) { set_current_user(VCAP::CloudController::User.make) }
-    let(:stack) { VCAP::CloudController::Stack.make }
+    let(:user) { set_current_user(create(:user)) }
+    let(:stack) { create(:stack) }
 
     describe 'permissions' do
       context 'when the user does not have the write scope' do
         before do
-          set_current_user(VCAP::CloudController::User.make, scopes: ['cloud_controller.read'])
+          set_current_user(create(:user), scopes: ['cloud_controller.read'])
         end
 
         it 'raises an ApiError with a 403 code' do
@@ -205,8 +205,8 @@ RSpec.describe StacksController, type: :controller do
 
         role_to_expected_http_response.each do |role, expected_return_value|
           context "as an #{role}" do
-            let(:org) { VCAP::CloudController::Organization.make }
-            let(:space) { VCAP::CloudController::Space.make(organization: org) }
+            let(:org) { create(:organization) }
+            let(:space) { create(:space, organization: org) }
 
             it "returns #{expected_return_value}" do
               set_current_user_as_role(
@@ -232,8 +232,8 @@ RSpec.describe StacksController, type: :controller do
 
         role_to_expected_http_response.each do |role, expected_return_value|
           context "as an #{role}" do
-            let(:org) { VCAP::CloudController::Organization.make }
-            let(:space) { VCAP::CloudController::Space.make(organization: org) }
+            let(:org) { create(:organization) }
+            let(:space) { create(:space, organization: org) }
 
             it "returns #{expected_return_value}" do
               set_current_user_as_role(
@@ -305,10 +305,10 @@ RSpec.describe StacksController, type: :controller do
   end
 
   describe '#update' do
-    let!(:org) { VCAP::CloudController::Organization.make(name: "Harold's Farm") }
-    let!(:space) { VCAP::CloudController::Space.make(name: 'roosters', organization: org) }
-    let(:user) { VCAP::CloudController::User.make }
-    let(:stack) { VCAP::CloudController::Stack.make }
+    let!(:org) { create(:organization, name: "Harold's Farm") }
+    let!(:space) { create(:space, name: 'roosters', organization: org) }
+    let(:user) { create(:user) }
+    let(:stack) { create(:stack) }
 
     let(:labels) do
       {
@@ -524,7 +524,7 @@ RSpec.describe StacksController, type: :controller do
       end
 
       context 'when changing state on the default stack' do
-        let!(:default_stack) { VCAP::CloudController::Stack.make(name: default_stack_name) }
+        let!(:default_stack) { create(:stack, name: default_stack_name) }
 
         it 'returns a warning header with the stack name' do
           patch :update, params: { guid: default_stack.guid, state: 'DEPRECATED' }, as: :json
@@ -535,8 +535,8 @@ RSpec.describe StacksController, type: :controller do
       end
 
       context 'when changing state on a non-default stack' do
-        let!(:default_stack) { VCAP::CloudController::Stack.make(name: default_stack_name) }
-        let!(:other_stack) { VCAP::CloudController::Stack.make(name: 'other-stack') }
+        let!(:default_stack) { create(:stack, name: default_stack_name) }
+        let!(:other_stack) { create(:stack, name: 'other-stack') }
 
         it 'does not return a warning header' do
           patch :update, params: { guid: other_stack.guid, state: 'DEPRECATED' }, as: :json
@@ -547,7 +547,7 @@ RSpec.describe StacksController, type: :controller do
       end
 
       context 'when updating metadata on the default stack without changing state' do
-        let!(:default_stack) { VCAP::CloudController::Stack.make(name: default_stack_name) }
+        let!(:default_stack) { create(:stack, name: default_stack_name) }
 
         it 'does not return a warning header' do
           patch :update, params: { guid: default_stack.guid, metadata: { labels: { foo: 'bar' } } }, as: :json

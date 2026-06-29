@@ -42,7 +42,7 @@ module VCAP::CloudController
             )
           end
           let(:good_lrp) { ::Diego::Bbs::Models::DesiredLRP.new(process_guid: 'good-lrp') }
-          let!(:good_process) { ProcessModel.make(:diego_runnable) }
+          let!(:good_process) { create(:process_model, :diego_runnable) }
 
           it 'does not touch lrps that are up to date and correct' do
             allow(bbs_apps_client).to receive(:desire_app)
@@ -58,8 +58,8 @@ module VCAP::CloudController
           end
 
           context 'when the process is a docker app' do
-            let(:app) { AppModel.make(:docker, droplet: DropletModel.make(:docker)) }
-            let(:good_process) { ProcessModel.make(:docker, state: 'STARTED', app: app) }
+            let(:app) { create(:app_model, :docker, droplet: create(:droplet_model, :docker)) }
+            let(:good_process) { create(:process_model, :docker, state: 'STARTED', app: app) }
 
             context 'when diego_docker is enabled' do
               before do
@@ -112,7 +112,7 @@ module VCAP::CloudController
               routes: ::Diego::Bbs::Models::ProtoRoutes.new(routes: [])
             )
           end
-          let!(:stale_process) { ProcessModel.make(:diego_runnable) }
+          let!(:stale_process) { create(:process_model, :diego_runnable) }
 
           it 'updates stale lrps' do
             allow(bbs_apps_client).to receive(:update_app)
@@ -138,8 +138,8 @@ module VCAP::CloudController
           end
 
           context 'when the process is a cnb app' do
-            let(:app) { AppModel.make(:cnb, droplet: DropletModel.make(:cnb)) }
-            let!(:stale_process) { ProcessModel.make(:cnb, state: 'STARTED', app: app) }
+            let(:app) { create(:app_model, :cnb, droplet: create(:droplet_model, :cnb)) }
+            let!(:stale_process) { create(:process_model, :cnb, state: 'STARTED', app: app) }
 
             before do
               FeatureFlag.create(name: 'diego_cnb', enabled: true)
@@ -173,8 +173,8 @@ module VCAP::CloudController
           end
 
           context 'when the process is a docker app' do
-            let(:app) { AppModel.make(:docker, droplet: DropletModel.make(:docker)) }
-            let!(:stale_process) { ProcessModel.make(:docker, state: 'STARTED', app: app) }
+            let(:app) { create(:app_model, :docker, droplet: create(:droplet_model, :docker)) }
+            let!(:stale_process) { create(:process_model, :docker, state: 'STARTED', app: app) }
 
             context 'when diego_docker is enabled' do
               before do
@@ -260,7 +260,7 @@ module VCAP::CloudController
 
         context 'when diego does not contain the LRP' do
           let(:scheduling_infos) { [] }
-          let!(:missing_process) { ProcessModel.make(:diego_runnable) }
+          let!(:missing_process) { create(:process_model, :diego_runnable) }
 
           it 'creates missing lrps' do
             allow(bbs_apps_client).to receive(:desire_app).with(missing_process)
@@ -320,7 +320,7 @@ module VCAP::CloudController
         end
 
         context 'when diego already contains the LRP' do
-          let(:good_process) { ProcessModel.make(:diego_runnable) }
+          let(:good_process) { create(:process_model, :diego_runnable) }
           let(:error) { CloudController::Errors::ApiError.new_from_details('RunnerError', 'the requested resource already exists') }
           let(:indexed_by_thing) { instance_double(Hash) }
           let(:existing_lrp) { ::Diego::Bbs::Models::DesiredLRP.new(process_guid: "#{good_process.guid}-#{good_process.version}") }
@@ -442,8 +442,8 @@ module VCAP::CloudController
 
         context 'when updating LRP state on diego fails multiple times with ignorable errors' do
           let(:scheduling_infos) { [] }
-          let!(:missing_process1) { ProcessModel.make(:diego_runnable) }
-          let!(:missing_process2) { ProcessModel.make(:diego_runnable) }
+          let!(:missing_process1) { create(:process_model, :diego_runnable) }
+          let!(:missing_process2) { create(:process_model, :diego_runnable) }
           let(:ignorable_error) { CloudController::Errors::ApiError.new_from_details('RunnerInvalidRequest', 'invalid thing') }
           let(:fake_app_recipe) { instance_double(AppRecipeBuilder, build_app_lrp: double(:app_lrp_recipe)) }
 
@@ -460,10 +460,10 @@ module VCAP::CloudController
 
         context 'when updating LRP state on diego fails multiple times with some non-ignorable errors' do
           let(:scheduling_infos) { [] }
-          let!(:missing_process1) { ProcessModel.make(:diego_runnable) }
-          let!(:missing_process2) { ProcessModel.make(:diego_runnable) }
-          let!(:missing_process3) { ProcessModel.make(:diego_runnable) }
-          let!(:missing_process4) { ProcessModel.make(:diego_runnable) }
+          let!(:missing_process1) { create(:process_model, :diego_runnable) }
+          let!(:missing_process2) { create(:process_model, :diego_runnable) }
+          let!(:missing_process3) { create(:process_model, :diego_runnable) }
+          let!(:missing_process4) { create(:process_model, :diego_runnable) }
           let(:ignorable_error) { CloudController::Errors::ApiError.new_from_details('RunnerInvalidRequest', 'invalid thing') }
           let(:non_ignorable_error) { CloudController::Errors::ApiError.new_from_details('RunnerError', 'some error') }
           let(:non_api_error) { StandardError.new('something went wrong') }
@@ -526,9 +526,9 @@ module VCAP::CloudController
         end
 
         context 'when logging invalid-lrp-request count to statsd' do
-          let!(:missing_process) { ProcessModel.make(:diego_runnable) }
-          let!(:missing_process2) { ProcessModel.make(:diego_runnable) }
-          let!(:missing_process3) { ProcessModel.make(:diego_runnable) }
+          let!(:missing_process) { create(:process_model, :diego_runnable) }
+          let!(:missing_process2) { create(:process_model, :diego_runnable) }
+          let!(:missing_process3) { create(:process_model, :diego_runnable) }
           let(:invalid_request_error) { CloudController::Errors::ApiError.new_from_details('RunnerInvalidRequest', 'invalid thing') }
           let(:other_error) { CloudController::Errors::ApiError.new_from_details('RunnerError', 'bad error!') }
 

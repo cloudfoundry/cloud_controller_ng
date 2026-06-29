@@ -51,7 +51,7 @@ module VCAP::CloudController
     end
 
     describe '#provide_for_update' do
-      let(:app) { AppModel.make }
+      let(:app) { create(:app_model) }
       let(:message) { AppUpdateMessage.new(request) }
 
       context 'when lifecycle type is requested on the message' do
@@ -86,7 +86,7 @@ module VCAP::CloudController
         let(:request) { {} }
 
         context 'the app is buildpack type' do
-          let(:app) { AppModel.make }
+          let(:app) { create(:app_model) }
 
           it 'returns a AppBuildpackLifecycle' do
             expect(AppLifecycleProvider.provide_for_update(message, app)).to be_a(AppBuildpackLifecycle)
@@ -94,7 +94,7 @@ module VCAP::CloudController
         end
 
         context 'the app is docker type' do
-          let(:app) { AppModel.make(:docker) }
+          let(:app) { create(:app_model, :docker) }
 
           it 'returns a AppDockerLifecycle' do
             expect(AppLifecycleProvider.provide_for_update(message, app)).to be_a(AppDockerLifecycle)

@@ -5,12 +5,12 @@ module VCAP::CloudController
   RSpec.describe RouteDeleteAction do
     let(:user_audit_info) { instance_double(UserAuditInfo) }
     let(:route_event_repo) { instance_double(Repositories::RouteEventRepository) }
-    let(:space) { Space.make }
+    let(:space) { create(:space) }
 
     subject(:route_delete) { RouteDeleteAction.new(user_audit_info) }
 
     describe '#delete' do
-      let!(:route) { Route.make }
+      let!(:route) { create(:route) }
 
       before do
         allow(Repositories::RouteEventRepository).to receive(:new).and_return(route_event_repo)
@@ -32,26 +32,24 @@ module VCAP::CloudController
       end
 
       describe 'recursive deletion' do
-        let(:app) { AppModel.make }
-        let(:route) { Route.make(space: space, host: 'test') }
-        let(:service_instance) { ManagedServiceInstance.make(:routing, space:) }
-        let!(:route_binding) { RouteBinding.make(route:, service_instance:) }
-        let!(:route_mapping) { RouteMappingModel.make(app: app, route: route, app_port: 8080) }
+        let(:app) { create(:app_model) }
+        let(:route) { create(:route, space: space, host: 'test') }
+        let(:service_instance) { create(:managed_service_instance, :routing, space:) }
+        let!(:route_binding) { create(:route_binding, route:, service_instance:) }
+        let!(:route_mapping) { create(:route_mapping_model, app: app, route: route, app_port: 8080) }
         let!(:route_label) do
-          VCAP::CloudController::RouteLabelModel.make(
-            resource_guid: route.guid,
-            key_prefix: 'pfx.com',
-            key_name: 'potato',
-            value: 'baked'
-          )
+          create(:route_label_model,
+                 resource_guid: route.guid,
+                 key_prefix: 'pfx.com',
+                 key_name: 'potato',
+                 value: 'baked')
         end
 
         let!(:route_annotation) do
-          VCAP::CloudController::RouteAnnotationModel.make(
-            resource_guid: route.guid,
-            key_name: 'contacts',
-            value: 'Bill tel(1111111) email(bill@fixme), Bob tel(222222) pager(3333333#555) email(bob@fixme)'
-          )
+          create(:route_annotation_model,
+                 resource_guid: route.guid,
+                 key_name: 'contacts',
+                 value: 'Bill tel(1111111) email(bill@fixme), Bob tel(222222) pager(3333333#555) email(bob@fixme)')
         end
 
         before do

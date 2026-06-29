@@ -239,7 +239,7 @@ RSpec.shared_examples 'resource with metadata' do
   # override these
   let(:resource) do
     # e.g:
-    # Space.make
+    # FactoryBot.create(:space)
   end
   let(:api_call) do
     # e.g:
@@ -280,9 +280,9 @@ RSpec.shared_examples 'list_endpoint_with_common_filters' do
   let(:additional_resource_params) { {} }
 
   context 'filtering guids' do
-    let!(:resource_1) { resource_klass.make(guid: '1', **additional_resource_params) }
-    let!(:resource_2) { resource_klass.make(guid: '2', **additional_resource_params) }
-    let!(:resource_3) { resource_klass.make(guid: '3', **additional_resource_params) }
+    let!(:resource_1) { create(resource_klass.name.demodulize.underscore.to_sym, guid: '1', **additional_resource_params) }
+    let!(:resource_2) { create(resource_klass.name.demodulize.underscore.to_sym, guid: '2', **additional_resource_params) }
+    let!(:resource_3) { create(resource_klass.name.demodulize.underscore.to_sym, guid: '3', **additional_resource_params) }
 
     it 'filters on guid' do
       api_call.call(headers, 'guids=1,2,4')
@@ -292,10 +292,10 @@ RSpec.shared_examples 'list_endpoint_with_common_filters' do
   end
 
   context 'filtering timestamps on creation' do
-    let!(:resource_1) { resource_klass.make(guid: '1', created_at: '2020-05-26T18:47:01Z', **additional_resource_params) }
-    let!(:resource_2) { resource_klass.make(guid: '2', created_at: '2020-05-26T18:47:02Z', **additional_resource_params) }
-    let!(:resource_3) { resource_klass.make(guid: '3', created_at: '2020-05-26T18:47:03Z', **additional_resource_params) }
-    let!(:resource_4) { resource_klass.make(guid: '4', created_at: '2020-05-26T18:47:04Z', **additional_resource_params) }
+    let!(:resource_1) { create(resource_klass.name.demodulize.underscore.to_sym, guid: '1', created_at: '2020-05-26T18:47:01Z', **additional_resource_params) }
+    let!(:resource_2) { create(resource_klass.name.demodulize.underscore.to_sym, guid: '2', created_at: '2020-05-26T18:47:02Z', **additional_resource_params) }
+    let!(:resource_3) { create(resource_klass.name.demodulize.underscore.to_sym, guid: '3', created_at: '2020-05-26T18:47:03Z', **additional_resource_params) }
+    let!(:resource_4) { create(resource_klass.name.demodulize.underscore.to_sym, guid: '4', created_at: '2020-05-26T18:47:04Z', **additional_resource_params) }
 
     it 'filters' do
       api_call.call(headers, "created_ats[lt]=#{resource_3.created_at.iso8601}")
@@ -315,10 +315,26 @@ RSpec.shared_examples 'list_endpoint_with_common_filters' do
       resource_klass.plugin :timestamps, update_on_create: true, allow_manual_update: true
     end
 
-    let!(:resource_1) { resource_klass.make(guid: '1', **additional_resource_params).tap { |r| r.update(updated_at: '2020-05-26T18:47:01Z') } }
-    let!(:resource_2) { resource_klass.make(guid: '2', **additional_resource_params).tap { |r| r.update(updated_at: '2020-05-26T18:47:02Z') } }
-    let!(:resource_3) { resource_klass.make(guid: '3', **additional_resource_params).tap { |r| r.update(updated_at: '2020-05-26T18:47:03Z') } }
-    let!(:resource_4) { resource_klass.make(guid: '4', **additional_resource_params).tap { |r| r.update(updated_at: '2020-05-26T18:47:04Z') } }
+    let!(:resource_1) do
+      create(resource_klass.name.demodulize.underscore.to_sym, guid: '1', **additional_resource_params).tap do |r|
+        r.update(updated_at: '2020-05-26T18:47:01Z')
+      end
+    end
+    let!(:resource_2) do
+      create(resource_klass.name.demodulize.underscore.to_sym, guid: '2', **additional_resource_params).tap do |r|
+        r.update(updated_at: '2020-05-26T18:47:02Z')
+      end
+    end
+    let!(:resource_3) do
+      create(resource_klass.name.demodulize.underscore.to_sym, guid: '3', **additional_resource_params).tap do |r|
+        r.update(updated_at: '2020-05-26T18:47:03Z')
+      end
+    end
+    let!(:resource_4) do
+      create(resource_klass.name.demodulize.underscore.to_sym, guid: '4', **additional_resource_params).tap do |r|
+        r.update(updated_at: '2020-05-26T18:47:04Z')
+      end
+    end
 
     after do
       resource_klass.plugin :timestamps, update_on_create: true, allow_manual_update: false
@@ -337,10 +353,10 @@ RSpec.shared_examples 'list endpoint order_by name' do |endpoint|
   let(:resource_klass) { raise 'Please define a resource_klass!' }
   let(:additional_resource_params) { {} }
 
-  let!(:resource_1) { resource_klass.make(guid: '1', name: 'flopsy', **additional_resource_params) }
-  let!(:resource_2) { resource_klass.make(guid: '2', name: 'mopsy', **additional_resource_params) }
-  let!(:resource_3) { resource_klass.make(guid: '3', name: 'cottontail', **additional_resource_params) }
-  let!(:resource_4) { resource_klass.make(guid: '4', name: 'peter', **additional_resource_params) }
+  let!(:resource_1) { create(resource_klass.name.demodulize.underscore.to_sym, guid: '1', name: 'flopsy', **additional_resource_params) }
+  let!(:resource_2) { create(resource_klass.name.demodulize.underscore.to_sym, guid: '2', name: 'mopsy', **additional_resource_params) }
+  let!(:resource_3) { create(resource_klass.name.demodulize.underscore.to_sym, guid: '3', name: 'cottontail', **additional_resource_params) }
+  let!(:resource_4) { create(resource_klass.name.demodulize.underscore.to_sym, guid: '4', name: 'peter', **additional_resource_params) }
 
   it 'sorts ascending' do
     get("#{endpoint}?order_by=name", nil, admin_headers)
@@ -366,10 +382,10 @@ RSpec.shared_examples 'list endpoint order_by timestamps' do |endpoint|
   let(:additional_resource_params) { {} }
 
   context 'order_by created_at' do
-    let!(:resource_1) { resource_klass.make(guid: '1', created_at: '2020-05-26T18:47:03Z', **additional_resource_params) }
-    let!(:resource_2) { resource_klass.make(guid: '2', created_at: '2020-05-26T18:47:02Z', **additional_resource_params) }
-    let!(:resource_3) { resource_klass.make(guid: '3', created_at: '2020-05-26T18:47:01Z', **additional_resource_params) }
-    let!(:resource_4) { resource_klass.make(guid: '4', created_at: '2020-05-26T18:47:04Z', **additional_resource_params) }
+    let!(:resource_1) { create(resource_klass.name.demodulize.underscore.to_sym, guid: '1', created_at: '2020-05-26T18:47:03Z', **additional_resource_params) }
+    let!(:resource_2) { create(resource_klass.name.demodulize.underscore.to_sym, guid: '2', created_at: '2020-05-26T18:47:02Z', **additional_resource_params) }
+    let!(:resource_3) { create(resource_klass.name.demodulize.underscore.to_sym, guid: '3', created_at: '2020-05-26T18:47:01Z', **additional_resource_params) }
+    let!(:resource_4) { create(resource_klass.name.demodulize.underscore.to_sym, guid: '4', created_at: '2020-05-26T18:47:04Z', **additional_resource_params) }
 
     it 'sorts ascending' do
       get("#{endpoint}?order_by=created_at", nil, admin_headers)
@@ -397,10 +413,10 @@ RSpec.shared_examples 'list endpoint order_by timestamps' do |endpoint|
       resource_klass.plugin :timestamps, update_on_create: false
     end
 
-    let!(:resource_1) { resource_klass.make(guid: '1', updated_at: '2020-05-26T18:47:03Z', **additional_resource_params) }
-    let!(:resource_2) { resource_klass.make(guid: '2', updated_at: '2020-05-26T18:47:02Z', **additional_resource_params) }
-    let!(:resource_3) { resource_klass.make(guid: '3', updated_at: '2020-05-26T18:47:01Z', **additional_resource_params) }
-    let!(:resource_4) { resource_klass.make(guid: '4', updated_at: '2020-05-26T18:47:04Z', **additional_resource_params) }
+    let!(:resource_1) { create(resource_klass.name.demodulize.underscore.to_sym, guid: '1', updated_at: '2020-05-26T18:47:03Z', **additional_resource_params) }
+    let!(:resource_2) { create(resource_klass.name.demodulize.underscore.to_sym, guid: '2', updated_at: '2020-05-26T18:47:02Z', **additional_resource_params) }
+    let!(:resource_3) { create(resource_klass.name.demodulize.underscore.to_sym, guid: '3', updated_at: '2020-05-26T18:47:01Z', **additional_resource_params) }
+    let!(:resource_4) { create(resource_klass.name.demodulize.underscore.to_sym, guid: '4', updated_at: '2020-05-26T18:47:04Z', **additional_resource_params) }
 
     after do
       resource_klass.plugin :timestamps, update_on_create: true

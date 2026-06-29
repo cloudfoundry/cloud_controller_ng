@@ -6,15 +6,15 @@ module VCAP::CloudController
       subject(:egress_rules) { EgressRules.new }
 
       describe '#staging_protobuf_rules' do
-        let(:space) { VCAP::CloudController::Space.make }
+        let(:space) { create(:space) }
         let(:process) { VCAP::CloudController::ProcessModelFactory.make(space:) }
 
         before do
-          SecurityGroup.make(guid: 'guid1', rules: [{ 'protocol' => 'udp', 'ports' => '8080-9090', 'destination' => '198.41.191.47/1' }], staging_default: true)
-          SecurityGroup.make(guid: 'guid2', rules: [{ 'protocol' => 'tcp', 'ports' => '8080,9090', 'destination' => '198.41.191.48/1', 'log' => true }], staging_default: true)
-          SecurityGroup.make(guid: 'guid3', rules: [{ 'protocol' => 'tcp', 'ports' => '443', 'destination' => '198.41.191.49/1' }], staging_default: true)
-          SecurityGroup.make(guid: 'guid4', rules: [{ 'protocol' => 'icmp', 'destination' => '1.1.1.1-2.2.2.2', 'type' => 0, 'code' => 1 }], staging_default: true)
-          SecurityGroup.make(guid: 'guid5', rules: [{ 'protocol' => 'tcp', 'ports' => '80', 'destination' => '0.0.0.0/0' }], staging_default: false)
+          create(:security_group, guid: 'guid1', rules: [{ 'protocol' => 'udp', 'ports' => '8080-9090', 'destination' => '198.41.191.47/1' }], staging_default: true)
+          create(:security_group, guid: 'guid2', rules: [{ 'protocol' => 'tcp', 'ports' => '8080,9090', 'destination' => '198.41.191.48/1', 'log' => true }], staging_default: true)
+          create(:security_group, guid: 'guid3', rules: [{ 'protocol' => 'tcp', 'ports' => '443', 'destination' => '198.41.191.49/1' }], staging_default: true)
+          create(:security_group, guid: 'guid4', rules: [{ 'protocol' => 'icmp', 'destination' => '1.1.1.1-2.2.2.2', 'type' => 0, 'code' => 1 }], staging_default: true)
+          create(:security_group, guid: 'guid5', rules: [{ 'protocol' => 'tcp', 'ports' => '80', 'destination' => '0.0.0.0/0' }], staging_default: false)
         end
 
         it 'includes egress information for default staging security groups' do
@@ -57,7 +57,8 @@ module VCAP::CloudController
 
         context 'when the app space has staging security groups' do
           before do
-            security_group = SecurityGroup.make(guid: 'guid6', rules: [{ 'protocol' => 'udp', 'ports' => '8081-9090', 'destination' => '198.41.191.50/1' }], staging_default: false)
+            security_group = create(:security_group, guid: 'guid6', rules: [{ 'protocol' => 'udp', 'ports' => '8081-9090', 'destination' => '198.41.191.50/1' }],
+                                                     staging_default: false)
             security_group.add_staging_space(space)
           end
 
@@ -75,7 +76,8 @@ module VCAP::CloudController
 
         context 'when the app space has staging security groups with the same rule as default staging' do
           before do
-            security_group = SecurityGroup.make(guid: 'guid6', rules: [{ 'protocol' => 'udp', 'ports' => '8080-9090', 'destination' => '198.41.191.47/1' }], staging_default: false)
+            security_group = create(:security_group, guid: 'guid6', rules: [{ 'protocol' => 'udp', 'ports' => '8080-9090', 'destination' => '198.41.191.47/1' }],
+                                                     staging_default: false)
             security_group.add_staging_space(space)
           end
 
@@ -98,9 +100,9 @@ module VCAP::CloudController
         let(:sg_for_space_rules) { [{ 'protocol' => 'udp', 'ports' => '1010,2020', 'destination' => '198.41.191.49/1' }] }
 
         before do
-          SecurityGroup.make(guid: 'guid1', rules: sg_default_rules_1, running_default: true)
-          SecurityGroup.make(guid: 'guid2', rules: sg_default_rules_2, running_default: true)
-          process.space.add_security_group(SecurityGroup.make(guid: 'guid3', rules: sg_for_space_rules))
+          create(:security_group, guid: 'guid1', rules: sg_default_rules_1, running_default: true)
+          create(:security_group, guid: 'guid2', rules: sg_default_rules_2, running_default: true)
+          process.space.add_security_group(create(:security_group, guid: 'guid3', rules: sg_for_space_rules))
         end
 
         it 'provides the egress rules in the start message' do
@@ -136,7 +138,7 @@ module VCAP::CloudController
 
         context 'when the app space has running security groups with the same rule as default running' do
           before do
-            security_group = SecurityGroup.make(guid: 'guid4', rules: sg_default_rules_1, running_default: false)
+            security_group = create(:security_group, guid: 'guid4', rules: sg_default_rules_1, running_default: false)
             process.space.add_security_group(security_group)
           end
 

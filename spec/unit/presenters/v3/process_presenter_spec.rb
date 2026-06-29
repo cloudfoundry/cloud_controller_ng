@@ -4,23 +4,21 @@ require 'presenters/v3/process_presenter'
 module VCAP::CloudController::Presenters::V3
   RSpec.describe ProcessPresenter do
     describe '#to_hash' do
-      let(:app_model) { VCAP::CloudController::AppModel.make }
+      let(:app_model) { create(:app_model) }
       let(:health_check_type) { 'http' }
       let(:process) do
-        VCAP::CloudController::ProcessModel.make(
-          diego: true,
-          app_guid: app_model.guid,
-          instances: 3,
-          memory: 42,
-          disk_quota: 37,
-          command: 'rackup',
-          metadata: {},
-          health_check_type: health_check_type,
-          health_check_timeout: 51,
-          health_check_interval: 23,
-          health_check_http_endpoint: '/healthcheck',
-          created_at: Time.at(1)
-        )
+        create(:process_model, diego: true,
+                               app_guid: app_model.guid,
+                               instances: 3,
+                               memory: 42,
+                               disk_quota: 37,
+                               command: 'rackup',
+                               metadata: {},
+                               health_check_type: health_check_type,
+                               health_check_timeout: 51,
+                               health_check_interval: 23,
+                               health_check_http_endpoint: '/healthcheck',
+                               created_at: Time.at(1))
       end
       let(:result) { ProcessPresenter.new(process).to_hash }
       let(:links) do
@@ -35,36 +33,28 @@ module VCAP::CloudController::Presenters::V3
       end
 
       let!(:release_label) do
-        VCAP::CloudController::ProcessLabelModel.make(
-          key_name: 'release',
-          value: 'stable',
-          resource_guid: process.guid
-        )
+        create(:process_label_model, key_name: 'release',
+                                     value: 'stable',
+                                     resource_guid: process.guid)
       end
 
       let!(:potato_label) do
-        VCAP::CloudController::ProcessLabelModel.make(
-          key_prefix: 'canberra.au',
-          key_name: 'potato',
-          value: 'mashed',
-          resource_guid: process.guid
-        )
+        create(:process_label_model, key_prefix: 'canberra.au',
+                                     key_name: 'potato',
+                                     value: 'mashed',
+                                     resource_guid: process.guid)
       end
 
       let!(:mountain_annotation) do
-        VCAP::CloudController::ProcessAnnotationModel.make(
-          key_name: 'altitude',
-          value: '14,412',
-          resource_guid: process.guid
-        )
+        create(:process_annotation_model, key_name: 'altitude',
+                                          value: '14,412',
+                                          resource_guid: process.guid)
       end
 
       let!(:plain_annotation) do
-        VCAP::CloudController::ProcessAnnotationModel.make(
-          key_name: 'maize',
-          value: 'hfcs',
-          resource_guid: process.guid
-        )
+        create(:process_annotation_model, key_name: 'maize',
+                                          value: 'hfcs',
+                                          resource_guid: process.guid)
       end
 
       before do
@@ -73,7 +63,7 @@ module VCAP::CloudController::Presenters::V3
 
       context 'when the process does not have a start command' do
         let(:droplet) do
-          VCAP::CloudController::DropletModel.make(app: app_model, process_types: { web: 'detected-start-command' })
+          create(:droplet_model, app: app_model, process_types: { web: 'detected-start-command' })
         end
 
         before do
@@ -155,7 +145,7 @@ module VCAP::CloudController::Presenters::V3
 
       describe '#revisions' do
         context('when the process has a revision') do
-          let(:revision) { VCAP::CloudController::RevisionModel.make }
+          let(:revision) { create(:revision_model) }
 
           before do
             process.revision = revision

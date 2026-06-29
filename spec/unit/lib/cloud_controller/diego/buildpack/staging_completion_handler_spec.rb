@@ -6,18 +6,18 @@ module VCAP::CloudController
     module Buildpack
       RSpec.describe StagingCompletionHandler do
         let(:logger) { instance_double(Steno::Logger, info: nil, error: nil, warn: nil) }
-        let(:buildpack) { VCAP::CloudController::Buildpack.make(name: 'lifecycle-bp') }
+        let(:buildpack) { create(:buildpack, name: 'lifecycle-bp') }
 
         let(:buildpack1_name) { 'the-pleasant-buildpack' }
         let(:buildpack1_other_name) { 'valley' }
         let(:buildpack1_version) { '3.1' }
         let(:buildpack1_key) { 'vicuna' }
-        let!(:buildpack1) { VCAP::CloudController::Buildpack.make(key: buildpack1_key, name: buildpack1_name, sha256_checksum: 'mammoth') }
+        let!(:buildpack1) { create(:buildpack, key: buildpack1_key, name: buildpack1_name, sha256_checksum: 'mammoth') }
         let(:buildpack2_name) { 'my-brilliant-buildpack' }
         let(:buildpack2_other_name) { 'launderette' }
         let(:buildpack2_version) { '95' }
         let(:buildpack2_key) { 'guanaco' }
-        let!(:buildpack2) { VCAP::CloudController::Buildpack.make(key: buildpack2_key, name: buildpack2_name, sha256_checksum: 'languid') }
+        let!(:buildpack2) { create(:buildpack, key: buildpack2_key, name: buildpack2_name, sha256_checksum: 'languid') }
         let(:buildpack3_key) { 'git://my-buildpacks.tv/kate/allie.git' }
         let(:buildpack3_other_name) { 'hilltop' }
         let(:buildpack3_version) { 'ME' }
@@ -72,12 +72,10 @@ module VCAP::CloudController
         subject { StagingCompletionHandler.new(build, runners) }
 
         describe '#staging_complete' do
-          let(:app) { AppModel.make }
-          let(:package) { PackageModel.make(app:) }
+          let(:app) { create(:app_model) }
+          let(:package) { create(:package_model, app:) }
           let!(:build) do
-            BuildModel.make(app: app, package: package, state: BuildModel::STAGING_STATE).tap do |build|
-              BuildpackLifecycleDataModel.make(build:)
-            end
+            create(:build_model, app: app, package: package, state: BuildModel::STAGING_STATE)
           end
           let(:staging_guid) { build.guid }
 
@@ -88,7 +86,7 @@ module VCAP::CloudController
           end
 
           describe 'success case' do
-            let(:droplet) { DropletModel.make(app: app, package: package, state: DropletModel::STAGING_STATE) }
+            let(:droplet) { create(:droplet_model, app: app, package: package, state: DropletModel::STAGING_STATE) }
 
             before do
               build.update(droplet:)
@@ -203,7 +201,7 @@ module VCAP::CloudController
 
                 context 'and the app\'s web process does NOT have a start command' do
                   let(:runner) { instance_double(Diego::Runner, start: nil) }
-                  let!(:web_process) { ProcessModel.make(app: app, type: 'web', state: 'STARTED', metadata: {}) }
+                  let!(:web_process) { create(:process_model, app: app, type: 'web', state: 'STARTED', metadata: {}) }
 
                   before do
                     allow(runners).to receive(:runner_for_process).and_return(runner)
@@ -219,7 +217,7 @@ module VCAP::CloudController
 
                 context 'and the app\'s web process has a start command' do
                   let(:runner) { instance_double(Diego::Runner, start: nil) }
-                  let!(:web_process) { ProcessModel.make(app: app, type: 'web', command: 'start me', state: 'STARTED', metadata: {}) }
+                  let!(:web_process) { create(:process_model, app: app, type: 'web', command: 'start me', state: 'STARTED', metadata: {}) }
 
                   before do
                     success_response[:result][:execution_metadata] = 'black-box-string'
@@ -241,7 +239,7 @@ module VCAP::CloudController
                 context 'when a start is requested' do
                   context 'and the app has a start command' do
                     let(:runner) { instance_double(Diego::Runner, start: nil) }
-                    let!(:web_process) { ProcessModel.make(app: app, type: 'web', command: 'start me', state: 'STARTED', metadata: {}) }
+                    let!(:web_process) { create(:process_model, app: app, type: 'web', command: 'start me', state: 'STARTED', metadata: {}) }
 
                     before do
                       success_response[:result][:execution_metadata] = 'black-box-string'
@@ -249,11 +247,11 @@ module VCAP::CloudController
                     end
 
                     context 'when revisions are enabled' do
-                      let(:old_droplet) { DropletModel.make(app: app, created_at: 5.days.ago) }
+                      let(:old_droplet) { create(:droplet_model, app: app, created_at: 5.days.ago) }
 
                       before do
                         app.update(revisions_enabled: true)
-                        RevisionModel.make(app_guid: app.guid, droplet_guid: old_droplet.guid)
+                        create(:revision_model, app_guid: app.guid, droplet_guid: old_droplet.guid)
                       end
 
                       it 'creates a revision and assigns it to the processes' do
@@ -301,7 +299,7 @@ module VCAP::CloudController
 
                       context 'but the app has a user-origin sidecar of the same name' do
                         before do
-                          SidecarModel.make(name: 'sleepy', command: 'sleep infinity', app: app, origin: SidecarModel::ORIGIN_USER)
+                          create(:sidecar_model, name: 'sleepy', command: 'sleep infinity', app: app, origin: SidecarModel::ORIGIN_USER)
                         end
 
                         it 'errors without materializing sidecars' do
@@ -322,7 +320,7 @@ module VCAP::CloudController
 
                   context 'when the app does not have a start command' do
                     let(:runner) { instance_double(Diego::Runner, start: nil) }
-                    let!(:web_process) { ProcessModel.make(app: app, type: 'web', state: 'STARTED', metadata: {}) }
+                    let!(:web_process) { create(:process_model, app: app, type: 'web', state: 'STARTED', metadata: {}) }
 
                     before do
                       allow(runners).to receive(:runner_for_process).and_return(runner)
@@ -357,7 +355,7 @@ module VCAP::CloudController
 
                 context 'when the buildpack key is a key' do
                   it 'records that as the buildpack' do
-                    admin_buildpack = VCAP::CloudController::Buildpack.make(name: 'woop', key: 'thismakey')
+                    admin_buildpack = create(:buildpack, name: 'woop', key: 'thismakey')
 
                     success_response[:result][:lifecycle_metadata][:buildpack_key] = 'thismakey'
                     subject.staging_complete(success_response)
@@ -394,7 +392,7 @@ module VCAP::CloudController
             context 'when updating the droplet record with data from staging fails' do
               let(:save_error) { StandardError.new('save-error') }
               let(:runner) { instance_double(Diego::Runner, start: nil) }
-              let!(:web_process) { ProcessModel.make(app: app, type: 'web') }
+              let!(:web_process) { create(:process_model, app: app, type: 'web') }
 
               before do
                 allow_any_instance_of(DropletModel).to receive(:save_changes).and_raise(save_error)
@@ -426,7 +424,7 @@ module VCAP::CloudController
 
             context 'when a start is requested' do
               let(:runner) { instance_double(Diego::Runner, start: nil) }
-              let!(:web_process) { ProcessModel.make(app: app, type: 'web') }
+              let!(:web_process) { create(:process_model, app: app, type: 'web') }
 
               before do
                 allow(runners).to receive(:runner_for_process).and_return(runner)
@@ -448,7 +446,7 @@ module VCAP::CloudController
               end
 
               it 'records a buildpack set event for all processes' do
-                ProcessModel.make(app: app, type: 'other')
+                create(:process_model, app: app, type: 'other')
                 expect do
                   subject.staging_complete(success_response, true)
                 end.to change { AppUsageEvent.where(state: 'BUILDPACK_SET').count }.from(0).to(2)
@@ -465,7 +463,7 @@ module VCAP::CloudController
 
               context 'when this is not the most recent staging result' do
                 before do
-                  DropletModel.make(app:, package:)
+                  create(:droplet_model, app: app, package: package, set_as_current_droplet: false)
                 end
 
                 it 'does not assign the current droplet' do
@@ -484,7 +482,7 @@ module VCAP::CloudController
             context 'when a start is not requested' do
               let(:with_start) { false }
               let(:runner) { instance_double(Diego::Runner, start: nil) }
-              let!(:web_process) { ProcessModel.make(app: app, type: 'web') }
+              let!(:web_process) { create(:process_model, app: app, type: 'web') }
 
               before do
                 allow(runners).to receive(:runner_for_process).and_return(runner)
@@ -500,7 +498,7 @@ module VCAP::CloudController
               end
 
               it 'records a buildpack set event for all processes' do
-                ProcessModel.make(app: app, type: 'other')
+                create(:process_model, app: app, type: 'other')
                 expect do
                   subject.staging_complete(success_response, with_start)
                 end.to change { AppUsageEvent.where(state: 'BUILDPACK_SET').count }.from(0).to(1)
@@ -580,7 +578,7 @@ module VCAP::CloudController
             end
 
             context 'with a malformed success message' do
-              let(:droplet) { DropletModel.make(app: app, package: package, state: DropletModel::STAGING_STATE) }
+              let(:droplet) { create(:droplet_model, app: app, package: package, state: DropletModel::STAGING_STATE) }
 
               before do
                 build.update(droplet:)
@@ -677,7 +675,7 @@ module VCAP::CloudController
             end
 
             context 'when a start is requested' do
-              let!(:web_process) { ProcessModel.make(app: app, type: 'web', state: 'STARTED') }
+              let!(:web_process) { create(:process_model, app: app, type: 'web', state: 'STARTED') }
 
               it 'stops the web process of the app' do
                 expect do

@@ -4,19 +4,17 @@ require 'repositories/build_event_repository'
 module VCAP::CloudController
   module Repositories
     RSpec.describe BuildEventRepository do
-      let(:app) { AppModel.make(name: 'popsicle') }
-      let(:user) { User.make }
-      let(:package) { PackageModel.make(app_guid: app.guid) }
+      let(:app) { create(:app_model, name: 'popsicle') }
+      let(:user) { create(:user) }
+      let(:package) { create(:package_model, app_guid: app.guid) }
       let(:email) { 'user-email' }
       let(:user_name) { 'user-name' }
       let(:build) do
-        BuildModel.make(
-          app_guid: app.guid,
-          package: package,
-          created_by_user_guid: user.guid,
-          created_by_user_name: user_name,
-          created_by_user_email: email
-        )
+        create(:build_model, app_guid: app.guid,
+                             package: package,
+                             created_by_user_guid: user.guid,
+                             created_by_user_name: user_name,
+                             created_by_user_email: email)
       end
       let(:user_audit_info) { UserAuditInfo.new(user_email: email, user_name: user_name, user_guid: user.guid) }
 
@@ -42,7 +40,7 @@ module VCAP::CloudController
       end
 
       describe '#record_build_staged' do
-        let(:droplet) { DropletModel.make(app_guid: app.guid, package: package, build: build) }
+        let(:droplet) { create(:droplet_model, app_guid: app.guid, package: package, build: build) }
 
         it 'creates a new audit.app.build.staged event' do
           event = BuildEventRepository.record_build_staged(build, droplet)
@@ -68,14 +66,14 @@ module VCAP::CloudController
 
         context 'cnb lifecycle' do
           let(:build) do
-            BuildModel.make(:cnb,
-                            app_guid: app.guid,
-                            package: package,
-                            created_by_user_guid: user.guid,
-                            created_by_user_name: user_name,
-                            created_by_user_email: email)
+            create(:build_model, :cnb,
+                   app_guid: app.guid,
+                   package: package,
+                   created_by_user_guid: user.guid,
+                   created_by_user_name: user_name,
+                   created_by_user_email: email)
           end
-          let(:droplet) { DropletModel.make(:cnb, app_guid: app.guid, package: package, build: build) }
+          let(:droplet) { create(:droplet_model, :cnb, app_guid: app.guid, package: package, build: build) }
 
           it 'creates a new audit.app.build.staged event' do
             event = BuildEventRepository.record_build_staged(build, droplet)
@@ -88,14 +86,14 @@ module VCAP::CloudController
 
         context 'docker lifecycle' do
           let(:build) do
-            BuildModel.make(:docker,
-                            app_guid: app.guid,
-                            package: package,
-                            created_by_user_guid: user.guid,
-                            created_by_user_name: user_name,
-                            created_by_user_email: email)
+            create(:build_model, :docker,
+                   app_guid: app.guid,
+                   package: package,
+                   created_by_user_guid: user.guid,
+                   created_by_user_name: user_name,
+                   created_by_user_email: email)
           end
-          let(:droplet) { DropletModel.make(:docker, app_guid: app.guid, package: package, build: build) }
+          let(:droplet) { create(:droplet_model, :docker, app_guid: app.guid, package: package, build: build) }
 
           it 'creates a new audit.app.build.staged event' do
             event = BuildEventRepository.record_build_staged(build, droplet)
@@ -107,24 +105,20 @@ module VCAP::CloudController
         end
 
         context 'when the droplet has buildpack lifecycle data' do
-          let!(:admin_buildpack) { Buildpack.make(name: 'ruby_buildpack') }
-          let(:lifecycle_data) { BuildpackLifecycleDataModel.make(droplet:, build:) }
+          let!(:admin_buildpack) { create(:buildpack, name: 'ruby_buildpack') }
+          let(:lifecycle_data) { create(:buildpack_lifecycle_data_model, droplet:, build:) }
           let!(:lifecycle_buildpack1) do
-            BuildpackLifecycleBuildpackModel.make(
-              buildpack_lifecycle_data: lifecycle_data,
-              admin_buildpack_name: 'ruby_buildpack',
-              buildpack_name: 'ruby',
-              version: '1.8.0'
-            )
+            create(:buildpack_lifecycle_buildpack_model, buildpack_lifecycle_data: lifecycle_data,
+                                                         admin_buildpack_name: 'ruby_buildpack',
+                                                         buildpack_name: 'ruby',
+                                                         version: '1.8.0')
           end
           let!(:lifecycle_buildpack2) do
-            BuildpackLifecycleBuildpackModel.make(
-              buildpack_lifecycle_data: lifecycle_data,
-              admin_buildpack_name: nil,
-              buildpack_url: 'https://user:password@github.com/custom/buildpack',
-              buildpack_name: 'custom-bp',
-              version: '2.0.0'
-            )
+            create(:buildpack_lifecycle_buildpack_model, buildpack_lifecycle_data: lifecycle_data,
+                                                         admin_buildpack_name: nil,
+                                                         buildpack_url: 'https://user:password@github.com/custom/buildpack',
+                                                         buildpack_name: 'custom-bp',
+                                                         version: '2.0.0')
           end
 
           before do
@@ -189,12 +183,12 @@ module VCAP::CloudController
 
         context 'cnb lifecycle' do
           let(:build) do
-            BuildModel.make(:cnb,
-                            app_guid: app.guid,
-                            package: package,
-                            created_by_user_guid: user.guid,
-                            created_by_user_name: user_name,
-                            created_by_user_email: email)
+            create(:build_model, :cnb,
+                   app_guid: app.guid,
+                   package: package,
+                   created_by_user_guid: user.guid,
+                   created_by_user_name: user_name,
+                   created_by_user_email: email)
           end
 
           it 'creates a new audit.app.build.failed event' do
@@ -207,12 +201,12 @@ module VCAP::CloudController
 
         context 'docker lifecycle' do
           let(:build) do
-            BuildModel.make(:docker,
-                            app_guid: app.guid,
-                            package: package,
-                            created_by_user_guid: user.guid,
-                            created_by_user_name: user_name,
-                            created_by_user_email: email)
+            create(:build_model, :docker,
+                   app_guid: app.guid,
+                   package: package,
+                   created_by_user_guid: user.guid,
+                   created_by_user_name: user_name,
+                   created_by_user_email: email)
           end
 
           it 'creates a new audit.app.build.failed event' do

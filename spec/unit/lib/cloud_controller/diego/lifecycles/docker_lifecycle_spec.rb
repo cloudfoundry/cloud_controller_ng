@@ -5,10 +5,10 @@ module VCAP::CloudController
   RSpec.describe DockerLifecycle do
     subject(:lifecycle) { DockerLifecycle.new(package, staging_message) }
     let(:package) do
-      PackageModel.make(:docker,
-                        docker_image: 'test-image',
-                        docker_username: 'dockerusername',
-                        docker_password: 'dockerpassword')
+      create(:package_model, :docker,
+             docker_image: 'test-image',
+             docker_username: 'dockerusername',
+             docker_password: 'dockerpassword')
     end
     let(:staging_message) { BuildCreateMessage.new({}) }
 

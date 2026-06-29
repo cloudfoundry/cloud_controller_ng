@@ -14,19 +14,19 @@ module VCAP::CloudController
 
     let(:fetcher) { ServicePlanVisibilityFetcher.new(permission_querier) }
 
-    let!(:org1) { Organization.make }
-    let!(:org2) { Organization.make }
+    let!(:org1) { create(:organization) }
+    let!(:org2) { create(:organization) }
 
     let!(:plan_1) do
-      plan = ServicePlan.make(public: false)
-      ServicePlanVisibility.make(service_plan: plan, organization: org1)
-      ServicePlanVisibility.make(service_plan: plan, organization: org2)
+      plan = create(:service_plan, public: false)
+      create(:service_plan_visibility, service_plan: plan, organization: org1)
+      create(:service_plan_visibility, service_plan: plan, organization: org2)
       plan
     end
 
     let!(:plan_2) do
-      plan = ServicePlan.make(public: false)
-      ServicePlanVisibility.make(service_plan: plan, organization: org2)
+      plan = create(:service_plan, public: false)
+      create(:service_plan_visibility, service_plan: plan, organization: org2)
       plan
     end
 
@@ -105,8 +105,8 @@ module VCAP::CloudController
 
       describe 'variable number of plans' do
         context 'when many plans are specified and only one is visible' do
-          let!(:plan_alpha) { ServicePlan.make }
-          let!(:plan_beta) { ServicePlan.make }
+          let!(:plan_alpha) { create(:service_plan) }
+          let!(:plan_beta) { create(:service_plan) }
 
           context 'when only one org is readable' do
             let(:readable_org_guids) { [org2.guid] }
@@ -238,8 +238,8 @@ module VCAP::CloudController
 
       describe 'variable number of plans' do
         context 'when many plans are specified and only one is visible' do
-          let!(:plan_alpha) { ServicePlan.make }
-          let!(:plan_beta) { ServicePlan.make }
+          let!(:plan_alpha) { create(:service_plan) }
+          let!(:plan_beta) { create(:service_plan) }
 
           context 'when only one org is readable' do
             let(:readable_org_guids) { [org2.guid] }

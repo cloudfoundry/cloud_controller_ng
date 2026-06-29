@@ -3,7 +3,7 @@ require 'spec_helper'
 module VCAP::CloudController
   RSpec.describe AppModel do
     let(:app_model) { AppModel.create(space: space, name: 'some-name') }
-    let(:space) { Space.make }
+    let(:space) { create(:space) }
 
     describe '#oldest_web_process' do
       context 'when there are no web processes' do
@@ -14,22 +14,18 @@ module VCAP::CloudController
 
       context 'when there are multiple web processes' do
         let!(:web_process) do
-          VCAP::CloudController::ProcessModel.make(
-            app: app_model,
-            command: 'old command!',
-            instances: 3,
-            type: VCAP::CloudController::ProcessTypes::WEB,
-            created_at: Time.now - 24.hours
-          )
+          create(:process_model, app: app_model,
+                                 command: 'old command!',
+                                 instances: 3,
+                                 type: VCAP::CloudController::ProcessTypes::WEB,
+                                 created_at: Time.now - 24.hours)
         end
         let!(:newer_web_process) do
-          VCAP::CloudController::ProcessModel.make(
-            app: app_model,
-            command: 'new command!',
-            instances: 4,
-            type: VCAP::CloudController::ProcessTypes::WEB,
-            created_at: Time.now - 23.hours
-          )
+          create(:process_model, app: app_model,
+                                 command: 'new command!',
+                                 instances: 4,
+                                 type: VCAP::CloudController::ProcessTypes::WEB,
+                                 created_at: Time.now - 23.hours)
         end
 
         it 'returns the oldest one' do
@@ -49,31 +45,25 @@ module VCAP::CloudController
         let(:created_at_for_new_processes) { Time.now - 23.hours }
 
         let!(:web_process) do
-          VCAP::CloudController::ProcessModel.make(
-            app: app_model,
-            command: 'old command!',
-            instances: 3,
-            type: VCAP::CloudController::ProcessTypes::WEB,
-            created_at: Time.now - 24.hours
-          )
+          create(:process_model, app: app_model,
+                                 command: 'old command!',
+                                 instances: 3,
+                                 type: VCAP::CloudController::ProcessTypes::WEB,
+                                 created_at: Time.now - 24.hours)
         end
         let!(:newer_web_process) do
-          VCAP::CloudController::ProcessModel.make(
-            app: app_model,
-            command: 'new command!',
-            instances: 4,
-            type: VCAP::CloudController::ProcessTypes::WEB,
-            created_at: created_at_for_new_processes
-          )
+          create(:process_model, app: app_model,
+                                 command: 'new command!',
+                                 instances: 4,
+                                 type: VCAP::CloudController::ProcessTypes::WEB,
+                                 created_at: created_at_for_new_processes)
         end
         let!(:most_newest_web_process) do
-          VCAP::CloudController::ProcessModel.make(
-            app: app_model,
-            command: 'new command!',
-            instances: 4,
-            type: VCAP::CloudController::ProcessTypes::WEB,
-            created_at: created_at_for_new_processes
-          )
+          create(:process_model, app: app_model,
+                                 command: 'new command!',
+                                 instances: 4,
+                                 type: VCAP::CloudController::ProcessTypes::WEB,
+                                 created_at: created_at_for_new_processes)
         end
 
         it 'returns the newest one' do
@@ -84,9 +74,9 @@ module VCAP::CloudController
     end
 
     describe '#latest_revision' do
-      let!(:revision1) { RevisionModel.make(app: app_model, created_at: 10.minutes.ago) }
-      let!(:revision2) { RevisionModel.make(app: app_model, created_at: Time.now) }
-      let!(:revision3) { RevisionModel.make(app: app_model, created_at: 5.minutes.ago) }
+      let!(:revision1) { create(:revision_model, app: app_model, created_at: 10.minutes.ago) }
+      let!(:revision2) { create(:revision_model, app: app_model, created_at: Time.now) }
+      let!(:revision3) { create(:revision_model, app: app_model, created_at: 5.minutes.ago) }
 
       context 'when revisions are enabled' do
         before do
@@ -98,7 +88,7 @@ module VCAP::CloudController
         end
 
         context 'when two were created in the same second' do
-          let!(:revision4) { RevisionModel.make(app: app_model, created_at: revision2.created_at) }
+          let!(:revision4) { create(:revision_model, app: app_model, created_at: revision2.created_at) }
 
           it 'prefers the one with the higher id' do
             expect(app_model.latest_revision).to eq(revision4)
@@ -119,7 +109,7 @@ module VCAP::CloudController
 
     describe '#staging_in_progress' do
       context 'when a build is in staging state' do
-        let!(:build) { BuildModel.make(app_guid: app_model.guid, state: BuildModel::STAGING_STATE) }
+        let!(:build) { create(:build_model, app_guid: app_model.guid, state: BuildModel::STAGING_STATE) }
 
         it 'returns true' do
           expect(app_model.staging_in_progress?).to be(true)
@@ -127,7 +117,7 @@ module VCAP::CloudController
       end
 
       context 'when a build is not in neither pending or staging state' do
-        let!(:build) { BuildModel.make(app_guid: app_model.guid, state: BuildModel::STAGED_STATE) }
+        let!(:build) { create(:build_model, app_guid: app_model.guid, state: BuildModel::STAGED_STATE) }
 
         it 'returns false' do
           expect(app_model.staging_in_progress?).to be(false)
@@ -178,13 +168,13 @@ module VCAP::CloudController
 
       describe 'name' do
         let(:space_guid) { space.guid }
-        let(:app) { AppModel.make }
+        let(:app) { create(:app_model) }
 
         it 'uniqueness is case insensitive' do
-          AppModel.make(name: 'lowercase', space_guid: space_guid)
+          create(:app_model, name: 'lowercase', space_guid: space_guid)
 
           expect do
-            AppModel.make(name: 'lowerCase', space_guid: space_guid)
+            create(:app_model, name: 'lowerCase', space_guid: space_guid)
           end.to raise_error(Sequel::ValidationFailed, "App with the name 'lowerCase' already exists.")
         end
 
@@ -228,24 +218,24 @@ module VCAP::CloudController
         it 'name can be reused in different spaces' do
           name = 'zach'
 
-          space1 = Space.make
-          space2 = Space.make
+          space1 = create(:space)
+          space2 = create(:space)
 
-          AppModel.make(name: name, space_guid: space1.guid)
+          create(:app_model, name: name, space_guid: space1.guid)
           expect do
-            AppModel.make(name: name, space_guid: space2.guid)
+            create(:app_model, name: name, space_guid: space2.guid)
           end.not_to raise_error
         end
 
         it 'name is unique in the same space' do
           name = 'zach'
 
-          space = Space.make
+          space = create(:space)
 
-          AppModel.make(name: name, space_guid: space.guid)
+          create(:app_model, name: name, space_guid: space.guid)
 
           expect do
-            AppModel.make(name: name, space_guid: space.guid)
+            create(:app_model, name: name, space_guid: space.guid)
           end.to raise_error(Sequel::ValidationFailed, "App with the name 'zach' already exists.")
         end
       end
@@ -253,13 +243,13 @@ module VCAP::CloudController
       describe 'environment_variables' do
         it 'validates them' do
           expect do
-            AppModel.make(environment_variables: '')
+            create(:app_model, environment_variables: '')
           end.to raise_error(Sequel::ValidationFailed, /must be an object/)
         end
       end
 
       describe 'droplet' do
-        let(:droplet) { DropletModel.make(app: app_model) }
+        let(:droplet) { create(:droplet_model, app: app_model) }
 
         it 'does not allow droplets that are not STAGED' do
           states = DropletModel::DROPLET_STATES - [DropletModel::STAGED_STATE]
@@ -287,14 +277,14 @@ module VCAP::CloudController
 
       it 'validates lifecycle_type is one of buildpack, cnb, or docker' do
         expect do
-          AppModel.make(lifecycle_type: 'invalid')
+          create(:app_model, lifecycle_type: 'invalid')
         end.to raise_error(Sequel::ValidationFailed, /lifecycle_type/)
       end
 
       it 'accepts valid lifecycle_type values' do
         %w[buildpack cnb docker].each do |type|
           expect do
-            AppModel.make(lifecycle_type: type)
+            create(:app_model, lifecycle_type: type)
           end.not_to raise_error
         end
       end
@@ -307,7 +297,7 @@ module VCAP::CloudController
       end
 
       context 'when there is buildpack_lifecycle_data associated to the app' do
-        before { BuildpackLifecycleDataModel.make(app: app_model) }
+        before { create(:buildpack_lifecycle_data_model, app: app_model) }
 
         it 'returns the string "buildpack"' do
           app_model.reload
@@ -316,7 +306,7 @@ module VCAP::CloudController
       end
 
       context 'when there is cnb_lifecycle_data associated to the app' do
-        before { CNBLifecycleDataModel.make(app: app_model) }
+        before { create(:cnb_lifecycle_data_model, app: app_model) }
 
         it 'returns the string "cnb"' do
           app_model.reload
@@ -333,7 +323,7 @@ module VCAP::CloudController
 
     describe '#lifecycle_data' do
       context 'buildpack_lifecycle_data' do
-        let!(:app_model) { AppModel.make }
+        let!(:app_model) { create(:app_model) }
 
         it 'returns a buildpack lifecycle data model' do
           expect(app_model.lifecycle_data).to be_a(BuildpackLifecycleDataModel)
@@ -349,7 +339,7 @@ module VCAP::CloudController
       end
 
       context 'cnb_lifecycle_data' do
-        let!(:app_model) { AppModel.make(:cnb) }
+        let!(:app_model) { create(:app_model, :cnb) }
 
         it 'returns a cnb lifecycle data model' do
           expect(app_model.lifecycle_data).to be_a(CNBLifecycleDataModel)
@@ -365,7 +355,7 @@ module VCAP::CloudController
       end
 
       context 'neither buildpack_lifecycle_data, nor cnb_lifecycle_data' do
-        let(:app_model) { AppModel.make(:docker) }
+        let(:app_model) { create(:app_model, :docker) }
 
         it 'returns a docker lifecycle data model' do
           expect(app_model.lifecycle_data).to be_a(DockerLifecycleDataModel)
@@ -376,18 +366,18 @@ module VCAP::CloudController
     end
 
     describe '#database_uri' do
-      let(:parent_app) { AppModel.make(environment_variables: { 'jesse' => 'awesome' }, space: space) }
-      let(:process) { ProcessModel.make(app: parent_app) }
+      let(:parent_app) { create(:app_model, environment_variables: { 'jesse' => 'awesome' }, space: space) }
+      let(:process) { create(:process_model, app: parent_app) }
 
       context 'when there are database-like services' do
         before do
-          sql_service_plan = ServicePlan.make(service: Service.make(label: 'elephantsql-n/a'))
-          sql_service_instance = ManagedServiceInstance.make(space: space, service_plan: sql_service_plan, name: 'elephantsql-vip-uat')
-          ServiceBinding.make(app: parent_app, service_instance: sql_service_instance, credentials: { 'uri' => 'mysql://foo.com' })
+          sql_service_plan = create(:service_plan, service: create(:service, label: 'elephantsql-n/a'))
+          sql_service_instance = create(:managed_service_instance, space: space, service_plan: sql_service_plan, name: 'elephantsql-vip-uat')
+          create(:service_binding, app: parent_app, service_instance: sql_service_instance, credentials: { 'uri' => 'mysql://foo.com' })
 
-          banana_service_plan = ServicePlan.make(service: Service.make(label: 'chiquita-n/a'))
-          banana_service_instance = ManagedServiceInstance.make(space: space, service_plan: banana_service_plan, name: 'chiqiuta-yummy')
-          ServiceBinding.make(app: parent_app, service_instance: banana_service_instance, credentials: { 'uri' => 'banana://yum.com' })
+          banana_service_plan = create(:service_plan, service: create(:service, label: 'chiquita-n/a'))
+          banana_service_instance = create(:managed_service_instance, space: space, service_plan: banana_service_plan, name: 'chiqiuta-yummy')
+          create(:service_binding, app: parent_app, service_instance: banana_service_instance, credentials: { 'uri' => 'banana://yum.com' })
         end
 
         it 'returns database uri' do
@@ -397,13 +387,13 @@ module VCAP::CloudController
 
       context 'when there are non-database-like services' do
         before do
-          banana_service_plan = ServicePlan.make(service: Service.make(label: 'chiquita-n/a'))
-          banana_service_instance = ManagedServiceInstance.make(space: space, service_plan: banana_service_plan, name: 'chiqiuta-yummy')
-          ServiceBinding.make(app: parent_app, service_instance: banana_service_instance, credentials: { 'uri' => 'banana://yum.com' })
+          banana_service_plan = create(:service_plan, service: create(:service, label: 'chiquita-n/a'))
+          banana_service_instance = create(:managed_service_instance, space: space, service_plan: banana_service_plan, name: 'chiqiuta-yummy')
+          create(:service_binding, app: parent_app, service_instance: banana_service_instance, credentials: { 'uri' => 'banana://yum.com' })
 
-          uncredentialed_service_plan = ServicePlan.make(service: Service.make(label: 'mysterious-n/a'))
-          uncredentialed_service_instance = ManagedServiceInstance.make(space: space, service_plan: uncredentialed_service_plan, name: 'mysterious-mystery')
-          ServiceBinding.make(app: parent_app, service_instance: uncredentialed_service_instance, credentials: {})
+          uncredentialed_service_plan = create(:service_plan, service: create(:service, label: 'mysterious-n/a'))
+          uncredentialed_service_instance = create(:managed_service_instance, space: space, service_plan: uncredentialed_service_plan, name: 'mysterious-mystery')
+          create(:service_binding, app: parent_app, service_instance: uncredentialed_service_instance, credentials: {})
         end
 
         it 'returns nil' do
@@ -419,9 +409,9 @@ module VCAP::CloudController
 
       context 'when the service binding credentials is nil' do
         before do
-          banana_service_plan = ServicePlan.make(service: Service.make(label: 'chiquita-n/a'))
-          banana_service_instance = ManagedServiceInstance.make(space: space, service_plan: banana_service_plan, name: 'chiqiuta-yummy')
-          ServiceBinding.make(app: parent_app, service_instance: banana_service_instance, credentials: nil)
+          banana_service_plan = create(:service_plan, service: create(:service, label: 'chiquita-n/a'))
+          banana_service_instance = create(:managed_service_instance, space: space, service_plan: banana_service_plan, name: 'chiqiuta-yummy')
+          create(:service_binding, app: parent_app, service_instance: banana_service_instance, credentials: nil)
         end
 
         it 'returns nil' do
@@ -431,18 +421,18 @@ module VCAP::CloudController
     end
 
     describe '#windows_gmsa_credential_refs' do
-      let(:parent_app) { AppModel.make(space:) }
+      let(:parent_app) { create(:app_model, space:) }
       let(:gmsa_credhub_ref) { 'some-gmsa-credhub-reference' }
 
       context 'when there are windows-gmsa-credential services' do
         before do
-          gmsa_service_plan = ServicePlan.make(service: Service.make(label: 'windows-gmsa'))
-          gmsa_service_instance = ManagedServiceInstance.make(space: space, service_plan: gmsa_service_plan, name: 'windows-gmsa-creds')
-          ServiceBinding.make(app: parent_app, service_instance: gmsa_service_instance, credentials: { 'credhub-windows-gmsa-credential-ref' => gmsa_credhub_ref })
+          gmsa_service_plan = create(:service_plan, service: create(:service, label: 'windows-gmsa'))
+          gmsa_service_instance = create(:managed_service_instance, space: space, service_plan: gmsa_service_plan, name: 'windows-gmsa-creds')
+          create(:service_binding, app: parent_app, service_instance: gmsa_service_instance, credentials: { 'credhub-windows-gmsa-credential-ref' => gmsa_credhub_ref })
 
-          non_gmsa_service_plan = ServicePlan.make(service: Service.make(label: 'incom-test-service'))
-          non_gmsa_service_instance = ManagedServiceInstance.make(space: space, service_plan: non_gmsa_service_plan, name: 't65-b-test-instance')
-          ServiceBinding.make(app: parent_app, service_instance: non_gmsa_service_instance, credentials: { 'something' => 'else' })
+          non_gmsa_service_plan = create(:service_plan, service: create(:service, label: 'incom-test-service'))
+          non_gmsa_service_instance = create(:managed_service_instance, space: space, service_plan: non_gmsa_service_plan, name: 't65-b-test-instance')
+          create(:service_binding, app: parent_app, service_instance: non_gmsa_service_instance, credentials: { 'something' => 'else' })
         end
 
         it 'returns the credential reference' do
@@ -452,13 +442,13 @@ module VCAP::CloudController
 
       context 'when there are only non-gmsa-credential services' do
         before do
-          non_gmsa_service_plan = ServicePlan.make(service: Service.make(label: 'incom-test-service'))
-          non_gmsa_service_instance = ManagedServiceInstance.make(space: space, service_plan: non_gmsa_service_plan, name: 't65-b-test-instance')
-          ServiceBinding.make(app: parent_app, service_instance: non_gmsa_service_instance, credentials: { 'something' => 'else' })
+          non_gmsa_service_plan = create(:service_plan, service: create(:service, label: 'incom-test-service'))
+          non_gmsa_service_instance = create(:managed_service_instance, space: space, service_plan: non_gmsa_service_plan, name: 't65-b-test-instance')
+          create(:service_binding, app: parent_app, service_instance: non_gmsa_service_instance, credentials: { 'something' => 'else' })
 
-          uncredentialed_service_plan = ServicePlan.make(service: Service.make(label: 'mysterious-n/a'))
-          uncredentialed_service_instance = ManagedServiceInstance.make(space: space, service_plan: uncredentialed_service_plan, name: 'mysterious-mystery')
-          ServiceBinding.make(app: parent_app, service_instance: uncredentialed_service_instance, credentials: {})
+          uncredentialed_service_plan = create(:service_plan, service: create(:service, label: 'mysterious-n/a'))
+          uncredentialed_service_instance = create(:managed_service_instance, space: space, service_plan: uncredentialed_service_plan, name: 'mysterious-mystery')
+          create(:service_binding, app: parent_app, service_instance: uncredentialed_service_instance, credentials: {})
         end
 
         it 'returns an empty array' do
@@ -474,9 +464,9 @@ module VCAP::CloudController
 
       context 'when the service binding credentials is nil' do
         before do
-          uncredentialed_service_plan = ServicePlan.make(service: Service.make(label: 'mysterious-n/a'))
-          uncredentialed_service_instance = ManagedServiceInstance.make(space: space, service_plan: uncredentialed_service_plan, name: 'mysterious-mystery')
-          ServiceBinding.make(app: parent_app, service_instance: uncredentialed_service_instance, credentials: nil)
+          uncredentialed_service_plan = create(:service_plan, service: create(:service, label: 'mysterious-n/a'))
+          uncredentialed_service_instance = create(:managed_service_instance, space: space, service_plan: uncredentialed_service_plan, name: 'mysterious-mystery')
+          create(:service_binding, app: parent_app, service_instance: uncredentialed_service_instance, credentials: nil)
         end
 
         it 'returns an empty array' do
@@ -488,10 +478,10 @@ module VCAP::CloudController
     describe 'default enable_ssh' do
       context 'when enable_ssh is set explicitly' do
         it 'does not overwrite it with the default' do
-          app1 = AppModel.make(enable_ssh: true)
+          app1 = create(:app_model, enable_ssh: true)
           expect(app1.enable_ssh).to be(true)
 
-          app2 = AppModel.make(enable_ssh: false)
+          app2 = create(:app_model, enable_ssh: false)
           expect(app2.enable_ssh).to be(false)
         end
       end
@@ -502,7 +492,7 @@ module VCAP::CloudController
         end
 
         it 'sets enable_ssh to true' do
-          app = AppModel.make
+          app = create(:app_model)
           expect(app.enable_ssh).to be(true)
         end
       end
@@ -513,14 +503,14 @@ module VCAP::CloudController
         end
 
         it 'sets enable_ssh to false' do
-          app = AppModel.make
+          app = create(:app_model)
           expect(app.enable_ssh).to be(false)
         end
       end
     end
 
     describe '#user_visibility_filter' do
-      let!(:other_app) { AppModel.make }
+      let!(:other_app) { create(:app_model) }
 
       context "when a user is a developer in the app's space" do
         let(:user) { make_developer_for_space(app_model.space) }
@@ -555,7 +545,7 @@ module VCAP::CloudController
       end
 
       context "when a user has no visibility to the app's space" do
-        let(:user) { User.make }
+        let(:user) { create(:user) }
 
         it 'the service binding is not visible' do
           expect(AppModel.user_visible(user).all).to be_empty
@@ -565,10 +555,10 @@ module VCAP::CloudController
 
     describe '#current_package' do
       context 'when the app has a current droplet assigned' do
-        let(:package) { PackageModel.make }
+        let(:package) { create(:package_model) }
 
         before do
-          app_model.update(droplet: DropletModel.make(package:))
+          app_model.update(droplet: create(:droplet_model, package:))
         end
 
         it 'returns the package from the current droplet' do
@@ -589,18 +579,18 @@ module VCAP::CloudController
       end
 
       it 'returns false when the app has no deployments that are being deployed' do
-        VCAP::CloudController::DeploymentModel.make(state: 'DEPLOYED', app: app_model)
-        VCAP::CloudController::DeploymentModel.make(state: 'CANCELING', app: app_model)
-        VCAP::CloudController::DeploymentModel.make(state: 'CANCELED', app: app_model)
+        create(:deployment_model, state: 'DEPLOYED', app: app_model)
+        create(:deployment_model, state: 'CANCELING', app: app_model)
+        create(:deployment_model, state: 'CANCELED', app: app_model)
 
         expect(app_model.deploying?).to be(false)
       end
 
       it 'returns true when the app has a deployment that is being deployed' do
-        VCAP::CloudController::DeploymentModel.make(state: 'DEPLOYED', app: app_model)
-        VCAP::CloudController::DeploymentModel.make(state: 'CANCELING', app: app_model)
-        VCAP::CloudController::DeploymentModel.make(state: 'DEPLOYING', app: app_model)
-        VCAP::CloudController::DeploymentModel.make(state: 'CANCELED', app: app_model)
+        create(:deployment_model, state: 'DEPLOYED', app: app_model)
+        create(:deployment_model, state: 'CANCELING', app: app_model)
+        create(:deployment_model, state: 'DEPLOYING', app: app_model)
+        create(:deployment_model, state: 'CANCELED', app: app_model)
 
         expect(app_model.deploying?).to be(true)
       end

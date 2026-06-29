@@ -5,7 +5,7 @@ require 'messages/app_feature_update_message'
 module VCAP::CloudController
   RSpec.describe AppFeatureUpdate do
     subject(:app_feature_update) { AppFeatureUpdate }
-    let(:app) { AppModel.make(enable_ssh: false, revisions_enabled: false, service_binding_k8s_enabled: false, file_based_vcap_services_enabled: false) }
+    let(:app) { create(:app_model, enable_ssh: false, revisions_enabled: false, service_binding_k8s_enabled: false, file_based_vcap_services_enabled: false) }
 
     describe '.update' do
       let(:message) { AppFeatureUpdateMessage.new(enabled: true) }

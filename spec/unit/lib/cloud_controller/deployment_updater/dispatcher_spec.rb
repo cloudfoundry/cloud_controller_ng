@@ -5,9 +5,9 @@ module VCAP::CloudController
   RSpec.describe DeploymentUpdater::Dispatcher do
     subject(:dispatcher) { DeploymentUpdater::Dispatcher }
 
-    let(:scaling_deployment) { DeploymentModel.make(state: DeploymentModel::DEPLOYING_STATE) }
-    let(:prepaused_deployment) { DeploymentModel.make(state: DeploymentModel::PREPAUSED_STATE) }
-    let(:canceling_deployment) { DeploymentModel.make(state: DeploymentModel::CANCELING_STATE) }
+    let(:scaling_deployment) { create(:deployment_model, state: DeploymentModel::DEPLOYING_STATE) }
+    let(:prepaused_deployment) { create(:deployment_model, state: DeploymentModel::PREPAUSED_STATE) }
+    let(:canceling_deployment) { create(:deployment_model, state: DeploymentModel::CANCELING_STATE) }
 
     let(:logger) { instance_double(Steno::Logger, info: nil, error: nil, warn: nil) }
     let(:workpool) { instance_double(WorkPool, submit: nil, drain: nil) }

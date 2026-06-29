@@ -9,7 +9,7 @@ module VCAP::CloudController
     let(:unbind_body) { {} }
 
     let(:services_event_repository) { double :services_event_respository, record_service_key_event: nil }
-    let(:service_key) { ServiceKey.make }
+    let(:service_key) { create(:service_key) }
     let(:service_key_delete_action) { double(:service_key_delete_action) }
     let(:delete_action_job) { double(:delete_action_job) }
 
@@ -55,7 +55,7 @@ module VCAP::CloudController
 
         context 'when the instance has a last_operation' do
           before do
-            service_key.service_instance.service_instance_operation = ServiceInstanceOperation.make(type: 'create', state: 'succeeded')
+            service_key.service_instance.service_instance_operation = create(:service_instance_operation, type: 'create', state: 'succeeded')
             service_key.service_instance.save
           end
 
@@ -68,9 +68,9 @@ module VCAP::CloudController
           end
 
           context 'when the instance operation is in progress' do
-            let(:last_operation) { ServiceInstanceOperation.make(state: 'in progress') }
-            let(:instance) { ManagedServiceInstance.make }
-            let(:service_key) { ServiceKey.make(service_instance: instance) }
+            let(:last_operation) { create(:service_instance_operation, state: 'in progress') }
+            let(:instance) { create(:managed_service_instance) }
+            let(:service_key) { create(:service_key, service_instance: instance) }
 
             before do
               instance.service_instance_operation = last_operation

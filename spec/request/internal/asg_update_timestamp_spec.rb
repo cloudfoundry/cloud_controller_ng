@@ -2,7 +2,7 @@ require 'spec_helper'
 require 'request_spec_shared_examples'
 
 RSpec.describe 'App Security Group Update Timestamp' do
-  let(:user) { VCAP::CloudController::User.make(guid: 'user-guid') }
+  let(:user) { create(:user, guid: 'user-guid') }
   let(:admin_header) { admin_headers_for(user) }
 
   describe 'GET /internal/v4/asg_latest_update' do

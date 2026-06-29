@@ -10,18 +10,18 @@ module VCAP::CloudController
 
     describe 'Validations' do
       describe 'stack' do
-        let(:stack) {  Stack.make(name: 'happy') }
+        let(:stack) {  create(:stack, name: 'happy') }
 
         it 'can be changed if not set' do
           buildpack = Buildpack.create(name: 'test', stack: nil)
-          buildpack.stack = Stack.make.name
+          buildpack.stack = create(:stack).name
 
           expect(buildpack).to be_valid
         end
 
         it 'cannot be changed once it is set' do
-          buildpack = Buildpack.create(name: 'test', stack: Stack.make.name)
-          buildpack.stack = Stack.make.name
+          buildpack = Buildpack.create(name: 'test', stack: create(:stack).name)
+          buildpack.stack = create(:stack).name
 
           expect(buildpack).not_to be_valid
           expect(buildpack.errors.on(:stack)).to include(:buildpack_cant_change_stacks)
@@ -79,7 +79,7 @@ module VCAP::CloudController
       end
 
       context 'when unique constraint violation occures' do
-        let(:stack) { Stack.make }
+        let(:stack) { create(:stack) }
 
         it 'raises validation error when name, stack and lifecyle is same' do
           Buildpack.create(name: 'oscar', stack: stack.name, lifecycle: 'cnb')
@@ -134,16 +134,16 @@ module VCAP::CloudController
       context 'with prioritized buildpacks' do
         before do
           buildpack_blobstore.cp_to_blobstore(buildpack_file_1.path, 'a key')
-          Buildpack.make(key: 'a key', position: 2)
+          create(:buildpack, key: 'a key', position: 2)
 
           buildpack_blobstore.cp_to_blobstore(buildpack_file_cnb.path, 'cnb key')
-          @cnb_buildpack = Buildpack.make(key: 'cnb key', position: 1, lifecycle: 'cnb')
+          @cnb_buildpack = create(:buildpack, key: 'cnb key', position: 1, lifecycle: 'cnb')
 
           buildpack_blobstore.cp_to_blobstore(buildpack_file_2.path, 'b key')
-          Buildpack.make(key: 'b key', position: 1)
+          create(:buildpack, key: 'b key', position: 1)
 
           buildpack_blobstore.cp_to_blobstore(buildpack_file_3.path, 'c key')
-          @another_buildpack = Buildpack.make(key: 'c key', position: 3)
+          @another_buildpack = create(:buildpack, key: 'c key', position: 3)
         end
 
         it { is_expected.to have(3).items }
@@ -179,7 +179,7 @@ module VCAP::CloudController
         end
 
         context 'and there are buildpacks with null keys' do
-          let!(:null_buildpack) { Buildpack.create(name: 'nil_key_custom_buildpack', stack: Stack.make.name, position: 0) }
+          let!(:null_buildpack) { Buildpack.create(name: 'nil_key_custom_buildpack', stack: create(:stack).name, position: 0) }
 
           it 'only returns buildpacks with non-null keys' do
             expect(Buildpack.all).to include(null_buildpack)
@@ -189,7 +189,7 @@ module VCAP::CloudController
         end
 
         context 'and there are buildpacks with empty keys' do
-          let!(:empty_buildpack) { Buildpack.create(name: 'nil_key_custom_buildpack', stack: Stack.make.name, key: '', position: 0) }
+          let!(:empty_buildpack) { Buildpack.create(name: 'nil_key_custom_buildpack', stack: create(:stack).name, key: '', position: 0) }
 
           it 'only returns buildpacks with non-null keys' do
             expect(Buildpack.all).to include(empty_buildpack)
@@ -206,8 +206,8 @@ module VCAP::CloudController
       end
 
       context 'when there are disabled buildpacks' do
-        let!(:enabled_buildpack) { Buildpack.make(key: 'enabled-buildpack', enabled: true) }
-        let!(:disabled_buildpack) { Buildpack.make(key: 'disabled-buildpack', enabled: false) }
+        let!(:enabled_buildpack) { create(:buildpack, key: 'enabled-buildpack', enabled: true) }
+        let!(:disabled_buildpack) { create(:buildpack, key: 'disabled-buildpack', enabled: false) }
 
         it 'includes them in the list' do
           expect(all_buildpacks).to contain_exactly(enabled_buildpack, disabled_buildpack)
@@ -217,21 +217,21 @@ module VCAP::CloudController
       context 'with a stack' do
         let(:cnb_buildpacks) { Buildpack.list_admin_buildpacks('stack2', 'cnb') }
         subject(:all_buildpacks) { Buildpack.list_admin_buildpacks('stack1') }
-        let!(:stack1) { Stack.make(name: 'stack1') }
-        let!(:stack2) { Stack.make(name: 'stack2') }
+        let!(:stack1) { create(:stack, name: 'stack1') }
+        let!(:stack2) { create(:stack, name: 'stack2') }
 
         before do
           buildpack_blobstore.cp_to_blobstore(buildpack_file_1.path, 'a key')
-          Buildpack.make(key: 'a key', position: 2, stack: 'stack1')
+          create(:buildpack, key: 'a key', position: 2, stack: 'stack1')
 
           buildpack_blobstore.cp_to_blobstore(buildpack_file_2.path, 'b key')
-          Buildpack.make(key: 'b key', position: 1, stack: 'stack2')
+          create(:buildpack, key: 'b key', position: 1, stack: 'stack2')
 
           buildpack_blobstore.cp_to_blobstore(buildpack_file_cnb.path, 'cnb key')
-          Buildpack.make(key: 'cnb key', position: 1, stack: 'stack2', lifecycle: 'cnb')
+          create(:buildpack, key: 'cnb key', position: 1, stack: 'stack2', lifecycle: 'cnb')
 
           buildpack_blobstore.cp_to_blobstore(buildpack_file_3.path, 'c key')
-          @another_buildpack = Buildpack.make(key: 'c key', position: 3, stack: nil)
+          @another_buildpack = create(:buildpack, key: 'c key', position: 3, stack: nil)
         end
 
         it { is_expected.to have(2).items }
@@ -248,14 +248,14 @@ module VCAP::CloudController
 
     describe 'staging_message' do
       it 'contains the buildpack key' do
-        buildpack = Buildpack.make
+        buildpack = create(:buildpack)
         expect(buildpack.staging_message).to eql(buildpack_key: buildpack.key)
       end
     end
 
     describe '#update' do
       let!(:buildpacks) do
-        Array.new(4) { |i| Buildpack.create(name: "name_#{100 - i}", stack: Stack.make.name, position: i + 1) }
+        Array.new(4) { |i| Buildpack.create(name: "name_#{100 - i}", stack: create(:stack).name, position: i + 1) }
       end
 
       it 'does not modify the frozen hash provided by Sequel' do
@@ -266,8 +266,8 @@ module VCAP::CloudController
     end
 
     describe '#destroy' do
-      let!(:buildpack1) { VCAP::CloudController::Buildpack.create({ name: 'first_buildpack', stack: Stack.make.name, key: 'xyz', position: 1 }) }
-      let!(:buildpack2) { VCAP::CloudController::Buildpack.create({ name: 'second_buildpack', stack: Stack.make.name, key: 'xyz', position: 2 }) }
+      let!(:buildpack1) { VCAP::CloudController::Buildpack.create({ name: 'first_buildpack', stack: create(:stack).name, key: 'xyz', position: 1 }) }
+      let!(:buildpack2) { VCAP::CloudController::Buildpack.create({ name: 'second_buildpack', stack: create(:stack).name, key: 'xyz', position: 2 }) }
 
       it 'removes the specified buildpack' do
         expect do
@@ -295,8 +295,8 @@ module VCAP::CloudController
     end
 
     describe '#state' do
-      let!(:buildpack1) { VCAP::CloudController::Buildpack.create({ name: 'first_buildpack', stack: Stack.make.name, key: 'xyz', position: 1, filename: '/some/file' }) }
-      let!(:buildpack2) { VCAP::CloudController::Buildpack.create({ name: 'second_buildpack', stack: Stack.make.name, key: 'xyz', position: 2, filename: nil }) }
+      let!(:buildpack1) { VCAP::CloudController::Buildpack.create({ name: 'first_buildpack', stack: create(:stack).name, key: 'xyz', position: 1, filename: '/some/file' }) }
+      let!(:buildpack2) { VCAP::CloudController::Buildpack.create({ name: 'second_buildpack', stack: create(:stack).name, key: 'xyz', position: 2, filename: nil }) }
 
       it 'returns ready when the buildpack has a filename' do
         expect(buildpack1.state).to eq('READY')

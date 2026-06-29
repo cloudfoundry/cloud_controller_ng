@@ -6,12 +6,12 @@ module VCAP::CloudController
 
     subject(:access) { RouteAccess.new(Security::AccessContext.new(queryer)) }
 
-    let(:user) { VCAP::CloudController::User.make }
-    let(:org) { VCAP::CloudController::Organization.make }
-    let(:space) { VCAP::CloudController::Space.make(organization: org) }
-    let(:domain) { VCAP::CloudController::PrivateDomain.make(owning_organization: org) }
-    let(:flag) { FeatureFlag.make(name: 'route_creation', enabled: false) }
-    let(:object) { VCAP::CloudController::Route.make(domain:, space:) }
+    let(:user) { create(:user) }
+    let(:org) { create(:organization) }
+    let(:space) { create(:space, organization: org) }
+    let(:domain) { create(:private_domain, owning_organization: org) }
+    let(:flag) { create(:feature_flag, name: 'route_creation', enabled: false) }
+    let(:object) { create(:route, domain:, space:) }
 
     before do
       flag.save
@@ -112,7 +112,7 @@ module VCAP::CloudController
         end
 
         describe 'in a shared domain' do
-          before { object.domain = SharedDomain.make }
+          before { object.domain = create(:shared_domain) }
 
           describe 'when the route has a wildcard host' do
             before { object.host = '*' }
@@ -156,7 +156,7 @@ module VCAP::CloudController
 
       describe 'when route creation is disabled' do
         describe 'in a shared domain' do
-          before { object.domain = SharedDomain.make }
+          before { object.domain = create(:shared_domain) }
 
           describe 'when the route has a wildcard host' do
             before { object.host = '*' }

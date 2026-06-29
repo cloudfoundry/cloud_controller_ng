@@ -3,7 +3,7 @@ require 'presenters/v3/organization_usage_summary_presenter'
 
 module VCAP::CloudController::Presenters::V3
   RSpec.describe OrganizationUsageSummaryPresenter do
-    let(:org) { VCAP::CloudController::Organization.make }
+    let(:org) { create(:organization) }
 
     describe '#to_hash' do
       let(:result) { OrganizationUsageSummaryPresenter.new(org).to_hash }

@@ -2,8 +2,8 @@ require 'spec_helper'
 require 'request_spec_shared_examples'
 
 RSpec.describe 'Domains Request' do
-  let(:user) { VCAP::CloudController::User.make }
-  let(:space) { VCAP::CloudController::Space.make }
+  let(:user) { create(:user) }
+  let(:space) { create(:space) }
   let(:org) { space.organization }
   let(:admin_header) { headers_for(user, scopes: %w[cloud_controller.admin]) }
   let(:user_header) { headers_for(user, scopes: []) }
@@ -46,8 +46,8 @@ RSpec.describe 'Domains Request' do
     end
 
     describe 'when the user is logged in' do
-      let!(:non_visible_org) { VCAP::CloudController::Organization.make(guid: 'non-visible') }
-      let!(:user_visible_org) { VCAP::CloudController::Organization.make(guid: 'visible') }
+      let!(:non_visible_org) { create(:organization, guid: 'non-visible') }
+      let!(:user_visible_org) { create(:organization, guid: 'visible') }
 
       # (domain)                        | (owning org)       | (visible orgs shared to)
       # (visible_owned_private_domain)  | (org)              | (non_visible_org, user_visible_org)
@@ -55,16 +55,16 @@ RSpec.describe 'Domains Request' do
       # (not_visible_private_domain)    | (non_visible_org)  | ()
       # (shared_domain)                 | ()                 | ()
       let!(:visible_owned_private_domain) do
-        VCAP::CloudController::PrivateDomain.make(guid: 'domain1', name: 'domain1.com', owning_organization: org)
+        create(:private_domain, guid: 'domain1', name: 'domain1.com', owning_organization: org)
       end
       let!(:visible_shared_private_domain) do
-        VCAP::CloudController::PrivateDomain.make(guid: 'domain2', name: 'domain2.com', owning_organization: non_visible_org)
+        create(:private_domain, guid: 'domain2', name: 'domain2.com', owning_organization: non_visible_org)
       end
       let!(:not_visible_private_domain) do
-        VCAP::CloudController::PrivateDomain.make(guid: 'domain3', name: 'domain3.com', owning_organization: non_visible_org)
+        create(:private_domain, guid: 'domain3', name: 'domain3.com', owning_organization: non_visible_org)
       end
       let!(:shared_domain) do
-        VCAP::CloudController::SharedDomain.make(guid: 'domain4', name: 'domain4.com')
+        create(:shared_domain, guid: 'domain4', name: 'domain4.com')
       end
 
       let(:visible_owned_private_domain_json) do
@@ -450,12 +450,12 @@ RSpec.describe 'Domains Request' do
     end
 
     describe 'labels' do
-      let!(:domain1) { VCAP::CloudController::PrivateDomain.make(name: 'dom1.com', owning_organization: org) }
-      let!(:domain1_label) { VCAP::CloudController::DomainLabelModel.make(resource_guid: domain1.guid, key_name: 'animal', value: 'dog') }
+      let!(:domain1) { create(:private_domain, name: 'dom1.com', owning_organization: org) }
+      let!(:domain1_label) { create(:domain_label_model, resource_guid: domain1.guid, key_name: 'animal', value: 'dog') }
 
-      let!(:domain2) { VCAP::CloudController::PrivateDomain.make(name: 'dom2.com', owning_organization: org) }
-      let!(:domain2_label) { VCAP::CloudController::DomainLabelModel.make(resource_guid: domain2.guid, key_name: 'animal', value: 'cow') }
-      let!(:domain2__exclusive_label) { VCAP::CloudController::DomainLabelModel.make(resource_guid: domain2.guid, key_name: 'santa', value: 'claus') }
+      let!(:domain2) { create(:private_domain, name: 'dom2.com', owning_organization: org) }
+      let!(:domain2_label) { create(:domain_label_model, resource_guid: domain2.guid, key_name: 'animal', value: 'cow') }
+      let!(:domain2__exclusive_label) { create(:domain_label_model, resource_guid: domain2.guid, key_name: 'santa', value: 'claus') }
 
       it 'returns a 200 and the filtered domains for "in" label selector' do
         get '/v3/domains?label_selector=animal in (dog)', nil, admin_header
@@ -620,12 +620,12 @@ RSpec.describe 'Domains Request' do
   end
 
   describe 'GET /v3/domains/:domain_guid/route_reservations' do
-    let!(:non_visible_org) { VCAP::CloudController::Organization.make(guid: 'non-visible') }
+    let!(:non_visible_org) { create(:organization, guid: 'non-visible') }
     let!(:non_visible_domain) do
-      VCAP::CloudController::PrivateDomain.make(guid: 'non-visible', name: 'non-visible-domain.com', owning_organization: non_visible_org)
+      create(:private_domain, guid: 'non-visible', name: 'non-visible-domain.com', owning_organization: non_visible_org)
     end
     let!(:domain) do
-      VCAP::CloudController::PrivateDomain.make(guid: 'visible', name: 'visibledomain.com', owning_organization: org)
+      create(:private_domain, guid: 'visible', name: 'visibledomain.com', owning_organization: org)
     end
 
     context 'no route matches' do
@@ -656,7 +656,7 @@ RSpec.describe 'Domains Request' do
 
     context 'there are route matches' do
       context 'when querying with both host and path' do
-        let!(:matching_route) { VCAP::CloudController::Route.make(space: space, domain: domain, host: 'my-host', path: '/somepath') }
+        let!(:matching_route) { create(:route, space: space, domain: domain, host: 'my-host', path: '/somepath') }
         let(:api_call) { ->(user_headers) { get "/v3/domains/#{domain.guid}/route_reservations?host=my-host&path=/somepath", nil, user_headers } }
 
         let(:matching_route_json) do
@@ -683,7 +683,7 @@ RSpec.describe 'Domains Request' do
       end
 
       context 'when querying with only host' do
-        let!(:other_route) { VCAP::CloudController::Route.make(space: space, domain: domain, host: 'my-host', path: '/path/to/something') }
+        let!(:other_route) { create(:route, space: space, domain: domain, host: 'my-host', path: '/path/to/something') }
         let(:api_call) { ->(user_headers) { get "/v3/domains/#{domain.guid}/route_reservations?host=my-host", nil, user_headers } }
 
         let(:matching_route_json) do
@@ -711,7 +711,7 @@ RSpec.describe 'Domains Request' do
 
       context 'when querying with only port' do
         let(:router_group) { VCAP::CloudController::RoutingApi::RouterGroup.new({ 'type' => 'tcp', 'reservable_ports' => '123' }) }
-        let(:domain) { VCAP::CloudController::SharedDomain.make(router_group_guid: 'some-router-group', name: 'my.domain') }
+        let(:domain) { create(:shared_domain, router_group_guid: 'some-router-group', name: 'my.domain') }
         let(:routing_api_client) { instance_double(VCAP::CloudController::RoutingApi::Client) }
 
         before do
@@ -724,7 +724,7 @@ RSpec.describe 'Domains Request' do
           allow(routing_api_client).to receive_messages(enabled?: true, router_group: router_group)
         end
 
-        let!(:other_route) { VCAP::CloudController::Route.make(host: '', space: space, domain: domain, port: 123) }
+        let!(:other_route) { create(:route, host: '', space: space, domain: domain, port: 123) }
         let(:api_call) { ->(user_headers) { get "/v3/domains/#{domain.guid}/route_reservations?port=123", nil, user_headers } }
 
         let(:matching_route_json) do
@@ -897,8 +897,8 @@ RSpec.describe 'Domains Request' do
     end
 
     describe 'when creating a private domain' do
-      let(:shared_org1) { VCAP::CloudController::Organization.make(guid: 'shared-org1') }
-      let(:shared_org2) { VCAP::CloudController::Organization.make(guid: 'shared-org2') }
+      let(:shared_org1) { create(:organization, guid: 'shared-org1') }
+      let(:shared_org2) { create(:organization, guid: 'shared-org2') }
 
       let(:domain_json) do
         {
@@ -1001,7 +1001,7 @@ RSpec.describe 'Domains Request' do
         let(:headers) { set_user_with_header_as_role(user: user, role: 'org_manager', org: org) }
 
         context 'when the feature flag is disabled' do
-          let!(:feature_flag) { VCAP::CloudController::FeatureFlag.make(name: 'private_domain_creation', enabled: false, error_message: 'my name is bob') }
+          let!(:feature_flag) { create(:feature_flag, name: 'private_domain_creation', enabled: false, error_message: 'my name is bob') }
 
           context 'when the user is not an admin' do
             it 'returns a 403' do
@@ -1048,7 +1048,7 @@ RSpec.describe 'Domains Request' do
 
         context 'when the org has exceeded its private domains quota' do
           it 'returns a 422 and a helpful error message' do
-            org.update(quota_definition: VCAP::CloudController::QuotaDefinition.make(total_private_domains: 0))
+            org.update(quota_definition: create(:quota_definition, total_private_domains: 0))
 
             post '/v3/domains', private_domain_params.to_json, headers
 
@@ -1100,7 +1100,7 @@ RSpec.describe 'Domains Request' do
         end
 
         context 'when the user does not have proper permissions in one of the shared orgs' do
-          let(:shared_org3) { VCAP::CloudController::Organization.make(guid: 'shared-org3') }
+          let(:shared_org3) { create(:organization, guid: 'shared-org3') }
 
           let(:unwriteable_shared_org) do
             {
@@ -1135,10 +1135,9 @@ RSpec.describe 'Domains Request' do
 
         context 'when one of the shared orgs is suspended' do
           let(:shared_org3) do
-            VCAP::CloudController::Organization.make(
-              guid: 'shared-org3',
-              status: VCAP::CloudController::Organization::SUSPENDED
-            )
+            create(:organization,
+                   guid: 'shared-org3',
+                   status: VCAP::CloudController::Organization::SUSPENDED)
           end
 
           let(:suspended_shared_org) do
@@ -1267,8 +1266,8 @@ RSpec.describe 'Domains Request' do
       let(:headers) { set_user_with_header_as_role(role: 'admin') }
 
       context 'creating a sub domain of a domain owned by another organization' do
-        let(:organization_to_scope_to) { VCAP::CloudController::Organization.make }
-        let(:existing_private_domain) { VCAP::CloudController::PrivateDomain.make }
+        let(:organization_to_scope_to) { create(:organization) }
+        let(:existing_private_domain) { create(:private_domain) }
 
         let(:params) do
           {
@@ -1317,7 +1316,7 @@ RSpec.describe 'Domains Request' do
 
       describe 'collisions' do
         context 'with an existing domain' do
-          let!(:existing_domain) { VCAP::CloudController::SharedDomain.make }
+          let!(:existing_domain) { create(:shared_domain) }
 
           let(:params) do
             {
@@ -1335,8 +1334,8 @@ RSpec.describe 'Domains Request' do
         end
 
         context 'with an existing route' do
-          let(:existing_domain) { VCAP::CloudController::SharedDomain.make }
-          let(:existing_route) { VCAP::CloudController::Route.make(domain: existing_domain) }
+          let(:existing_domain) { create(:shared_domain) }
+          let(:existing_route) { create(:route, domain: existing_domain) }
           let(:domain_name) { existing_route.fqdn }
 
           let(:params) do
@@ -1357,7 +1356,7 @@ RSpec.describe 'Domains Request' do
         end
 
         context 'with an existing route as a subdomain' do
-          let(:existing_route) { VCAP::CloudController::Route.make }
+          let(:existing_route) { create(:route) }
           let(:domain) { "sub.#{existing_route.fqdn}" }
 
           let(:params) do
@@ -1441,12 +1440,12 @@ RSpec.describe 'Domains Request' do
 
   describe 'POST /v3/domains/:guid/relationships/shared_organizations' do
     let(:params) { { data: [] } }
-    let(:private_domain) { VCAP::CloudController::PrivateDomain.make(owning_organization: org) }
+    let(:private_domain) { create(:private_domain, owning_organization: org) }
     let(:user_header) { admin_headers_for(user) }
 
     describe 'when updating shared orgs for a shared domain' do
       let(:params) { { data: [{ guid: org.guid }] } }
-      let(:shared_domain) { VCAP::CloudController::SharedDomain.make }
+      let(:shared_domain) { create(:shared_domain) }
 
       it 'returns a 422' do
         post "/v3/domains/#{shared_domain.guid}/relationships/shared_organizations", params.to_json, user_header
@@ -1497,7 +1496,7 @@ RSpec.describe 'Domains Request' do
     end
 
     describe 'when sharing orgs with a private domain' do
-      let(:shared_org1) { VCAP::CloudController::Organization.make(guid: 'shared-org1') }
+      let(:shared_org1) { create(:organization, guid: 'shared-org1') }
 
       let(:domain_shared_orgs) do
         {
@@ -1551,10 +1550,10 @@ RSpec.describe 'Domains Request' do
     end
 
     describe 'when the user does not have read permissions for the domain' do
-      let(:org1) { VCAP::CloudController::Organization.make(guid: 'org1') }
-      let(:org2) { VCAP::CloudController::Organization.make(guid: 'org2') }
-      let!(:shared_domain) { VCAP::CloudController::SharedDomain.make }
-      let(:unreadable_domain) { VCAP::CloudController::PrivateDomain.make(owning_organization: org1) }
+      let(:org1) { create(:organization, guid: 'org1') }
+      let(:org2) { create(:organization, guid: 'org2') }
+      let!(:shared_domain) { create(:shared_domain) }
+      let(:unreadable_domain) { create(:private_domain, owning_organization: org1) }
 
       let(:domain_shared_orgs) do
         {
@@ -1597,7 +1596,7 @@ RSpec.describe 'Domains Request' do
 
   describe 'DELETE /v3/domains/:guid' do
     describe 'when deleting a shared domain' do
-      let(:shared_domain) { VCAP::CloudController::SharedDomain.make }
+      let(:shared_domain) { create(:shared_domain) }
       let(:api_call) { ->(user_headers) { delete "/v3/domains/#{shared_domain.guid}", nil, user_headers } }
       let(:db_check) do
         lambda do
@@ -1634,7 +1633,7 @@ RSpec.describe 'Domains Request' do
     end
 
     describe 'when deleting a private domain' do
-      let(:private_domain) { VCAP::CloudController::PrivateDomain.make(owning_organization: org) }
+      let(:private_domain) { create(:private_domain, owning_organization: org) }
       let(:api_call) { ->(user_headers) { delete "/v3/domains/#{private_domain.guid}", nil, user_headers } }
 
       let(:db_check) do
@@ -1674,8 +1673,8 @@ RSpec.describe 'Domains Request' do
     end
 
     describe 'when deleting a shared private domain as an org manager of the shared organization' do
-      let(:shared_org1) { VCAP::CloudController::Organization.make(guid: 'shared-org1') }
-      let(:private_domain) { VCAP::CloudController::PrivateDomain.make(owning_organization: org) }
+      let(:shared_org1) { create(:organization, guid: 'shared-org1') }
+      let(:private_domain) { create(:private_domain, owning_organization: org) }
       let(:user_header) { headers_for(user) }
 
       before do
@@ -1690,8 +1689,8 @@ RSpec.describe 'Domains Request' do
     end
 
     describe 'when deleting a shared private domain' do
-      let(:shared_org1) { VCAP::CloudController::Organization.make(guid: 'shared-org1') }
-      let(:private_domain) { VCAP::CloudController::PrivateDomain.make(owning_organization: org) }
+      let(:shared_org1) { create(:organization, guid: 'shared-org1') }
+      let(:private_domain) { create(:private_domain, owning_organization: org) }
       let(:user_header) { admin_headers_for(user) }
 
       before do
@@ -1710,8 +1709,8 @@ RSpec.describe 'Domains Request' do
 
   describe 'DELETE /v3/domains/:guid/relationships/shared_organizations/:org_guid' do
     let(:owning_org) { org }
-    let(:shared_org1) { VCAP::CloudController::Organization.make(guid: 'shared-org1') }
-    let(:private_domain) { VCAP::CloudController::PrivateDomain.make(owning_organization: owning_org) }
+    let(:shared_org1) { create(:organization, guid: 'shared-org1') }
+    let(:private_domain) { create(:private_domain, owning_organization: owning_org) }
     let(:user_header) { admin_headers_for(user) }
 
     context 'when there are non role related permissions issues' do
@@ -1742,7 +1741,7 @@ RSpec.describe 'Domains Request' do
       end
 
       context 'when unsharing from non-shared org' do
-        let(:org2) { VCAP::CloudController::Organization.make }
+        let(:org2) { create(:organization) }
 
         it 'returns a 422' do
           delete "/v3/domains/#{private_domain.guid}/relationships/shared_organizations/#{org2.guid}", nil, user_header
@@ -1782,7 +1781,7 @@ RSpec.describe 'Domains Request' do
       end
 
       context 'when unsharing a shared domain' do
-        let(:shared_domain) { VCAP::CloudController::SharedDomain.make }
+        let(:shared_domain) { create(:shared_domain) }
 
         it 'returns a 422' do
           delete "/v3/domains/#{shared_domain.guid}/relationships/shared_organizations/#{shared_org1.guid}", nil, user_header
@@ -1795,8 +1794,8 @@ RSpec.describe 'Domains Request' do
     end
 
     context 'when the org has routes using the domain' do
-      let(:route_space) { VCAP::CloudController::Space.make(organization: shared_org1) }
-      let(:route) { VCAP::CloudController::Route.make(domain: private_domain, space: route_space) }
+      let(:route_space) { create(:space, organization: shared_org1) }
+      let(:route) { create(:route, domain: private_domain, space: route_space) }
 
       before do
         private_domain.add_shared_organization(shared_org1)
@@ -1842,7 +1841,7 @@ RSpec.describe 'Domains Request' do
     end
 
     context 'when the shared org is suspended' do
-      let(:owning_org) { VCAP::CloudController::Organization.make(guid: 'owning-org') }
+      let(:owning_org) { create(:organization, guid: 'owning-org') }
       let(:shared_org1) { org } # permissions apply to shared org
       let(:api_call) { ->(user_headers) { delete "/v3/domains/#{private_domain.guid}/relationships/shared_organizations/#{shared_org1.guid}", nil, user_headers } }
 
@@ -1938,7 +1937,7 @@ RSpec.describe 'Domains Request' do
     end
 
     context 'when getting a shared domain' do
-      let(:shared_domain) { VCAP::CloudController::SharedDomain.make }
+      let(:shared_domain) { create(:shared_domain) }
 
       let(:shared_domain_json) do
         {
@@ -1983,7 +1982,7 @@ RSpec.describe 'Domains Request' do
 
     context 'when getting a private domain' do
       context 'when the domain has not been shared' do
-        let(:private_domain) { VCAP::CloudController::PrivateDomain.make(owning_organization: org) }
+        let(:private_domain) { create(:private_domain, owning_organization: org) }
 
         let(:private_domain_json) do
           {
@@ -2037,10 +2036,10 @@ RSpec.describe 'Domains Request' do
       end
 
       context 'when the domain has been shared with another organization' do
-        let!(:non_visible_org) { VCAP::CloudController::Organization.make }
-        let!(:user_visible_org) { VCAP::CloudController::Organization.make }
+        let!(:non_visible_org) { create(:organization) }
+        let!(:user_visible_org) { create(:organization) }
 
-        let(:private_domain) { VCAP::CloudController::PrivateDomain.make(owning_organization: org) }
+        let(:private_domain) { create(:private_domain, owning_organization: org) }
 
         before do
           non_visible_org.add_private_domain(private_domain)
@@ -2126,7 +2125,7 @@ RSpec.describe 'Domains Request' do
     end
 
     context 'when metadata is invalid' do
-      let(:domain) { VCAP::CloudController::SharedDomain.make }
+      let(:domain) { create(:shared_domain) }
       let(:user_header) { admin_headers_for(user) }
 
       it 'returns a 422' do
@@ -2143,7 +2142,7 @@ RSpec.describe 'Domains Request' do
     end
 
     context 'updating an existing shared domain' do
-      let(:domain) { VCAP::CloudController::SharedDomain.make }
+      let(:domain) { create(:shared_domain) }
 
       let(:domain_json) do
         {
@@ -2196,7 +2195,7 @@ RSpec.describe 'Domains Request' do
     end
 
     context 'updating an existing private domain' do
-      let(:domain) { VCAP::CloudController::PrivateDomain.make(owning_organization: org) }
+      let(:domain) { create(:private_domain, owning_organization: org) }
 
       let(:domain_json) do
         {
@@ -2268,7 +2267,7 @@ RSpec.describe 'Domains Request' do
     end
 
     context 'updating an existing, shared private domain' do
-      let(:domain) { VCAP::CloudController::PrivateDomain.make }
+      let(:domain) { create(:private_domain) }
 
       let(:domain_json) do
         {

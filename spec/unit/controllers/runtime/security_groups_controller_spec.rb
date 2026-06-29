@@ -4,7 +4,7 @@ require 'spec_helper'
 
 module VCAP::CloudController
   RSpec.describe SecurityGroupsController do
-    let(:group) { SecurityGroup.make }
+    let(:group) { create(:security_group) }
 
     describe 'Query Parameters' do
       it { expect(SecurityGroupsController).to be_queryable_by(:name) }
@@ -53,7 +53,7 @@ module VCAP::CloudController
       end
 
       it 'returns SecurityGroupNameTaken errors on unique name errors' do
-        SecurityGroup.make(name: 'foo')
+        create(:security_group, name: 'foo')
         post '/v2/security_groups', '{"name":"foo"}'
 
         expect(last_response.status).to eq(400)
@@ -90,10 +90,10 @@ module VCAP::CloudController
     end
 
     describe 'spaces' do
-      let(:user) { User.make }
-      let(:org) { Organization.make(user_guids: [user.guid]) }
-      let(:space) { Space.make(organization: org) }
-      let(:security_group) { SecurityGroup.make }
+      let(:user) { create(:user) }
+      let(:org) { create(:organization, user_guids: [user.guid]) }
+      let(:space) { create(:space, organization: org) }
+      let(:security_group) { create(:security_group) }
 
       before do
         set_current_user(user)

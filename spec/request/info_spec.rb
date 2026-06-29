@@ -124,15 +124,15 @@ RSpec.describe 'Info Request' do
   end
 
   describe 'GET /v3/info/usage_summary' do
-    let(:user) { VCAP::CloudController::User.make(guid: 'user-guid') }
-    let(:space) { VCAP::CloudController::Space.make }
+    let(:user) { create(:user, guid: 'user-guid') }
+    let(:space) { create(:space) }
     let(:org) { space.organization }
     let(:admin_header) { headers_for(user, scopes: %w[cloud_controller.admin]) }
 
     let(:api_call) { ->(user_headers) { get '/v3/info/usage_summary', nil, user_headers } }
 
-    let!(:task) { VCAP::CloudController::TaskModel.make(state: VCAP::CloudController::TaskModel::RUNNING_STATE, memory_in_mb: 100) }
-    let!(:completed_task) { VCAP::CloudController::TaskModel.make(state: VCAP::CloudController::TaskModel::SUCCEEDED_STATE, memory_in_mb: 100) }
+    let!(:task) { create(:task_model, state: VCAP::CloudController::TaskModel::RUNNING_STATE, memory_in_mb: 100) }
+    let!(:completed_task) { create(:task_model, state: VCAP::CloudController::TaskModel::SUCCEEDED_STATE, memory_in_mb: 100) }
     let!(:started_process1) { VCAP::CloudController::ProcessModelFactory.make(instances: 3, state: 'STARTED', memory: 100) }
     let!(:started_process2) { VCAP::CloudController::ProcessModelFactory.make(instances: 6, state: 'STARTED', memory: 100) }
     let!(:started_process3) { VCAP::CloudController::ProcessModelFactory.make(instances: 7, state: 'STARTED', memory: 100) }

@@ -5,7 +5,7 @@ require 'permissions_spec_helper'
 
 RSpec.describe AppsV3Controller, type: :controller do
   describe '#index' do
-    let(:user) { VCAP::CloudController::User.make }
+    let(:user) { create(:user) }
 
     before do
       set_current_user_as_admin(user:)
@@ -57,11 +57,11 @@ RSpec.describe AppsV3Controller, type: :controller do
 
     context 'sorting' do
       before do
-        VCAP::CloudController::AppModel.make(name: 'clem')
-        VCAP::CloudController::AppModel.make(name: 'abel')
-        VCAP::CloudController::AppModel.make(name: 'quartz')
-        VCAP::CloudController::AppModel.make(name: 'beale')
-        VCAP::CloudController::AppModel.make(name: 'rocky')
+        create(:app_model, name: 'clem')
+        create(:app_model, name: 'abel')
+        create(:app_model, name: 'quartz')
+        create(:app_model, name: 'beale')
+        create(:app_model, name: 'rocky')
       end
 
       it 'sorts and paginates the apps by name' do
@@ -145,9 +145,9 @@ RSpec.describe AppsV3Controller, type: :controller do
   end
 
   describe '#show' do
-    let!(:app_model) { VCAP::CloudController::AppModel.make }
+    let!(:app_model) { create(:app_model) }
     let(:space) { app_model.space }
-    let(:user) { VCAP::CloudController::User.make }
+    let(:user) { create(:user) }
 
     before do
       set_current_user(user)
@@ -174,7 +174,7 @@ RSpec.describe AppsV3Controller, type: :controller do
     context 'permissions' do
       context 'when the user does not have cc read scope' do
         before do
-          set_current_user(VCAP::CloudController::User.make, scopes: [])
+          set_current_user(create(:user), scopes: [])
         end
 
         it 'raises an ApiError with a 403 code' do
@@ -188,8 +188,8 @@ RSpec.describe AppsV3Controller, type: :controller do
   end
 
   describe '#create' do
-    let(:user) { set_current_user(VCAP::CloudController::User.make) }
-    let(:space) { VCAP::CloudController::Space.make }
+    let(:user) { set_current_user(create(:user)) }
+    let(:space) { create(:space) }
     let(:request_body) do
       {
         name: 'some-name',
@@ -460,7 +460,7 @@ RSpec.describe AppsV3Controller, type: :controller do
 
     context 'cnb' do
       before do
-        VCAP::CloudController::FeatureFlag.make(name: 'diego_cnb', enabled: true, error_message: nil)
+        create(:feature_flag, name: 'diego_cnb', enabled: true, error_message: nil)
       end
 
       context 'when lifecycle data contains credentials' do
@@ -508,7 +508,7 @@ RSpec.describe AppsV3Controller, type: :controller do
       end
 
       before do
-        VCAP::CloudController::FeatureFlag.make(name: 'diego_docker', enabled: false, error_message: nil)
+        create(:feature_flag, name: 'diego_docker', enabled: false, error_message: nil)
       end
 
       context 'admin' do
@@ -545,7 +545,7 @@ RSpec.describe AppsV3Controller, type: :controller do
       end
 
       before do
-        VCAP::CloudController::FeatureFlag.make(name: 'diego_cnb', enabled: false, error_message: nil)
+        create(:feature_flag, name: 'diego_cnb', enabled: false, error_message: nil)
       end
 
       context 'admin' do
@@ -574,7 +574,7 @@ RSpec.describe AppsV3Controller, type: :controller do
   end
 
   describe '#update' do
-    let(:app_model) { VCAP::CloudController::AppModel.make }
+    let(:app_model) { create(:app_model) }
 
     let(:space) { app_model.space }
     let(:org) { space.organization }
@@ -582,7 +582,7 @@ RSpec.describe AppsV3Controller, type: :controller do
     let(:request_body) { { name: 'new-name' } }
 
     before do
-      user = VCAP::CloudController::User.make
+      user = create(:user)
       set_current_user(user)
       allow_user_read_access_for(user, spaces: [space])
       allow_user_write_access(user, space:)
@@ -613,8 +613,8 @@ RSpec.describe AppsV3Controller, type: :controller do
       let(:new_name) { 'potato' }
 
       before do
-        VCAP::CloudController::Buildpack.make(name: 'some-buildpack-name')
-        VCAP::CloudController::Buildpack.make(name: 'some-buildpack')
+        create(:buildpack, name: 'some-buildpack-name')
+        create(:buildpack, name: 'some-buildpack')
       end
 
       context 'when the space developer does not request lifecycle' do
@@ -687,7 +687,7 @@ RSpec.describe AppsV3Controller, type: :controller do
         end
 
         context 'for a docker app' do
-          let(:app_model) { VCAP::CloudController::AppModel.make(:docker) }
+          let(:app_model) { create(:app_model, :docker) }
 
           it 'uses the existing lifecycle on app' do
             patch :update, params: { guid: app_model.guid }.merge(request_body), as: :json
@@ -864,7 +864,7 @@ RSpec.describe AppsV3Controller, type: :controller do
       end
 
       context 'docker request' do
-        let(:app_model) { VCAP::CloudController::AppModel.make(:docker) }
+        let(:app_model) { create(:app_model, :docker) }
 
         context 'when attempting to change to another lifecycle type' do
           let(:request_body) do
@@ -965,11 +965,11 @@ RSpec.describe AppsV3Controller, type: :controller do
 
       context 'when the metadata is valid' do
         let!(:app_annotation) do
-          VCAP::CloudController::AppAnnotationModel.make(app: app_model, key_name: 'existing_anno', value: 'original-value')
+          create(:app_annotation_model, app: app_model, key_name: 'existing_anno', value: 'original-value')
         end
 
         let!(:delete_annotation) do
-          VCAP::CloudController::AppAnnotationModel.make(app: app_model, key_name: 'please', value: 'delete me')
+          create(:app_annotation_model, app: app_model, key_name: 'please', value: 'delete me')
         end
 
         let(:request_body) do
@@ -1029,16 +1029,16 @@ RSpec.describe AppsV3Controller, type: :controller do
   end
 
   describe '#destroy' do
-    let(:app_model) { VCAP::CloudController::AppModel.make }
+    let(:app_model) { create(:app_model) }
     let(:space) { app_model.space }
     let(:org) { space.organization }
-    let(:user) { set_current_user(VCAP::CloudController::User.make) }
+    let(:user) { set_current_user(create(:user)) }
     let(:app_delete_stub) { instance_double(VCAP::CloudController::AppDelete) }
 
     before do
       allow_user_read_access_for(user, spaces: [space])
       allow_user_write_access(user, space:)
-      VCAP::CloudController::BuildpackLifecycleDataModel.make(app: app_model, buildpacks: nil, stack: VCAP::CloudController::Stack.default.name)
+      create(:buildpack_lifecycle_data_model, app: app_model, buildpacks: nil, stack: VCAP::CloudController::Stack.default.name)
       allow(VCAP::CloudController::Jobs::DeleteActionJob).to receive(:new).and_call_original
       allow(VCAP::CloudController::AppDelete).to receive(:new).and_return(app_delete_stub)
       allow(AppsV3Controller::DeleteAppErrorTranslatorJob).to receive(:new).and_call_original
@@ -1088,12 +1088,12 @@ RSpec.describe AppsV3Controller, type: :controller do
   end
 
   describe '#start' do
-    let(:app_model) { VCAP::CloudController::AppModel.make(droplet_guid: droplet.guid) }
-    let(:droplet) { VCAP::CloudController::DropletModel.make(state: VCAP::CloudController::DropletModel::STAGED_STATE) }
+    let(:app_model) { create(:app_model, droplet_guid: droplet.guid) }
+    let(:droplet) { create(:droplet_model, state: VCAP::CloudController::DropletModel::STAGED_STATE) }
     let(:space) { app_model.space }
     let(:org) { space.organization }
-    let(:user) { set_current_user(VCAP::CloudController::User.make) }
-    let(:buildpack_lifecycle) { VCAP::CloudController::BuildpackLifecycleDataModel.make(app: app_model, buildpacks: nil, stack: VCAP::CloudController::Stack.default.name) }
+    let(:user) { set_current_user(create(:user)) }
+    let(:buildpack_lifecycle) { create(:buildpack_lifecycle_data_model, app: app_model, buildpacks: nil, stack: VCAP::CloudController::Stack.default.name) }
 
     before do
       allow_user_read_access_for(user, spaces: [space])
@@ -1113,7 +1113,7 @@ RSpec.describe AppsV3Controller, type: :controller do
     context 'permissions' do
       context 'when the user does not have write permissions' do
         before do
-          set_current_user(VCAP::CloudController::User.make, scopes: ['cloud_controller.read'])
+          set_current_user(create(:user), scopes: ['cloud_controller.read'])
         end
 
         it 'raises an ApiError with a 403 code' do
@@ -1195,11 +1195,11 @@ RSpec.describe AppsV3Controller, type: :controller do
     end
 
     context 'when requesting docker lifecycle and diego_docker feature flag is disabled' do
-      let(:app_model) { VCAP::CloudController::AppModel.make(:docker, droplet_guid: droplet.guid) }
-      let(:droplet) { VCAP::CloudController::DropletModel.make(:docker, state: VCAP::CloudController::DropletModel::STAGED_STATE) }
+      let(:app_model) { create(:app_model, :docker, droplet_guid: droplet.guid) }
+      let(:droplet) { create(:droplet_model, :docker, state: VCAP::CloudController::DropletModel::STAGED_STATE) }
 
       before do
-        VCAP::CloudController::FeatureFlag.make(name: 'diego_docker', enabled: false, error_message: nil)
+        create(:feature_flag, name: 'diego_docker', enabled: false, error_message: nil)
       end
 
       context 'admin' do
@@ -1229,17 +1229,17 @@ RSpec.describe AppsV3Controller, type: :controller do
   end
 
   describe '#stop' do
-    let(:app_model) { VCAP::CloudController::AppModel.make(droplet_guid: droplet.guid, desired_state: 'STARTED') }
-    let(:droplet) { VCAP::CloudController::DropletModel.make(state: VCAP::CloudController::DropletModel::STAGED_STATE) }
+    let(:app_model) { create(:app_model, droplet_guid: droplet.guid, desired_state: 'STARTED') }
+    let(:droplet) { create(:droplet_model, state: VCAP::CloudController::DropletModel::STAGED_STATE) }
     let(:space) { app_model.space }
     let(:org) { space.organization }
-    let(:user) { VCAP::CloudController::User.make }
+    let(:user) { create(:user) }
 
     before do
       set_current_user(user)
       allow_user_read_access_for(user, spaces: [space])
       allow_user_write_access(user, space:)
-      VCAP::CloudController::BuildpackLifecycleDataModel.make(app: app_model, buildpacks: nil, stack: VCAP::CloudController::Stack.default.name)
+      create(:buildpack_lifecycle_data_model, app: app_model, buildpacks: nil, stack: VCAP::CloudController::Stack.default.name)
     end
 
     it 'returns a 200 and the app' do
@@ -1255,7 +1255,7 @@ RSpec.describe AppsV3Controller, type: :controller do
     context 'permissions' do
       context 'when the user does not have the write scope' do
         before do
-          set_current_user(VCAP::CloudController::User.make, scopes: ['cloud_controller.read'])
+          set_current_user(create(:user), scopes: ['cloud_controller.read'])
         end
 
         it 'raises an ApiError with a 403 code' do
@@ -1319,14 +1319,14 @@ RSpec.describe AppsV3Controller, type: :controller do
   end
 
   describe '#restart' do
-    let(:app_model) { VCAP::CloudController::AppModel.make(droplet_guid: droplet.guid, desired_state: 'STARTED') }
-    let(:droplet) { VCAP::CloudController::DropletModel.make(state: VCAP::CloudController::DropletModel::STAGED_STATE) }
+    let(:app_model) { create(:app_model, droplet_guid: droplet.guid, desired_state: 'STARTED') }
+    let(:droplet) { create(:droplet_model, state: VCAP::CloudController::DropletModel::STAGED_STATE) }
     let(:space) { app_model.space }
     let(:org) { space.organization }
-    let(:user) { VCAP::CloudController::User.make }
+    let(:user) { create(:user) }
 
     before do
-      VCAP::CloudController::BuildpackLifecycleDataModel.make(app: app_model, buildpacks: nil, stack: VCAP::CloudController::Stack.default.name)
+      create(:buildpack_lifecycle_data_model, app: app_model, buildpacks: nil, stack: VCAP::CloudController::Stack.default.name)
     end
 
     context 'permissions' do
@@ -1411,12 +1411,12 @@ RSpec.describe AppsV3Controller, type: :controller do
       end
 
       context 'when requesting docker lifecycle' do
-        let(:app_model) { VCAP::CloudController::AppModel.make(:docker, droplet_guid: droplet.guid) }
-        let(:droplet) { VCAP::CloudController::DropletModel.make(:docker, state: VCAP::CloudController::DropletModel::STAGED_STATE) }
+        let(:app_model) { create(:app_model, :docker, droplet_guid: droplet.guid) }
+        let(:droplet) { create(:droplet_model, :docker, state: VCAP::CloudController::DropletModel::STAGED_STATE) }
 
         context 'and diego_docker feature flag is enabled' do
           before do
-            VCAP::CloudController::FeatureFlag.make(name: 'diego_docker', enabled: true, error_message: nil)
+            create(:feature_flag, name: 'diego_docker', enabled: true, error_message: nil)
           end
 
           it 'returns 200' do
@@ -1429,7 +1429,7 @@ RSpec.describe AppsV3Controller, type: :controller do
         context 'and diego_docker feature flag is disabled' do
           before do
             app_model.buildpack_lifecycle_data = nil
-            VCAP::CloudController::FeatureFlag.make(name: 'diego_docker', enabled: false, error_message: nil)
+            create(:feature_flag, name: 'diego_docker', enabled: false, error_message: nil)
           end
 
           context 'admin' do
@@ -1494,12 +1494,12 @@ RSpec.describe AppsV3Controller, type: :controller do
   end
 
   describe '#builds' do
-    let(:app_model) { VCAP::CloudController::AppModel.make }
+    let(:app_model) { create(:app_model) }
     let(:space) { app_model.space }
     let(:org) { space.organization }
-    let(:user) { VCAP::CloudController::User.make }
-    let!(:build1) { VCAP::CloudController::BuildModel.make(app_guid: app_model.guid, guid: 'build-1') }
-    let!(:build2) { VCAP::CloudController::BuildModel.make(app_guid: app_model.guid, guid: 'build-2') }
+    let(:user) { create(:user) }
+    let!(:build1) { create(:build_model, app_guid: app_model.guid, guid: 'build-1') }
+    let!(:build2) { create(:build_model, app_guid: app_model.guid, guid: 'build-2') }
 
     before do
       set_current_user_as_admin(user:)
@@ -1553,17 +1553,17 @@ RSpec.describe AppsV3Controller, type: :controller do
   end
 
   describe '#clear_buildpack_cache' do
-    let(:app_model) { VCAP::CloudController::AppModel.make(droplet_guid: droplet.guid, desired_state: 'STARTED') }
-    let(:droplet) { VCAP::CloudController::DropletModel.make(state: VCAP::CloudController::DropletModel::STAGED_STATE) }
+    let(:app_model) { create(:app_model, droplet_guid: droplet.guid, desired_state: 'STARTED') }
+    let(:droplet) { create(:droplet_model, state: VCAP::CloudController::DropletModel::STAGED_STATE) }
     let(:space) { app_model.space }
     let(:org) { space.organization }
-    let(:user) { VCAP::CloudController::User.make }
+    let(:user) { create(:user) }
 
     before do
       set_current_user(user)
       allow_user_read_access_for(user, spaces: [space])
       allow_user_write_access(user, space:)
-      VCAP::CloudController::BuildpackLifecycleDataModel.make(app: app_model, buildpacks: nil, stack: VCAP::CloudController::Stack.default.name)
+      create(:buildpack_lifecycle_data_model, app: app_model, buildpacks: nil, stack: VCAP::CloudController::Stack.default.name)
     end
 
     it 'returns a 202 and a job' do
@@ -1619,7 +1619,7 @@ RSpec.describe AppsV3Controller, type: :controller do
 
       context 'when the user does not have the write scope' do
         before do
-          set_current_user(VCAP::CloudController::User.make, scopes: ['cloud_controller.read'])
+          set_current_user(create(:user), scopes: ['cloud_controller.read'])
         end
 
         it 'raises an ApiError with a 403 code' do
@@ -1660,17 +1660,17 @@ RSpec.describe AppsV3Controller, type: :controller do
   end
 
   describe '#show_env' do
-    let(:app_model) { VCAP::CloudController::AppModel.make(environment_variables: { meep: 'moop', beep: 'boop' }) }
+    let(:app_model) { create(:app_model, environment_variables: { meep: 'moop', beep: 'boop' }) }
     let(:space) { app_model.space }
     let(:org) { space.organization }
-    let(:user) { VCAP::CloudController::User.make }
+    let(:user) { create(:user) }
 
     before do
       set_current_user(user, email: 'mona@example.com')
       allow_user_read_access_for(user, spaces: [space])
       allow_user_write_access(user, space:)
       allow_user_secret_access(user, space:)
-      VCAP::CloudController::BuildpackLifecycleDataModel.make(app: app_model, buildpacks: nil, stack: VCAP::CloudController::Stack.default.name)
+      create(:buildpack_lifecycle_data_model, app: app_model, buildpacks: nil, stack: VCAP::CloudController::Stack.default.name)
     end
 
     it 'returns 200 and the environment variables' do
@@ -1702,7 +1702,7 @@ RSpec.describe AppsV3Controller, type: :controller do
     context 'permissions' do
       context 'when the user does not have read permissions' do
         before do
-          set_current_user(VCAP::CloudController::User.make, scopes: ['cloud_controller.write'])
+          set_current_user(create(:user), scopes: ['cloud_controller.write'])
         end
 
         it 'returns a 403' do
@@ -1752,7 +1752,7 @@ RSpec.describe AppsV3Controller, type: :controller do
 
       context 'when the space_developer_env_var_visibility feature flag is disabled' do
         before do
-          VCAP::CloudController::FeatureFlag.make(name: 'space_developer_env_var_visibility', enabled: false, error_message: nil)
+          create(:feature_flag, name: 'space_developer_env_var_visibility', enabled: false, error_message: nil)
         end
 
         it 'raises 403 for non-admins' do
@@ -1794,7 +1794,7 @@ RSpec.describe AppsV3Controller, type: :controller do
       context 'when the env_var_visibility feature flag is disabled' do
         before do
           allow_user_secret_access(user, space:)
-          VCAP::CloudController::FeatureFlag.make(name: 'env_var_visibility', enabled: false, error_message: nil)
+          create(:feature_flag, name: 'env_var_visibility', enabled: false, error_message: nil)
         end
 
         it 'raises 403 for all users' do
@@ -1818,10 +1818,10 @@ RSpec.describe AppsV3Controller, type: :controller do
   end
 
   describe '#show_environment_variables' do
-    let(:app_model) { VCAP::CloudController::AppModel.make(environment_variables: { meep: 'moop', beep: 'boop' }) }
+    let(:app_model) { create(:app_model, environment_variables: { meep: 'moop', beep: 'boop' }) }
     let(:space) { app_model.space }
     let(:org) { space.organization }
-    let(:user) { VCAP::CloudController::User.make }
+    let(:user) { create(:user) }
 
     let(:expected_success_response) do
       {
@@ -1868,7 +1868,7 @@ RSpec.describe AppsV3Controller, type: :controller do
 
       context 'when the space_developer_env_var_visibility feature flag is disabled' do
         before do
-          VCAP::CloudController::FeatureFlag.make(name: 'space_developer_env_var_visibility', enabled: false, error_message: nil)
+          create(:feature_flag, name: 'space_developer_env_var_visibility', enabled: false, error_message: nil)
         end
 
         role_to_expected_http_response.merge({ 'space_developer' => 403 }).each do |role, expected_return_value|
@@ -1890,7 +1890,7 @@ RSpec.describe AppsV3Controller, type: :controller do
 
       context 'when the env_var_visibility feature flag is disabled' do
         before do
-          VCAP::CloudController::FeatureFlag.make(name: 'env_var_visibility', enabled: false, error_message: nil)
+          create(:feature_flag, name: 'env_var_visibility', enabled: false, error_message: nil)
         end
 
         it 'raises 403 for all users' do
@@ -1904,7 +1904,7 @@ RSpec.describe AppsV3Controller, type: :controller do
     end
 
     context 'when the user does not have read scope' do
-      let(:user) { VCAP::CloudController::User.make }
+      let(:user) { create(:user) }
 
       before do
         org.add_user(user)
@@ -1929,7 +1929,7 @@ RSpec.describe AppsV3Controller, type: :controller do
     end
 
     context 'when the app does not have environment variables' do
-      let(:app_model) { VCAP::CloudController::AppModel.make }
+      let(:app_model) { create(:app_model) }
 
       it 'returns 200 and the set of links' do
         set_current_user_as_admin(user:)
@@ -1966,10 +1966,10 @@ RSpec.describe AppsV3Controller, type: :controller do
   end
 
   describe '#update_environment_variables' do
-    let(:app_model) { VCAP::CloudController::AppModel.make(environment_variables: { override: 'value-to-override', preserve: 'value-to-keep' }) }
+    let(:app_model) { create(:app_model, environment_variables: { override: 'value-to-override', preserve: 'value-to-keep' }) }
     let(:space) { app_model.space }
     let(:org) { space.organization }
-    let(:user) { VCAP::CloudController::User.make }
+    let(:user) { create(:user) }
 
     let(:expected_success_response) do
       {
@@ -2092,20 +2092,20 @@ RSpec.describe AppsV3Controller, type: :controller do
   end
 
   describe '#assign_current_droplet' do
-    let(:app_model) { VCAP::CloudController::AppModel.make }
-    let(:droplet) { VCAP::CloudController::DropletModel.make(process_types: { 'web' => 'start app' }, state: VCAP::CloudController::DropletModel::STAGED_STATE) }
+    let(:app_model) { create(:app_model) }
+    let(:droplet) { create(:droplet_model, process_types: { 'web' => 'start app' }, state: VCAP::CloudController::DropletModel::STAGED_STATE) }
     let(:request_body) { { data: { guid: droplet.guid } } }
     let(:droplet_link) { { 'href' => "#{link_prefix}/v3/apps/#{app_model.guid}/droplets/current" } }
     let(:space) { app_model.space }
     let(:org) { space.organization }
-    let(:user) { VCAP::CloudController::User.make }
+    let(:user) { create(:user) }
 
     before do
       app_model.add_droplet(droplet)
       set_current_user(user)
       allow_user_read_access_for(user, spaces: [space])
       allow_user_write_access(user, space:)
-      VCAP::CloudController::BuildpackLifecycleDataModel.make(app: app_model, buildpacks: nil, stack: VCAP::CloudController::Stack.default.name)
+      create(:buildpack_lifecycle_data_model, app: app_model, buildpacks: nil, stack: VCAP::CloudController::Stack.default.name)
     end
 
     it 'returns 200 and the droplet guid' do
@@ -2143,7 +2143,7 @@ RSpec.describe AppsV3Controller, type: :controller do
     end
 
     context 'and the droplet is not associated with the application' do
-      let(:unassociated_droplet) { VCAP::CloudController::DropletModel.make }
+      let(:unassociated_droplet) { create(:droplet_model) }
       let(:request_body) { { data: { guid: unassociated_droplet.guid } } }
 
       it 'returns a 422' do
@@ -2193,7 +2193,7 @@ RSpec.describe AppsV3Controller, type: :controller do
     context 'when the app has a Deployment in flight' do
       context 'when the deployment is deploying' do
         before do
-          VCAP::CloudController::DeploymentModel.make(app: app_model, state: 'DEPLOYING')
+          create(:deployment_model, app: app_model, state: 'DEPLOYING')
         end
 
         it 'returns an UnprocessableEntity error' do
@@ -2209,7 +2209,7 @@ RSpec.describe AppsV3Controller, type: :controller do
     context 'permissions' do
       context 'when the user does not have write permissions' do
         before do
-          set_current_user(VCAP::CloudController::User.make, scopes: ['cloud_controller.read'])
+          set_current_user(create(:user), scopes: ['cloud_controller.read'])
         end
 
         it 'raises an ApiError with a 403 code' do
@@ -2250,12 +2250,12 @@ RSpec.describe AppsV3Controller, type: :controller do
   end
 
   describe '#current_droplet' do
-    let(:app_model) { VCAP::CloudController::AppModel.make(droplet_guid: droplet.guid) }
-    let(:droplet) { VCAP::CloudController::DropletModel.make(process_types: { 'web' => 'start app' }, state: VCAP::CloudController::DropletModel::STAGED_STATE) }
+    let(:app_model) { create(:app_model, droplet_guid: droplet.guid) }
+    let(:droplet) { create(:droplet_model, process_types: { 'web' => 'start app' }, state: VCAP::CloudController::DropletModel::STAGED_STATE) }
     let(:droplet_link) { { 'href' => "/v3/apps/#{app_model.guid}/droplets/current" } }
     let(:space) { app_model.space }
     let(:org) { space.organization }
-    let(:user) { VCAP::CloudController::User.make }
+    let(:user) { create(:user) }
 
     before do
       app_model.add_droplet(droplet)
@@ -2272,7 +2272,7 @@ RSpec.describe AppsV3Controller, type: :controller do
     end
 
     context 'when the current droplet is not set' do
-      let(:app_model) { VCAP::CloudController::AppModel.make }
+      let(:app_model) { create(:app_model) }
 
       it 'returns a 404 Not Found' do
         get :current_droplet, params: { guid: app_model.guid }
@@ -2284,12 +2284,12 @@ RSpec.describe AppsV3Controller, type: :controller do
   end
 
   describe '#current_droplet_relationship' do
-    let(:app_model) { VCAP::CloudController::AppModel.make(droplet_guid: droplet.guid) }
-    let(:droplet) { VCAP::CloudController::DropletModel.make(process_types: { 'web' => 'start app' }, state: VCAP::CloudController::DropletModel::STAGED_STATE) }
+    let(:app_model) { create(:app_model, droplet_guid: droplet.guid) }
+    let(:droplet) { create(:droplet_model, process_types: { 'web' => 'start app' }, state: VCAP::CloudController::DropletModel::STAGED_STATE) }
     let(:droplet_link) { { 'href' => "/v3/apps/#{app_model.guid}/droplets/current" } }
     let(:space) { app_model.space }
     let(:org) { space.organization }
-    let(:user) { VCAP::CloudController::User.make }
+    let(:user) { create(:user) }
 
     before do
       app_model.add_droplet(droplet)
@@ -2306,7 +2306,7 @@ RSpec.describe AppsV3Controller, type: :controller do
     end
 
     context 'when the current droplet is not set' do
-      let(:app_model) { VCAP::CloudController::AppModel.make }
+      let(:app_model) { create(:app_model) }
 
       it 'returns a 404 Not Found' do
         get :current_droplet_relationship, params: { guid: app_model.guid }

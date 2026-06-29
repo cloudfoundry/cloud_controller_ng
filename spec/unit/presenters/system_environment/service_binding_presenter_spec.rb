@@ -4,21 +4,17 @@ require 'presenters/system_environment/service_binding_presenter'
 module VCAP::CloudController
   RSpec.describe ServiceBindingPresenter do
     context 'for a managed service instance' do
-      let(:service) { Service.make(requires: ['syslog_drain'], label: Sham.label) }
-      let(:service_plan) { ServicePlan.make(name: Sham.name, service: service) }
+      let(:service) { create(:service, requires: ['syslog_drain'], label: Sham.label) }
+      let(:service_plan) { create(:service_plan, name: Sham.name, service: service) }
       let(:service_instance) do
-        ManagedServiceInstance.make(
-          name: instance_name,
-          service_plan: service_plan
-        )
+        create(:managed_service_instance, name: instance_name,
+                                          service_plan: service_plan)
       end
       let(:instance_name) { Sham.name }
       let(:binding_options) { nil }
       let(:service_binding) do
-        ServiceBinding.make(
-          name: binding_name,
-          service_instance: service_instance
-        )
+        create(:service_binding, name: binding_name,
+                                 service_instance: service_instance)
       end
       let(:binding_name) { nil }
 
@@ -98,11 +94,11 @@ module VCAP::CloudController
 
     context 'for a provided service instance' do
       let(:service_instance) do
-        UserProvidedServiceInstance.make
+        create(:user_provided_service_instance)
       end
 
       let(:service_binding) do
-        ServiceBinding.make(service_instance:)
+        create(:service_binding, service_instance:)
       end
 
       describe '#to_hash' do

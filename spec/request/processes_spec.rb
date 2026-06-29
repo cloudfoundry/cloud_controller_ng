@@ -22,13 +22,13 @@ RSpec.describe 'Processes' do
     end
   end
 
-  let(:org) { VCAP::CloudController::Organization.make }
-  let(:space) { VCAP::CloudController::Space.make(organization: org) }
-  let(:app_model) { VCAP::CloudController::AppModel.make(space: space, name: 'my_app', droplet: droplet) }
-  let(:droplet) { VCAP::CloudController::DropletModel.make }
+  let(:org) { create(:organization) }
+  let(:space) { create(:space, organization: org) }
+  let(:app_model) { create(:app_model, space: space, name: 'my_app', droplet: droplet) }
+  let(:droplet) { create(:droplet_model) }
   let(:developer) { make_developer_for_space(space) }
   let(:developer_headers) { headers_for(developer, user_name:) }
-  let(:user) { VCAP::CloudController::User.make }
+  let(:user) { create(:user) }
   let(:admin_header) { admin_headers_for(user) }
   let(:user_name) { 'ProcHudson' }
   let(:build_client) { instance_double(HTTPClient, post: nil) }
@@ -50,32 +50,30 @@ RSpec.describe 'Processes' do
   end
 
   describe 'GET /v3/processes' do
-    let!(:web_revision) { VCAP::CloudController::RevisionModel.make }
+    let!(:web_revision) { create(:revision_model) }
 
     let!(:web_process) do
-      VCAP::CloudController::ProcessModel.make(
-        :process,
-        app: app_model,
-        revision: web_revision,
-        type: 'web',
-        instances: 2,
-        memory: 1024,
-        disk_quota: 1024,
-        log_rate_limit: 1_048_576,
-        command: 'rackup'
-      )
+      create(:process_model,
+             :process,
+             app: app_model,
+             revision: web_revision,
+             type: 'web',
+             instances: 2,
+             memory: 1024,
+             disk_quota: 1024,
+             log_rate_limit: 1_048_576,
+             command: 'rackup')
     end
     let!(:worker_process) do
-      VCAP::CloudController::ProcessModel.make(
-        :process,
-        app: app_model,
-        type: 'worker',
-        instances: 1,
-        memory: 100,
-        disk_quota: 200,
-        log_rate_limit: 400,
-        command: 'start worker'
-      )
+      create(:process_model,
+             :process,
+             app: app_model,
+             type: 'worker',
+             instances: 1,
+             memory: 100,
+             disk_quota: 200,
+             log_rate_limit: 400,
+             command: 'start worker')
     end
 
     before do
@@ -84,9 +82,9 @@ RSpec.describe 'Processes' do
     end
 
     context 'eager loading' do
-      let(:cnb_app) { VCAP::CloudController::AppModel.make(:cnb, space:) }
-      let!(:cnb_process_1) { VCAP::CloudController::ProcessModel.make(:cnb, app: cnb_app) }
-      let!(:cnb_process_2) { VCAP::CloudController::ProcessModel.make(:cnb, app: cnb_app) }
+      let(:cnb_app) { create(:app_model, :cnb, space:) }
+      let!(:cnb_process_1) { create(:process_model, :cnb, app: cnb_app) }
+      let!(:cnb_process_2) { create(:process_model, :cnb, app: cnb_app) }
       let(:get_processes) { -> { get '/v3/processes', nil, developer_headers } }
 
       it 'eager loads associated data needed to present processes' do
@@ -246,7 +244,7 @@ RSpec.describe 'Processes' do
     end
 
     it 'filters by label selectors' do
-      VCAP::CloudController::ProcessLabelModel.make(key_name: 'fruit', value: 'strawberry', process: worker_process)
+      create(:process_label_model, key_name: 'fruit', value: 'strawberry', process: worker_process)
 
       get '/v3/processes?label_selector=fruit=strawberry', {}, developer_headers
 
@@ -292,19 +290,18 @@ RSpec.describe 'Processes' do
       end
 
       context 'by space_guids' do
-        let(:other_space) { VCAP::CloudController::Space.make(organization: space.organization) }
-        let(:other_app_model) { VCAP::CloudController::AppModel.make(space: other_space) }
+        let(:other_space) { create(:space, organization: space.organization) }
+        let(:other_app_model) { create(:app_model, space: other_space) }
         let!(:other_space_process) do
-          VCAP::CloudController::ProcessModel.make(
-            :process,
-            app: other_app_model,
-            type: 'web',
-            instances: 2,
-            memory: 1024,
-            disk_quota: 1024,
-            log_rate_limit: 1_048_576,
-            command: 'rackup'
-          )
+          create(:process_model,
+                 :process,
+                 app: other_app_model,
+                 type: 'web',
+                 instances: 2,
+                 memory: 1024,
+                 disk_quota: 1024,
+                 log_rate_limit: 1_048_576,
+                 command: 'rackup')
         end
 
         before do
@@ -334,21 +331,20 @@ RSpec.describe 'Processes' do
       end
 
       context 'by organization guids' do
-        let(:other_space) { VCAP::CloudController::Space.make }
+        let(:other_space) { create(:space) }
         let!(:other_org) { other_space.organization }
         let!(:other_space_process) do
-          VCAP::CloudController::ProcessModel.make(
-            :process,
-            app: other_app_model,
-            type: 'web',
-            instances: 2,
-            memory: 1024,
-            disk_quota: 1024,
-            log_rate_limit: 1_048_576,
-            command: 'rackup'
-          )
+          create(:process_model,
+                 :process,
+                 app: other_app_model,
+                 type: 'web',
+                 instances: 2,
+                 memory: 1024,
+                 disk_quota: 1024,
+                 log_rate_limit: 1_048_576,
+                 command: 'rackup')
         end
-        let(:other_app_model) { VCAP::CloudController::AppModel.make(space: other_space) }
+        let(:other_app_model) { create(:app_model, space: other_space) }
         let(:developer) { make_developer_for_space(other_space) }
 
         it 'returns only the matching processes' do
@@ -374,16 +370,16 @@ RSpec.describe 'Processes' do
       end
 
       context 'by app guids' do
-        let(:desired_app) { VCAP::CloudController::AppModel.make(space:) }
+        let(:desired_app) { create(:app_model, space:) }
         let!(:desired_process) do
-          VCAP::CloudController::ProcessModel.make(:process,
-                                                   app: desired_app,
-                                                   type: 'persnickety',
-                                                   instances: 3,
-                                                   memory: 2048,
-                                                   disk_quota: 2048,
-                                                   log_rate_limit: 2_097_152,
-                                                   command: 'at ease')
+          create(:process_model, :process,
+                 app: desired_app,
+                 type: 'persnickety',
+                 instances: 3,
+                 memory: 2048,
+                 disk_quota: 2048,
+                 log_rate_limit: 2_097_152,
+                 command: 'at ease')
         end
 
         it 'returns only the matching processes' do
@@ -488,19 +484,18 @@ RSpec.describe 'Processes' do
   end
 
   describe 'GET /v3/processes/:guid' do
-    let(:revision) { VCAP::CloudController::RevisionModel.make }
+    let(:revision) { create(:revision_model) }
     let(:process) do
-      VCAP::CloudController::ProcessModel.make(
-        :process,
-        app: app_model,
-        revision: revision,
-        type: 'web',
-        instances: 2,
-        memory: 1024,
-        disk_quota: 1024,
-        log_rate_limit: 1_048_576,
-        command: 'rackup'
-      )
+      create(:process_model,
+             :process,
+             app: app_model,
+             revision: revision,
+             type: 'web',
+             instances: 2,
+             memory: 1024,
+             disk_quota: 1024,
+             log_rate_limit: 1_048_576,
+             command: 'rackup')
     end
     let(:expected_response) do
       {
@@ -556,7 +551,7 @@ RSpec.describe 'Processes' do
     end
 
     it 'redacts information for auditors' do
-      auditor = VCAP::CloudController::User.make
+      auditor = create(:user)
       space.organization.add_user(auditor)
       space.add_auditor(auditor)
 
@@ -630,7 +625,7 @@ RSpec.describe 'Processes' do
   end
 
   describe 'GET stats' do
-    let(:process) { VCAP::CloudController::ProcessModel.make(:process, type: 'worker', app: app_model) }
+    let(:process) { create(:process_model, :process, type: 'worker', app: app_model) }
     let(:net_info_1) do
       {
         address: '1.2.3.4',
@@ -790,7 +785,7 @@ RSpec.describe 'Processes' do
   end
 
   describe 'GET /v3/processes/:guid/process_instances' do
-    let(:process) { VCAP::CloudController::ProcessModel.make(:process, app: app_model, state: VCAP::CloudController::ProcessModel::STARTED) }
+    let(:process) { create(:process_model, :process, app: app_model, state: VCAP::CloudController::ProcessModel::STARTED) }
     let(:two_days_ago_since_epoch_ns) { 2.days.ago.to_f * 1e9 }
     let(:two_days_in_seconds) { 60 * 60 * 24 * 2 }
     let(:second_in_ns) { 1_000_000_000 }
@@ -861,23 +856,22 @@ RSpec.describe 'Processes' do
   end
 
   describe 'PATCH /v3/processes/:guid' do
-    let(:revision) { VCAP::CloudController::RevisionModel.make }
+    let(:revision) { create(:revision_model) }
     let(:process) do
-      VCAP::CloudController::ProcessModel.make(
-        :process,
-        app: app_model,
-        revision: revision,
-        type: 'web',
-        instances: 2,
-        memory: 1024,
-        disk_quota: 1024,
-        log_rate_limit: 1_048_576,
-        command: 'rackup',
-        ports: [4444, 5555],
-        health_check_type: 'port',
-        health_check_timeout: 10,
-        health_check_interval: 5
-      )
+      create(:process_model,
+             :process,
+             app: app_model,
+             revision: revision,
+             type: 'web',
+             instances: 2,
+             memory: 1024,
+             disk_quota: 1024,
+             log_rate_limit: 1_048_576,
+             command: 'rackup',
+             ports: [4444, 5555],
+             health_check_type: 'port',
+             health_check_timeout: 10,
+             health_check_interval: 5)
     end
 
     let(:update_request) do
@@ -1042,16 +1036,15 @@ RSpec.describe 'Processes' do
 
   describe 'POST /v3/processes/:guid/actions/scale' do
     let(:process) do
-      VCAP::CloudController::ProcessModel.make(
-        :process,
-        app: app_model,
-        type: 'web',
-        instances: 2,
-        memory: 1024,
-        disk_quota: 1024,
-        log_rate_limit: 1_048_576,
-        command: 'rackup'
-      )
+      create(:process_model,
+             :process,
+             app: app_model,
+             type: 'web',
+             instances: 2,
+             memory: 1024,
+             disk_quota: 1024,
+             log_rate_limit: 1_048_576,
+             command: 'rackup')
     end
 
     let(:scale_request) do
@@ -1181,7 +1174,7 @@ RSpec.describe 'Processes' do
 
     context 'when the user is assigned the space_supporter role' do
       let(:space_supporter) do
-        user = VCAP::CloudController::User.make
+        user = create(:user)
         org.add_user(user)
         space.add_supporter(user)
         user
@@ -1223,12 +1216,11 @@ RSpec.describe 'Processes' do
     end
 
     it 'ensures that the memory allocation is greater than existing sidecar memory allocation' do
-      sidecar = VCAP::CloudController::SidecarModel.make(
-        name: 'my-sidecar',
-        app: app_model,
-        memory: 256
-      )
-      VCAP::CloudController::SidecarProcessTypeModel.make(sidecar: sidecar, type: process.type, app_guid: app_model.guid)
+      sidecar = create(:sidecar_model,
+                       name: 'my-sidecar',
+                       app: app_model,
+                       memory: 256)
+      create(:sidecar_process_type_model, sidecar: sidecar, type: process.type, app_guid: app_model.guid)
 
       scale_request = {
         memory_in_mb: 256
@@ -1259,16 +1251,15 @@ RSpec.describe 'Processes' do
 
     context 'telemetry' do
       let(:process) do
-        VCAP::CloudController::ProcessModel.make(
-          :process,
-          app: app_model,
-          type: 'web',
-          instances: 2,
-          memory: 1024,
-          disk_quota: 1024,
-          log_rate_limit: 1_048_576,
-          command: 'rackup'
-        )
+        create(:process_model,
+               :process,
+               app: app_model,
+               type: 'web',
+               instances: 2,
+               memory: 1024,
+               disk_quota: 1024,
+               log_rate_limit: 1_048_576,
+               command: 'rackup')
       end
 
       let(:scale_request) do
@@ -1311,7 +1302,7 @@ RSpec.describe 'Processes' do
     end
 
     it 'terminates a single instance of a process' do
-      process = VCAP::CloudController::ProcessModel.make(:process, type: 'web', app: app_model)
+      process = create(:process_model, :process, type: 'web', app: app_model)
 
       delete "/v3/processes/#{process.guid}/instances/0", nil, developer_headers
 
@@ -1338,7 +1329,7 @@ RSpec.describe 'Processes' do
     end
 
     context 'permissions' do
-      let(:process) { VCAP::CloudController::ProcessModel.make(:process, type: 'web', app: app_model) }
+      let(:process) { create(:process_model, :process, type: 'web', app: app_model) }
 
       let(:api_call) { ->(user_headers) { delete "/v3/processes/#{process.guid}/instances/0", nil, user_headers } }
 
@@ -1373,42 +1364,40 @@ RSpec.describe 'Processes' do
 
   describe 'GET /v3/apps/:guid/processes' do
     let!(:process1) do
-      VCAP::CloudController::ProcessModel.make(
-        :process,
-        app: app_model,
-        type: 'web',
-        instances: 2,
-        memory: 1024,
-        disk_quota: 1024,
-        log_rate_limit: 1_048_576,
-        command: 'rackup'
-      )
+      create(:process_model,
+             :process,
+             app: app_model,
+             type: 'web',
+             instances: 2,
+             memory: 1024,
+             disk_quota: 1024,
+             log_rate_limit: 1_048_576,
+             command: 'rackup')
     end
 
     let!(:process2) do
-      VCAP::CloudController::ProcessModel.make(
-        :process,
-        app: app_model,
-        revision: revision2,
-        type: 'worker',
-        instances: 1,
-        memory: 100,
-        disk_quota: 200,
-        log_rate_limit: 400,
-        command: 'start worker'
-      )
+      create(:process_model,
+             :process,
+             app: app_model,
+             revision: revision2,
+             type: 'worker',
+             instances: 1,
+             memory: 100,
+             disk_quota: 200,
+             log_rate_limit: 400,
+             command: 'start worker')
     end
 
     let!(:process3) do
-      VCAP::CloudController::ProcessModel.make(:process, app: app_model, revision: revision3)
+      create(:process_model, :process, app: app_model, revision: revision3)
     end
 
     let!(:deployment_process) do
-      VCAP::CloudController::ProcessModel.make(:process, app: app_model, type: 'web-deployment', revision: deployment_revision)
+      create(:process_model, :process, app: app_model, type: 'web-deployment', revision: deployment_revision)
     end
-    let!(:revision3) { VCAP::CloudController::RevisionModel.make }
-    let!(:revision2) { VCAP::CloudController::RevisionModel.make }
-    let!(:deployment_revision) { VCAP::CloudController::RevisionModel.make }
+    let!(:revision3) { create(:revision_model) }
+    let!(:revision2) { create(:revision_model) }
+    let!(:deployment_revision) { create(:revision_model) }
 
     it_behaves_like 'list_endpoint_with_common_filters' do
       let(:resource_klass) { VCAP::CloudController::ProcessModel }
@@ -1634,19 +1623,18 @@ RSpec.describe 'Processes' do
 
   describe 'GET /v3/apps/:guid/processes/:type' do
     let!(:process) do
-      VCAP::CloudController::ProcessModel.make(
-        :process,
-        app: app_model,
-        revision: revision,
-        type: 'web',
-        instances: 2,
-        memory: 1024,
-        disk_quota: 1024,
-        log_rate_limit: 1_048_576,
-        command: 'rackup'
-      )
+      create(:process_model,
+             :process,
+             app: app_model,
+             revision: revision,
+             type: 'web',
+             instances: 2,
+             memory: 1024,
+             disk_quota: 1024,
+             log_rate_limit: 1_048_576,
+             command: 'rackup')
     end
-    let!(:revision) { VCAP::CloudController::RevisionModel.make }
+    let!(:revision) { create(:revision_model) }
     let(:expected_response) do
       {
         'guid' => process.guid,
@@ -1706,9 +1694,9 @@ RSpec.describe 'Processes' do
     end
 
     it 'redacts information for auditors' do
-      VCAP::CloudController::ProcessModel.make(:process, app: app_model, type: 'web', command: 'rackup')
+      create(:process_model, :process, app: app_model, type: 'web', command: 'rackup')
 
-      auditor = VCAP::CloudController::User.make
+      auditor = create(:user)
       space.organization.add_user(auditor)
       space.add_auditor(auditor)
 
@@ -1770,20 +1758,19 @@ RSpec.describe 'Processes' do
 
   describe 'PATCH /v3/apps/:guid/processes/:type' do
     it 'updates the process' do
-      process = VCAP::CloudController::ProcessModel.make(
-        :process,
-        app: app_model,
-        type: 'web',
-        instances: 2,
-        memory: 1024,
-        disk_quota: 1024,
-        log_rate_limit: 1_048_576,
-        command: 'rackup',
-        ports: [4444, 5555],
-        health_check_type: 'port',
-        health_check_timeout: 10,
-        readiness_health_check_type: 'process'
-      )
+      process = create(:process_model,
+                       :process,
+                       app: app_model,
+                       type: 'web',
+                       instances: 2,
+                       memory: 1024,
+                       disk_quota: 1024,
+                       log_rate_limit: 1_048_576,
+                       command: 'rackup',
+                       ports: [4444, 5555],
+                       health_check_type: 'port',
+                       health_check_timeout: 10,
+                       readiness_health_check_type: 'process')
 
       update_request = {
         command: 'new command',
@@ -1917,17 +1904,16 @@ RSpec.describe 'Processes' do
 
   describe 'POST /v3/apps/:guid/processes/:type/actions/scale' do
     let!(:process) do
-      VCAP::CloudController::ProcessModel.make(
-        :process,
-        app: app_model,
-        type: 'web',
-        instances: 2,
-        memory: 1024,
-        disk_quota: 1024,
-        log_rate_limit: 1_048_576,
-        command: 'rackup',
-        state: 'STARTED'
-      )
+      create(:process_model,
+             :process,
+             app: app_model,
+             type: 'web',
+             instances: 2,
+             memory: 1024,
+             disk_quota: 1024,
+             log_rate_limit: 1_048_576,
+             command: 'rackup',
+             state: 'STARTED')
     end
 
     let(:scale_request) do
@@ -2031,7 +2017,7 @@ RSpec.describe 'Processes' do
       end
 
       before do
-        org.update(quota_definition: VCAP::CloudController::QuotaDefinition.make(log_rate_limit: 2_097_152))
+        org.update(quota_definition: create(:quota_definition, log_rate_limit: 2_097_152))
       end
 
       it 'fails to scale the process' do
@@ -2047,7 +2033,7 @@ RSpec.describe 'Processes' do
 
     context 'when the user is assigned the space_supporter role' do
       let(:space_supporter) do
-        user = VCAP::CloudController::User.make
+        user = create(:user)
         org.add_user(user)
         space.add_supporter(user)
         user
@@ -2099,7 +2085,7 @@ RSpec.describe 'Processes' do
       allow_any_instance_of(VCAP::CloudController::Diego::BbsAppsClient).to receive(:stop_index)
     end
 
-    let!(:process) { VCAP::CloudController::ProcessModel.make(:process, type: 'web', app: app_model) }
+    let!(:process) { create(:process_model, :process, type: 'web', app: app_model) }
 
     it 'terminates a single instance of a process belonging to an app' do
       delete "/v3/apps/#{app_model.guid}/processes/web/instances/0", nil, developer_headers

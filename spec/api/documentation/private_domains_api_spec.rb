@@ -4,7 +4,7 @@ require 'rspec_api_documentation/dsl'
 RSpec.resource 'Private Domains', type: %i[api legacy_api] do
   let(:admin_auth_header) { admin_headers['HTTP_AUTHORIZATION'] }
   let(:guid) { VCAP::CloudController::PrivateDomain.first.guid }
-  let!(:domains) { 3.times { VCAP::CloudController::PrivateDomain.make } }
+  let!(:domains) { FactoryBot.create_list(:private_domain, 3) }
 
   authenticated_request
 
@@ -25,7 +25,7 @@ RSpec.resource 'Private Domains', type: %i[api legacy_api] do
     post '/v2/private_domains' do
       include_context 'updatable_fields'
       example 'Create a Private Domain owned by the given Organization' do
-        org_guid = VCAP::CloudController::Organization.make.guid
+        org_guid = create(:organization).guid
         payload  = Oj.dump(
           {
             name: 'exmaple.com',
@@ -51,7 +51,7 @@ RSpec.resource 'Private Domains', type: %i[api legacy_api] do
         let(:q) { 'name:my-domain.com' }
 
         before do
-          VCAP::CloudController::PrivateDomain.make name: 'my-domain.com'
+          create(:private_domain, name: 'my-domain.com')
         end
 
         example 'Filtering Private Domains by name' do
@@ -79,7 +79,7 @@ RSpec.resource 'Private Domains', type: %i[api legacy_api] do
     describe 'Shared Organizations' do
       before do
         pd  = VCAP::CloudController::PrivateDomain[guid:]
-        org = VCAP::CloudController::Organization.make
+        org = create(:organization)
         org.add_private_domain(pd)
       end
 

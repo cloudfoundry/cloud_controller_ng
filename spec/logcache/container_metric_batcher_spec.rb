@@ -8,7 +8,7 @@ RSpec.describe Logcache::ContainerMetricBatcher do
   let(:wrapped_logcache_client) { instance_double(Logcache::Client, container_metrics: logcache_response) }
 
   let(:num_instances) { 11 }
-  let(:process) { VCAP::CloudController::ProcessModel.make(instances: num_instances) }
+  let(:process) { create(:process_model, instances: num_instances) }
   let(:process_guid) { process.guid }
   let(:logcache_response) { Logcache::V1::ReadResponse.new(envelopes:) }
   let(:envelopes) { Loggregator::V2::EnvelopeBatch.new }

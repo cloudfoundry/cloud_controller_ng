@@ -129,7 +129,7 @@ RSpec.describe 'max log_rate_limit policies' do
   describe TaskMaxLogRateLimitPolicy do
     subject(:validator) { TaskMaxLogRateLimitPolicy.new(task, org_or_space, error_name) }
 
-    let(:task) { VCAP::CloudController::TaskModel.make log_rate_limit: 150, state: VCAP::CloudController::TaskModel::RUNNING_STATE }
+    let(:task) { create(:task_model, log_rate_limit: 150, state: VCAP::CloudController::TaskModel::RUNNING_STATE) }
 
     context 'when not cancelling a task' do
       it 'registers error when quota is exceeded' do

@@ -7,7 +7,7 @@ module VCAP::CloudController
       let(:buildpack_guid) { buildpack.guid }
       let(:timeout) { 90_000 }
 
-      let(:buildpack) { VCAP::CloudController::Buildpack.make }
+      let(:buildpack) { create(:buildpack) }
 
       before do
         allow(BuildpackBitsDelete).to receive(:delete_when_safe)

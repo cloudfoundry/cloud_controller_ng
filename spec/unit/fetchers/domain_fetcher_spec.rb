@@ -11,15 +11,15 @@ module VCAP::CloudController
         org3.add_private_domain(private_domain1)
       end
 
-      let!(:org1) { Organization.make(guid: 'org1') }
-      let!(:org2) { Organization.make(guid: 'org2') }
-      let!(:org3) { Organization.make(guid: 'org3') }
+      let!(:org1) { create(:organization, guid: 'org1') }
+      let!(:org2) { create(:organization, guid: 'org2') }
+      let!(:org3) { create(:organization, guid: 'org3') }
       # org1 will share private domain(s) with org3
-      let!(:shared_domain1) { SharedDomain.make(guid: 'shared_domain1') }
-      let!(:shared_domain2) { SharedDomain.make(guid: 'shared_domain2') }
-      let!(:private_domain1) { PrivateDomain.make(guid: 'private_domain1', owning_organization: org1) }
-      let!(:private_domain2) { PrivateDomain.make(guid: 'private_domain2', owning_organization: org1) }
-      let!(:private_domain3) { PrivateDomain.make(guid: 'private_domain3', owning_organization: org3) }
+      let!(:shared_domain1) { create(:shared_domain, guid: 'shared_domain1') }
+      let!(:shared_domain2) { create(:shared_domain, guid: 'shared_domain2') }
+      let!(:private_domain1) { create(:private_domain, guid: 'private_domain1', owning_organization: org1) }
+      let!(:private_domain2) { create(:private_domain, guid: 'private_domain2', owning_organization: org1) }
+      let!(:private_domain3) { create(:private_domain, guid: 'private_domain3', owning_organization: org3) }
 
       context 'when there are no readable org guids' do
         it 'lists shared domains only' do
@@ -75,8 +75,8 @@ module VCAP::CloudController
         end
 
         context 'when the domain is shared' do
-          let!(:org1) { Organization.make(guid: 'org1') }
-          let!(:shared_domain1) { SharedDomain.make(guid: 'shared_domain1') }
+          let!(:org1) { create(:organization, guid: 'org1') }
+          let!(:shared_domain1) { create(:shared_domain, guid: 'shared_domain1') }
           let!(:domain_guid_filter) { shared_domain1.guid }
 
           it 'returns only the shared domain for the given guid' do
@@ -88,8 +88,8 @@ module VCAP::CloudController
 
         context 'when the domain is private' do
           context 'when the user can read from the owning org' do
-            let!(:org1) { Organization.make(guid: 'org1') }
-            let!(:private_domain) { PrivateDomain.make(guid: 'private_domain', owning_organization: org1) }
+            let!(:org1) { create(:organization, guid: 'org1') }
+            let!(:private_domain) { create(:private_domain, guid: 'private_domain', owning_organization: org1) }
             let!(:domain_guid_filter) { private_domain.guid }
 
             it 'returns only the private domain' do
@@ -100,8 +100,8 @@ module VCAP::CloudController
           end
 
           context 'when the user can read from a shared org' do
-            let!(:org1) { Organization.make(guid: 'org1') }
-            let!(:private_domain) { PrivateDomain.make(guid: 'private_domain') }
+            let!(:org1) { create(:organization, guid: 'org1') }
+            let!(:private_domain) { create(:private_domain, guid: 'private_domain') }
             let!(:domain_guid_filter) { private_domain.guid }
 
             before do
@@ -116,9 +116,9 @@ module VCAP::CloudController
           end
 
           context 'when the user can not read from any associated org' do
-            let!(:org1) { Organization.make(guid: 'org1') }
-            let!(:org2) { Organization.make(guid: 'org2') }
-            let!(:private_domain) { PrivateDomain.make(guid: 'private_domain') }
+            let!(:org1) { create(:organization, guid: 'org1') }
+            let!(:org2) { create(:organization, guid: 'org2') }
+            let!(:private_domain) { create(:private_domain, guid: 'private_domain') }
             let!(:domain_guid_filter) { private_domain.guid }
 
             before do
@@ -139,9 +139,9 @@ module VCAP::CloudController
         end
 
         context 'when the matching domain is shared' do
-          let!(:org1) { Organization.make(guid: 'org1') }
-          let!(:shared_domain1) { SharedDomain.make(guid: 'named-domain-1', name: 'named-domain-1.com') }
-          let!(:shared_domain2) { SharedDomain.make(guid: 'named-domain-2', name: 'named-domain-2.com') }
+          let!(:org1) { create(:organization, guid: 'org1') }
+          let!(:shared_domain1) { create(:shared_domain, guid: 'named-domain-1', name: 'named-domain-1.com') }
+          let!(:shared_domain2) { create(:shared_domain, guid: 'named-domain-2', name: 'named-domain-2.com') }
           let!(:domain_name_filter) { shared_domain2.name }
 
           it 'only returns the matching domain' do
@@ -167,9 +167,9 @@ module VCAP::CloudController
         end
 
         context 'when the matching domain is shared' do
-          let!(:org1) { Organization.make(guid: 'org1') }
-          let!(:shared_domain1) { SharedDomain.make(guid: 'guid-1') }
-          let!(:shared_domain2) { SharedDomain.make(guid: 'guid-2') }
+          let!(:org1) { create(:organization, guid: 'org1') }
+          let!(:shared_domain1) { create(:shared_domain, guid: 'guid-1') }
+          let!(:shared_domain2) { create(:shared_domain, guid: 'guid-2') }
           let!(:domain_guid_filter) { shared_domain2.guid }
 
           it 'only returns the matching domain' do
@@ -195,10 +195,10 @@ module VCAP::CloudController
         end
 
         context 'when the matching domain is shared' do
-          let!(:org1) { Organization.make(guid: 'org1') }
-          let!(:org2) { Organization.make(guid: 'org2') }
-          let!(:private_domain1) { PrivateDomain.make(owning_organization: org1, name: 'named-domain-1.com') }
-          let!(:private_domain2) { PrivateDomain.make(owning_organization: org2, name: 'named-domain-2.com') }
+          let!(:org1) { create(:organization, guid: 'org1') }
+          let!(:org2) { create(:organization, guid: 'org2') }
+          let!(:private_domain1) { create(:private_domain, owning_organization: org1, name: 'named-domain-1.com') }
+          let!(:private_domain2) { create(:private_domain, owning_organization: org2, name: 'named-domain-2.com') }
           let!(:organization_guid_filter) { org1.guid }
 
           it 'returns only privates_domain1' do
@@ -219,15 +219,15 @@ module VCAP::CloudController
       end
 
       context 'when fetching domains by label selector' do
-        let!(:org1) { Organization.make(guid: 'org1') }
-        let!(:shared_domain1) { SharedDomain.make(guid: 'named-domain-1', name: 'named-domain-1.com') }
-        let!(:shared_domain2) { SharedDomain.make(guid: 'named-domain-2', name: 'named-domain-2.com') }
+        let!(:org1) { create(:organization, guid: 'org1') }
+        let!(:shared_domain1) { create(:shared_domain, guid: 'named-domain-1', name: 'named-domain-1.com') }
+        let!(:shared_domain2) { create(:shared_domain, guid: 'named-domain-2', name: 'named-domain-2.com') }
         let!(:domain_label) do
-          VCAP::CloudController::DomainLabelModel.make(resource_guid: shared_domain1.guid, key_name: 'dog', value: 'scooby-doo')
+          create(:domain_label_model, resource_guid: shared_domain1.guid, key_name: 'dog', value: 'scooby-doo')
         end
 
         let!(:sad_domain_label) do
-          VCAP::CloudController::DomainLabelModel.make(resource_guid: shared_domain2.guid, key_name: 'dog', value: 'poodle')
+          create(:domain_label_model, resource_guid: shared_domain2.guid, key_name: 'dog', value: 'poodle')
         end
 
         let(:results) { DomainFetcher.fetch(message, [org1.guid]).all }
@@ -248,9 +248,9 @@ module VCAP::CloudController
             DomainsListMessage.from_params({ 'names' => 'dom.com', 'label_selector' => 'dog in (chihuahua,scooby-doo)' })
           end
 
-          let!(:happiest_domain) { SharedDomain.make(name: 'dom.com') }
+          let!(:happiest_domain) { create(:shared_domain, name: 'dom.com') }
           let!(:happiest_domain_label) do
-            VCAP::CloudController::DomainLabelModel.make(resource_guid: happiest_domain.guid, key_name: 'dog', value: 'scooby-doo')
+            create(:domain_label_model, resource_guid: happiest_domain.guid, key_name: 'dog', value: 'scooby-doo')
           end
 
           it 'returns the desired app' do

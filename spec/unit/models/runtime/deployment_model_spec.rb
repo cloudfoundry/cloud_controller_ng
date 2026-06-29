@@ -2,12 +2,12 @@ require 'spec_helper'
 
 module VCAP::CloudController
   RSpec.describe DeploymentModel do
-    let(:app) { AppModel.make(name: 'rolling-app') }
-    let(:droplet) { DropletModel.make(app:) }
-    let(:deploying_web_process) { ProcessModel.make(health_check_timeout: 180) }
+    let(:app) { create(:app_model, name: 'rolling-app') }
+    let(:droplet) { create(:droplet_model, app:) }
+    let(:deploying_web_process) { create(:process_model, health_check_timeout: 180) }
     let(:canary_steps) { [{ 'instance_weight' => 20 }, { 'instance_weight' => 40 }] }
     let(:strategy) { DeploymentModel::CANARY_STRATEGY }
-    let(:deployment) { DeploymentModel.make(app:, droplet:, deploying_web_process:, canary_steps:, strategy:, web_instances:) }
+    let(:deployment) { create(:deployment_model, app:, droplet:, deploying_web_process:, canary_steps:, strategy:, web_instances:) }
     let(:web_instances) { nil }
 
     it 'has an app' do
@@ -54,19 +54,13 @@ module VCAP::CloudController
 
     describe '#processes' do
       before do
-        DeploymentProcessModel.make(
-          deployment: deployment,
-          process_guid: deploying_web_process.guid,
-          process_type: deploying_web_process.type
-        )
-        DeploymentProcessModel.make(
-          deployment: deployment,
-          process_guid: 'guid-for-deleted-process',
-          process_type: 'i-do-not-exist!!!!!!!!!!'
-        )
-        DeploymentProcessModel.make(
-          deployment: DeploymentModel.make
-        )
+        create(:deployment_process_model, deployment: deployment,
+                                          process_guid: deploying_web_process.guid,
+                                          process_type: deploying_web_process.type)
+        create(:deployment_process_model, deployment: deployment,
+                                          process_guid: 'guid-for-deleted-process',
+                                          process_type: 'i-do-not-exist!!!!!!!!!!')
+        create(:deployment_process_model, deployment: create(:deployment_model))
       end
 
       it 'has deployment processes with the deploying web process' do
@@ -221,13 +215,11 @@ module VCAP::CloudController
 
     describe '#status_updated_at' do
       let(:deployment) do
-        DeploymentModel.make(
-          app: app,
-          droplet: droplet,
-          deploying_web_process: deploying_web_process,
-          status_reason: DeploymentModel::DEPLOYING_STATUS_REASON,
-          status_value: DeploymentModel::ACTIVE_STATUS_VALUE
-        )
+        create(:deployment_model, app: app,
+                                  droplet: droplet,
+                                  deploying_web_process: deploying_web_process,
+                                  status_reason: DeploymentModel::DEPLOYING_STATUS_REASON,
+                                  status_value: DeploymentModel::ACTIVE_STATUS_VALUE)
       end
 
       # Can't use Timecop with created_at since its set by the DB
@@ -344,15 +336,13 @@ module VCAP::CloudController
           let(:canary_steps) { test[:weights].map { |weight| { instance_weight: weight } } }
 
           let(:deployment) do
-            DeploymentModel.make(
-              app: app,
-              droplet: droplet,
-              strategy: 'canary',
-              deploying_web_process: deploying_web_process,
-              original_web_process_instance_count: test[:existing_instances],
-              canary_steps: canary_steps,
-              canary_current_step: 1
-            )
+            create(:deployment_model, app: app,
+                                      droplet: droplet,
+                                      strategy: 'canary',
+                                      deploying_web_process: deploying_web_process,
+                                      original_web_process_instance_count: test[:existing_instances],
+                                      canary_steps: canary_steps,
+                                      canary_current_step: 1)
           end
 
           it 'returns the correct deployment plan' do
@@ -363,14 +353,12 @@ module VCAP::CloudController
 
       context 'when deployment is canary but canary steps are empty' do
         let(:deployment) do
-          DeploymentModel.make(
-            app: app,
-            strategy: 'canary',
-            droplet: droplet,
-            deploying_web_process: deploying_web_process,
-            original_web_process_instance_count: 10,
-            canary_current_step: 1
-          )
+          create(:deployment_model, app: app,
+                                    strategy: 'canary',
+                                    droplet: droplet,
+                                    deploying_web_process: deploying_web_process,
+                                    original_web_process_instance_count: 10,
+                                    canary_current_step: 1)
         end
 
         it 'returns the correct deployment plan' do
@@ -380,15 +368,13 @@ module VCAP::CloudController
 
       context 'when deployment is has a 100% step' do
         let(:deployment) do
-          DeploymentModel.make(
-            app: app,
-            strategy: 'canary',
-            droplet: droplet,
-            deploying_web_process: deploying_web_process,
-            canary_steps: [{ instance_weight: 1 }, { instance_weight: 25 }, { instance_weight: 50 }, { instance_weight: 99 }, { instance_weight: 100 }],
-            original_web_process_instance_count: 10,
-            canary_current_step: 1
-          )
+          create(:deployment_model, app: app,
+                                    strategy: 'canary',
+                                    droplet: droplet,
+                                    deploying_web_process: deploying_web_process,
+                                    canary_steps: [{ instance_weight: 1 }, { instance_weight: 25 }, { instance_weight: 50 }, { instance_weight: 99 }, { instance_weight: 100 }],
+                                    original_web_process_instance_count: 10,
+                                    canary_current_step: 1)
         end
 
         it 'provides an extra canary instance for every step except at 100%' do
@@ -399,16 +385,14 @@ module VCAP::CloudController
 
       context 'when web_instances is lower than original_web_process_instance_count' do
         let(:deployment) do
-          DeploymentModel.make(
-            app: app,
-            strategy: 'canary',
-            droplet: droplet,
-            deploying_web_process: deploying_web_process,
-            canary_steps: [{ instance_weight: 1 }, { instance_weight: 25 }, { instance_weight: 50 }, { instance_weight: 99 }, { instance_weight: 100 }],
-            original_web_process_instance_count: 100,
-            web_instances: 10,
-            canary_current_step: 1
-          )
+          create(:deployment_model, app: app,
+                                    strategy: 'canary',
+                                    droplet: droplet,
+                                    deploying_web_process: deploying_web_process,
+                                    canary_steps: [{ instance_weight: 1 }, { instance_weight: 25 }, { instance_weight: 50 }, { instance_weight: 99 }, { instance_weight: 100 }],
+                                    original_web_process_instance_count: 100,
+                                    web_instances: 10,
+                                    canary_current_step: 1)
         end
 
         it 'uses web_instances to calculate a plan' do
@@ -419,16 +403,14 @@ module VCAP::CloudController
 
       context 'when original_web_process_instance_count is lower than web_instances' do
         let(:deployment) do
-          DeploymentModel.make(
-            app: app,
-            strategy: 'canary',
-            droplet: droplet,
-            deploying_web_process: deploying_web_process,
-            canary_steps: [{ instance_weight: 1 }, { instance_weight: 25 }, { instance_weight: 50 }, { instance_weight: 99 }, { instance_weight: 100 }],
-            original_web_process_instance_count: 10,
-            web_instances: 100,
-            canary_current_step: 1
-          )
+          create(:deployment_model, app: app,
+                                    strategy: 'canary',
+                                    droplet: droplet,
+                                    deploying_web_process: deploying_web_process,
+                                    canary_steps: [{ instance_weight: 1 }, { instance_weight: 25 }, { instance_weight: 50 }, { instance_weight: 99 }, { instance_weight: 100 }],
+                                    original_web_process_instance_count: 10,
+                                    web_instances: 100,
+                                    canary_current_step: 1)
         end
 
         it 'uses original_web_process_instance_count to calculate a plan' do
@@ -439,13 +421,11 @@ module VCAP::CloudController
 
       context 'when deployment is not canary' do
         let(:deployment) do
-          DeploymentModel.make(
-            app: app,
-            strategy: 'rolling',
-            droplet: droplet,
-            deploying_web_process: deploying_web_process,
-            original_web_process_instance_count: 10
-          )
+          create(:deployment_model, app: app,
+                                    strategy: 'rolling',
+                                    droplet: droplet,
+                                    deploying_web_process: deploying_web_process,
+                                    original_web_process_instance_count: 10)
         end
 
         it 'returns the correct deployment plan' do
@@ -456,14 +436,12 @@ module VCAP::CloudController
 
     describe '#current_canary_instance_target' do
       let(:deployment) do
-        DeploymentModel.make(
-          app: app,
-          strategy: 'canary',
-          droplet: droplet,
-          deploying_web_process: deploying_web_process,
-          canary_steps: [{ instance_weight: 1 }, { instance_weight: 25 }, { instance_weight: 50 }, { instance_weight: 99 }, { instance_weight: 100 }],
-          original_web_process_instance_count: 10
-        )
+        create(:deployment_model, app: app,
+                                  strategy: 'canary',
+                                  droplet: droplet,
+                                  deploying_web_process: deploying_web_process,
+                                  canary_steps: [{ instance_weight: 1 }, { instance_weight: 25 }, { instance_weight: 50 }, { instance_weight: 99 }, { instance_weight: 100 }],
+                                  original_web_process_instance_count: 10)
       end
 
       it 'returns the canary target of the current step' do
@@ -475,14 +453,12 @@ module VCAP::CloudController
 
     describe '#canary_total_instances' do
       let(:deployment) do
-        DeploymentModel.make(
-          app: app,
-          strategy: 'canary',
-          droplet: droplet,
-          deploying_web_process: deploying_web_process,
-          canary_steps: [{ instance_weight: 1 }, { instance_weight: 25 }, { instance_weight: 50 }, { instance_weight: 99 }, { instance_weight: 100 }],
-          original_web_process_instance_count: 10
-        )
+        create(:deployment_model, app: app,
+                                  strategy: 'canary',
+                                  droplet: droplet,
+                                  deploying_web_process: deploying_web_process,
+                                  canary_steps: [{ instance_weight: 1 }, { instance_weight: 25 }, { instance_weight: 50 }, { instance_weight: 99 }, { instance_weight: 100 }],
+                                  original_web_process_instance_count: 10)
       end
 
       it 'returns the total instances of the canary and original processes' do
@@ -494,15 +470,13 @@ module VCAP::CloudController
 
     describe '#canary_step' do
       let(:deployment) do
-        DeploymentModel.make(
-          app: app,
-          strategy: 'canary',
-          droplet: droplet,
-          deploying_web_process: deploying_web_process,
-          original_web_process_instance_count: 10,
-          canary_steps: [{ instance_weight: 20 }, { instance_weight: 40 }],
-          canary_current_step: 1
-        )
+        create(:deployment_model, app: app,
+                                  strategy: 'canary',
+                                  droplet: droplet,
+                                  deploying_web_process: deploying_web_process,
+                                  original_web_process_instance_count: 10,
+                                  canary_steps: [{ instance_weight: 20 }, { instance_weight: 40 }],
+                                  canary_current_step: 1)
       end
 
       it 'returns the correct deployment plan' do
@@ -514,13 +488,11 @@ module VCAP::CloudController
 
       context 'when canary current step is not set' do
         let(:deployment) do
-          DeploymentModel.make(
-            app: app,
-            droplet: droplet,
-            strategy: 'canary',
-            deploying_web_process: deploying_web_process,
-            original_web_process_instance_count: 10
-          )
+          create(:deployment_model, app: app,
+                                    droplet: droplet,
+                                    strategy: 'canary',
+                                    deploying_web_process: deploying_web_process,
+                                    original_web_process_instance_count: 10)
         end
 
         it 'returns the correct deployment plan' do
@@ -530,13 +502,11 @@ module VCAP::CloudController
 
       context 'when deployment is not canary' do
         let(:deployment) do
-          DeploymentModel.make(
-            app: app,
-            strategy: 'rolling',
-            droplet: droplet,
-            deploying_web_process: deploying_web_process,
-            original_web_process_instance_count: 10
-          )
+          create(:deployment_model, app: app,
+                                    strategy: 'rolling',
+                                    droplet: droplet,
+                                    deploying_web_process: deploying_web_process,
+                                    original_web_process_instance_count: 10)
         end
 
         it 'returns the correct deployment plan' do

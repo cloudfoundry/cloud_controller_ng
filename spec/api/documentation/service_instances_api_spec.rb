@@ -5,17 +5,15 @@ require 'uri'
 RSpec.resource 'Service Instances', type: %i[api legacy_api] do
   tags = %w[accounting mongodb]
   let(:admin_auth_header) { admin_headers['HTTP_AUTHORIZATION'] }
-  let(:service_broker) { VCAP::CloudController::ServiceBroker.make }
-  let(:service) { VCAP::CloudController::Service.make(service_broker:) }
-  let(:service_plan) { VCAP::CloudController::ServicePlan.make(service: service, public: true) }
+  let(:service_broker) { FactoryBot.create(:service_broker) }
+  let(:service) { FactoryBot.create(:service, service_broker:) }
+  let(:service_plan) { FactoryBot.create(:service_plan, service: service, public: true) }
   let!(:service_instance) do
-    service_instance = VCAP::CloudController::ManagedServiceInstance.make(
-      service_plan:, tags:
-    )
-    service_instance.service_instance_operation = VCAP::CloudController::ServiceInstanceOperation.make(
-      state: 'succeeded',
-      description: 'service broker-provided description'
-    )
+    service_instance = FactoryBot.create(:managed_service_instance,
+                                         service_plan:, tags:)
+    service_instance.service_instance_operation = FactoryBot.create(:service_instance_operation,
+                                                                    state: 'succeeded',
+                                                                    description: 'service broker-provided description')
     service_instance
   end
   let(:guid) { service_instance.guid }
@@ -93,7 +91,7 @@ RSpec.resource 'Service Instances', type: %i[api legacy_api] do
       parameter :accepts_incomplete, param_description, valid_values: [true, false]
 
       example 'Creating a Service Instance' do
-        space_guid   = VCAP::CloudController::Space.make.guid
+        space_guid   = create(:space).guid
         request_hash = {
           space_guid: space_guid,
           name: 'my-service-instance',
@@ -110,11 +108,11 @@ RSpec.resource 'Service Instances', type: %i[api legacy_api] do
     end
 
     put '/v2/service_instances/:guid' do
-      let(:service_broker) { VCAP::CloudController::ServiceBroker.make }
-      let(:service) { VCAP::CloudController::Service.make(service_broker: service_broker, plan_updateable: true) }
-      let(:new_plan) { VCAP::CloudController::ServicePlan.make(service:) }
-      let(:old_plan) { VCAP::CloudController::ServicePlan.make(service:) }
-      let(:service_instance) { VCAP::CloudController::ManagedServiceInstance.make(service_plan: old_plan) }
+      let(:service_broker) { create(:service_broker) }
+      let(:service) { create(:service, service_broker: service_broker, plan_updateable: true) }
+      let(:new_plan) { create(:service_plan, service:) }
+      let(:old_plan) { create(:service_plan, service:) }
+      let(:service_instance) { create(:managed_service_instance, service_plan: old_plan) }
 
       field :name, 'The new name for the service instance', required: false, example_values: ['my-new-service-instance']
       field :service_plan_guid, 'The new plan guid for the service instance', required: false, example_values: ['6c4bd80f-4593-41d1-a2c9-b20cb65ec76e']
@@ -174,7 +172,7 @@ RSpec.resource 'Service Instances', type: %i[api legacy_api] do
   describe 'Nested endpoints' do
     describe 'Service Bindings' do
       before do
-        VCAP::CloudController::ServiceBinding.make(service_instance:)
+        create(:service_binding, service_instance:)
       end
 
       standard_model_list :service_binding,
@@ -184,9 +182,9 @@ RSpec.resource 'Service Instances', type: %i[api legacy_api] do
     end
 
     describe 'Routes' do
-      let(:service_instance) { VCAP::CloudController::ManagedServiceInstance.make(:routing) }
-      let(:route) { VCAP::CloudController::Route.make(space: service_instance.space) }
-      let!(:route_binding) { VCAP::CloudController::RouteBinding.make(service_instance:) }
+      let(:service_instance) { create(:managed_service_instance, :routing) }
+      let(:route) { create(:route, space: service_instance.space) }
+      let!(:route_binding) { create(:route_binding, service_instance:) }
 
       put '/v2/service_instances/:service_instance_guid/routes/:route_guid' do
         before do # rubocop:disable RSpec/ScatteredSetup
@@ -213,7 +211,7 @@ RSpec.resource 'Service Instances', type: %i[api legacy_api] do
 
       delete '/v2/service_instances/:service_instance_guid/routes/:route_guid' do
         before do # rubocop:disable RSpec/ScatteredSetup
-          binding = VCAP::CloudController::RouteBinding.make(service_instance:, route:)
+          binding = create(:route_binding, service_instance:, route:)
           stub_unbind(binding)
         end
 
@@ -230,7 +228,7 @@ RSpec.resource 'Service Instances', type: %i[api legacy_api] do
 
     describe 'Service Keys' do
       before do
-        VCAP::CloudController::ServiceKey.make(name: 'a-service-key', service_instance: service_instance)
+        create(:service_key, name: 'a-service-key', service_instance: service_instance)
       end
 
       standard_model_list :service_key, VCAP::CloudController::ServiceInstancesController, outer_model: :service_instance

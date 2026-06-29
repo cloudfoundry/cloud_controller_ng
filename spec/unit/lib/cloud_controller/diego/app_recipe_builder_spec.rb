@@ -76,7 +76,7 @@ module VCAP::CloudController
           before do
             app = process.app
             app.update(service_binding_k8s_enabled: true)
-            VCAP::CloudController::ServiceBinding.make(service_instance: ManagedServiceInstance.make(space: app.space), app: app)
+            create(:service_binding, service_instance: create(:managed_service_instance, space: app.space), app: app)
           end
 
           it 'includes volume mounted files' do
@@ -95,7 +95,7 @@ module VCAP::CloudController
           before do
             app = process.app
             app.update(file_based_vcap_services_enabled: true)
-            VCAP::CloudController::ServiceBinding.make(service_instance: ManagedServiceInstance.make(space: app.space), app: app)
+            create(:service_binding, service_instance: create(:managed_service_instance, space: app.space), app: app)
           end
 
           it 'includes the vcap_services file' do
@@ -120,13 +120,13 @@ module VCAP::CloudController
           allow(Environment).to receive(:new).with(process, {}).and_return(environment)
           allow(environment).to receive(:as_json).and_return(environment_variables)
           [
-            SecurityGroup.make(guid: 'guid1', rules: [{ 'protocol' => 'udp', 'ports' => '53', 'destination' => '0.0.0.0/0' }]),
-            SecurityGroup.make(guid: 'guid2', rules: [{ 'protocol' => 'tcp', 'ports' => '80', 'destination' => '0.0.0.0/0', 'log' => true }]),
-            SecurityGroup.make(guid: 'guid3', rules: [{ 'protocol' => 'tcp', 'ports' => '443', 'destination' => '0.0.0.0/0', 'log' => true }])
+            create(:security_group, guid: 'guid1', rules: [{ 'protocol' => 'udp', 'ports' => '53', 'destination' => '0.0.0.0/0' }]),
+            create(:security_group, guid: 'guid2', rules: [{ 'protocol' => 'tcp', 'ports' => '80', 'destination' => '0.0.0.0/0', 'log' => true }]),
+            create(:security_group, guid: 'guid3', rules: [{ 'protocol' => 'tcp', 'ports' => '443', 'destination' => '0.0.0.0/0', 'log' => true }])
           ].each { |security_group| security_group.add_space(process.space) }
 
-          RouteMappingModel.make(app: process.app, route: route_without_service, process_type: process.type, app_port: 1111)
-          RouteMappingModel.make(app: process.app, route: route_with_service, process_type: process.type, app_port: 1111)
+          create(:route_mapping_model, app: process.app, route: route_without_service, process_type: process.type, app_port: 1111)
+          create(:route_mapping_model, app: process.app, route: route_with_service, process_type: process.type, app_port: 1111)
 
           app_model.update(droplet:)
           allow(VCAP::CloudController::IsolationSegmentSelector).to receive(:for_space).and_return('placement-tag')
@@ -141,36 +141,36 @@ module VCAP::CloudController
         end
 
         let(:lifecycle_type) { nil }
-        let(:org) { Organization.make(name: 'MyOrg') }
-        let(:space) { Space.make(organization: org) }
-        let(:app_model) { AppModel.make(lifecycle_type, guid: 'app-guid', space: space, droplet: DropletModel.make(state: 'STAGED'), enable_ssh: false) }
-        let(:package) { PackageModel.make(lifecycle_type, app: app_model) }
+        let(:org) { create(:organization, name: 'MyOrg') }
+        let(:space) { create(:space, organization: org) }
+        let(:app_model) { create(:app_model, lifecycle_type, guid: 'app-guid', space: space, droplet: create(:droplet_model, state: 'STAGED'), enable_ssh: false) }
+        let(:package) { create(:package_model, lifecycle_type, app: app_model) }
         let(:process) do
-          process = ProcessModel.make(:process,
-                                      app: app_model,
-                                      state: 'STARTED',
-                                      diego: true,
-                                      guid: 'process-guid',
-                                      type: 'web',
-                                      health_check_timeout: 12,
-                                      instances: 21,
-                                      memory: 128,
-                                      disk_quota: 256,
-                                      log_rate_limit: 1024,
-                                      command: command,
-                                      file_descriptors: 32,
-                                      health_check_type: 'port',
-                                      enable_ssh: false)
+          process = create(:process_model, :process,
+                           app: app_model,
+                           state: 'STARTED',
+                           diego: true,
+                           guid: 'process-guid',
+                           type: 'web',
+                           health_check_timeout: 12,
+                           instances: 21,
+                           memory: 128,
+                           disk_quota: 256,
+                           log_rate_limit: 1024,
+                           command: command,
+                           file_descriptors: 32,
+                           health_check_type: 'port',
+                           enable_ssh: false)
           process.this.update(updated_at: Time.at(2))
           process.reload
         end
         let(:command) { 'echo "hello"' }
 
-        let(:route_without_service) { Route.make(space: process.space) }
+        let(:route_without_service) { create(:route, space: process.space) }
         let(:route_with_service) do
-          si = ManagedServiceInstance.make(:routing, space: process.space)
-          r  = Route.make(space: process.space)
-          RouteBinding.make(route: r, service_instance: si, route_service_url: 'http://foobar.com')
+          si = create(:managed_service_instance, :routing, space: process.space)
+          r  = create(:route, space: process.space)
+          create(:route_binding, route: r, service_instance: si, route_service_url: 'http://foobar.com')
           r
         end
 
@@ -300,11 +300,11 @@ module VCAP::CloudController
         context 'when the lifecycle_type is "buildpack"' do
           let(:lifecycle_type) { :buildpack }
           let(:droplet) do
-            DropletModel.make(lifecycle_type,
-                              package: package,
-                              state: DropletModel::STAGED_STATE,
-                              execution_metadata: execution_metadata,
-                              droplet_hash: 'droplet-hash')
+            create(:droplet_model, lifecycle_type,
+                   package: package,
+                   state: DropletModel::STAGED_STATE,
+                   execution_metadata: execution_metadata,
+                   droplet_hash: 'droplet-hash')
           end
           let(:config) do
             Config.new({
@@ -347,11 +347,9 @@ module VCAP::CloudController
           let(:ports) { '8080' }
 
           before do
-            VCAP::CloudController::BuildpackLifecycleDataModel.make(
-              app: app_model,
-              buildpacks: nil,
-              stack: 'potato-stack'
-            )
+            create(:buildpack_lifecycle_data_model, app: app_model,
+                                                    buildpacks: nil,
+                                                    stack: 'potato-stack')
 
             allow(VCAP::CloudController::Diego::Buildpack::DesiredLrpBuilder).to receive(:new).and_return(desired_lrp_builder)
           end
@@ -378,7 +376,7 @@ module VCAP::CloudController
           end
 
           context 'when a volume mount is provided' do
-            let(:service_instance) { ManagedServiceInstance.make space: app_model.space }
+            let(:service_instance) { create(:managed_service_instance, space: app_model.space) }
             let(:multiple_volume_mounts) do
               [
                 {
@@ -407,7 +405,7 @@ module VCAP::CloudController
             end
 
             before do
-              ServiceBinding.make(app: app_model, service_instance: service_instance, volume_mounts: multiple_volume_mounts)
+              create(:service_binding, app: app_model, service_instance: service_instance, volume_mounts: multiple_volume_mounts)
             end
 
             it 'desires the mount' do
@@ -972,11 +970,11 @@ module VCAP::CloudController
         context 'when the lifecycle_type is "cnb"' do
           let(:lifecycle_type) { :cnb }
           let(:droplet) do
-            DropletModel.make(lifecycle_type,
-                              package: package,
-                              state: DropletModel::STAGED_STATE,
-                              execution_metadata: execution_metadata,
-                              droplet_hash: 'droplet-hash')
+            create(:droplet_model, lifecycle_type,
+                   package: package,
+                   state: DropletModel::STAGED_STATE,
+                   execution_metadata: execution_metadata,
+                   droplet_hash: 'droplet-hash')
           end
           let(:config) do
             Config.new({
@@ -1069,15 +1067,15 @@ module VCAP::CloudController
                        })
           end
           let(:lifecycle_type) { :docker }
-          let(:package) { PackageModel.make(lifecycle_type, app: app_model) }
+          let(:package) { create(:package_model, lifecycle_type, app: app_model) }
           let(:droplet) do
-            DropletModel.make(:docker,
-                              package: package,
-                              state: DropletModel::STAGED_STATE,
-                              execution_metadata: execution_metadata,
-                              docker_receipt_image: 'docker-receipt-image',
-                              docker_receipt_username: 'dockeruser',
-                              docker_receipt_password: 'dockerpass')
+            create(:droplet_model, :docker,
+                   package: package,
+                   state: DropletModel::STAGED_STATE,
+                   execution_metadata: execution_metadata,
+                   docker_receipt_image: 'docker-receipt-image',
+                   docker_receipt_username: 'dockeruser',
+                   docker_receipt_password: 'dockerpass')
           end
           let(:old_expected_cached_dependencies) do
             [
@@ -1123,19 +1121,15 @@ module VCAP::CloudController
             let(:metric_tag_key_prefix) { 'metric.tag.cloudfoundry.org' }
 
             before do
-              AppLabelModel.make(
-                app: app_model,
-                key_prefix: metric_tag_key_prefix,
-                key_name: 'DatadogValue',
-                value: 'woof'
-              )
+              create(:app_label_model, app: app_model,
+                                       key_prefix: metric_tag_key_prefix,
+                                       key_name: 'DatadogValue',
+                                       value: 'woof')
 
-              AppLabelModel.make(
-                app: app_model,
-                key_prefix: 'nonmetric.tag.cloudfoundry.org',
-                key_name: 'SomeotherValue',
-                value: 'notapplied'
-              )
+              create(:app_label_model, app: app_model,
+                                       key_prefix: 'nonmetric.tag.cloudfoundry.org',
+                                       key_name: 'SomeotherValue',
+                                       value: 'notapplied')
             end
 
             context 'when cc.custom_metric_tag_prefix_list has entries' do
@@ -1150,12 +1144,10 @@ module VCAP::CloudController
 
               context 'when app labels tags match existing custom metrics tags' do
                 before do
-                  AppLabelModel.make(
-                    app: app_model,
-                    key_prefix: metric_tag_key_prefix,
-                    key_name: 'organization_name',
-                    value: 'wrong_org_name'
-                  )
+                  create(:app_label_model, app: app_model,
+                                           key_prefix: metric_tag_key_prefix,
+                                           key_name: 'organization_name',
+                                           value: 'wrong_org_name')
                 end
 
                 it 'does not override the metric tag' do
@@ -1165,33 +1157,25 @@ module VCAP::CloudController
 
               context 'when app labels contain forbidden key_names' do
                 before do
-                  AppLabelModel.make(
-                    app: app_model,
-                    key_prefix: metric_tag_key_prefix,
-                    key_name: 'deployment',
-                    value: 'kafka'
-                  )
+                  create(:app_label_model, app: app_model,
+                                           key_prefix: metric_tag_key_prefix,
+                                           key_name: 'deployment',
+                                           value: 'kafka')
 
-                  AppLabelModel.make(
-                    app: app_model,
-                    key_prefix: metric_tag_key_prefix,
-                    key_name: 'index',
-                    value: '999'
-                  )
+                  create(:app_label_model, app: app_model,
+                                           key_prefix: metric_tag_key_prefix,
+                                           key_name: 'index',
+                                           value: '999')
 
-                  AppLabelModel.make(
-                    app: app_model,
-                    key_prefix: metric_tag_key_prefix,
-                    key_name: 'ip',
-                    value: '127.0.0.1'
-                  )
+                  create(:app_label_model, app: app_model,
+                                           key_prefix: metric_tag_key_prefix,
+                                           key_name: 'ip',
+                                           value: '127.0.0.1')
 
-                  AppLabelModel.make(
-                    app: app_model,
-                    key_prefix: metric_tag_key_prefix,
-                    key_name: 'job',
-                    value: 'potato farmer'
-                  )
+                  create(:app_label_model, app: app_model,
+                                           key_prefix: metric_tag_key_prefix,
+                                           key_name: 'job',
+                                           value: 'potato farmer')
                 end
 
                 it 'do not get applied' do
@@ -1330,7 +1314,7 @@ module VCAP::CloudController
           end
 
           context 'when a volume mount is provided' do
-            let(:service_instance) { ManagedServiceInstance.make space: app_model.space }
+            let(:service_instance) { create(:managed_service_instance, space: app_model.space) }
             let(:multiple_volume_mounts) do
               [
                 {
@@ -1359,7 +1343,7 @@ module VCAP::CloudController
             end
 
             before do
-              ServiceBinding.make(app: app_model, service_instance: service_instance, volume_mounts: multiple_volume_mounts)
+              create(:service_binding, app: app_model, service_instance: service_instance, volume_mounts: multiple_volume_mounts)
             end
 
             it 'desires the mount' do
@@ -1410,9 +1394,9 @@ module VCAP::CloudController
 
       describe '#build_app_lrp_update' do
         let(:config) { Config.new({}) }
-        let(:app_model) { AppModel.make(guid: 'app-guid', droplet: DropletModel.make(state: 'STAGED')) }
+        let(:app_model) { create(:app_model, guid: 'app-guid', droplet: create(:droplet_model, state: 'STAGED')) }
         let(:process) do
-          process = ProcessModel.make(:process, instances: 7, app: app_model)
+          process = create(:process_model, :process, instances: 7, app: app_model)
           process.this.update(updated_at: Time.at(2))
           process.reload
         end

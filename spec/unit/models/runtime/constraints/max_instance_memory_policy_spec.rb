@@ -139,7 +139,7 @@ RSpec.describe 'max instance memory policies' do
   describe TaskMaxInstanceMemoryPolicy do
     subject(:validator) { TaskMaxInstanceMemoryPolicy.new(task, policy_target, error_name) }
 
-    let(:task) { VCAP::CloudController::TaskModel.make }
+    let(:task) { create(:task_model) }
 
     it 'gives error when task memory_in_mb exceeds instance memory limit' do
       task.memory_in_mb = 200

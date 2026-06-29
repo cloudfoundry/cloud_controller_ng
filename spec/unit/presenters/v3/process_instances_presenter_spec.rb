@@ -3,7 +3,7 @@ require 'presenters/v3/process_instances_presenter'
 
 module VCAP::CloudController::Presenters::V3
   RSpec.describe ProcessInstancesPresenter do
-    let(:process) { VCAP::CloudController::ProcessModel.make }
+    let(:process) { create(:process_model) }
     let(:instances) do
       {
         0 => { state: 'RUNNING', since: 111 },

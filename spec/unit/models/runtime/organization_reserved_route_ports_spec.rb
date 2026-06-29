@@ -2,7 +2,7 @@ require 'spec_helper'
 
 module VCAP::CloudController
   RSpec.describe OrganizationReservedRoutePorts do
-    let(:organization) { Organization.make }
+    let(:organization) { create(:organization) }
 
     subject(:organization_routes) { OrganizationReservedRoutePorts.new(organization) }
 
@@ -18,9 +18,9 @@ module VCAP::CloudController
       end
 
       context 'when there are spaces' do
-        let(:space_quota) { SpaceQuotaDefinition.make(organization:) }
-        let(:space) { Space.make(organization: organization, space_quota_definition: space_quota) }
-        let(:space2) { Space.make(organization: organization, space_quota_definition: space_quota) }
+        let(:space_quota) { create(:space_quota_definition, organization:) }
+        let(:space) { create(:space, organization: organization, space_quota_definition: space_quota) }
+        let(:space2) { create(:space, organization: organization, space_quota_definition: space_quota) }
 
         it 'has no reserved ports' do
           expect(subject.count).to eq 0
@@ -34,13 +34,13 @@ module VCAP::CloudController
           end
 
           before do
-            domain = SharedDomain.make(router_group_guid: '123')
-            Route.make(host: '', space: space, domain: domain, port: 1234)
-            Route.make(host: '', space: space, domain: domain, port: 3455)
-            Route.make(host: '', space: space, domain: domain, port: 4444)
-            Route.make(host: '', space: space2, domain: domain, port: 6000)
-            Route.make(host: '', space: space2, domain: domain, port: 2222)
-            Route.make(space:)
+            domain = create(:shared_domain, router_group_guid: '123')
+            create(:route, host: '', space: space, domain: domain, port: 1234)
+            create(:route, host: '', space: space, domain: domain, port: 3455)
+            create(:route, host: '', space: space, domain: domain, port: 4444)
+            create(:route, host: '', space: space2, domain: domain, port: 6000)
+            create(:route, host: '', space: space2, domain: domain, port: 2222)
+            create(:route, space:)
           end
 
           it 'has return the number of reserved ports' do

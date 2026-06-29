@@ -4,11 +4,11 @@ require 'fetchers/org_list_fetcher'
 
 module VCAP::CloudController
   RSpec.describe OrgListFetcher do
-    let!(:org1) { Organization.make(name: 'Marmot') }
-    let!(:org2) { Organization.make(name: 'Rat') }
-    let!(:org3) { Organization.make(name: 'Beaver') }
-    let!(:org4) { Organization.make(name: 'Capybara') }
-    let!(:org5) { Organization.make(name: 'Groundhog') }
+    let!(:org1) { create(:organization, name: 'Marmot') }
+    let!(:org2) { create(:organization, name: 'Rat') }
+    let!(:org3) { create(:organization, name: 'Beaver') }
+    let!(:org4) { create(:organization, name: 'Capybara') }
+    let!(:org5) { create(:organization, name: 'Groundhog') }
     let(:some_org_guids) { [org1.guid, org3.guid, org4.guid] }
 
     let(:fetcher) { OrgListFetcher }
@@ -121,8 +121,8 @@ module VCAP::CloudController
           let(:message) do
             OrgsListMessage.from_params({ 'label_selector' => 'key=value' })
           end
-          let!(:org1label) { OrganizationLabelModel.make(key_name: 'key', value: 'value', organization: org1) }
-          let!(:org2label) { OrganizationLabelModel.make(key_name: 'key2', value: 'value2', organization: org2) }
+          let!(:org1label) { create(:organization_label_model, key_name: 'key', value: 'value', organization: org1) }
+          let!(:org2label) { create(:organization_label_model, key_name: 'key2', value: 'value2', organization: org2) }
 
           it 'returns the correct set of orgs' do
             results = fetcher.fetch_all(message:).all
@@ -133,7 +133,7 @@ module VCAP::CloudController
     end
 
     describe '#fetch_for_isolation_segment' do
-      let(:isolation_segment) { IsolationSegmentModel.make }
+      let(:isolation_segment) { create(:isolation_segment_model) }
       let(:assigner) { IsolationSegmentAssign.new }
       let(:message) { OrgsListMessage.from_params isolation_segment_guid: isolation_segment.guid }
       let(:readable_org_guids) { [org1.guid, org2.guid] }
@@ -167,7 +167,7 @@ module VCAP::CloudController
     end
 
     describe '#fetch_all_for_isoation_segments' do
-      let(:isolation_segment) { IsolationSegmentModel.make }
+      let(:isolation_segment) { create(:isolation_segment_model) }
       let(:assigner) { IsolationSegmentAssign.new }
       let(:message) { OrgsListMessage.from_params isolation_segment_guid: isolation_segment.guid }
 

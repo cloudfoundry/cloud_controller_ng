@@ -19,16 +19,15 @@ module VCAP::CloudController
     end
 
     describe '#create_route_service_instance_binding' do
-      let(:route) { Route.make }
+      let(:route) { create(:route) }
       let(:route_service_url) { 'https://some-rs-url' }
       let(:route_services_enabled) { true }
 
       context 'user provided service instance' do
         let(:service_instance) do
-          UserProvidedServiceInstance.make(
-            space: route.space,
-            route_service_url: route_service_url
-          )
+          create(:user_provided_service_instance,
+                 space: route.space,
+                 route_service_url: route_service_url)
         end
 
         before do
@@ -44,8 +43,8 @@ module VCAP::CloudController
         end
 
         context 'when route is internal' do
-          let(:internal_domain) { SharedDomain.make(name: 'apps.internal', internal: true) }
-          let(:internal_route) { Route.make(domain: internal_domain, space: route.space) }
+          let(:internal_domain) { create(:shared_domain, name: 'apps.internal', internal: true) }
+          let(:internal_route) { create(:route, domain: internal_domain, space: route.space) }
 
           it 'raises an api error' do
             expect do
@@ -69,7 +68,7 @@ module VCAP::CloudController
       end
 
       context 'managed service instance' do
-        let(:service_instance) { ManagedServiceInstance.make(:routing, space: route.space) }
+        let(:service_instance) { create(:managed_service_instance, :routing, space: route.space) }
         let(:arbitrary_parameters) { { 'arbitrary' => 'parameters' } }
 
         before do
@@ -99,7 +98,7 @@ module VCAP::CloudController
         end
 
         it 'fails if the instance has another operation in progress' do
-          service_instance.service_instance_operation = ServiceInstanceOperation.make state: 'in progress'
+          service_instance.service_instance_operation = create(:service_instance_operation, state: 'in progress')
           expect do
             manager.create_route_service_instance_binding(route.guid, service_instance.guid, arbitrary_parameters, route_services_enabled)
           end.to raise_error do |e|
@@ -109,8 +108,8 @@ module VCAP::CloudController
         end
 
         context 'when route is internal' do
-          let(:internal_domain) { SharedDomain.make(name: 'apps.internal', internal: true) }
-          let(:internal_route) { Route.make(domain: internal_domain, space: route.space) }
+          let(:internal_domain) { create(:shared_domain, name: 'apps.internal', internal: true) }
+          let(:internal_route) { create(:route, domain: internal_domain, space: route.space) }
 
           it 'raises an api error' do
             expect do
@@ -154,7 +153,7 @@ module VCAP::CloudController
 
         context 'when the route is already bound to a service_instance' do
           before do
-            RouteBinding.make(route: route, service_instance: ManagedServiceInstance.make(:routing, space: route.space))
+            create(:route_binding, route: route, service_instance: create(:managed_service_instance, :routing, space: route.space))
           end
 
           it 'raises a already bound to service instance error' do
@@ -168,7 +167,7 @@ module VCAP::CloudController
 
         context 'when the route is already bound to the same service_instance' do
           before do
-            RouteBinding.make(route:, service_instance:)
+            create(:route_binding, route:, service_instance:)
           end
 
           it 'raises a service already bound to same route error' do
@@ -192,7 +191,7 @@ module VCAP::CloudController
             let(:process) { ProcessModelFactory.make(space: route.space, state: 'STARTED') }
 
             before do
-              RouteMappingModel.make(app: process.app, route: route, process_type: process.type)
+              create(:route_mapping_model, app: process.app, route: route, process_type: process.type)
             end
 
             it 'sends a message on to diego' do
@@ -368,7 +367,7 @@ module VCAP::CloudController
               allow(logger).to receive(:error)
 
               process = ProcessModelFactory.make(space: route.space, state: 'STARTED')
-              RouteMappingModel.make(app: process.app, route: route, process_type: process.type)
+              create(:route_mapping_model, app: process.app, route: route, process_type: process.type)
 
               stub_request(:delete, service_binding_url_pattern).to_return(status: 200, body: {}.to_json)
 
@@ -393,24 +392,24 @@ module VCAP::CloudController
 
     describe '#delete_route_service_binding' do
       context 'user provided service instance' do
-        let(:route) { Route.make }
+        let(:route) { create(:route) }
         let(:route_service_url) { 'https://my-rs.example.com' }
         let(:route_binding) do
-          RouteBinding.make(service_instance:,
-                            route:,
-                            route_service_url:)
+          create(:route_binding, service_instance:,
+                                 route:,
+                                 route_service_url:)
         end
         let(:service_instance) do
-          UserProvidedServiceInstance.make(:routing,
-                                           space: route.space,
-                                           route_service_url: route_service_url)
+          create(:user_provided_service_instance, :routing,
+                 space: route.space,
+                 route_service_url: route_service_url)
         end
 
         before do
           allow(access_validator).to receive(:validate_access).with(:update, anything).and_return(true)
 
           process = ProcessModelFactory.make(space: route.space, state: 'STARTED')
-          RouteMappingModel.make(app: process.app, route: route, process_type: process.type)
+          create(:route_mapping_model, app: process.app, route: route, process_type: process.type)
         end
 
         it 'unbinds the route and service instance', isolation: :truncation do
@@ -429,7 +428,7 @@ module VCAP::CloudController
       end
 
       context 'managed service instances' do
-        let(:route_binding) { RouteBinding.make }
+        let(:route_binding) { create(:route_binding) }
         let(:service_instance) { route_binding.service_instance }
         let(:route) { route_binding.route }
 
@@ -468,7 +467,7 @@ module VCAP::CloudController
         context 'when the route and service instance are not bound' do
           it 'raises a RouteBindingNotFound error' do
             expect do
-              manager.delete_route_service_instance_binding(Route.make.guid, service_instance.guid)
+              manager.delete_route_service_instance_binding(create(:route).guid, service_instance.guid)
             end.to raise_error ServiceInstanceBindingManager::RouteBindingNotFound
 
             expect(a_request(:delete, service_binding_url_pattern)).not_to have_been_made
@@ -501,7 +500,7 @@ module VCAP::CloudController
         it 'fails if the instance has another operation in progress' do
           allow(logger).to receive(:error)
 
-          service_instance.service_instance_operation = ServiceInstanceOperation.make state: 'in progress'
+          service_instance.service_instance_operation = create(:service_instance_operation, state: 'in progress')
           expect do
             manager.delete_route_service_instance_binding(route.guid, service_instance.guid)
           end.to raise_error do |e|

@@ -3,25 +3,23 @@ require 'presenters/v3/deployment_presenter'
 
 module VCAP::CloudController::Presenters::V3
   RSpec.describe DeploymentPresenter do
-    let(:droplet) { VCAP::CloudController::DropletModel.make }
-    let(:previous_droplet) { VCAP::CloudController::DropletModel.make }
-    let(:app) { VCAP::CloudController::AppModel.make }
-    let(:process) { VCAP::CloudController::ProcessModel.make(guid: 'deploying-process-guid', type: 'web-deployment-guid-type') }
+    let(:droplet) { create(:droplet_model) }
+    let(:previous_droplet) { create(:droplet_model) }
+    let(:app) { create(:app_model) }
+    let(:process) { create(:process_model, guid: 'deploying-process-guid', type: 'web-deployment-guid-type') }
     let(:deployment_state) { VCAP::CloudController::DeploymentModel::DEPLOYING_STATE }
     let!(:deployment) do
-      VCAP::CloudController::DeploymentModelTestFactory.make(
-        app: app,
-        droplet: droplet,
-        previous_droplet: previous_droplet,
-        deploying_web_process: process,
-        last_healthy_at: '2019-07-12 19:01:54',
-        status_updated_at: '2019-07-11 19:01:54',
-        state: deployment_state,
-        status_value: VCAP::CloudController::DeploymentModel::ACTIVE_STATUS_VALUE,
-        status_reason: VCAP::CloudController::DeploymentModel::DEPLOYING_STATUS_REASON,
-        web_instances: 20,
-        memory_in_mb: 1000
-      )
+      create(:deployment_model_test_factory, app: app,
+                                             droplet: droplet,
+                                             previous_droplet: previous_droplet,
+                                             deploying_web_process: process,
+                                             last_healthy_at: '2019-07-12 19:01:54',
+                                             status_updated_at: '2019-07-11 19:01:54',
+                                             state: deployment_state,
+                                             status_value: VCAP::CloudController::DeploymentModel::ACTIVE_STATUS_VALUE,
+                                             status_reason: VCAP::CloudController::DeploymentModel::DEPLOYING_STATUS_REASON,
+                                             web_instances: 20,
+                                             memory_in_mb: 1000)
     end
 
     describe '#to_hash' do
@@ -55,17 +53,15 @@ module VCAP::CloudController::Presenters::V3
 
       context 'when the deployment has revision fields' do
         let!(:deployment) do
-          VCAP::CloudController::DeploymentModelTestFactory.make(
-            app: app,
-            droplet: droplet,
-            previous_droplet: previous_droplet,
-            deploying_web_process: process,
-            revision_guid: 'totes-a-guid',
-            revision_version: 96,
-            state: VCAP::CloudController::DeploymentModel::DEPLOYING_STATE,
-            status_value: VCAP::CloudController::DeploymentModel::ACTIVE_STATUS_VALUE,
-            status_reason: VCAP::CloudController::DeploymentModel::DEPLOYING_STATUS_REASON
-          )
+          create(:deployment_model_test_factory, app: app,
+                                                 droplet: droplet,
+                                                 previous_droplet: previous_droplet,
+                                                 deploying_web_process: process,
+                                                 revision_guid: 'totes-a-guid',
+                                                 revision_version: 96,
+                                                 state: VCAP::CloudController::DeploymentModel::DEPLOYING_STATE,
+                                                 status_value: VCAP::CloudController::DeploymentModel::ACTIVE_STATUS_VALUE,
+                                                 status_reason: VCAP::CloudController::DeploymentModel::DEPLOYING_STATUS_REASON)
         end
 
         it 'presents the deployment as json' do

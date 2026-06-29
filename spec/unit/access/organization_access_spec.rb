@@ -5,10 +5,10 @@ module VCAP::CloudController
     let(:queryer) { instance_spy(VCAP::CloudController::Permissions) }
 
     subject(:access) { OrganizationAccess.new(Security::AccessContext.new(queryer)) }
-    let(:user) { VCAP::CloudController::User.make }
-    let(:org) { VCAP::CloudController::Organization.make }
+    let(:user) { create(:user) }
+    let(:org) { create(:organization) }
     let(:object) { org }
-    let(:flag) { FeatureFlag.make(name: 'user_org_creation', enabled: false) }
+    let(:flag) { create(:feature_flag, name: 'user_org_creation', enabled: false) }
 
     before do
       flag.save
@@ -169,7 +169,7 @@ module VCAP::CloudController
     end
 
     describe 'in a suspended org' do
-      let(:org) { VCAP::CloudController::Organization.make(status: VCAP::CloudController::Organization::SUSPENDED) }
+      let(:org) { create(:organization, status: VCAP::CloudController::Organization::SUSPENDED) }
 
       it_behaves_like('an access control', :read, read_table)
       it_behaves_like('an access control', :delete, write_table)
@@ -180,7 +180,7 @@ module VCAP::CloudController
     describe 'related objects' do
       context 'removing managers' do
         context 'when there is a manager other than the current user' do
-          let(:manager) { VCAP::CloudController::User.make }
+          let(:manager) { create(:user) }
           let(:op_params) { { relation: :managers, related_guid: manager.guid } }
 
           before do
@@ -211,7 +211,7 @@ module VCAP::CloudController
 
       context 'removing org users' do
         context 'when there is a manager other than the current user' do
-          let(:org_user) { VCAP::CloudController::User.make }
+          let(:org_user) { create(:user) }
           let(:op_params) { { related_guid: org_user.guid, relation: :users } }
 
           before do

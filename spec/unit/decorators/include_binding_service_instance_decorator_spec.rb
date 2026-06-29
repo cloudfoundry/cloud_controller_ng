@@ -1,4 +1,4 @@
-require 'db_spec_helper'
+require 'spec_helper'
 require 'decorators/include_binding_service_instance_decorator'
 
 module VCAP
@@ -7,10 +7,12 @@ module VCAP
       RSpec.describe IncludeBindingServiceInstanceDecorator do
         subject(:decorator) { described_class }
 
+        let(:factory_name) { klazz.name.demodulize.underscore.to_sym }
+
         let(:bindings) do
           [
-            klazz.make(service_instance: ManagedServiceInstance.make(:routing, created_at: Time.now.utc - 1.second)),
-            klazz.make
+            create(factory_name, service_instance: create(:managed_service_instance, :routing, created_at: Time.now.utc - 1.second)),
+            create(factory_name)
           ]
         end
 
@@ -34,7 +36,7 @@ module VCAP
         end
 
         it 'does not include duplicates' do
-          hash = subject.decorate({}, bindings << klazz.make(service_instance: bindings[0].service_instance))
+          hash = subject.decorate({}, bindings << create(factory_name, service_instance: bindings[0].service_instance))
           expect(hash[:included][:service_instances]).to have(2).items
         end
 

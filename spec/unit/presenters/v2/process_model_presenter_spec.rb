@@ -14,7 +14,7 @@ module CloudController::Presenters::V2
     describe '#entity_hash' do
       before do
         allow(RelationsPresenter).to receive(:new).and_return(relations_presenter)
-        VCAP::CloudController::Buildpack.make(name: 'schmuby')
+        create(:buildpack, name: 'schmuby')
         process.app.lifecycle_data.update(
           buildpacks:
         )
@@ -22,11 +22,11 @@ module CloudController::Presenters::V2
           buildpack_receipt_detect_output: 'detected buildpack',
           buildpack_receipt_buildpack_guid: 'i am a buildpack guid'
         )
-        VCAP::CloudController::DropletModel.make(app: process.app, package: process.latest_package, error_description: 'because')
+        create(:droplet_model, app: process.app, package: process.latest_package, error_description: 'because')
       end
 
-      let(:space) { VCAP::CloudController::Space.make }
-      let(:stack) { VCAP::CloudController::Stack.make }
+      let(:space) { create(:space) }
+      let(:stack) { create(:stack) }
       let(:process) do
         VCAP::CloudController::ProcessModelFactory.make(
           name: 'utako',
@@ -49,9 +49,7 @@ module CloudController::Presenters::V2
       let(:buildpack) { 'https://github.com/custombuildpack' }
       let(:buildpacks) { [buildpack] }
       let(:revision) do
-        VCAP::CloudController::RevisionModel.make(
-          environment_variables: {}
-        )
+        create(:revision_model, environment_variables: {})
       end
 
       it 'returns the app entity and associated urls' do
@@ -167,7 +165,7 @@ module CloudController::Presenters::V2
       describe 'docker' do
         context 'with no credentials' do
           before do
-            VCAP::CloudController::PackageModel.make(:docker, app: process.app, docker_image: 'someimage')
+            create(:package_model, :docker, app: process.app, docker_image: 'someimage')
             process.reload
           end
 
@@ -183,7 +181,7 @@ module CloudController::Presenters::V2
 
         context 'with credentials' do
           before do
-            VCAP::CloudController::PackageModel.make(:docker, app: process.app, docker_image: 'someimage', docker_username: 'user', docker_password: 'secret')
+            create(:package_model, :docker, app: process.app, docker_image: 'someimage', docker_username: 'user', docker_password: 'secret')
             process.reload
           end
 

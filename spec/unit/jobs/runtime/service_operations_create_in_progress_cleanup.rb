@@ -29,14 +29,13 @@ module VCAP::CloudController
         pollable_job_state: PollableJobModel::FAILED_STATE,
         delayed_job_failed_at: Time.now
       )
-        service_instance = ManagedServiceInstance.make
+        service_instance = create(:managed_service_instance)
 
-        ServiceInstanceOperation.make(
-          service_instance_id: service_instance.id,
-          type: service_instance_type,
-          state: service_instance_state,
-          created_at: service_instance_created_at
-        )
+        create(:service_instance_operation,
+               service_instance_id: service_instance.id,
+               type: service_instance_type,
+               state: service_instance_state,
+               created_at: service_instance_created_at)
 
         dj = Delayed::Job.create!(
           guid: SecureRandom.uuid,
@@ -46,13 +45,12 @@ module VCAP::CloudController
           queue: 'cc-generic'
         )
 
-        pjob = PollableJobModel.make(
-          state: pollable_job_state,
-          operation: 'service_instance.create',
-          resource_guid: service_instance.guid,
-          resource_type: 'service_instances',
-          delayed_job_guid: dj.guid
-        )
+        pjob = create(:pollable_job_model,
+                      state: pollable_job_state,
+                      operation: 'service_instance.create',
+                      resource_guid: service_instance.guid,
+                      resource_type: 'service_instances',
+                      delayed_job_guid: dj.guid)
 
         { service_instance: service_instance, pjob: pjob, delayed_job: dj }
       end
@@ -159,20 +157,18 @@ module VCAP::CloudController
 
         context 'when a service binding create job is stuck' do
           it 'sets operation to failed, pollable job to FAILED, and triggers orphan mitigation' do
-            service_binding = ServiceBinding.make
-            ServiceBindingOperation.make(
-              service_binding_id: service_binding.id,
-              type: 'create',
-              state: 'in progress'
-            )
+            service_binding = create(:service_binding)
+            create(:service_binding_operation,
+                   service_binding_id: service_binding.id,
+                   type: 'create',
+                   state: 'in progress')
             dj = Delayed::Job.create!(guid: SecureRandom.uuid, handler: 'fake', run_at: Time.now, failed_at: Time.now, queue: 'cc-generic')
-            pjob = PollableJobModel.make(
-              state: PollableJobModel::FAILED_STATE,
-              operation: 'service_bindings.create',
-              resource_guid: service_binding.guid,
-              resource_type: 'service_bindings',
-              delayed_job_guid: dj.guid
-            )
+            pjob = create(:pollable_job_model,
+                          state: PollableJobModel::FAILED_STATE,
+                          operation: 'service_bindings.create',
+                          resource_guid: service_binding.guid,
+                          resource_type: 'service_bindings',
+                          delayed_job_guid: dj.guid)
 
             job.perform
 
@@ -184,20 +180,18 @@ module VCAP::CloudController
 
         context 'when a service key create job is stuck' do
           it 'sets operation to failed, pollable job to FAILED, and triggers orphan mitigation' do
-            service_key = ServiceKey.make
-            ServiceKeyOperation.make(
-              service_key_id: service_key.id,
-              type: 'create',
-              state: 'in progress'
-            )
+            service_key = create(:service_key)
+            create(:service_key_operation,
+                   service_key_id: service_key.id,
+                   type: 'create',
+                   state: 'in progress')
             dj = Delayed::Job.create!(guid: SecureRandom.uuid, handler: 'fake', run_at: Time.now, failed_at: Time.now, queue: 'cc-generic')
-            pjob = PollableJobModel.make(
-              state: PollableJobModel::FAILED_STATE,
-              operation: 'service_keys.create',
-              resource_guid: service_key.guid,
-              resource_type: 'service_keys',
-              delayed_job_guid: dj.guid
-            )
+            pjob = create(:pollable_job_model,
+                          state: PollableJobModel::FAILED_STATE,
+                          operation: 'service_keys.create',
+                          resource_guid: service_key.guid,
+                          resource_type: 'service_keys',
+                          delayed_job_guid: dj.guid)
 
             job.perform
 

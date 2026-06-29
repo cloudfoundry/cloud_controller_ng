@@ -50,14 +50,14 @@ module VCAP::CloudController
 
       describe '#type_of' do
         it 'returns the type constant for a binding model' do
-          expect(described_class.type_of(RouteBinding.make)).to eq(:route)
-          expect(described_class.type_of(ServiceKey.make)).to eq(:key)
-          expect(described_class.type_of(ServiceBinding.make)).to eq(:credential)
+          expect(described_class.type_of(create(:route_binding))).to eq(:route)
+          expect(described_class.type_of(create(:service_key))).to eq(:key)
+          expect(described_class.type_of(create(:service_binding))).to eq(:credential)
         end
 
         it 'raises on invalid input' do
           expect do
-            described_class.type_of(ServiceInstance.make)
+            described_class.type_of(create(:service_instance))
           end.to raise_error(described_class::InvalidType)
         end
       end

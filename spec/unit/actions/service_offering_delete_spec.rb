@@ -3,7 +3,7 @@ require 'service_offering_delete'
 
 module VCAP::CloudController
   RSpec.describe ServiceOfferingDelete do
-    let(:service_offering_model) { Service.make }
+    let(:service_offering_model) { create(:service) }
 
     it 'can delete service offerings' do
       subject.delete(service_offering_model)
@@ -15,7 +15,7 @@ module VCAP::CloudController
 
     context 'when the service offering has a service plan' do
       before do
-        ServicePlan.make(service: service_offering_model)
+        create(:service_plan, service: service_offering_model)
       end
 
       it 'does not delete the service offering' do

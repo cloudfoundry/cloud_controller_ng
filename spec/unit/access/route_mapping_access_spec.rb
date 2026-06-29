@@ -5,13 +5,13 @@ module VCAP::CloudController
     subject(:access) { RouteMappingModelAccess.new(Security::AccessContext.new) }
     let(:scopes) { ['cloud_controller.read', 'cloud_controller.write'] }
 
-    let(:user) { VCAP::CloudController::User.make }
-    let(:org) { VCAP::CloudController::Organization.make }
-    let(:space) { VCAP::CloudController::Space.make(organization: org) }
-    let(:domain) { VCAP::CloudController::PrivateDomain.make(owning_organization: org) }
+    let(:user) { create(:user) }
+    let(:org) { create(:organization) }
+    let(:space) { create(:space, organization: org) }
+    let(:domain) { create(:private_domain, owning_organization: org) }
     let(:process) { VCAP::CloudController::ProcessModelFactory.make(space:) }
-    let(:route) { VCAP::CloudController::Route.make(domain:, space:) }
-    let(:object) { VCAP::CloudController::RouteMappingModel.make(route: route, app: process) }
+    let(:route) { create(:route, domain:, space:) }
+    let(:object) { create(:route_mapping_model, route: route, app: process) }
 
     before { set_current_user(user, scopes:) }
 

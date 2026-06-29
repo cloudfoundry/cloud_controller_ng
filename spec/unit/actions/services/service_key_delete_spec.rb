@@ -24,11 +24,11 @@ module VCAP::CloudController
     end
 
     describe '#delete' do
-      let!(:service_key_1) { ServiceKey.make }
-      let!(:service_key_2) { ServiceKey.make }
+      let!(:service_key_1) { create(:service_key) }
+      let!(:service_key_2) { create(:service_key) }
       let(:service_instance) { service_key_1.service_instance }
       let!(:service_key_dataset) { ServiceKey.dataset }
-      let(:user) { User.make }
+      let(:user) { create(:user) }
       let(:user_email) { 'user@example.com' }
       let(:client) { instance_double(VCAP::Services::ServiceBrokers::V2::Client) }
 
@@ -52,7 +52,7 @@ module VCAP::CloudController
 
       context 'when the instance has another operation in progress' do
         it 'raises an error' do
-          service_instance.service_instance_operation = ServiceInstanceOperation.make state: 'in progress'
+          service_instance.service_instance_operation = create(:service_instance_operation, state: 'in progress')
           errors = service_key_delete.delete([service_key_1])
           expect(errors.first).to be_instance_of CloudController::Errors::ApiError
           expect(errors.first.name).to eq('AsyncServiceInstanceOperationInProgress')
@@ -71,7 +71,7 @@ module VCAP::CloudController
       end
 
       context 'when one key deletion fails' do
-        let(:service_key_3) { ServiceKey.make }
+        let(:service_key_3) { create(:service_key) }
 
         before do
           allow(client).to receive(:unbind).with(service_key_1).and_return({})

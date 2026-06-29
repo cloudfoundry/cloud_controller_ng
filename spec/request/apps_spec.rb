@@ -3,17 +3,17 @@ require 'actions/process_create_from_app_droplet'
 require 'request_spec_shared_examples'
 
 RSpec.describe 'Apps' do
-  let(:user) { VCAP::CloudController::User.make }
+  let(:user) { create(:user) }
   let(:user_header) { headers_for(user, email: user_email, user_name: user_name) }
   let(:admin_header) { admin_headers_for(user) }
-  let(:org) { VCAP::CloudController::Organization.make(created_at: 3.days.ago) }
-  let(:space) { VCAP::CloudController::Space.make(organization: org) }
-  let(:stack) { VCAP::CloudController::Stack.make }
+  let(:org) { create(:organization, created_at: 3.days.ago) }
+  let(:space) { create(:space, organization: org) }
+  let(:stack) { create(:stack) }
   let(:user_email) { Sham.email }
   let(:user_name) { 'some-username' }
 
   describe 'POST /v3/apps' do
-    let(:buildpack) { VCAP::CloudController::Buildpack.make(stack: stack.name) }
+    let(:buildpack) { create(:buildpack, stack: stack.name) }
     let(:create_request) do
       {
         name: 'my_app',
@@ -253,7 +253,7 @@ RSpec.describe 'Apps' do
 
       context 'Docker app' do
         before do
-          VCAP::CloudController::FeatureFlag.make(name: 'diego_docker', enabled: true, error_message: nil)
+          create(:feature_flag, name: 'diego_docker', enabled: true, error_message: nil)
         end
 
         it 'create a docker app' do
@@ -370,7 +370,7 @@ RSpec.describe 'Apps' do
       end
 
       context 'when stack is DISABLED' do
-        let(:disabled_stack) { VCAP::CloudController::Stack.make(name: 'disabled-stack', state: 'DISABLED') }
+        let(:disabled_stack) { create(:stack, name: 'disabled-stack', state: 'DISABLED') }
         let(:create_request) do
           {
             name: 'my_app',
@@ -388,7 +388,7 @@ RSpec.describe 'Apps' do
       end
 
       context 'when stack is RESTRICTED' do
-        let(:restricted_stack) { VCAP::CloudController::Stack.make(name: 'restricted-stack', state: 'RESTRICTED') }
+        let(:restricted_stack) { create(:stack, name: 'restricted-stack', state: 'RESTRICTED') }
         let(:create_request) do
           {
             name: 'my_app',
@@ -406,7 +406,7 @@ RSpec.describe 'Apps' do
       end
 
       context 'when stack is DEPRECATED' do
-        let(:deprecated_stack) { VCAP::CloudController::Stack.make(name: 'deprecated-stack', state: 'DEPRECATED') }
+        let(:deprecated_stack) { create(:stack, name: 'deprecated-stack', state: 'DEPRECATED') }
         let(:create_request) do
           {
             name: 'my_app',
@@ -433,7 +433,7 @@ RSpec.describe 'Apps' do
       end
 
       context 'when stack is ACTIVE' do
-        let(:active_stack) { VCAP::CloudController::Stack.make(name: 'active-stack', state: 'ACTIVE') }
+        let(:active_stack) { create(:stack, name: 'active-stack', state: 'ACTIVE') }
         let(:create_request) do
           {
             name: 'my_app',
@@ -460,10 +460,10 @@ RSpec.describe 'Apps' do
 
     context 'listing all apps' do
       let(:api_call) { ->(user_headers) { get '/v3/apps', nil, user_headers } }
-      let(:space2) { VCAP::CloudController::Space.make(organization: org) }
-      let(:buildpack_lifecycle) { VCAP::CloudController::BuildpackLifecycleDataModel.make(stack: 'cool-stack', app: app_model1) }
-      let(:app_model1) { VCAP::CloudController::AppModel.make(guid: 'app1_guid', name: 'name1', space: space) }
-      let(:app_model2) { VCAP::CloudController::AppModel.make(guid: 'app2_guid', name: 'name2', space: space2) }
+      let(:space2) { create(:space, organization: org) }
+      let(:buildpack_lifecycle) { create(:buildpack_lifecycle_data_model, stack: 'cool-stack', app: app_model1) }
+      let(:app_model1) { create(:app_model, guid: 'app1_guid', name: 'name1', space: space) }
+      let(:app_model2) { create(:app_model, guid: 'app2_guid', name: 'name2', space: space2) }
 
       let(:app_model1_response_object) do
         {
@@ -613,7 +613,7 @@ RSpec.describe 'Apps' do
           }
         end
 
-        let!(:app_model) { VCAP::CloudController::AppModel.make }
+        let!(:app_model) { create(:app_model) }
       end
     end
 
@@ -623,23 +623,22 @@ RSpec.describe 'Apps' do
       end
 
       it 'returns a paginated list of apps the user has access to' do
-        buildpack = VCAP::CloudController::Buildpack.make(name: 'bp-name')
-        stack = VCAP::CloudController::Stack.make(name: 'stack-name')
+        buildpack = create(:buildpack, name: 'bp-name')
+        stack = create(:stack, name: 'stack-name')
 
-        app_model1 = VCAP::CloudController::AppModel.make(name: 'name1', space: space, desired_state: 'STOPPED')
+        app_model1 = create(:app_model, name: 'name1', space: space, desired_state: 'STOPPED')
         app_model1.lifecycle_data.update(
           buildpacks: [buildpack.name],
           stack: stack.name
         )
 
-        app_model2 = VCAP::CloudController::AppModel.make(
-          :docker,
-          name: 'name2',
-          space: space,
-          desired_state: 'STARTED'
-        )
-        VCAP::CloudController::AppModel.make(space:)
-        VCAP::CloudController::AppModel.make
+        app_model2 = create(:app_model,
+                            :docker,
+                            name: 'name2',
+                            space: space,
+                            desired_state: 'STARTED')
+        create(:app_model, space:)
+        create(:app_model)
 
         get '/v3/apps?per_page=2&include=space', nil, user_header
         expect(last_response.status).to eq(200)
@@ -792,9 +791,9 @@ RSpec.describe 'Apps' do
       let(:admin_header) { headers_for(user, scopes: %w[cloud_controller.admin]) }
 
       it 'filters by guids' do
-        app_model1 = VCAP::CloudController::AppModel.make(name: 'name1')
-        VCAP::CloudController::AppModel.make(name: 'name2')
-        app_model3 = VCAP::CloudController::AppModel.make(name: 'name3')
+        app_model1 = create(:app_model, name: 'name1')
+        create(:app_model, name: 'name2')
+        app_model3 = create(:app_model, name: 'name3')
 
         get "/v3/apps?guids=#{app_model1.guid}%2C#{app_model3.guid}", nil, admin_header
 
@@ -815,9 +814,9 @@ RSpec.describe 'Apps' do
       end
 
       it 'filters by names' do
-        VCAP::CloudController::AppModel.make(name: 'name1')
-        VCAP::CloudController::AppModel.make(name: 'name2')
-        VCAP::CloudController::AppModel.make(name: 'name3')
+        create(:app_model, name: 'name1')
+        create(:app_model, name: 'name2')
+        create(:app_model, name: 'name3')
 
         get '/v3/apps?names=name1%2Cname2', nil, admin_header
 
@@ -838,9 +837,9 @@ RSpec.describe 'Apps' do
       end
 
       it 'filters by organizations' do
-        app_model1 = VCAP::CloudController::AppModel.make(name: 'name1')
-        VCAP::CloudController::AppModel.make(name: 'name2')
-        app_model3 = VCAP::CloudController::AppModel.make(name: 'name3')
+        app_model1 = create(:app_model, name: 'name1')
+        create(:app_model, name: 'name2')
+        app_model3 = create(:app_model, name: 'name3')
 
         get "/v3/apps?organization_guids=#{app_model1.organization.guid}%2C#{app_model3.organization.guid}", nil, admin_header
 
@@ -861,9 +860,9 @@ RSpec.describe 'Apps' do
       end
 
       it 'filters by spaces' do
-        app_model1 = VCAP::CloudController::AppModel.make(name: 'name1')
-        VCAP::CloudController::AppModel.make(name: 'name2')
-        app_model3 = VCAP::CloudController::AppModel.make(name: 'name3')
+        app_model1 = create(:app_model, name: 'name1')
+        create(:app_model, name: 'name2')
+        app_model3 = create(:app_model, name: 'name3')
 
         get "/v3/apps?space_guids=#{app_model1.space.guid}%2C#{app_model3.space.guid}", nil, admin_header
 
@@ -884,12 +883,12 @@ RSpec.describe 'Apps' do
       end
 
       it 'filters by stack names' do
-        app_model1 = VCAP::CloudController::AppModel.make(name: 'name1')
-        app_model2 = VCAP::CloudController::AppModel.make(name: 'name2')
-        app_model3 = VCAP::CloudController::AppModel.make(name: 'name3')
+        app_model1 = create(:app_model, name: 'name1')
+        app_model2 = create(:app_model, name: 'name2')
+        app_model3 = create(:app_model, name: 'name3')
 
-        stack2 = VCAP::CloudController::Stack.make(name: 'name2')
-        stack3 = VCAP::CloudController::Stack.make(name: 'name3')
+        stack2 = create(:stack, name: 'name2')
+        stack3 = create(:stack, name: 'name3')
 
         app_model1.lifecycle_data.stack = stack2.name
         app_model1.lifecycle_data.save
@@ -919,12 +918,12 @@ RSpec.describe 'Apps' do
       end
 
       it 'filters by null stacks' do
-        app_model1 = VCAP::CloudController::AppModel.make(name: 'name1')
-        app_model2 = VCAP::CloudController::AppModel.make(name: 'name2')
-        app_model3 = VCAP::CloudController::AppModel.make(name: 'name3')
+        app_model1 = create(:app_model, name: 'name1')
+        app_model2 = create(:app_model, name: 'name2')
+        app_model3 = create(:app_model, name: 'name3')
 
-        stack2 = VCAP::CloudController::Stack.make(name: 'name2')
-        stack3 = VCAP::CloudController::Stack.make(name: 'name3')
+        stack2 = create(:stack, name: 'name2')
+        stack3 = create(:stack, name: 'name3')
 
         app_model1.lifecycle_data.stack = nil
         app_model1.lifecycle_data.save
@@ -954,9 +953,9 @@ RSpec.describe 'Apps' do
       end
 
       it 'filters by lifecycle_type' do
-        VCAP::CloudController::AppModel.make(name: 'name1')
-        docker_app_model = VCAP::CloudController::AppModel.make(name: 'name2')
-        VCAP::CloudController::AppModel.make(name: 'name3')
+        create(:app_model, name: 'name1')
+        docker_app_model = create(:app_model, name: 'name2')
+        create(:app_model, name: 'name3')
 
         docker_app_model.buildpack_lifecycle_data = nil
         docker_app_model.save
@@ -986,11 +985,11 @@ RSpec.describe 'Apps' do
       end
 
       it 'can order by name' do
-        VCAP::CloudController::AppModel.make(space: space, name: 'zed')
-        VCAP::CloudController::AppModel.make(space: space, name: 'alpha')
-        VCAP::CloudController::AppModel.make(space: space, name: 'gamma')
-        VCAP::CloudController::AppModel.make(space: space, name: 'delta')
-        VCAP::CloudController::AppModel.make(space: space, name: 'theta')
+        create(:app_model, space: space, name: 'zed')
+        create(:app_model, space: space, name: 'alpha')
+        create(:app_model, space: space, name: 'gamma')
+        create(:app_model, space: space, name: 'delta')
+        create(:app_model, space: space, name: 'theta')
 
         ascending = %w[alpha delta gamma theta zed]
         descending = ascending.reverse
@@ -1013,10 +1012,10 @@ RSpec.describe 'Apps' do
       end
 
       it 'can order by state' do
-        VCAP::CloudController::AppModel.make(space: space, desired_state: 'STARTED')
-        VCAP::CloudController::AppModel.make(space: space, desired_state: 'STOPPED')
-        VCAP::CloudController::AppModel.make(space: space, desired_state: 'STARTED')
-        VCAP::CloudController::AppModel.make(space: space, desired_state: 'STOPPED')
+        create(:app_model, space: space, desired_state: 'STARTED')
+        create(:app_model, space: space, desired_state: 'STOPPED')
+        create(:app_model, space: space, desired_state: 'STARTED')
+        create(:app_model, space: space, desired_state: 'STOPPED')
         ascending = %w[STARTED STARTED STOPPED STOPPED]
         descending = ascending.reverse
 
@@ -1039,12 +1038,12 @@ RSpec.describe 'Apps' do
     end
 
     context 'labels' do
-      let!(:app1) { VCAP::CloudController::AppModel.make(name: 'name1') }
-      let!(:app1_label) { VCAP::CloudController::AppLabelModel.make(resource_guid: app1.guid, key_name: 'foo', value: 'bar') }
+      let!(:app1) { create(:app_model, name: 'name1') }
+      let!(:app1_label) { create(:app_label_model, resource_guid: app1.guid, key_name: 'foo', value: 'bar') }
 
-      let!(:app2) { VCAP::CloudController::AppModel.make(name: 'name2') }
-      let!(:app2_label) { VCAP::CloudController::AppLabelModel.make(resource_guid: app2.guid, key_name: 'foo', value: 'funky') }
-      let!(:app2__exclusive_label) { VCAP::CloudController::AppLabelModel.make(resource_guid: app2.guid, key_name: 'santa', value: 'claus') }
+      let!(:app2) { create(:app_model, name: 'name2') }
+      let!(:app2_label) { create(:app_label_model, resource_guid: app2.guid, key_name: 'foo', value: 'funky') }
+      let!(:app2__exclusive_label) { create(:app_label_model, resource_guid: app2.guid, key_name: 'santa', value: 'claus') }
 
       let(:admin_header) { headers_for(user, scopes: %w[cloud_controller.admin]) }
 
@@ -1202,15 +1201,15 @@ RSpec.describe 'Apps' do
     end
 
     context 'labels and existing filters' do
-      let!(:space1) { VCAP::CloudController::Space.make }
-      let!(:space2) { VCAP::CloudController::Space.make }
-      let!(:app1) { VCAP::CloudController::AppModel.make(name: 'name1', space: space1) }
-      let!(:app2) { VCAP::CloudController::AppModel.make(name: 'name2', space: space2) }
-      let!(:app3) { VCAP::CloudController::AppModel.make(name: 'name3', space: space2) }
-      let!(:app1_label1) { VCAP::CloudController::AppLabelModel.make(resource_guid: app1.guid, key_name: 'foo', value: 'funky') }
-      let!(:app2_label1) { VCAP::CloudController::AppLabelModel.make(resource_guid: app2.guid, key_name: 'foo', value: 'funky') }
-      let!(:app2_label2) { VCAP::CloudController::AppLabelModel.make(resource_guid: app2.guid, key_name: 'fruit', value: 'strawberry') }
-      let!(:app3_label1) { VCAP::CloudController::AppLabelModel.make(resource_guid: app3.guid, key_name: 'fruit', value: 'strawberry') }
+      let!(:space1) { create(:space) }
+      let!(:space2) { create(:space) }
+      let!(:app1) { create(:app_model, name: 'name1', space: space1) }
+      let!(:app2) { create(:app_model, name: 'name2', space: space2) }
+      let!(:app3) { create(:app_model, name: 'name3', space: space2) }
+      let!(:app1_label1) { create(:app_label_model, resource_guid: app1.guid, key_name: 'foo', value: 'funky') }
+      let!(:app2_label1) { create(:app_label_model, resource_guid: app2.guid, key_name: 'foo', value: 'funky') }
+      let!(:app2_label2) { create(:app_label_model, resource_guid: app2.guid, key_name: 'fruit', value: 'strawberry') }
+      let!(:app3_label1) { create(:app_label_model, resource_guid: app3.guid, key_name: 'fruit', value: 'strawberry') }
 
       let(:admin_header) { headers_for(user, scopes: %w[cloud_controller.admin]) }
 
@@ -1255,22 +1254,21 @@ RSpec.describe 'Apps' do
 
     context 'including orgs and spaces' do
       it 'presents the apps listed with the orgs and spaces included' do
-        VCAP::CloudController::AppModel.make(:docker, name: 'name1', guid: 'app1-guid', space: space)
+        create(:app_model, :docker, name: 'name1', guid: 'app1-guid', space: space)
 
         org1 = space.organization
-        org2 = VCAP::CloudController::Organization.make(name: 'org2', guid: 'org2-guid', created_at: 1.day.ago)
-        space2 = VCAP::CloudController::Space.make(name: 'space2', guid: 'space2-guid', organization: org2)
+        org2 = create(:organization, name: 'org2', guid: 'org2-guid', created_at: 1.day.ago)
+        space2 = create(:space, name: 'space2', guid: 'space2-guid', organization: org2)
 
-        unused_org = VCAP::CloudController::Organization.make(name: 'unused_org', guid: 'unused_org-guid')
+        unused_org = create(:organization, name: 'unused_org', guid: 'unused_org-guid')
 
-        VCAP::CloudController::Space.make(name: 'unused_space', guid: 'unused_space-guid', organization: unused_org)
+        create(:space, name: 'unused_space', guid: 'unused_space-guid', organization: unused_org)
 
-        VCAP::CloudController::AppModel.make(
-          :docker,
-          name: 'name2',
-          guid: 'app2-guid',
-          space: space2
-        )
+        create(:app_model,
+               :docker,
+               name: 'name2',
+               guid: 'app2-guid',
+               space: space2)
 
         get '/v3/apps?per_page=2&include=space,space.organization', nil, admin_header
         expect(last_response.status).to eq(200)
@@ -1345,7 +1343,7 @@ RSpec.describe 'Apps' do
 
     context 'when including orgs' do
       before do
-        VCAP::CloudController::AppModel.make
+        create(:app_model)
       end
 
       it 'eagerly loads spaces to efficiently access space.organization_id' do
@@ -1361,16 +1359,15 @@ RSpec.describe 'Apps' do
   end
 
   describe 'GET /v3/apps/:guid' do
-    let!(:buildpack) { VCAP::CloudController::Buildpack.make(name: 'bp-name') }
-    let!(:stack) { VCAP::CloudController::Stack.make(name: 'stack-name') }
+    let!(:buildpack) { create(:buildpack, name: 'bp-name') }
+    let!(:stack) { create(:stack, name: 'stack-name') }
     let!(:app_model) do
-      VCAP::CloudController::AppModel.make(
-        name: 'my_app',
-        guid: 'app1_guid',
-        space: space,
-        desired_state: 'STARTED',
-        environment_variables: { 'unicorn' => 'horn' }
-      )
+      create(:app_model,
+             name: 'my_app',
+             guid: 'app1_guid',
+             space: space,
+             desired_state: 'STARTED',
+             environment_variables: { 'unicorn' => 'horn' })
     end
 
     before do
@@ -1378,8 +1375,8 @@ RSpec.describe 'Apps' do
       app_model.lifecycle_data.buildpacks = [buildpack.name]
       app_model.lifecycle_data.stack = stack.name
       app_model.lifecycle_data.save
-      app_model.add_process(VCAP::CloudController::ProcessModel.make(instances: 1))
-      app_model.add_process(VCAP::CloudController::ProcessModel.make(instances: 2))
+      app_model.add_process(create(:process_model, instances: 1))
+      app_model.add_process(create(:process_model, instances: 2))
     end
 
     context 'when getting an app' do
@@ -1627,12 +1624,11 @@ RSpec.describe 'Apps' do
     context 'when getting an apps environment variables' do
       let(:api_call) { ->(user_headers) { get "/v3/apps/#{app_model.guid}/env", nil, user_headers } }
       let!(:app_model) do
-        VCAP::CloudController::AppModel.make(
-          name: 'my_app',
-          guid: 'app1_guid',
-          space: space,
-          environment_variables: { 'unicorn' => 'horn' }
-        )
+        create(:app_model,
+               name: 'my_app',
+               guid: 'app1_guid',
+               space: space,
+               environment_variables: { 'unicorn' => 'horn' })
       end
 
       let(:app_model_response_object) do
@@ -1708,26 +1704,23 @@ RSpec.describe 'Apps' do
 
       let(:api_call) { ->(user_headers) { get "/v3/apps/#{app_model.guid}/env", nil, user_headers } }
       let(:app_model) do
-        VCAP::CloudController::AppModel.make(
-          name: 'my_app',
-          space: space,
-          environment_variables: { 'unicorn' => 'horn' }
-        )
+        create(:app_model,
+               name: 'my_app',
+               space: space,
+               environment_variables: { 'unicorn' => 'horn' })
       end
       let(:service_instance) do
-        VCAP::CloudController::ManagedServiceInstance.make(
-          space: space,
-          name: 'si-name',
-          tags: ['50% off']
-        )
+        create(:managed_service_instance,
+               space: space,
+               name: 'si-name',
+               tags: ['50% off'])
       end
       let(:service_binding) do
-        VCAP::CloudController::ServiceBinding.make(
-          service_instance: service_instance,
-          app: app_model,
-          syslog_drain_url: 'https://syslog.example.com/drain',
-          credentials: { password: 'top-secret' }
-        )
+        create(:service_binding,
+               service_instance: service_instance,
+               app: app_model,
+               syslog_drain_url: 'https://syslog.example.com/drain',
+               credentials: { password: 'top-secret' })
       end
       let(:expected_response) do
         {
@@ -1828,7 +1821,7 @@ RSpec.describe 'Apps' do
 
       context 'when the space_developer_env_var_visibility feature flag is disabled' do
         before do
-          VCAP::CloudController::FeatureFlag.make(name: 'space_developer_env_var_visibility', enabled: false, error_message: nil)
+          create(:feature_flag, name: 'space_developer_env_var_visibility', enabled: false, error_message: nil)
         end
 
         it_behaves_like 'permissions for single object endpoint', ALL_PERMISSIONS do
@@ -1844,46 +1837,42 @@ RSpec.describe 'Apps' do
   end
 
   describe 'GET /v3/apps/:guid/builds' do
-    let(:app_model) { VCAP::CloudController::AppModel.make(space: space, name: 'my-app') }
+    let(:app_model) { create(:app_model, space: space, name: 'my-app') }
     let(:build) do
-      VCAP::CloudController::BuildModel.make(
-        package: package,
-        app: app_model,
-        staging_memory_in_mb: 123,
-        staging_disk_in_mb: 456,
-        staging_log_rate_limit: 789,
-        created_by_user_name: 'bob the builder',
-        created_by_user_guid: user.guid,
-        created_by_user_email: 'bob@loblaw.com'
-      )
+      create(:build_model,
+             package: package,
+             app: app_model,
+             staging_memory_in_mb: 123,
+             staging_disk_in_mb: 456,
+             staging_log_rate_limit: 789,
+             created_by_user_name: 'bob the builder',
+             created_by_user_guid: user.guid,
+             created_by_user_email: 'bob@loblaw.com')
     end
     let!(:second_build) do
-      VCAP::CloudController::BuildModel.make(
-        package: package,
-        app: app_model,
-        staging_memory_in_mb: 123,
-        staging_disk_in_mb: 456,
-        staging_log_rate_limit: 789,
-        created_at: build.created_at - 1.day,
-        created_by_user_name: 'bob the builder',
-        created_by_user_guid: user.guid,
-        created_by_user_email: 'bob@loblaw.com'
-      )
+      create(:build_model,
+             package: package,
+             app: app_model,
+             staging_memory_in_mb: 123,
+             staging_disk_in_mb: 456,
+             staging_log_rate_limit: 789,
+             created_at: build.created_at - 1.day,
+             created_by_user_name: 'bob the builder',
+             created_by_user_guid: user.guid,
+             created_by_user_email: 'bob@loblaw.com')
     end
-    let(:package) { VCAP::CloudController::PackageModel.make(app_guid: app_model.guid) }
+    let(:package) { create(:package_model, app: app_model) }
     let(:droplet) do
-      VCAP::CloudController::DropletModel.make(
-        state: VCAP::CloudController::DropletModel::STAGED_STATE,
-        package_guid: package.guid,
-        build: build
-      )
+      create(:droplet_model,
+             state: VCAP::CloudController::DropletModel::STAGED_STATE,
+             package_guid: package.guid,
+             build: build)
     end
     let(:second_droplet) do
-      VCAP::CloudController::DropletModel.make(
-        state: VCAP::CloudController::DropletModel::STAGED_STATE,
-        package_guid: package.guid,
-        build: second_build
-      )
+      create(:droplet_model,
+             state: VCAP::CloudController::DropletModel::STAGED_STATE,
+             package_guid: package.guid,
+             build: second_build)
     end
     let(:body) do
       {
@@ -2016,7 +2005,7 @@ RSpec.describe 'Apps' do
       end
 
       it 'filters on label_selector' do
-        VCAP::CloudController::BuildLabelModel.make(key_name: 'fruit', value: 'strawberry', build: build)
+        create(:build_label_model, key_name: 'fruit', value: 'strawberry', build: build)
 
         get "/v3/apps/#{app_model.guid}/builds?label_selector=fruit=strawberry", {}, user_header
 
@@ -2035,11 +2024,10 @@ RSpec.describe 'Apps' do
     context 'when getting an apps ssh_enabled value' do
       let(:api_call) { ->(user_headers) { get "/v3/apps/#{app_model.guid}/ssh_enabled", nil, user_headers } }
       let!(:app_model) do
-        VCAP::CloudController::AppModel.make(
-          name: 'my_app',
-          guid: 'app1_guid',
-          space: space
-        )
+        create(:app_model,
+               name: 'my_app',
+               guid: 'app1_guid',
+               space: space)
       end
 
       let(:expected_codes_and_responses) do
@@ -2055,11 +2043,11 @@ RSpec.describe 'Apps' do
   end
 
   describe 'DELETE /v3/apps/guid' do
-    let!(:app_model) { VCAP::CloudController::AppModel.make(name: 'app_name', space: space) }
-    let!(:package) { VCAP::CloudController::PackageModel.make(app: app_model) }
-    let!(:droplet) { VCAP::CloudController::DropletModel.make(package: package, app: app_model) }
-    let!(:process) { VCAP::CloudController::ProcessModel.make(app: app_model) }
-    let!(:deployment) { VCAP::CloudController::DeploymentModel.make(app: app_model) }
+    let!(:app_model) { create(:app_model, name: 'app_name', space: space) }
+    let!(:package) { create(:package_model, app: app_model) }
+    let!(:droplet) { create(:droplet_model, package: package, app: app_model) }
+    let!(:process) { create(:process_model, app: app_model) }
+    let!(:deployment) { create(:deployment_model, app: app_model) }
     let(:user_email) { nil }
 
     it 'deletes an App' do
@@ -2140,15 +2128,14 @@ RSpec.describe 'Apps' do
 
   describe 'PATCH /v3/apps/:guid' do
     let(:app_model) do
-      VCAP::CloudController::AppModel.make(
-        name: 'original_name',
-        space: space,
-        environment_variables: { 'ORIGINAL' => 'ENVAR' },
-        desired_state: 'STOPPED'
-      )
+      create(:app_model,
+             name: 'original_name',
+             space: space,
+             environment_variables: { 'ORIGINAL' => 'ENVAR' },
+             desired_state: 'STOPPED')
     end
-    let!(:web_process) { VCAP::CloudController::ProcessModel.make(app: app_model, state: VCAP::CloudController::ProcessModel::STOPPED) }
-    let(:stack) { VCAP::CloudController::Stack.make(name: 'redhat') }
+    let!(:web_process) { create(:process_model, app: app_model, state: VCAP::CloudController::ProcessModel::STOPPED) }
+    let(:stack) { create(:stack, name: 'redhat') }
 
     let(:update_request) do
       {
@@ -2231,23 +2218,20 @@ RSpec.describe 'Apps' do
     end
 
     before do
-      VCAP::CloudController::AppLabelModel.make(
-        resource_guid: app_model.guid,
-        key_name: 'delete-me',
-        value: 'yes'
-      )
+      create(:app_label_model,
+             resource_guid: app_model.guid,
+             key_name: 'delete-me',
+             value: 'yes')
 
-      VCAP::CloudController::AppAnnotationModel.make(
-        resource_guid: app_model.guid,
-        key_name: 'anno1',
-        value: 'original-value'
-      )
+      create(:app_annotation_model,
+             resource_guid: app_model.guid,
+             key_name: 'anno1',
+             value: 'original-value')
 
-      VCAP::CloudController::AppAnnotationModel.make(
-        resource_guid: app_model.guid,
-        key_name: 'please',
-        value: 'delete this'
-      )
+      create(:app_annotation_model,
+             resource_guid: app_model.guid,
+             key_name: 'please',
+             value: 'delete this')
     end
 
     it 'updates an app' do
@@ -2301,7 +2285,7 @@ RSpec.describe 'Apps' do
     end
 
     context 'when the app has a process that is started' do
-      let!(:web_process) { VCAP::CloudController::ProcessModel.make(app: app_model, state: VCAP::CloudController::ProcessModel::STARTED) }
+      let!(:web_process) { create(:process_model, app: app_model, state: VCAP::CloudController::ProcessModel::STARTED) }
 
       before do
         app_model.desired_state = VCAP::CloudController::ProcessModel::STARTED
@@ -2373,21 +2357,19 @@ RSpec.describe 'Apps' do
   end
 
   describe 'POST /v3/apps/:guid/actions/start' do
-    let(:stack) { VCAP::CloudController::Stack.make(name: 'stack-name') }
+    let(:stack) { create(:stack, name: 'stack-name') }
     let(:app_model) do
-      VCAP::CloudController::AppModel.make(
-        name: 'app-name',
-        space: space,
-        desired_state: 'STOPPED'
-      )
+      create(:app_model,
+             name: 'app-name',
+             space: space,
+             desired_state: 'STOPPED')
     end
 
     context 'app lifecycle is buildpack' do
       let!(:droplet) do
-        VCAP::CloudController::DropletModel.make(
-          app: app_model,
-          state: VCAP::CloudController::DropletModel::STAGED_STATE
-        )
+        create(:droplet_model,
+               app: app_model,
+               state: VCAP::CloudController::DropletModel::STAGED_STATE)
       end
 
       before do
@@ -2490,19 +2472,18 @@ RSpec.describe 'Apps' do
           let(:log_rate_limit) { -1 }
           let(:space_log_rate_limit) { -1 }
           let(:org_log_rate_limit) { -1 }
-          let(:org_quota_definition) { VCAP::CloudController::QuotaDefinition.make(log_rate_limit: org_log_rate_limit) }
-          let(:org) { VCAP::CloudController::Organization.make(quota_definition: org_quota_definition) }
-          let(:space_quota_definition) { VCAP::CloudController::SpaceQuotaDefinition.make(organization: org, log_rate_limit: space_log_rate_limit) }
-          let(:space) { VCAP::CloudController::Space.make(organization: org, space_quota_definition: space_quota_definition) }
-          let!(:process_model) { VCAP::CloudController::ProcessModel.make(app: app_model, log_rate_limit: log_rate_limit) }
+          let(:org_quota_definition) { create(:quota_definition, log_rate_limit: org_log_rate_limit) }
+          let(:org) { create(:organization, quota_definition: org_quota_definition) }
+          let(:space_quota_definition) { create(:space_quota_definition, organization: org, log_rate_limit: space_log_rate_limit) }
+          let(:space) { create(:space, organization: org, space_quota_definition: space_quota_definition) }
+          let!(:process_model) { create(:process_model, app: app_model, log_rate_limit: log_rate_limit) }
           let(:app_model) do
-            VCAP::CloudController::AppModel.make(
-              name: 'app-name',
-              space: space,
-              desired_state: 'STOPPED'
-            )
+            create(:app_model,
+                   name: 'app-name',
+                   space: space,
+                   desired_state: 'STOPPED')
           end
-          let(:droplet) { VCAP::CloudController::DropletModel.make(app: app_model, process_types: { web: 'webby' }) }
+          let(:droplet) { create(:droplet_model, app: app_model, process_types: { web: 'webby' }) }
 
           before do
             app_model.update(droplet_guid: droplet.guid)
@@ -2685,12 +2666,11 @@ RSpec.describe 'Apps' do
 
     describe 'when there is a new desired droplet and revision feature is turned on' do
       let(:droplet) do
-        VCAP::CloudController::DropletModel.make(
-          app: app_model,
-          process_types: { web: 'rackup' },
-          state: VCAP::CloudController::DropletModel::STAGED_STATE,
-          package: VCAP::CloudController::PackageModel.make
-        )
+        create(:droplet_model,
+               app: app_model,
+               process_types: { web: 'rackup' },
+               state: VCAP::CloudController::DropletModel::STAGED_STATE,
+               package: create(:package_model))
       end
 
       before do
@@ -2714,19 +2694,17 @@ RSpec.describe 'Apps' do
   end
 
   describe 'POST /v3/apps/:guid/actions/stop' do
-    let(:stack) { VCAP::CloudController::Stack.make(name: 'stack-name') }
+    let(:stack) { create(:stack, name: 'stack-name') }
     let(:app_model) do
-      VCAP::CloudController::AppModel.make(
-        name: 'app-name',
-        space: space,
-        desired_state: 'STARTED'
-      )
+      create(:app_model,
+             name: 'app-name',
+             space: space,
+             desired_state: 'STARTED')
     end
     let!(:droplet) do
-      VCAP::CloudController::DropletModel.make(
-        app: app_model,
-        state: VCAP::CloudController::DropletModel::STAGED_STATE
-      )
+      create(:droplet_model,
+             app: app_model,
+             state: VCAP::CloudController::DropletModel::STAGED_STATE)
     end
 
     before do
@@ -2879,21 +2857,19 @@ RSpec.describe 'Apps' do
   end
 
   describe 'POST /v3/apps/:guid/actions/restart' do
-    let(:stack) { VCAP::CloudController::Stack.make(name: 'stack-name') }
+    let(:stack) { create(:stack, name: 'stack-name') }
     let(:app_model) do
-      VCAP::CloudController::AppModel.make(
-        name: 'app-name',
-        space: space,
-        desired_state: 'STARTED'
-      )
+      create(:app_model,
+             name: 'app-name',
+             space: space,
+             desired_state: 'STARTED')
     end
 
     context 'app lifecycle is buildpack' do
       let!(:droplet) do
-        VCAP::CloudController::DropletModel.make(
-          app: app_model,
-          state: VCAP::CloudController::DropletModel::STAGED_STATE
-        )
+        create(:droplet_model,
+               app: app_model,
+               state: VCAP::CloudController::DropletModel::STAGED_STATE)
       end
 
       before do
@@ -3023,8 +2999,8 @@ RSpec.describe 'Apps' do
 
   describe 'GET /v3/apps/:guid/relationships/current_droplet' do
     let(:api_call) { ->(user_headers) { get "/v3/apps/#{droplet_model.app_guid}/relationships/current_droplet", nil, user_headers } }
-    let(:app_model) { VCAP::CloudController::AppModel.make(space_guid: space.guid) }
-    let!(:droplet_model) { VCAP::CloudController::DropletModel.make(app_guid: app_model.guid) }
+    let(:app_model) { create(:app_model, space: space) }
+    let!(:droplet_model) { create(:droplet_model, app: app_model) }
     let(:expected_response) do
       {
         'data' => {
@@ -3055,19 +3031,18 @@ RSpec.describe 'Apps' do
 
   describe 'GET /v3/apps/:guid/droplets/current' do
     let(:api_call) { ->(user_headers) { get "/v3/apps/#{droplet_model.app_guid}/droplets/current", nil, user_headers } }
-    let(:app_model) { VCAP::CloudController::AppModel.make(space_guid: space.guid) }
-    let(:package_model) { VCAP::CloudController::PackageModel.make(app_guid: app_model.guid) }
+    let(:app_model) { create(:app_model, space: space) }
+    let(:package_model) { create(:package_model, app: app_model) }
     let!(:droplet_model) do
-      VCAP::CloudController::DropletModel.make(
-        app_guid: app_model.guid,
-        package_guid: package_model.guid,
-        buildpack_receipt_buildpack: 'http://buildpack.git.url.com',
-        error_description: 'example error',
-        execution_metadata: 'some-data',
-        droplet_hash: 'shalalala',
-        sha256_checksum: 'droplet-sha256-checksum',
-        process_types: { 'web' => 'start-command' }
-      )
+      create(:droplet_model,
+             app_guid: app_model.guid,
+             package_guid: package_model.guid,
+             buildpack_receipt_buildpack: 'http://buildpack.git.url.com',
+             error_description: 'example error',
+             execution_metadata: 'some-data',
+             droplet_hash: 'shalalala',
+             sha256_checksum: 'droplet-sha256-checksum',
+             process_types: { 'web' => 'start-command' })
     end
     let(:expected_response) do
       {
@@ -3118,22 +3093,20 @@ RSpec.describe 'Apps' do
   end
 
   describe 'PATCH /v3/apps/:guid/relationships/current_droplet' do
-    let(:stack) { VCAP::CloudController::Stack.make(name: 'stack-name') }
+    let(:stack) { create(:stack, name: 'stack-name') }
     let(:app_model) do
-      VCAP::CloudController::AppModel.make(
-        name: 'my_app',
-        space: space,
-        desired_state: 'STOPPED'
-      )
+      create(:app_model,
+             name: 'my_app',
+             space: space,
+             desired_state: 'STOPPED')
     end
     let(:droplet) do
-      VCAP::CloudController::DropletModel.make(
-        :docker,
-        app: app_model,
-        process_types: { web: 'rackup' },
-        state: VCAP::CloudController::DropletModel::STAGED_STATE,
-        package: VCAP::CloudController::PackageModel.make
-      )
+      create(:droplet_model,
+             :docker,
+             app: app_model,
+             process_types: { web: 'rackup' },
+             state: VCAP::CloudController::DropletModel::STAGED_STATE,
+             package: create(:package_model))
     end
     let(:request_body) { { data: { guid: droplet.guid } } }
 
@@ -3229,11 +3202,10 @@ RSpec.describe 'Apps' do
 
       context 'with two process types' do
         let(:droplet) do
-          VCAP::CloudController::DropletModel.make(
-            app: app_model,
-            process_types: { web: 'rackup', other: 'cron' },
-            state: VCAP::CloudController::DropletModel::STAGED_STATE
-          )
+          create(:droplet_model,
+                 app: app_model,
+                 process_types: { web: 'rackup', other: 'cron' },
+                 state: VCAP::CloudController::DropletModel::STAGED_STATE)
         end
 
         it 'creates audit.app.process.create events for each process' do
@@ -3284,22 +3256,21 @@ RSpec.describe 'Apps' do
 
     context 'sidecars' do
       let(:droplet) do
-        VCAP::CloudController::DropletModel.make(
-          :docker,
-          app: app_model,
-          process_types: { web: 'rackup' },
-          state: VCAP::CloudController::DropletModel::STAGED_STATE,
-          package: VCAP::CloudController::PackageModel.make,
-          sidecars:
-            [
-              {
-                name: 'sidecar_one',
-                command: 'bundle exec rackup',
-                process_types: ['web'],
-                memory: 300
-              }
-            ]
-        )
+        create(:droplet_model,
+               :docker,
+               app: app_model,
+               process_types: { web: 'rackup' },
+               state: VCAP::CloudController::DropletModel::STAGED_STATE,
+               package: create(:package_model),
+               sidecars:
+                 [
+                   {
+                     name: 'sidecar_one',
+                     command: 'bundle exec rackup',
+                     process_types: ['web'],
+                     memory: 300
+                   }
+                 ])
       end
 
       before do
@@ -3353,15 +3324,14 @@ RSpec.describe 'Apps' do
       }
     end
     let(:app_model) do
-      VCAP::CloudController::AppModel.make(
-        name: 'name1',
-        space: space,
-        desired_state: 'STOPPED',
-        environment_variables: {
-          override: 'original',
-          preserve: 'keep'
-        }
-      )
+      create(:app_model,
+             name: 'name1',
+             space: space,
+             desired_state: 'STOPPED',
+             environment_variables: {
+               override: 'original',
+               preserve: 'keep'
+             })
     end
     let(:api_call) { ->(user_headers) { patch "/v3/apps/#{app_model.guid}/environment_variables", update_request.to_json, user_headers } }
     let(:app_model_response_object) do
@@ -3407,7 +3377,7 @@ RSpec.describe 'Apps' do
   end
 
   describe 'GET /v3/apps/:guid/environment_variables' do
-    let(:app_model) { VCAP::CloudController::AppModel.make(name: 'my_app', space: space, desired_state: 'STARTED', environment_variables: { meep: 'moop' }) }
+    let(:app_model) { create(:app_model, name: 'my_app', space: space, desired_state: 'STARTED', environment_variables: { meep: 'moop' }) }
     let(:api_call) { ->(user_headers) { get "/v3/apps/#{app_model.guid}/environment_variables", nil, user_headers } }
     let(:app_model_response_object) do
       {
@@ -3439,7 +3409,7 @@ RSpec.describe 'Apps' do
 
     context 'when the space_developer_env_var_visibility feature flag is disabled' do
       before do
-        VCAP::CloudController::FeatureFlag.make(name: 'space_developer_env_var_visibility', enabled: false, error_message: nil)
+        create(:feature_flag, name: 'space_developer_env_var_visibility', enabled: false, error_message: nil)
       end
 
       it_behaves_like 'permissions for single object endpoint', ALL_PERMISSIONS do
@@ -3472,9 +3442,9 @@ RSpec.describe 'Apps' do
   end
 
   describe 'GET /v3/apps/:guid/permissions' do
-    let(:org) { VCAP::CloudController::Organization.make }
-    let(:space) { VCAP::CloudController::Space.make(organization: org) }
-    let(:app_model) { VCAP::CloudController::AppModel.make(name: 'name1', space: space, desired_state: 'STOPPED') }
+    let(:org) { create(:organization) }
+    let(:space) { create(:space, organization: org) }
+    let(:app_model) { create(:app_model, name: 'name1', space: space, desired_state: 'STOPPED') }
     let(:api_call) { ->(user_headers) { get "/v3/apps/#{app_model.guid}/permissions", nil, user_headers } }
 
     let(:read_all_response) do

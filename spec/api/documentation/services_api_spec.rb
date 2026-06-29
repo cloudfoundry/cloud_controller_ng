@@ -3,8 +3,8 @@ require 'rspec_api_documentation/dsl'
 
 RSpec.resource 'Services', type: %i[api legacy_api] do
   let(:admin_auth_header) { admin_headers['HTTP_AUTHORIZATION'] }
-  let(:service_broker) { VCAP::CloudController::ServiceBroker.make }
-  let!(:service) { VCAP::CloudController::Service.make(service_broker:) }
+  let(:service_broker) { FactoryBot.create(:service_broker) }
+  let!(:service) { FactoryBot.create(:service, service_broker:) }
   let(:guid) { service.guid }
 
   authenticated_request
@@ -69,7 +69,7 @@ RSpec.resource 'Services', type: %i[api legacy_api] do
 
     describe 'Service Plans' do
       before do
-        VCAP::CloudController::ServicePlan.make(service:)
+        create(:service_plan, service:)
       end
 
       expected_attributes = VCAP::CloudController::ServicePlan.new.export_attrs - [:create_instance_schema] - [:update_instance_schema] - [:create_binding_schema] + [:schemas]

@@ -6,8 +6,8 @@ module VCAP::CloudController
   RSpec.describe SecurityGroupCreate do
     describe 'create' do
       subject { SecurityGroupCreate }
-      let(:space1) { VCAP::CloudController::Space.make }
-      let(:space2) { VCAP::CloudController::Space.make }
+      let(:space1) { create(:space) }
+      let(:space2) { create(:space) }
 
       context 'when creating a security-group' do
         context 'with default values' do
@@ -81,7 +81,7 @@ module VCAP::CloudController
         end
 
         context 'with rules' do
-          let(:group) { VCAP::CloudController::SecurityGroup.make }
+          let(:group) { create(:security_group) }
 
           let(:first_group) do
             {

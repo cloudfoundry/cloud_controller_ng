@@ -2,7 +2,7 @@ require 'spec_helper'
 
 module VCAP::CloudController
   RSpec.describe VCAP::CloudController::QuotaDefinition, type: :model do
-    let(:quota_definition) { QuotaDefinition.make }
+    let(:quota_definition) { create(:quota_definition) }
 
     it { is_expected.to have_timestamp_columns }
 
@@ -16,7 +16,7 @@ module VCAP::CloudController
 
     describe 'uniqueness' do
       it 'enforces uniqueness of name' do
-        existing = QuotaDefinition.make
+        existing = create(:quota_definition)
         expect do
           QuotaDefinition.create(name: existing.name, non_basic_services_allowed: true, total_services: 0, total_routes: 0, memory_limit: 0)
         end.to raise_error(Sequel::ValidationFailed, /unique/)
@@ -171,7 +171,7 @@ module VCAP::CloudController
     describe '#destroy' do
       context 'when there is an associated organization' do
         it 'raises an AssociationNotEmpty error' do
-          Organization.make(quota_definition:)
+          create(:organization, quota_definition:)
 
           expect do
             quota_definition.destroy

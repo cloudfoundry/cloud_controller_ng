@@ -22,7 +22,7 @@ module VCAP::CloudController
           end
 
           context 'and the flag was previously set' do
-            before { FeatureFlag.make(name: 'user_org_creation', enabled: false, error_message: 'foobar') }
+            before { create(:feature_flag, name: 'user_org_creation', enabled: false, error_message: 'foobar') }
 
             it 'sets the feature flag to the specified value' do
               put '/v2/config/feature_flags/user_org_creation', Oj.dump({ enabled: true, error_message: 'baz' })
@@ -59,7 +59,7 @@ module VCAP::CloudController
 
       context 'when the user is not an admin' do
         it 'returns a 403' do
-          set_current_user(User.make)
+          set_current_user(create(:user))
           put '/v2/config/feature_flags/user_org_creation', Oj.dump({ enabled: true })
 
           expect(last_response.status).to eq(403)
@@ -112,7 +112,7 @@ module VCAP::CloudController
       end
 
       context 'when there are overrides' do
-        before { FeatureFlag.make(name: 'flag1', enabled: true, error_message: 'custom_error_message') }
+        before { create(:feature_flag, name: 'flag1', enabled: true, error_message: 'custom_error_message') }
 
         it 'returns the defaults, overridden where needed' do
           get '/v2/config/feature_flags'
@@ -171,7 +171,7 @@ module VCAP::CloudController
       end
 
       context 'when there are overrides' do
-        before { FeatureFlag.make(name: 'flag1', enabled: true, error_message: nil) }
+        before { create(:feature_flag, name: 'flag1', enabled: true, error_message: nil) }
 
         it 'returns the overridden value' do
           get '/v2/config/feature_flags/flag1'

@@ -3,7 +3,7 @@ require 'rspec_api_documentation/dsl'
 
 RSpec.resource 'User Provided Service Instances', type: %i[api legacy_api] do
   let(:admin_auth_header) { admin_headers['HTTP_AUTHORIZATION'] }
-  let!(:service_instance) { VCAP::CloudController::UserProvidedServiceInstance.make }
+  let!(:service_instance) { FactoryBot.create(:user_provided_service_instance) }
   let(:guid) { service_instance.guid }
 
   authenticated_request
@@ -21,7 +21,7 @@ RSpec.resource 'User Provided Service Instances', type: %i[api legacy_api] do
       field :route_service_url, 'URL to which requests for bound routes will be forwarded.', required: false, example_values: ['https://logger.example.com']
 
       example 'Creating a User Provided Service Instance' do
-        space_guid = VCAP::CloudController::Space.make.guid
+        space_guid = create(:space).guid
         request_hash = {
           space_guid: space_guid,
           name: 'my-user-provided-instance',
@@ -56,7 +56,7 @@ RSpec.resource 'User Provided Service Instances', type: %i[api legacy_api] do
   describe 'Nested endpoints' do
     describe 'Service Bindings' do
       before do
-        VCAP::CloudController::ServiceBinding.make(service_instance:)
+        create(:service_binding, service_instance:)
       end
 
       field :guid, 'The guid of the Service Instance.', required: true
@@ -68,15 +68,15 @@ RSpec.resource 'User Provided Service Instances', type: %i[api legacy_api] do
     end
 
     describe 'Routes' do
-      let(:route) { VCAP::CloudController::Route.make(space: service_instance.space) }
+      let(:route) { create(:route, space: service_instance.space) }
       let(:route_guid) { route.guid }
-      let(:associated_route) { VCAP::CloudController::Route.make(space: service_instance.space) }
+      let(:associated_route) { create(:route, space: service_instance.space) }
       let(:associated_route_guid) { associated_route.guid }
-      let(:service_instance) { VCAP::CloudController::UserProvidedServiceInstance.make(:routing) }
+      let(:service_instance) { create(:user_provided_service_instance, :routing) }
       let(:guid) { service_instance.guid }
 
       before do
-        binding = VCAP::CloudController::RouteBinding.make(route: associated_route, service_instance: service_instance)
+        binding = create(:route_binding, route: associated_route, service_instance: service_instance)
         associated_route.route_binding = binding
         associated_route.save
       end

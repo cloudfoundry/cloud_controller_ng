@@ -6,10 +6,10 @@ module VCAP::CloudController
       describe 'Associations' do
         describe 'service_instance_sti_eager_load' do
           it 'eager loads successfully' do
-            instance1 = UserProvidedServiceInstance.make
-            instance2 = ManagedServiceInstance.make
-            binding = ServiceBinding.make(service_instance: instance1)
-            key = ServiceKey.make(service_instance: instance2)
+            instance1 = create(:user_provided_service_instance)
+            instance2 = create(:managed_service_instance)
+            binding = create(:service_binding, service_instance: instance1)
+            key = create(:service_key, service_instance: instance2)
             eager_loaded_service_credential_bindings = nil
             expect do
               eager_loaded_service_credential_bindings = View.eager(:service_instance_sti_eager_load).all.to_a
@@ -28,12 +28,12 @@ module VCAP::CloudController
 
         describe 'labels_sti_eager_load' do
           it 'eager loads successfully' do
-            binding = ServiceBinding.make
-            lb1 = ServiceBindingLabelModel.make(service_binding: binding, key_name: 'test1', value: 'bommel')
-            lb2 = ServiceBindingLabelModel.make(service_binding: binding, key_name: 'test2', value: 'bommel')
-            key = ServiceKey.make
-            lk1 = ServiceKeyLabelModel.make(service_key: key, key_name: 'test1', value: 'bommel')
-            lk2 = ServiceKeyLabelModel.make(service_key: key, key_name: 'test2', value: 'bommel')
+            binding = create(:service_binding)
+            lb1 = create(:service_binding_label_model, service_binding: binding, key_name: 'test1', value: 'bommel')
+            lb2 = create(:service_binding_label_model, service_binding: binding, key_name: 'test2', value: 'bommel')
+            key = create(:service_key)
+            lk1 = create(:service_key_label_model, service_key: key, key_name: 'test1', value: 'bommel')
+            lk2 = create(:service_key_label_model, service_key: key, key_name: 'test2', value: 'bommel')
 
             eager_loaded_service_credential_bindings = nil
             expect do
@@ -53,12 +53,12 @@ module VCAP::CloudController
 
         describe 'annotations_sti_eager_load' do
           it 'eager loads successfully' do
-            binding = ServiceBinding.make
-            lb1 = ServiceBindingAnnotationModel.make(service_binding: binding, key_name: 'test1', value: 'bommel')
-            lb2 = ServiceBindingAnnotationModel.make(service_binding: binding, key_name: 'test2', value: 'bommel')
-            key = ServiceKey.make
-            lk1 = ServiceKeyAnnotationModel.make(service_key: key, key_name: 'test1', value: 'bommel')
-            lk2 = ServiceKeyAnnotationModel.make(service_key: key, key_name: 'test2', value: 'bommel')
+            binding = create(:service_binding)
+            lb1 = create(:service_binding_annotation_model, service_binding: binding, key_name: 'test1', value: 'bommel')
+            lb2 = create(:service_binding_annotation_model, service_binding: binding, key_name: 'test2', value: 'bommel')
+            key = create(:service_key)
+            lk1 = create(:service_key_annotation_model, service_key: key, key_name: 'test1', value: 'bommel')
+            lk2 = create(:service_key_annotation_model, service_key: key, key_name: 'test2', value: 'bommel')
 
             eager_loaded_service_credential_bindings = nil
             expect do
@@ -78,10 +78,10 @@ module VCAP::CloudController
 
         describe 'operation_sti_eager_load' do
           it 'eager loads successfully' do
-            binding = ServiceBinding.make.save
-            bo = ServiceBindingOperation.make(service_binding_id: binding.id)
-            key = ServiceKey.make
-            ko = ServiceKeyOperation.make(service_key_id: key.id)
+            binding = create(:service_binding).save
+            bo = create(:service_binding_operation, service_binding_id: binding.id)
+            key = create(:service_key)
+            ko = create(:service_key_operation, service_key_id: key.id)
 
             eager_loaded_service_credential_bindings = nil
             expect do

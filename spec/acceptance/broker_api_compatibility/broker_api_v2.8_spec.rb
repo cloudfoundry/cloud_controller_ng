@@ -4,7 +4,7 @@ RSpec.describe 'Service Broker API integration' do
   describe 'v2.8' do
     include VCAP::CloudController::BrokerApiHelper
 
-    let(:route) { VCAP::CloudController::Route.make(space: @space) }
+    let(:route) { create(:route, space: @space) }
     let(:catalog) { default_catalog(requires: ['route_forwarding']) }
     let(:service_broker_bind_request) { %r{.*/v2/service_instances/#{@service_instance_guid}/service_bindings/#{guid_pattern}} }
 

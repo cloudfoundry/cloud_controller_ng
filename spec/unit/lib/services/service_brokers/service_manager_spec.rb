@@ -5,7 +5,7 @@ require 'cloud_controller/security_context'
 
 module VCAP::Services::ServiceBrokers
   RSpec.describe ServiceManager do
-    let(:broker) { VCAP::CloudController::ServiceBroker.make }
+    let(:broker) { create(:service_broker) }
 
     let(:service_id) { Sham.guid }
     let(:service_name) { Sham.name }
@@ -101,7 +101,7 @@ module VCAP::Services::ServiceBrokers
         'email' => user_email
       }
     end
-    let(:user) { VCAP::CloudController::User.make }
+    let(:user) { create(:user) }
 
     before do
       VCAP::CloudController::SecurityContext.set(user, token)
@@ -445,10 +445,8 @@ module VCAP::Services::ServiceBrokers
 
       context 'when a service already exists' do
         let!(:service) do
-          VCAP::CloudController::Service.make(
-            service_broker: broker,
-            unique_id: service_id
-          )
+          create(:service, service_broker: broker,
+                           unique_id: service_id)
         end
 
         it 'updates the existing service' do
@@ -465,14 +463,12 @@ module VCAP::Services::ServiceBrokers
         end
 
         context 'when the broker is different' do
-          let(:different_broker) { VCAP::CloudController::ServiceBroker.make }
+          let(:different_broker) { create(:service_broker) }
 
           context 'and when there is a single service exposed from a different broker' do
             let!(:service) do
-              VCAP::CloudController::Service.make(
-                service_broker: different_broker,
-                unique_id: service_id
-              )
+              create(:service, service_broker: different_broker,
+                               unique_id: service_id)
             end
 
             it 'creates the new plan' do
@@ -492,10 +488,8 @@ module VCAP::Services::ServiceBrokers
 
           context 'and when there are two service with identical ids exposed from different brokers' do
             let!(:service_2) do
-              VCAP::CloudController::Service.make(
-                service_broker: different_broker,
-                unique_id: service_id
-              )
+              create(:service, service_broker: different_broker,
+                               unique_id: service_id)
             end
 
             it 'updates the service for the correct broker' do
@@ -529,11 +523,9 @@ module VCAP::Services::ServiceBrokers
 
         context 'when a service is renamed and a new service is added with the old name' do
           let!(:service) do
-            VCAP::CloudController::Service.make(
-              label: service_name,
-              service_broker: broker,
-              unique_id: service_id
-            )
+            create(:service, label: service_name,
+                             service_broker: broker,
+                             unique_id: service_id)
           end
 
           let(:catalog_hash) do
@@ -586,16 +578,14 @@ module VCAP::Services::ServiceBrokers
 
         context 'and a plan already exists' do
           let!(:plan) do
-            VCAP::CloudController::ServicePlan.make(
-              service: service,
-              unique_id: plan_id,
-              free: true,
-              bindable: false,
-              maximum_polling_duration: 0,
-              maintenance_info: nil,
-              create_instance_schema: nil,
-              update_instance_schema: nil
-            )
+            create(:service_plan, service: service,
+                                  unique_id: plan_id,
+                                  free: true,
+                                  bindable: false,
+                                  maximum_polling_duration: 0,
+                                  maintenance_info: nil,
+                                  create_instance_schema: nil,
+                                  update_instance_schema: nil)
           end
 
           it 'updates the existing plan' do
@@ -656,14 +646,12 @@ module VCAP::Services::ServiceBrokers
           end
 
           context 'when the plan belongs to a different service' do
-            let(:different_service) { VCAP::CloudController::Service.make }
+            let(:different_service) { create(:service) }
 
             context 'and when there is only one plan exposed from that service' do
               let!(:plan) do
-                VCAP::CloudController::ServicePlan.make(
-                  service: different_service,
-                  unique_id: plan_id
-                )
+                create(:service_plan, service: different_service,
+                                      unique_id: plan_id)
               end
 
               it 'creates a new plan associated with the service and keeps the old unchanged' do
@@ -687,10 +675,8 @@ module VCAP::Services::ServiceBrokers
 
             context 'when there are two plans with the same id that belong to different services' do
               let!(:plan_2) do
-                VCAP::CloudController::ServicePlan.make(
-                  service: different_service,
-                  unique_id: plan_id
-                )
+                create(:service_plan, service: different_service,
+                                      unique_id: plan_id)
               end
 
               it 'updates the plan that belongs to the corresponding service and keeps the other unchanged' do
@@ -710,15 +696,13 @@ module VCAP::Services::ServiceBrokers
 
           context 'when a plan is renamed and a new plan is added with the old name' do
             let!(:plan) do
-              VCAP::CloudController::ServicePlan.make(
-                name: plan_name,
-                service: service,
-                unique_id: plan_id,
-                free: true,
-                bindable: false,
-                create_instance_schema: nil,
-                update_instance_schema: nil
-              )
+              create(:service_plan, name: plan_name,
+                                    service: service,
+                                    unique_id: plan_id,
+                                    free: true,
+                                    bindable: false,
+                                    create_instance_schema: nil,
+                                    update_instance_schema: nil)
             end
 
             let(:catalog_hash) do
@@ -805,11 +789,9 @@ module VCAP::Services::ServiceBrokers
         context 'and a plan exists that has been removed from the broker catalog' do
           let(:missing_plan_name) { '111' }
           let!(:missing_plan) do
-            VCAP::CloudController::ServicePlan.make(
-              service: service,
-              unique_id: 'nolongerexists',
-              name: missing_plan_name
-            )
+            create(:service_plan, service: service,
+                                  unique_id: 'nolongerexists',
+                                  name: missing_plan_name)
           end
 
           it 'deletes the plan from the db' do
@@ -841,10 +823,10 @@ module VCAP::Services::ServiceBrokers
             let(:missing_service2_plan_name) { '111-B' }
 
             before do
-              VCAP::CloudController::ManagedServiceInstance.make(service_plan: missing_plan)
+              create(:managed_service_instance, service_plan: missing_plan)
 
-              missing_plan2 = VCAP::CloudController::ServicePlan.make(service: service, unique_id: 'plan2_nolongerexists', name: missing_plan2_name)
-              VCAP::CloudController::ManagedServiceInstance.make(service_plan: missing_plan2)
+              missing_plan2 = create(:service_plan, service: service, unique_id: 'plan2_nolongerexists', name: missing_plan2_name)
+              create(:managed_service_instance, service_plan: missing_plan2)
             end
 
             it 'marks the existing plan as inactive' do
@@ -858,9 +840,9 @@ module VCAP::Services::ServiceBrokers
 
             context 'when there are existing service instances' do
               before do
-                missing_service2 = VCAP::CloudController::Service.make(service_broker: broker, label: missing_service2_name)
-                missing_service2_plan = VCAP::CloudController::ServicePlan.make(service: missing_service2, unique_id: 'i_be_gone', name: missing_service2_plan_name)
-                VCAP::CloudController::ManagedServiceInstance.make(service_plan: missing_service2_plan)
+                missing_service2 = create(:service, service_broker: broker, label: missing_service2_name)
+                missing_service2_plan = create(:service_plan, service: missing_service2, unique_id: 'i_be_gone', name: missing_service2_plan_name)
+                create(:managed_service_instance, service_plan: missing_service2_plan)
               end
 
               it 'adds a formatted warning' do
@@ -897,20 +879,16 @@ module VCAP::Services::ServiceBrokers
 
       context 'when a service no longer exists' do
         let!(:service) do
-          VCAP::CloudController::Service.make(
-            service_broker: broker,
-            unique_id: 'nolongerexists',
-            label: 'was-an-awesome-service'
-          )
+          create(:service, service_broker: broker,
+                           unique_id: 'nolongerexists',
+                           label: 'was-an-awesome-service')
         end
 
         let!(:service_owned_by_other_broker) do
-          other_service_broker = VCAP::CloudController::ServiceBroker.make
+          other_service_broker = create(:service_broker)
 
-          VCAP::CloudController::Service.make(
-            service_broker: other_service_broker,
-            unique_id: 'other-service-id'
-          )
+          create(:service, service_broker: other_service_broker,
+                           unique_id: 'other-service-id')
         end
 
         it 'deletes the service' do
@@ -942,17 +920,13 @@ module VCAP::Services::ServiceBrokers
 
         context 'but it has an active plan' do
           before do
-            plan = VCAP::CloudController::ServicePlan.make(
-              service: service,
-              unique_id: 'also_no_longer_in_catalog'
-            )
-            VCAP::CloudController::ManagedServiceInstance.make(service_plan: plan)
+            plan = create(:service_plan, service: service,
+                                         unique_id: 'also_no_longer_in_catalog')
+            create(:managed_service_instance, service_plan: plan)
 
-            other_broker_plan = VCAP::CloudController::ServicePlan.make(
-              service: service_owned_by_other_broker,
-              unique_id: 'in-another-brokers-catalog'
-            )
-            VCAP::CloudController::ManagedServiceInstance.make(service_plan: other_broker_plan)
+            other_broker_plan = create(:service_plan, service: service_owned_by_other_broker,
+                                                      unique_id: 'in-another-brokers-catalog')
+            create(:managed_service_instance, service_plan: other_broker_plan)
           end
 
           it 'marks the existing service as inactive' do
@@ -976,8 +950,8 @@ module VCAP::Services::ServiceBrokers
       end
 
       context 'when a sql validtion error is thrown' do
-        let!(:service_offering) { VCAP::CloudController::Service.make(service_broker: broker, unique_id: service_id) }
-        let!(:service_plan) { VCAP::CloudController::ServicePlan.make(service: service_offering, name: plan_name, unique_id: Sham.guid) }
+        let!(:service_offering) { create(:service, service_broker: broker, unique_id: service_id) }
+        let!(:service_plan) { create(:service_plan, service: service_offering, name: plan_name, unique_id: Sham.guid) }
 
         after do
           service_plan.destroy

@@ -4,7 +4,7 @@ require 'fetchers/package_fetcher'
 module VCAP::CloudController
   RSpec.describe PackageFetcher do
     describe '#fetch' do
-      let(:package) { PackageModel.make }
+      let(:package) { create(:package_model) }
       let(:space) { package.space }
 
       it 'returns the desired package and space' do

@@ -14,8 +14,8 @@ module VCAP::CloudController
         Stack.dataset.destroy
       end
 
-      let!(:stack1) { Stack.make }
-      let!(:stack2) { Stack.make(name: default_stack_name) }
+      let!(:stack1) { create(:stack) }
+      let!(:stack2) { create(:stack, name: default_stack_name) }
 
       let(:message) { StacksListMessage.from_params(filters) }
 
@@ -60,8 +60,8 @@ module VCAP::CloudController
 
       context 'when a label_selector is provided' do
         let(:message) { StacksListMessage.from_params({ 'label_selector' => 'key=value' }) }
-        let!(:stack1label) { StackLabelModel.make(key_name: 'key', value: 'value', stack: stack1) }
-        let!(:stack2label) { StackLabelModel.make(key_name: 'key2', value: 'value2', stack: stack2) }
+        let!(:stack1label) { create(:stack_label_model, key_name: 'key', value: 'value', stack: stack1) }
+        let!(:stack2label) { create(:stack_label_model, key_name: 'key2', value: 'value2', stack: stack2) }
 
         it 'returns the correct set of stacks' do
           results = fetcher.fetch_all(message).all

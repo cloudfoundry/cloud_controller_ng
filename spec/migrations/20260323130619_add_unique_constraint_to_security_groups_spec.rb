@@ -6,7 +6,7 @@ RSpec.describe 'add unique constraint to security_groups', isolation: :truncatio
   end
 
   it 'removes duplicates, adds constraint and reverts migration' do
-    space = VCAP::CloudController::Space.make
+    space = create(:space)
 
     # create duplicate entries with join table references
     surviving_id = db[:security_groups].insert(guid: SecureRandom.uuid, name: 'sec1')

@@ -5,12 +5,12 @@ module VCAP::CloudController
     include VCAP::CloudController::BrokerApiHelper
 
     context 'when updating a service instance' do
-      let(:space) { Space.make }
+      let(:space) { create(:space) }
 
       context 'when service plan is not public and not active' do
-        let(:service) { Service.make(plan_updateable: true) }
-        let(:service_plan) { ServicePlan.make(public: false, active: false, service: service) }
-        let(:service_instance) { ManagedServiceInstance.make(space:, service_plan:) }
+        let(:service) { create(:service, plan_updateable: true) }
+        let(:service_plan) { create(:service_plan, public: false, active: false, service: service) }
+        let(:service_instance) { create(:managed_service_instance, space:, service_plan:) }
 
         before do
           @broker_url = service_instance.service_broker.broker_url
@@ -44,7 +44,7 @@ module VCAP::CloudController
         end
 
         context 'when the user is SpaceDeveloper' do
-          let(:user) { User.make }
+          let(:user) { create(:user) }
 
           before do
             space.organization.add_user(user)
@@ -95,7 +95,7 @@ module VCAP::CloudController
           end
 
           context 'when updating to a plan that is not visible' do
-            let(:new_service_plan) { ServicePlan.make(public: false, active: false, service: service_instance.service) }
+            let(:new_service_plan) { create(:service_plan, public: false, active: false, service: service_instance.service) }
             let(:body) do
               {
                 service_plan_guid: new_service_plan.guid

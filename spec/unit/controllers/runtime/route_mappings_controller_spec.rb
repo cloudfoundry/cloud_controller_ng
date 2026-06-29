@@ -20,10 +20,10 @@ module VCAP::CloudController
         before do
           @process_a = ProcessModelFactory.make(space: @space_a)
           @process_b = ProcessModelFactory.make(space: @space_b)
-          @route_a   = Route.make(space: @space_a)
-          @route_b   = Route.make(space: @space_b)
-          @obj_a     = RouteMappingModel.make(app_guid: @process_a.app.guid, route_guid: @route_a.guid, process_type: @process_a.type)
-          @obj_b     = RouteMappingModel.make(app_guid: @process_b.app.guid, route_guid: @route_b.guid, process_type: @process_b.type)
+          @route_a   = create(:route, space: @space_a)
+          @route_b   = create(:route, space: @space_b)
+          @obj_a     = create(:route_mapping_model, app_guid: @process_a.app.guid, route_guid: @route_a.guid, process_type: @process_a.type)
+          @obj_b     = create(:route_mapping_model, app_guid: @process_b.app.guid, route_guid: @route_b.guid, process_type: @process_b.type)
         end
 
         describe 'Org Level Permissions' do
@@ -102,11 +102,11 @@ module VCAP::CloudController
       end
 
       describe 'GET /v2/route_mappings' do
-        let(:space) { Space.make }
+        let(:space) { create(:space) }
         let(:developer) { make_developer_for_space(space) }
-        let(:route) { Route.make(space:) }
+        let(:route) { create(:route, space:) }
         let(:process) { ProcessModelFactory.make(space:) }
-        let(:route_mapping) { RouteMappingModel.make(app: process, route: route) }
+        let(:route_mapping) { create(:route_mapping_model, app: process, route: route) }
 
         before do
           set_current_user(developer)
@@ -129,7 +129,7 @@ module VCAP::CloudController
         end
 
         context "when the route mapping's process type is not 'web'" do
-          let(:route_mapping) { RouteMappingModel.make(app: process, route: route, process_type: 'foo') }
+          let(:route_mapping) { create(:route_mapping_model, app: process, route: route, process_type: 'foo') }
 
           it 'returns a 404 NotFound' do
             get "/v2/route_mappings/#{route_mapping.guid}"
@@ -141,8 +141,8 @@ module VCAP::CloudController
       end
 
       describe 'POST /v2/route_mappings' do
-        let(:space) { Space.make }
-        let(:route) { Route.make(space:) }
+        let(:space) { create(:space) }
+        let(:route) { create(:route, space:) }
         let(:process) { ProcessModelFactory.make(space: space, ports: [8080, 9090]) }
         let(:developer) { make_developer_for_space(space) }
         let(:body) do
@@ -181,7 +181,7 @@ module VCAP::CloudController
         end
 
         context 'and there is another app already bound to the specified route' do
-          let(:route_2) { Route.make(space:) }
+          let(:route_2) { create(:route, space:) }
           let(:body_2) do
             {
               app_guid: process.guid,
@@ -303,7 +303,7 @@ module VCAP::CloudController
           end
 
           context 'and developer of different space is specified' do
-            let(:space1) { Space.make }
+            let(:space1) { create(:space) }
             let(:developer) { make_developer_for_space(space1) }
             let(:body) do
               {
@@ -354,9 +354,9 @@ module VCAP::CloudController
         end
 
         context 'when the Routing API is not enabled' do
-          let(:space_quota) { SpaceQuotaDefinition.make(organization: space.organization) }
-          let(:tcp_domain) { SharedDomain.make(name: 'tcp.com', router_group_guid: 'guid_1') }
-          let(:tcp_route) { Route.make(port: 9090, host: '', space: space, domain: tcp_domain) }
+          let(:space_quota) { create(:space_quota_definition, organization: space.organization) }
+          let(:tcp_domain) { create(:shared_domain, name: 'tcp.com', router_group_guid: 'guid_1') }
+          let(:tcp_route) { create(:route, port: 9090, host: '', space: space, domain: tcp_domain) }
           let(:process) { ProcessModelFactory.make(space: space, ports: [9090], diego: true) }
           let(:space_developer) { make_developer_for_space(space) }
           let(:routing_api_client) { double('routing_api_client', router_group:) }
@@ -389,7 +389,7 @@ module VCAP::CloudController
           end
 
           context 'when a pre-existing route has no router_group' do
-            let(:route) { Route.make(port: 9090, host: '', space: space) }
+            let(:route) { create(:route, port: 9090, host: '', space: space) }
             let(:body) do
               {
                 app_guid: process.guid,
@@ -410,7 +410,7 @@ module VCAP::CloudController
         end
 
         context 'when the app and route are in different spaces' do
-          let(:route) { Route.make }
+          let(:route) { create(:route) }
           let(:body) do
             {
               app_guid: process.guid,
@@ -434,18 +434,18 @@ module VCAP::CloudController
       describe 'PUT /v2/route_mappings/:guid' do
         it 'does not have a route' do
           set_current_user_as_admin
-          mapping = RouteMappingModel.make
+          mapping = create(:route_mapping_model)
           put "/v2/route_mappings/#{mapping.guid}", '{"app_port": 34}'
           expect(last_response).to have_status_code(404)
         end
       end
 
       describe 'DELETE /v2/route_mappings/:guid' do
-        let(:route) { Route.make }
+        let(:route) { create(:route) }
         let(:process) { ProcessModelFactory.make(space:) }
         let(:space) { route.space }
         let(:developer) { make_developer_for_space(space) }
-        let(:route_mapping) { RouteMappingModel.make(app: process.app, route: route, process_type: process.type) }
+        let(:route_mapping) { create(:route_mapping_model, app: process.app, route: route, process_type: process.type) }
 
         before do
           set_current_user(developer)
@@ -467,7 +467,7 @@ module VCAP::CloudController
 
         context 'when the user is not a SpaceDeveloper' do
           before do
-            set_current_user(User.make)
+            set_current_user(create(:user))
           end
 
           it 'raises a 403' do

@@ -4,7 +4,7 @@ require 'fetchers/app_fetcher'
 module VCAP::CloudController
   RSpec.describe AppFetcher do
     describe '#fetch' do
-      let(:app) { AppModel.make }
+      let(:app) { create(:app_model) }
       let(:space) { app.space }
 
       it 'returns the desired app and space' do

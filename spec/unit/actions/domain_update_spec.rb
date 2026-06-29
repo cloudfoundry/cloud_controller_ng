@@ -39,7 +39,7 @@ module VCAP::CloudController
         }
       end
 
-      let(:domain) { SharedDomain.make }
+      let(:domain) { create(:shared_domain) }
       let(:message) { DomainUpdateMessage.new(body.merge({ guid: domain.guid })) }
 
       context 'when there is no current metadata' do

@@ -5,14 +5,14 @@ module VCAP::CloudController
   RSpec.describe IsolationSegmentSpacesFetcher do
     subject(:fetcher) { IsolationSegmentSpacesFetcher.new(isolation_segment_model) }
 
-    let!(:isolation_segment_model) { VCAP::CloudController::IsolationSegmentModel.make }
+    let!(:isolation_segment_model) { create(:isolation_segment_model) }
 
-    let(:org1) { VCAP::CloudController::Organization.make }
-    let(:org2) { VCAP::CloudController::Organization.make }
+    let(:org1) { create(:organization) }
+    let(:org2) { create(:organization) }
 
-    let(:space1) { VCAP::CloudController::Space.make(organization: org1) }
-    let(:space2) { VCAP::CloudController::Space.make(organization: org2) }
-    let(:space3) { VCAP::CloudController::Space.make(organization: org2) }
+    let(:space1) { create(:space, organization: org1) }
+    let(:space2) { create(:space, organization: org2) }
+    let(:space3) { create(:space, organization: org2) }
 
     let(:assigner) { VCAP::CloudController::IsolationSegmentAssign.new }
 

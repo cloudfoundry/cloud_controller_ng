@@ -14,14 +14,14 @@ module VCAP::CloudController
       end
 
       describe '#perform' do
-        let(:app) { AppModel.make(name: 'app') }
+        let(:app) { create(:app_model, name: 'app') }
 
         it 'deletes all the staged builds over the limit' do
           expect(BuildModel.count).to eq(0)
 
           total = 8
           (1..total).each do |i|
-            BuildModel.make(id: i, state: BuildModel::STAGED_STATE, app: app, created_at: Time.now - total + i)
+            create(:build_model, id: i, state: BuildModel::STAGED_STATE, app: app, created_at: Time.now - total + i)
           end
 
           job.perform
@@ -35,7 +35,7 @@ module VCAP::CloudController
 
           total = 8
           (1..total).each do |i|
-            BuildModel.make(id: i, state: BuildModel::FAILED_STATE, app: app, created_at: Time.now - total + i)
+            create(:build_model, id: i, state: BuildModel::FAILED_STATE, app: app, created_at: Time.now - total + i)
           end
 
           job.perform
@@ -49,7 +49,7 @@ module VCAP::CloudController
 
           total = 8
           (1..total).each do |i|
-            BuildModel.make(id: i, state: BuildModel::STAGING_STATE, app: app, created_at: Time.now - total + i)
+            create(:build_model, id: i, state: BuildModel::STAGING_STATE, app: app, created_at: Time.now - total + i)
           end
 
           job.perform
@@ -61,13 +61,13 @@ module VCAP::CloudController
         it 'does not delete in-flight builds over the limit' do
           total = 12
           (1..4).each do |i|
-            BuildModel.make(id: i, state: BuildModel::STAGED_STATE, app: app, created_at: Time.now - total + i)
+            create(:build_model, id: i, state: BuildModel::STAGED_STATE, app: app, created_at: Time.now - total + i)
           end
           (5..8).each do |i|
-            BuildModel.make(id: i, state: BuildModel::STAGING_STATE, app: app, created_at: Time.now - total + i)
+            create(:build_model, id: i, state: BuildModel::STAGING_STATE, app: app, created_at: Time.now - total + i)
           end
           (9..12).each do |i|
-            BuildModel.make(id: i, state: BuildModel::STAGED_STATE, app: app, created_at: Time.now - total + i)
+            create(:build_model, id: i, state: BuildModel::STAGED_STATE, app: app, created_at: Time.now - total + i)
           end
 
           job.perform
@@ -80,8 +80,8 @@ module VCAP::CloudController
           expect(BuildModel.count).to eq(0)
 
           8.times do
-            b = BuildModel.make(state: BuildModel::STAGED_STATE, app: app)
-            BuildpackLifecycleDataModel.make(build: b)
+            b = create(:build_model, state: BuildModel::STAGED_STATE, app: app)
+            create(:buildpack_lifecycle_data_model, build: b)
           end
 
           expect do
@@ -90,8 +90,8 @@ module VCAP::CloudController
         end
 
         context 'multiple apps' do
-          let(:app_the_second) { AppModel.make(name: 'app_the_second') }
-          let(:app_the_third) { AppModel.make(name: 'app_the_third') }
+          let(:app_the_second) { create(:app_model, name: 'app_the_second') }
+          let(:app_the_third) { create(:app_model, name: 'app_the_third') }
 
           it 'prunes builds on multiple apps' do
             expect(BuildModel.count).to eq(0)
@@ -99,7 +99,7 @@ module VCAP::CloudController
             [app, app_the_second, app_the_third].each_with_index do |current_app, app_index|
               total = 8
               (1..total).each do |i|
-                BuildModel.make(id: i + (1000 * app_index), state: BuildModel::STAGED_STATE, app: current_app, created_at: Time.now - total + i)
+                create(:build_model, id: i + (1000 * app_index), state: BuildModel::STAGED_STATE, app: current_app, created_at: Time.now - total + i)
               end
             end
 
@@ -117,7 +117,7 @@ module VCAP::CloudController
         end
 
         context 'apps without builds' do
-          let!(:app_without_builds) { AppModel.make }
+          let!(:app_without_builds) { create(:app_model) }
           let(:fake_logger) { instance_double(Steno::Logger, info: nil) }
 
           before do

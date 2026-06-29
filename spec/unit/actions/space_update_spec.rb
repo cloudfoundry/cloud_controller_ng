@@ -4,10 +4,10 @@ require 'actions/space_update'
 module VCAP::CloudController
   RSpec.describe SpaceUpdate do
     describe 'update' do
-      let(:org) { VCAP::CloudController::Organization.make }
-      let(:space) { VCAP::CloudController::Space.make(name: 'old-space-name', organization: org) }
+      let(:org) { create(:organization) }
+      let(:space) { create(:space, name: 'old-space-name', organization: org) }
       let(:user_audit_info) { UserAuditInfo.new(user_guid: user.guid, user_email: user_email) }
-      let(:user) { User.make }
+      let(:user) { create(:user) }
       let(:user_email) { 'user@example.com' }
 
       context 'when a name and label are requested' do
@@ -68,7 +68,7 @@ module VCAP::CloudController
 
         context 'when the space name is not unique' do
           it 'errors usefully' do
-            VCAP::CloudController::Space.make(name: 'new-space-name', organization: org)
+            create(:space, name: 'new-space-name', organization: org)
 
             expect do
               SpaceUpdate.new(user_audit_info).update(space, message)

@@ -4,7 +4,7 @@ module VCAP::CloudController
   RSpec.describe StackStateValidator do
     describe '.validate_for_new_app!' do
       context 'when stack is Active' do
-        let(:stack) { Stack.make(state: StackStates::STACK_ACTIVE, description: 'My ACTIVE stack') }
+        let(:stack) { create(:stack, state: StackStates::STACK_ACTIVE, description: 'My ACTIVE stack') }
 
         it 'returns empty warnings' do
           result = StackStateValidator.validate_for_new_app!(stack)
@@ -17,7 +17,7 @@ module VCAP::CloudController
       end
 
       context 'when stack is DEPRECATED' do
-        let(:stack) { Stack.make(state: StackStates::STACK_DEPRECATED, description: 'My DEPRECATED stack') }
+        let(:stack) { create(:stack, state: StackStates::STACK_DEPRECATED, description: 'My DEPRECATED stack') }
 
         it 'returns a warning message' do
           result = StackStateValidator.validate_for_new_app!(stack)
@@ -39,7 +39,7 @@ module VCAP::CloudController
       end
 
       context 'when stack is RESTRICTED' do
-        let(:stack) { Stack.make(state: StackStates::STACK_RESTRICTED, description: 'My RESTRICTED stack') }
+        let(:stack) { create(:stack, state: StackStates::STACK_RESTRICTED, description: 'My RESTRICTED stack') }
 
         it 'raise RestrictedStackError' do
           expect do
@@ -61,7 +61,7 @@ module VCAP::CloudController
       end
 
       context 'when stack is DISABLED' do
-        let(:stack) { Stack.make(state: StackStates::STACK_DISABLED, description: 'My DEPRECATED stack') }
+        let(:stack) { create(:stack, state: StackStates::STACK_DISABLED, description: 'My DEPRECATED stack') }
 
         it 'returns a disabled error message' do
           expect do
@@ -79,7 +79,7 @@ module VCAP::CloudController
 
     describe '.validate_for_restaging_app!' do
       context 'when stack is Active' do
-        let(:stack) { Stack.make(state: StackStates::STACK_ACTIVE, description: 'My ACTIVE stack') }
+        let(:stack) { create(:stack, state: StackStates::STACK_ACTIVE, description: 'My ACTIVE stack') }
 
         it 'for restaging returns empty warnings' do
           result = StackStateValidator.validate_for_restaging!(stack)
@@ -92,7 +92,7 @@ module VCAP::CloudController
       end
 
       context 'when stack is DEPRECATED' do
-        let(:stack) { Stack.make(state: StackStates::STACK_DEPRECATED, description: 'My DEPRECATED stack') }
+        let(:stack) { create(:stack, state: StackStates::STACK_DEPRECATED, description: 'My DEPRECATED stack') }
 
         it 'returns a warning message' do
           result = StackStateValidator.validate_for_restaging!(stack)
@@ -114,7 +114,7 @@ module VCAP::CloudController
       end
 
       context 'when stack is RESTRICTED' do
-        let(:stack) { Stack.make(state: StackStates::STACK_RESTRICTED, description: 'My RESTRICTED stack') }
+        let(:stack) { create(:stack, state: StackStates::STACK_RESTRICTED, description: 'My RESTRICTED stack') }
 
         it 'returns warnings for restaging' do
           result = StackStateValidator.validate_for_restaging!(stack)
@@ -129,7 +129,7 @@ module VCAP::CloudController
       end
 
       context 'when stack is DISABLED' do
-        let(:stack) { Stack.make(state: StackStates::STACK_DISABLED, description: 'My DEPRECATED stack') }
+        let(:stack) { create(:stack, state: StackStates::STACK_DISABLED, description: 'My DEPRECATED stack') }
 
         it 'returns a disabled error message' do
           expect do
@@ -146,7 +146,7 @@ module VCAP::CloudController
     end
 
     describe '.build_deprecation_warning' do
-      let(:stack) { Stack.make(name: 'cflinuxfs3', description: 'End of life December 2025') }
+      let(:stack) { create(:stack, name: 'cflinuxfs3', description: 'End of life December 2025') }
 
       it 'returns formatted warning string' do
         warning = StackStateValidator.build_stack_warning(stack, StackStates::STACK_DEPRECATED)
@@ -171,7 +171,7 @@ module VCAP::CloudController
     describe 'state_reason in messages' do
       describe '.build_stack_warning' do
         context 'when state_reason is present' do
-          let(:stack) { Stack.make(name: 'old-stack', state: StackStates::STACK_DEPRECATED, state_reason: 'EOL on 2026-12-31') }
+          let(:stack) { create(:stack, name: 'old-stack', state: StackStates::STACK_DEPRECATED, state_reason: 'EOL on 2026-12-31') }
 
           it 'includes state_reason in warning message' do
             warning = StackStateValidator.build_stack_warning(stack, StackStates::STACK_DEPRECATED)
@@ -182,7 +182,7 @@ module VCAP::CloudController
         end
 
         context 'when state_reason is nil' do
-          let(:stack) { Stack.make(name: 'old-stack', state: StackStates::STACK_DEPRECATED, state_reason: nil) }
+          let(:stack) { create(:stack, name: 'old-stack', state: StackStates::STACK_DEPRECATED, state_reason: nil) }
 
           it 'does not append state_reason to warning message' do
             warning = StackStateValidator.build_stack_warning(stack, StackStates::STACK_DEPRECATED)
@@ -193,7 +193,7 @@ module VCAP::CloudController
         end
 
         context 'when state_reason is empty string' do
-          let(:stack) { Stack.make(name: 'old-stack', state: StackStates::STACK_DEPRECATED, state_reason: '') }
+          let(:stack) { create(:stack, name: 'old-stack', state: StackStates::STACK_DEPRECATED, state_reason: '') }
 
           it 'does not append state_reason to warning message' do
             warning = StackStateValidator.build_stack_warning(stack, StackStates::STACK_DEPRECATED)
@@ -204,7 +204,7 @@ module VCAP::CloudController
 
       describe '.build_stack_error' do
         context 'when state_reason is present' do
-          let(:stack) { Stack.make(name: 'disabled-stack', state: StackStates::STACK_DISABLED, state_reason: 'Security vulnerability') }
+          let(:stack) { create(:stack, name: 'disabled-stack', state: StackStates::STACK_DISABLED, state_reason: 'Security vulnerability') }
 
           it 'includes state_reason in error message' do
             error = StackStateValidator.build_stack_error(stack, StackStates::STACK_DISABLED)
@@ -215,7 +215,7 @@ module VCAP::CloudController
         end
 
         context 'when state_reason is nil' do
-          let(:stack) { Stack.make(name: 'disabled-stack', state: StackStates::STACK_DISABLED, state_reason: nil) }
+          let(:stack) { create(:stack, name: 'disabled-stack', state: StackStates::STACK_DISABLED, state_reason: nil) }
 
           it 'does not append state_reason to error message' do
             error = StackStateValidator.build_stack_error(stack, StackStates::STACK_DISABLED)
@@ -228,7 +228,7 @@ module VCAP::CloudController
 
       describe 'integration with validation methods' do
         context 'when deprecated stack has state_reason' do
-          let(:stack) { Stack.make(state: StackStates::STACK_DEPRECATED, state_reason: 'Use cflinuxfs5 instead') }
+          let(:stack) { create(:stack, state: StackStates::STACK_DEPRECATED, state_reason: 'Use cflinuxfs5 instead') }
 
           it 'includes state_reason in warning for new app' do
             warnings = StackStateValidator.validate_for_new_app!(stack)
@@ -242,7 +242,7 @@ module VCAP::CloudController
         end
 
         context 'when disabled stack has state_reason' do
-          let(:stack) { Stack.make(state: StackStates::STACK_DISABLED, state_reason: 'Critical security issue') }
+          let(:stack) { create(:stack, state: StackStates::STACK_DISABLED, state_reason: 'Critical security issue') }
 
           it 'includes state_reason in error for new app' do
             expect do
@@ -258,7 +258,7 @@ module VCAP::CloudController
         end
 
         context 'when restricted stack has state_reason' do
-          let(:stack) { Stack.make(state: StackStates::STACK_RESTRICTED, state_reason: 'Limited availability') }
+          let(:stack) { create(:stack, state: StackStates::STACK_RESTRICTED, state_reason: 'Limited availability') }
 
           it 'includes state_reason in error for new app' do
             expect do
@@ -275,10 +275,10 @@ module VCAP::CloudController
     end
 
     describe 'state behavior matrix' do
-      let(:active_stack) { Stack.make(state: StackStates::STACK_ACTIVE) }
-      let(:deprecated_stack) { Stack.make(state: StackStates::STACK_DEPRECATED) }
-      let(:restricted_stack) { Stack.make(state: StackStates::STACK_RESTRICTED) }
-      let(:disabled_stack) { Stack.make(state: StackStates::STACK_DISABLED) }
+      let(:active_stack) { create(:stack, state: StackStates::STACK_ACTIVE) }
+      let(:deprecated_stack) { create(:stack, state: StackStates::STACK_DEPRECATED) }
+      let(:restricted_stack) { create(:stack, state: StackStates::STACK_RESTRICTED) }
+      let(:disabled_stack) { create(:stack, state: StackStates::STACK_DISABLED) }
 
       describe 'new app creation' do
         it 'allows ACTIVE without warnings' do

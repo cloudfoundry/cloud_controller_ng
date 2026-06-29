@@ -103,7 +103,7 @@ module VCAP::CloudController
 
       describe 'the deprecated stack is in the db' do
         before do
-          Stack.make(name: 'cflinuxfs3')
+          create(:stack, name: 'cflinuxfs3')
         end
 
         it 'logs an error and exits 1' do

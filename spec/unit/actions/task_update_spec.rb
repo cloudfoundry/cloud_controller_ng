@@ -18,7 +18,7 @@ module VCAP::CloudController
           }
         }
       end
-      let(:task) { TaskModel.make }
+      let(:task) { create(:task_model) }
       let(:message) { TaskUpdateMessage.new(body) }
 
       it 'updates the task metadata' do

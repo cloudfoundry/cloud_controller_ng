@@ -38,21 +38,20 @@ module VCAP::CloudController
         }
       )
     end
-    let!(:droplet) { DropletModel.make(process_types: { web: 'BE rackup' }) }
-    let!(:app) { AppModel.make(droplet:) }
+    let!(:droplet) { create(:droplet_model, process_types: { web: 'BE rackup' }) }
+    let!(:app) { create(:app_model, droplet:) }
     let!(:process) do
-      ProcessModel.make(
-        :process,
-        type: 'web',
-        command: 'initial command',
-        user: nil,
-        health_check_type: 'port',
-        health_check_timeout: 10,
-        health_check_interval: 5,
-        ports: [1574, 3389],
-        app: app,
-        state: 'STARTED'
-      )
+      create(:process_model,
+             :process,
+             type: 'web',
+             command: 'initial command',
+             user: nil,
+             health_check_type: 'port',
+             health_check_timeout: 10,
+             health_check_interval: 5,
+             ports: [1574, 3389],
+             app: app,
+             state: 'STARTED')
     end
 
     let(:user_guid) { 'user-guid' }
@@ -104,14 +103,13 @@ module VCAP::CloudController
 
         context 'when the old healthcheck is http and the new healtcheck is not' do
           let!(:process) do
-            ProcessModel.make(
-              :process,
-              command: 'initial command',
-              health_check_type: 'http',
-              health_check_http_endpoint: '/healthcheck',
-              health_check_timeout: 10,
-              ports: [1574, 3389]
-            )
+            create(:process_model,
+                   :process,
+                   command: 'initial command',
+                   health_check_type: 'http',
+                   health_check_http_endpoint: '/healthcheck',
+                   health_check_timeout: 10,
+                   ports: [1574, 3389])
           end
 
           let(:health_check) do
@@ -131,11 +129,10 @@ module VCAP::CloudController
 
           context 'when nothing else is changed' do
             let!(:process) do
-              ProcessModel.make(
-                :process,
-                health_check_type: 'http',
-                health_check_http_endpoint: '/healthcheck'
-              )
+              create(:process_model,
+                     :process,
+                     health_check_type: 'http',
+                     health_check_http_endpoint: '/healthcheck')
             end
 
             let(:health_check) do
@@ -245,15 +242,14 @@ module VCAP::CloudController
 
         context 'when the old readiness healthcheck is http and the new readiness healtcheck is not' do
           let!(:process) do
-            ProcessModel.make(
-              :process,
-              command: 'initial command',
-              readiness_health_check_type: 'http',
-              readiness_health_check_http_endpoint: '/ready',
-              readiness_health_check_interval: 5,
-              health_check_timeout: 10,
-              ports: [1574, 3389]
-            )
+            create(:process_model,
+                   :process,
+                   command: 'initial command',
+                   readiness_health_check_type: 'http',
+                   readiness_health_check_http_endpoint: '/ready',
+                   readiness_health_check_interval: 5,
+                   health_check_timeout: 10,
+                   ports: [1574, 3389])
           end
 
           let(:readiness_health_check) do
@@ -273,11 +269,10 @@ module VCAP::CloudController
 
           context 'when nothing else is changed' do
             let!(:process) do
-              ProcessModel.make(
-                :process,
-                readiness_health_check_type: 'http',
-                readiness_health_check_http_endpoint: '/ready'
-              )
+              create(:process_model,
+                     :process,
+                     readiness_health_check_type: 'http',
+                     readiness_health_check_http_endpoint: '/ready')
             end
 
             let(:readiness_health_check) do
@@ -483,7 +478,7 @@ module VCAP::CloudController
 
       context 'when there is a deployment in flight' do
         before do
-          DeploymentModel.make(app: app, state: DeploymentModel::DEPLOYING_STATE)
+          create(:deployment_model, app: app, state: DeploymentModel::DEPLOYING_STATE)
         end
 
         context 'when the process type is web' do
@@ -496,15 +491,14 @@ module VCAP::CloudController
 
         context 'when the process type is NOT web' do
           let!(:process) do
-            ProcessModel.make(
-              :process,
-              type: 'gerg',
-              command: 'zrob',
-              health_check_type: 'port',
-              health_check_timeout: 10,
-              ports: [1574, 3389],
-              app: app
-            )
+            create(:process_model,
+                   :process,
+                   type: 'gerg',
+                   command: 'zrob',
+                   health_check_type: 'port',
+                   health_check_timeout: 10,
+                   ports: [1574, 3389],
+                   app: app)
           end
 
           it 'does not raise an error and updates the process' do

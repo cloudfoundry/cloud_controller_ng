@@ -40,11 +40,11 @@ module VCAP::CloudController
         subject { StagingCompletionHandler.new(build, runners) }
 
         describe '#staging_complete' do
-          let(:app) { AppModel.make }
-          let(:package) { PackageModel.make(app:) }
+          let(:app) { create(:app_model) }
+          let(:package) { create(:package_model, app:) }
           let!(:build) do
-            BuildModel.make(app: app, package: package, state: BuildModel::STAGING_STATE).tap do |build|
-              CNBLifecycleDataModel.make(build:)
+            create(:build_model, app: app, package: package, state: BuildModel::STAGING_STATE).tap do |build|
+              create(:cnb_lifecycle_data_model, build:)
             end
           end
           let(:staging_guid) { build.guid }
@@ -56,7 +56,7 @@ module VCAP::CloudController
           end
 
           describe 'success case' do
-            let(:droplet) { DropletModel.make(app: app, package: package, state: DropletModel::STAGING_STATE) }
+            let(:droplet) { create(:droplet_model, app: app, package: package, state: DropletModel::STAGING_STATE) }
 
             before do
               build.update(droplet:)
@@ -130,7 +130,7 @@ module VCAP::CloudController
 
                 context 'and the app\'s web process does NOT have a start command' do
                   let(:runner) { instance_double(Diego::Runner, start: nil) }
-                  let!(:web_process) { ProcessModel.make(app: app, type: 'web', state: 'STARTED', metadata: {}) }
+                  let!(:web_process) { create(:process_model, app: app, type: 'web', state: 'STARTED', metadata: {}) }
 
                   before do
                     allow(runners).to receive(:runner_for_process).and_return(runner)
@@ -146,7 +146,7 @@ module VCAP::CloudController
 
                 context 'and the app\'s web process has a start command' do
                   let(:runner) { instance_double(Diego::Runner, start: nil) }
-                  let!(:web_process) { ProcessModel.make(app: app, type: 'web', command: 'start me', state: 'STARTED', metadata: {}) }
+                  let!(:web_process) { create(:process_model, app: app, type: 'web', command: 'start me', state: 'STARTED', metadata: {}) }
 
                   before do
                     allow(runners).to receive(:runner_for_process).and_return(runner)
@@ -163,18 +163,18 @@ module VCAP::CloudController
                 context 'when a start is requested' do
                   context 'and the app has a start command' do
                     let(:runner) { instance_double(Diego::Runner, start: nil) }
-                    let!(:web_process) { ProcessModel.make(app: app, type: 'web', command: 'start me', state: 'STARTED', metadata: {}) }
+                    let!(:web_process) { create(:process_model, app: app, type: 'web', command: 'start me', state: 'STARTED', metadata: {}) }
 
                     before do
                       allow(runners).to receive(:runner_for_process).and_return(runner)
                     end
 
                     context 'when revisions are enabled' do
-                      let(:old_droplet) { DropletModel.make(app: app, created_at: 5.days.ago) }
+                      let(:old_droplet) { create(:droplet_model, app: app, created_at: 5.days.ago) }
 
                       before do
                         app.update(revisions_enabled: true)
-                        RevisionModel.make(app_guid: app.guid, droplet_guid: old_droplet.guid)
+                        create(:revision_model, app_guid: app.guid, droplet_guid: old_droplet.guid)
                       end
 
                       it 'creates a revision and assigns it to the processes' do
@@ -222,7 +222,7 @@ module VCAP::CloudController
 
                       context 'but the app has a user-origin sidecar of the same name' do
                         before do
-                          SidecarModel.make(name: 'sleepy', command: 'sleep infinity', app: app, origin: SidecarModel::ORIGIN_USER)
+                          create(:sidecar_model, name: 'sleepy', command: 'sleep infinity', app: app, origin: SidecarModel::ORIGIN_USER)
                         end
 
                         it 'errors without materializing sidecars' do
@@ -243,7 +243,7 @@ module VCAP::CloudController
 
                   context 'when the app does not have a start command' do
                     let(:runner) { instance_double(Diego::Runner, start: nil) }
-                    let!(:web_process) { ProcessModel.make(app: app, type: 'web', state: 'STARTED', metadata: {}) }
+                    let!(:web_process) { create(:process_model, app: app, type: 'web', state: 'STARTED', metadata: {}) }
 
                     before do
                       allow(runners).to receive(:runner_for_process).and_return(runner)
@@ -263,7 +263,7 @@ module VCAP::CloudController
             context 'when updating the droplet record with data from staging fails' do
               let(:save_error) { StandardError.new('save-error') }
               let(:runner) { instance_double(Diego::Runner, start: nil) }
-              let!(:web_process) { ProcessModel.make(app: app, type: 'web') }
+              let!(:web_process) { create(:process_model, app: app, type: 'web') }
 
               before do
                 allow_any_instance_of(DropletModel).to receive(:save_changes).and_raise(save_error)
@@ -295,7 +295,7 @@ module VCAP::CloudController
 
             context 'when a start is requested' do
               let(:runner) { instance_double(Diego::Runner, start: nil) }
-              let!(:web_process) { ProcessModel.make(app: app, type: 'web') }
+              let!(:web_process) { create(:process_model, app: app, type: 'web') }
 
               before do
                 allow(runners).to receive(:runner_for_process).and_return(runner)
@@ -317,7 +317,7 @@ module VCAP::CloudController
               end
 
               it 'records a buildpack set event for all processes' do
-                ProcessModel.make(app: app, type: 'other')
+                create(:process_model, app: app, type: 'other')
                 expect do
                   subject.staging_complete(success_response, true)
                 end.to change { AppUsageEvent.where(state: 'BUILDPACK_SET').count }.from(0).to(2)
@@ -325,7 +325,7 @@ module VCAP::CloudController
 
               context 'when this is not the most recent staging result' do
                 before do
-                  DropletModel.make(app:, package:)
+                  create(:droplet_model, app: app, package: package, set_as_current_droplet: false)
                 end
 
                 it 'does not assign the current droplet' do
@@ -344,7 +344,7 @@ module VCAP::CloudController
             context 'when a start is not requested' do
               let(:with_start) { false }
               let(:runner) { instance_double(Diego::Runner, start: nil) }
-              let!(:web_process) { ProcessModel.make(app: app, type: 'web') }
+              let!(:web_process) { create(:process_model, app: app, type: 'web') }
 
               before do
                 allow(runners).to receive(:runner_for_process).and_return(runner)
@@ -414,7 +414,7 @@ module VCAP::CloudController
             end
 
             context 'with a malformed success message' do
-              let(:droplet) { DropletModel.make(app: app, package: package, state: DropletModel::STAGING_STATE) }
+              let(:droplet) { create(:droplet_model, app: app, package: package, state: DropletModel::STAGING_STATE) }
 
               before do
                 build.update(droplet:)
@@ -511,7 +511,7 @@ module VCAP::CloudController
             end
 
             context 'when a start is requested' do
-              let!(:web_process) { ProcessModel.make(app: app, type: 'web', state: 'STARTED') }
+              let!(:web_process) { create(:process_model, app: app, type: 'web', state: 'STARTED') }
 
               it 'stops the web process of the app' do
                 expect do

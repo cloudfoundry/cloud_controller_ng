@@ -9,7 +9,7 @@ module VCAP::CloudController
     let(:tcp_group_2) { 'tcp-group-2' }
     let(:tcp_group_3) { 'tcp-group-3' }
     let(:http_group) { 'http-group' }
-    let(:user) { User.make }
+    let(:user) { create(:user) }
     let(:router_groups) do
       [
         RoutingApi::RouterGroup.new({ 'guid' => tcp_group_1, 'name' => 'TCP1', 'type' => 'tcp', 'reservable_ports' => '1024-65535' }),
@@ -65,10 +65,10 @@ module VCAP::CloudController
       context 'with a custom domain' do
         include_context 'permissions'
         before do
-          @domain_a = PrivateDomain.make(owning_organization: @org_a)
-          @obj_a    = Route.make(domain: @domain_a, space: @space_a)
-          @domain_b = PrivateDomain.make(owning_organization: @org_b)
-          @obj_b    = Route.make(domain: @domain_b, space: @space_b)
+          @domain_a = create(:private_domain, owning_organization: @org_a)
+          @obj_a    = create(:route, domain: @domain_a, space: @space_a)
+          @domain_b = create(:private_domain, owning_organization: @org_b)
+          @obj_b    = create(:route, domain: @domain_b, space: @space_b)
         end
 
         describe 'Org Level Permissions' do
@@ -157,10 +157,10 @@ module VCAP::CloudController
           FeatureFlag.create(name: 'diego_docker', enabled: true)
         end
 
-        let(:organization) { Organization.make }
-        let(:http_domain) { PrivateDomain.make(owning_organization: organization) }
-        let(:space) { Space.make(organization:) }
-        let(:route) { Route.make(domain: http_domain, space: space) }
+        let(:organization) { create(:organization) }
+        let(:http_domain) { create(:private_domain, owning_organization: organization) }
+        let(:space) { create(:space, organization:) }
+        let(:route) { create(:route, domain: http_domain, space: space) }
         let!(:docker_process) do
           ProcessModelFactory.make(space: space, docker_image: 'some-image', state: 'STARTED')
         end
@@ -182,7 +182,7 @@ module VCAP::CloudController
     end
 
     describe 'DELETE /v2/routes/:guid' do
-      let(:route) { Route.make }
+      let(:route) { create(:route) }
 
       before do
         allow(app_event_repository).to receive(:record_unmap_route)
@@ -250,12 +250,12 @@ module VCAP::CloudController
     end
 
     describe 'POST /v2/routes' do
-      let(:space_quota_definition) { SpaceQuotaDefinition.make }
+      let(:space_quota_definition) { create(:space_quota_definition) }
       let(:space) do
-        Space.make(space_quota_definition: space_quota_definition,
-                   organization: space_quota_definition.organization)
+        create(:space, space_quota_definition: space_quota_definition,
+                       organization: space_quota_definition.organization)
       end
-      let(:shared_domain) { SharedDomain.make }
+      let(:shared_domain) { create(:shared_domain) }
       let(:domain_guid) { shared_domain.guid }
       let(:host) { 'example' }
       let(:port) { nil }
@@ -289,7 +289,7 @@ module VCAP::CloudController
       end
 
       context 'when the requested route specifies a system hostname and a system domain' do
-        let(:space) { Space.make(organization: system_domain.owning_organization) }
+        let(:space) { create(:space, organization: system_domain.owning_organization) }
         let(:system_domain) { Domain.find(name: TestConfig.config[:system_domain]) }
         let(:host) { 'api' }
         let(:req) do
@@ -347,7 +347,7 @@ module VCAP::CloudController
       context 'when host is already taken and no paths are requested' do
         it 'returns 400 RouteHostTaken' do
           taken_host = 'someroute'
-          Route.make(host: taken_host, domain: shared_domain)
+          create(:route, host: taken_host, domain: shared_domain)
 
           post '/v2/routes', Oj.dump(host: taken_host, domain_guid: domain_guid, space_guid: space.guid)
 
@@ -403,8 +403,8 @@ module VCAP::CloudController
       end
 
       context 'shared domains' do
-        let(:shared_domain) { SharedDomain.make }
-        let(:another_space) { Space.make }
+        let(:shared_domain) { create(:shared_domain) }
+        let(:another_space) { create(:space) }
         let(:req) do
           {
             domain_guid: shared_domain.guid,
@@ -417,7 +417,7 @@ module VCAP::CloudController
 
         context 'when the route already exists with the same host in a another space' do
           before do
-            Route.make(domain: shared_domain, host: host, space: space)
+            create(:route, domain: shared_domain, host: host, space: space)
             another_space.organization.add_user(user)
             another_space.add_developer(user)
           end
@@ -454,7 +454,7 @@ module VCAP::CloudController
       end
 
       context 'private domains' do
-        let(:private_domain) { PrivateDomain.make(owning_organization_guid: space.organization.guid) }
+        let(:private_domain) { create(:private_domain, owning_organization_guid: space.organization.guid) }
         let(:routing_api_client) { double('routing_api_client', enabled?: true) }
         let(:router_group) do
           RoutingApi::RouterGroup.new({
@@ -484,7 +484,7 @@ module VCAP::CloudController
       end
 
       context 'internal domains' do
-        let(:internal_domain) { Domain.make(internal: true, wildcard: true) }
+        let(:internal_domain) { create(:domain, internal: true, wildcard: true) }
 
         context 'and path is present' do
           it 'returns RouteInvalid' do
@@ -510,8 +510,8 @@ module VCAP::CloudController
       end
 
       context 'tcp domains' do
-        let(:tcp_domain) { SharedDomain.make(router_group_guid: tcp_group_1) }
-        let(:another_tcp_domain) { SharedDomain.make(router_group_guid: tcp_group_1) }
+        let(:tcp_domain) { create(:shared_domain, router_group_guid: tcp_group_1) }
+        let(:another_tcp_domain) { create(:shared_domain, router_group_guid: tcp_group_1) }
 
         context 'when the requested port is already in use by another domain with the same router group' do
           it 'returns the RoutePortTaken message when ports conflict' do
@@ -575,7 +575,7 @@ module VCAP::CloudController
         end
 
         context 'when the routing api has experienced data loss' do
-          let(:orphaned_shared_domain) { SharedDomain.make(router_group_guid: 'abc') }
+          let(:orphaned_shared_domain) { create(:shared_domain, router_group_guid: 'abc') }
           let(:req) do
             {
               domain_guid: orphaned_shared_domain.guid,
@@ -599,7 +599,7 @@ module VCAP::CloudController
 
         context 'generate_port' do
           let(:generated_port) { 10_005 }
-          let(:domain) { SharedDomain.make(router_group_guid: tcp_group_1) }
+          let(:domain) { create(:shared_domain, router_group_guid: tcp_group_1) }
           let(:domain_guid) { domain.guid }
           let(:port) { nil }
 
@@ -622,7 +622,7 @@ module VCAP::CloudController
             context 'and a port is specified' do
               let(:port) { 10_500 }
               let(:generated_port) { 14_098 }
-              let(:domain) { SharedDomain.make(router_group_guid: tcp_group_1) }
+              let(:domain) { create(:shared_domain, router_group_guid: tcp_group_1) }
               let(:domain_guid) { domain.guid }
               let(:port_override_warning) { 'Specified+port+ignored.+Random+port+generated.' }
 
@@ -645,7 +645,7 @@ module VCAP::CloudController
                   call_count += 1
                   raise Sequel::UniqueConstraintViolation.new('port already taken') if call_count == 1
 
-                  Route.make(port: args[:route_hash]['port'])
+                  create(:route, port: args[:route_hash]['port'])
                 end
               end
 
@@ -684,7 +684,7 @@ module VCAP::CloudController
 
           context 'when the router group runs out of ports' do
             let(:generated_port) { -1 }
-            let(:domain) { SharedDomain.make(router_group_guid: tcp_group_3) }
+            let(:domain) { create(:shared_domain, router_group_guid: tcp_group_3) }
             let(:domain_guid) { domain.guid }
 
             before do
@@ -701,7 +701,7 @@ module VCAP::CloudController
           end
 
           context 'when queried with a shared http domain' do
-            let(:shared_http_domain) { SharedDomain.make(router_group_guid: http_group) }
+            let(:shared_http_domain) { create(:shared_domain, router_group_guid: http_group) }
 
             it 'returns 400 RouteInvalid' do
               post '/v2/routes?generate_port=true', Oj.dump(domain_guid: shared_http_domain.guid, space_guid: space.guid)
@@ -714,7 +714,7 @@ module VCAP::CloudController
           end
 
           context 'when queried with a private http domain' do
-            let(:private_domain) { PrivateDomain.make(owning_organization_guid: space.organization.guid) }
+            let(:private_domain) { create(:private_domain, owning_organization_guid: space.organization.guid) }
             let(:routing_api_client) { double('routing_api_client', enabled?: true) }
             let(:router_group) do
               RoutingApi::RouterGroup.new({
@@ -757,7 +757,7 @@ module VCAP::CloudController
       context 'quotas' do
         context 'when the total routes quota for the space has maxed out' do
           it 'returns 400 SpaceQuotaTotalRoutesExceeded' do
-            quota_definition             = SpaceQuotaDefinition.make(total_routes: 0, organization: space.organization)
+            quota_definition             = create(:space_quota_definition, total_routes: 0, organization: space.organization)
             space.space_quota_definition = quota_definition
             space.save
 
@@ -784,7 +784,7 @@ module VCAP::CloudController
         end
 
         context 'when the total reserved route ports quota for the org has maxed out' do
-          let(:tcp_domain) { SharedDomain.make(router_group_guid: tcp_group_1) }
+          let(:tcp_domain) { create(:shared_domain, router_group_guid: tcp_group_1) }
 
           it 'returns 400 OrgQuotaTotalReservedRoutePortsExceeded' do
             quota_definition                            = space.organization.quota_definition
@@ -800,10 +800,10 @@ module VCAP::CloudController
         end
 
         context 'when the total reserved route ports quota for the space has maxed out' do
-          let(:tcp_domain) { SharedDomain.make(router_group_guid: tcp_group_1) }
+          let(:tcp_domain) { create(:shared_domain, router_group_guid: tcp_group_1) }
 
           it 'returns 400 SpaceQuotaTotalReservedRoutePortsExceeded' do
-            quota_definition             = SpaceQuotaDefinition.make(total_reserved_route_ports: 0, organization: space.organization)
+            quota_definition             = create(:space_quota_definition, total_reserved_route_ports: 0, organization: space.organization)
             space.space_quota_definition = quota_definition
             space.save
 
@@ -819,7 +819,7 @@ module VCAP::CloudController
       context 'when route_creation feature flag is disabled' do
         before do
           allow_any_instance_of(RouteValidator).to receive(:validate)
-          FeatureFlag.make(name: 'route_creation', enabled: false, error_message: nil)
+          create(:feature_flag, name: 'route_creation', enabled: false, error_message: nil)
         end
 
         it 'returns FeatureDisabled for users' do
@@ -833,15 +833,14 @@ module VCAP::CloudController
     end
 
     describe 'PUT /v2/routes/:guid' do
-      let(:space_quota_definition) { SpaceQuotaDefinition.make }
+      let(:space_quota_definition) { create(:space_quota_definition) }
       let(:space) do
-        Space.make(
-          space_quota_definition: space_quota_definition,
-          organization: space_quota_definition.organization
-        )
+        create(:space,
+               space_quota_definition: space_quota_definition,
+               organization: space_quota_definition.organization)
       end
-      let(:user) { User.make }
-      let(:domain) { SharedDomain.make }
+      let(:user) { create(:user) }
+      let(:domain) { create(:shared_domain) }
       let(:domain_guid) { domain.guid }
 
       before do
@@ -853,8 +852,8 @@ module VCAP::CloudController
       describe 'tcp routes' do
         let(:port) { 18_000 }
         let(:new_port) { 514 }
-        let(:tcp_domain) { SharedDomain.make(router_group_guid: tcp_group_1) }
-        let(:route) { Route.make(space: space, domain: tcp_domain, port: port, host: '') }
+        let(:tcp_domain) { create(:shared_domain, router_group_guid: tcp_group_1) }
+        let(:route) { create(:route, space: space, domain: tcp_domain, port: port, host: '') }
         let(:req) do
           { port: new_port }
         end
@@ -876,7 +875,7 @@ module VCAP::CloudController
           end
 
           context 'with a domain with a router_group_guid and type tcp' do
-            let(:domain) { SharedDomain.make(router_group_guid: tcp_group_1) }
+            let(:domain) { create(:shared_domain, router_group_guid: tcp_group_1) }
 
             it 'updates the route' do
               put "/v2/routes/#{route.guid}", Oj.dump(req)
@@ -898,8 +897,8 @@ module VCAP::CloudController
           end
 
           context 'when the routing api client raises a UaaUnavailable error' do
-            let(:domain) { SharedDomain.make(router_group_guid: 'router-group') }
-            let!(:route) { Route.make(space: space, domain: tcp_domain, port: port, host: '') }
+            let(:domain) { create(:shared_domain, router_group_guid: 'router-group') }
+            let!(:route) { create(:route, space: space, domain: tcp_domain, port: port, host: '') }
 
             before do
               allow_any_instance_of(RouteValidator).to receive(:validate).
@@ -915,8 +914,8 @@ module VCAP::CloudController
           end
 
           context 'when the routing api client raises a RoutingApiUnavailable error' do
-            let(:domain) { SharedDomain.make(router_group_guid: 'router-group') }
-            let!(:route) { Route.make(space: space, domain: tcp_domain, port: port, host: '') }
+            let(:domain) { create(:shared_domain, router_group_guid: 'router-group') }
+            let!(:route) { create(:route, space: space, domain: tcp_domain, port: port, host: '') }
 
             before do
               allow_any_instance_of(RouteValidator).to receive(:validate).
@@ -935,11 +934,11 @@ module VCAP::CloudController
     end
 
     describe 'GET /v2/routes/:guid' do
-      let(:user) { User.make }
-      let(:organization) { Organization.make }
-      let(:domain) { PrivateDomain.make(owning_organization: organization) }
-      let(:space) { Space.make(organization:) }
-      let(:route) { Route.make(domain:, space:) }
+      let(:user) { create(:user) }
+      let(:organization) { create(:organization) }
+      let(:domain) { create(:private_domain, owning_organization: organization) }
+      let(:space) { create(:space, organization:) }
+      let(:route) { create(:route, domain:, space:) }
 
       context 'as a space auditor' do
         before do
@@ -970,16 +969,16 @@ module VCAP::CloudController
     end
 
     describe 'GET /v2/routes' do
-      let(:organization) { Organization.make }
-      let(:domain) { PrivateDomain.make(owning_organization: organization) }
-      let(:space) { Space.make(organization:) }
-      let!(:first_route) { Route.make(domain:, space:) }
-      let!(:second_route) { Route.make(domain:, space:) }
+      let(:organization) { create(:organization) }
+      let(:domain) { create(:private_domain, owning_organization: organization) }
+      let(:space) { create(:space, organization:) }
+      let!(:first_route) { create(:route, domain:, space:) }
+      let!(:second_route) { create(:route, domain:, space:) }
 
-      let(:other_org) { Organization.make }
-      let(:other_domain) { PrivateDomain.make(owning_organization: other_org) }
-      let(:other_space) { Space.make(organization: other_org) }
-      let!(:third_route_for_other_org) { Route.make(domain: other_domain, space: other_space) }
+      let(:other_org) { create(:organization) }
+      let(:other_domain) { create(:private_domain, owning_organization: other_org) }
+      let(:other_space) { create(:space, organization: other_org) }
+      let!(:third_route_for_other_org) { create(:route, domain: other_domain, space: other_space) }
 
       before do
         set_current_user_as_admin
@@ -1021,12 +1020,12 @@ module VCAP::CloudController
           let(:first_route_info) { decoded_response.fetch('resources')[0] }
           let(:second_route_info) { decoded_response.fetch('resources')[1] }
           let(:third_route_info) { decoded_response.fetch('resources')[2] }
-          let(:space1) { Space.make(organization:) }
+          let(:space1) { create(:space, organization:) }
 
-          let(:organization2) { Organization.make }
-          let(:domain2) { PrivateDomain.make(owning_organization: organization2) }
-          let(:space2) { Space.make(organization: organization2) }
-          let!(:route_for_organization2) { Route.make(domain: domain2, space: space2) }
+          let(:organization2) { create(:organization) }
+          let(:domain2) { create(:private_domain, owning_organization: organization2) }
+          let(:space2) { create(:space, organization: organization2) }
+          let!(:route_for_organization2) { create(:route, domain: domain2, space: space2) }
 
           it 'Allows organization_guid query at any place in query with preceding domain query' do
             org_guid    = organization.guid
@@ -1043,7 +1042,7 @@ module VCAP::CloudController
           it 'Allows organization_guid query at any place in query with all queryable filters' do
             org_guid    = organization.guid
             taken_host  = 'someroute'
-            route_temp  = Route.make(host: taken_host, domain: domain, space: space)
+            route_temp  = create(:route, host: taken_host, domain: domain, space: space)
             route_guid  = route_temp.guid
             domain_guid = domain.guid
 
@@ -1090,7 +1089,7 @@ module VCAP::CloudController
 
           context 'with pagination' do
             let(:results_per_page) { 1 }
-            let(:route_for_organization2) { Route.make(domain: domain2, space: space2) }
+            let(:route_for_organization2) { create(:route, domain: domain2, space: space2) }
             let(:domain1) { domain }
             let(:org1) { organization }
             let(:org2) { organization2 }
@@ -1174,15 +1173,15 @@ module VCAP::CloudController
     end
 
     describe 'GET /v2/routes/ inline related resources' do
-      let(:organization) { Organization.make }
-      let(:domain) { PrivateDomain.make(owning_organization: organization) }
-      let(:space) { Space.make(organization:) }
-      let(:route) { Route.make(domain:, space:) }
-      let(:myapp) { AppModel.make(name: 'myapp') }
-      let!(:app_route_mapping) { RouteMappingModel.make(route: route, app: myapp, process_type: 'web') }
+      let(:organization) { create(:organization) }
+      let(:domain) { create(:private_domain, owning_organization: organization) }
+      let(:space) { create(:space, organization:) }
+      let(:route) { create(:route, domain:, space:) }
+      let(:myapp) { create(:app_model, name: 'myapp') }
+      let!(:app_route_mapping) { create(:route_mapping_model, route: route, app: myapp, process_type: 'web') }
 
-      let!(:webproc1) { ProcessModel.make(app: myapp, type: 'web', created_at: 1.day.ago) }
-      let!(:webproc2) { ProcessModel.make(app: myapp, type: 'web', created_at: 2.days.ago) }
+      let!(:webproc1) { create(:process_model, app: myapp, type: 'web', created_at: 1.day.ago) }
+      let!(:webproc2) { create(:process_model, app: myapp, type: 'web', created_at: 2.days.ago) }
 
       before { set_current_user_as_admin }
 
@@ -1203,7 +1202,7 @@ module VCAP::CloudController
     end
 
     describe 'GET /v2/routes/reserved/domain/:domain_guid/host/:hostname' do
-      before { set_current_user(User.make) }
+      before { set_current_user(create(:user)) }
 
       context 'when the domain does not exist' do
         it 'returns a NOT_FOUND (404)' do
@@ -1213,7 +1212,7 @@ module VCAP::CloudController
       end
 
       context 'when the domain exists' do
-        let(:route) { Route.make }
+        let(:route) { create(:route) }
 
         context 'when the hostname is not reserved' do
           it 'returns a NOT_FOUND (404)' do
@@ -1240,7 +1239,7 @@ module VCAP::CloudController
           context 'when the path does exist' do
             context 'when the path does not contain url encoding' do
               let(:path) { '/my_path' }
-              let(:route) { Route.make(path:) }
+              let(:route) { create(:route, path:) }
 
               it 'returns a NO_CONTENT (204)' do
                 get "/v2/routes/reserved/domain/#{route.domain_guid}/host/#{route.host}?path=#{path}"
@@ -1250,7 +1249,7 @@ module VCAP::CloudController
 
             context 'when the path is url encoded' do
               let(:path) { '/my%20path' }
-              let(:route) { Route.make(path:) }
+              let(:route) { create(:route, path:) }
 
               it 'returns a NO_CONTENT' do
                 uri_encoded_path = '%2Fmy%2520path'
@@ -1264,7 +1263,7 @@ module VCAP::CloudController
     end
 
     describe 'GET /v2/routes/reserved/domain/:domain_guid' do
-      before { set_current_user(User.make) }
+      before { set_current_user(create(:user)) }
 
       context 'when the domain does not exist' do
         it 'returns a NOT_FOUND (404)' do
@@ -1274,7 +1273,7 @@ module VCAP::CloudController
       end
 
       context 'when the domain exists' do
-        let(:route) { Route.make }
+        let(:route) { create(:route) }
 
         it 'returns a NOT_FOUND (404)' do
           get "/v2/routes/reserved/domain/#{route.domain_guid}"
@@ -1282,8 +1281,8 @@ module VCAP::CloudController
         end
 
         context 'when the domain is a private domain' do
-          let(:domain) { PrivateDomain.make }
-          let(:route) { Route.make(domain: domain, host: '', space: Space.make(organization: domain.owning_organization)) }
+          let(:domain) { create(:private_domain) }
+          let(:route) { create(:route, domain: domain, host: '', space: create(:space, organization: domain.owning_organization)) }
 
           it 'returns NO_CONTENT (204)' do
             get "/v2/routes/reserved/domain/#{route.domain_guid}"
@@ -1306,9 +1305,9 @@ module VCAP::CloudController
         end
 
         context 'when the route is tcp route' do
-          let(:tcp_domain) { SharedDomain.make(router_group_guid: 'tcp-group-1') }
-          let(:tcp_2_domain) { SharedDomain.make(router_group_guid: 'tcp-group-1') }
-          let(:tcp_route) { Route.make(domain: tcp_domain, host: '', port: 1234) }
+          let(:tcp_domain) { create(:shared_domain, router_group_guid: 'tcp-group-1') }
+          let(:tcp_2_domain) { create(:shared_domain, router_group_guid: 'tcp-group-1') }
+          let(:tcp_route) { create(:route, domain: tcp_domain, host: '', port: 1234) }
 
           before do
             allow_any_instance_of(RouteValidator).to receive(:validate)
@@ -1352,7 +1351,7 @@ module VCAP::CloudController
           context 'when the path does exist' do
             context 'when the path does not contain url encoding' do
               let(:path) { '/my_path' }
-              let(:route) { Route.make(path:) }
+              let(:route) { create(:route, path:) }
 
               it 'returns a NO_CONTENT (204)' do
                 get "/v2/routes/reserved/domain/#{route.domain_guid}?host=#{route.host}&path=#{path}"
@@ -1362,7 +1361,7 @@ module VCAP::CloudController
 
             context 'when the path is url encoded' do
               let(:path) { '/my%20path' }
-              let(:route) { Route.make(path:) }
+              let(:route) { create(:route, path:) }
 
               it 'returns a NO_CONTENT' do
                 uri_encoded_path = '%2Fmy%2520path'
@@ -1376,21 +1375,21 @@ module VCAP::CloudController
     end
 
     describe 'GET /v2/routes/:guid/<related resource>' do
-      let(:route_space) { Space.make }
-      let!(:route) { Route.make(space: route_space) }
+      let(:route_space) { create(:space) }
+      let!(:route) { create(:route, space: route_space) }
 
-      let(:other_route_space) { Space.make }
-      let!(:other_route) { Route.make(space: other_route_space) }
+      let(:other_route_space) { create(:space) }
+      let!(:other_route) { create(:route, space: other_route_space) }
 
-      let(:no_route_space) { Space.make }
+      let(:no_route_space) { create(:space) }
 
       let(:process1) { ProcessModelFactory.make(space: route_space) }
       let(:process2) { ProcessModelFactory.make(space: route_space) }
-      let!(:route_mapping1) { RouteMappingModel.make(app: process1.app, route: route, process_type: process1.type) }
-      let!(:route_mapping2) { RouteMappingModel.make(app: process2.app, route: route, process_type: process2.type) }
+      let!(:route_mapping1) { create(:route_mapping_model, app: process1.app, route: route, process_type: process1.type) }
+      let!(:route_mapping2) { create(:route_mapping_model, app: process2.app, route: route, process_type: process2.type) }
 
       let(:other_process) { ProcessModelFactory.make(space: other_route_space) }
-      let!(:other_route_mapping) { RouteMappingModel.make(app: other_process.app, route: other_route, process_type: other_process.type) }
+      let!(:other_route_mapping) { create(:route_mapping_model, app: other_process.app, route: other_route, process_type: other_process.type) }
 
       let(:developer) { make_developer_for_space(no_route_space) }
 
@@ -1445,7 +1444,7 @@ module VCAP::CloudController
         context 'when the app has more than one web process on it' do
           let(:developer) { make_developer_for_space(route_space) }
           let!(:app_model) { process1.app }
-          let!(:process3) { ProcessModel.make(app: app_model, type: process1.type) }
+          let!(:process3) { create(:process_model, app: app_model, type: process1.type) }
 
           it 'returns only one app guid' do
             get "v2/routes/#{route.guid}/apps"
@@ -1504,7 +1503,7 @@ module VCAP::CloudController
     end
 
     describe 'PUT /v2/routes/:guid/apps/:app_guid' do
-      let(:route) { Route.make }
+      let(:route) { create(:route) }
       let(:process) { ProcessModelFactory.make(space: route.space) }
       let(:developer) { make_developer_for_space(route.space) }
 
@@ -1553,7 +1552,7 @@ module VCAP::CloudController
 
       context 'when the user is not a SpaceDeveloper' do
         before do
-          set_current_user(User.make)
+          set_current_user(create(:user))
         end
 
         it 'returns 403' do
@@ -1568,7 +1567,7 @@ module VCAP::CloudController
 
       context 'when the route and app are already associated' do
         before do
-          RouteMappingModel.make(app: process.app, route: route, process_type: process.type)
+          create(:route_mapping_model, app: process.app, route: route, process_type: process.type)
         end
 
         it 'reports success' do
@@ -1608,8 +1607,8 @@ module VCAP::CloudController
       end
 
       describe 'tcp routes' do
-        let(:tcp_domain) { SharedDomain.make(router_group_guid: tcp_group_1) }
-        let(:route) { Route.make(domain: tcp_domain, port: 9090, host: '') }
+        let(:tcp_domain) { create(:shared_domain, router_group_guid: tcp_group_1) }
+        let(:route) { create(:route, domain: tcp_domain, port: 9090, host: '') }
 
         it 'associates the route and the app' do
           expect(route.reload.apps).to be_empty
@@ -1642,10 +1641,10 @@ module VCAP::CloudController
     end
 
     describe 'DELETE /v2/routes/:guid/apps/:app_guid' do
-      let(:route) { Route.make }
+      let(:route) { create(:route) }
       let(:process) { ProcessModelFactory.make(space: route.space) }
       let(:developer) { make_developer_for_space(route.space) }
-      let!(:route_mapping) { RouteMappingModel.make(app: process.app, route: route, process_type: process.type) }
+      let!(:route_mapping) { create(:route_mapping_model, app: process.app, route: route, process_type: process.type) }
 
       before do
         set_current_user(developer)
@@ -1693,7 +1692,7 @@ module VCAP::CloudController
 
       context 'when the user is not a SpaceDeveloper' do
         before do
-          set_current_user(User.make)
+          set_current_user(create(:user))
         end
 
         it 'returns 403' do

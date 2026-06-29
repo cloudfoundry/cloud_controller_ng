@@ -86,9 +86,7 @@ module VCAP
               before do
                 uaa_conflicting_catalog
 
-                VCAP::CloudController::ServiceDashboardClient.make(
-                  uaa_id: 'some-uaa-id'
-                )
+                create(:service_dashboard_client, uaa_id: 'some-uaa-id')
               end
 
               it 'errors when there are uaa synchronization errors' do

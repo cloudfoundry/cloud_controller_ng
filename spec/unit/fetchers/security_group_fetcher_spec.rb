@@ -4,9 +4,9 @@ require 'fetchers/security_group_fetcher'
 module VCAP::CloudController
   RSpec.describe SecurityGroupFetcher do
     let(:fetcher) { SecurityGroupFetcher }
-    let!(:security_group_1) { SecurityGroup.make }
-    let!(:security_group_2) { SecurityGroup.make }
-    let(:associated_space) { Space.make }
+    let!(:security_group_1) { create(:security_group) }
+    let!(:security_group_2) { create(:security_group) }
+    let(:associated_space) { create(:space) }
     let(:visible_security_groups) { nil }
     let(:security_group) { fetcher.fetch(security_group_1.guid, visible_security_groups) }
 

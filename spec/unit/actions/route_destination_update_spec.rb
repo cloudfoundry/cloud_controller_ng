@@ -7,7 +7,7 @@ module VCAP::CloudController
 
     describe '#update' do
       let(:process) { ProcessModelFactory.make(state: 'STARTED') }
-      let!(:destination) { RouteMappingModel.make({ protocol: 'http1', app_guid: process.app.guid, process_type: process.type }) }
+      let!(:destination) { create(:route_mapping_model, { protocol: 'http1', app_guid: process.app.guid, process_type: process.type }) }
       let(:process_route_handler) { instance_double(ProcessRouteHandler, notify_backend_of_route_update: nil) }
 
       let(:message) do
@@ -42,9 +42,9 @@ module VCAP::CloudController
             allow_any_instance_of(CloudController::DependencyLocator).to receive(:routing_api_client).and_return(routing_api_client)
             allow_any_instance_of(VCAP::CloudController::RouteValidator).to receive(:validate)
 
-            VCAP::CloudController::Route.make(:tcp)
+            create(:route, :tcp)
           end
-          let!(:tcp_destination) { RouteMappingModel.make({ route: tcp_route }) }
+          let!(:tcp_destination) { create(:route_mapping_model, { route: tcp_route }) }
 
           it 'does not update the destination record' do
             expect { RouteDestinationUpdate.update(tcp_destination, message) }.to raise_error(StandardError)

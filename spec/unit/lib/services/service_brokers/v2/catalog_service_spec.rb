@@ -448,7 +448,7 @@ module VCAP::Services::ServiceBrokers::V2
     end
 
     describe '#cc_service' do
-      let(:service_broker) { VCAP::CloudController::ServiceBroker.make }
+      let(:service_broker) { create(:service_broker) }
       let(:broker_provided_id) { SecureRandom.uuid }
       let(:catalog_service) do
         CatalogService.new(service_broker,
@@ -461,10 +461,8 @@ module VCAP::Services::ServiceBrokers::V2
 
       context 'when a Service exists with the same service broker and broker provided id' do
         let!(:cc_service) do
-          VCAP::CloudController::Service.make(
-            unique_id: broker_provided_id,
-            service_broker: service_broker
-          )
+          create(:service, unique_id: broker_provided_id,
+                           service_broker: service_broker)
         end
 
         it 'is that Service' do
@@ -474,7 +472,7 @@ module VCAP::Services::ServiceBrokers::V2
 
       context 'when a Service exists with a different service broker, but the same broker provided id' do
         let!(:cc_service) do
-          VCAP::CloudController::Service.make(unique_id: broker_provided_id)
+          create(:service, unique_id: broker_provided_id)
         end
 
         it 'is nil' do
@@ -484,7 +482,7 @@ module VCAP::Services::ServiceBrokers::V2
     end
 
     describe '#route_service?' do
-      let(:service_broker) { VCAP::CloudController::ServiceBroker.make }
+      let(:service_broker) { create(:service_broker) }
 
       context 'when requires include "route_forwarding"' do
         let(:service) { CatalogService.new(service_broker, 'requires' => ['route_forwarding']) }

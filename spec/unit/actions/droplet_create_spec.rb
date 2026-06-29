@@ -5,19 +5,18 @@ module VCAP::CloudController
   RSpec.describe DropletCreate do
     let(:user_audit_info) { UserAuditInfo.new(user_email: 'amelia@cats.com', user_guid: 'gooid') }
     subject(:droplet_create) { DropletCreate.new }
-    let!(:app) { AppModel.make }
-    let!(:buildpack_data) { BuildpackLifecycleDataModel.make(app:) }
+    let!(:app) { create(:app_model) }
+    let!(:buildpack_data) { create(:buildpack_lifecycle_data_model, app:) }
 
-    let(:docker_app) { AppModel.make(:docker) }
-    let(:package) { PackageModel.make app: }
+    let(:docker_app) { create(:app_model, :docker) }
+    let(:package) { create(:package_model, app:) }
     let(:build) do
-      BuildModel.make(
-        app: app,
-        package: package,
-        created_by_user_guid: 'schneider',
-        created_by_user_email: 'bob@loblaw.com',
-        created_by_user_name: 'bobert'
-      )
+      create(:build_model,
+             app: app,
+             package: package,
+             created_by_user_guid: 'schneider',
+             created_by_user_email: 'bob@loblaw.com',
+             created_by_user_name: 'bobert')
     end
 
     describe '#create' do
@@ -130,10 +129,9 @@ module VCAP::CloudController
 
       context 'when the build does not contain created_by fields' do
         let(:build) do
-          BuildModel.make(
-            app:,
-            package:
-          )
+          create(:build_model,
+                 app:,
+                 package:)
         end
 
         it 'sets the actor to UNKNOWN' do
@@ -224,12 +222,11 @@ module VCAP::CloudController
         end
 
         it 'returns the pre-existing droplet when one already exists for the build' do
-          existing = DropletModel.make(
-            app: app,
-            package: package,
-            build: build,
-            state: DropletModel::STAGING_STATE
-          )
+          existing = create(:droplet_model,
+                            app: app,
+                            package: package,
+                            build: build,
+                            state: DropletModel::STAGING_STATE)
           build.buildpack_lifecycle_data.update(droplet: existing)
 
           expect do
@@ -242,10 +239,9 @@ module VCAP::CloudController
 
         context 'when the build does not contain created_by fields' do
           let(:build) do
-            BuildModel.make(
-              app:,
-              package:
-            )
+            create(:build_model,
+                   app:,
+                   package:)
           end
 
           it 'sets the actor to UNKNOWN' do
@@ -271,14 +267,14 @@ module VCAP::CloudController
       end
 
       context 'cnb lifecycle' do
-        let(:app) { AppModel.make(:cnb) }
+        let(:app) { create(:app_model, :cnb) }
         let(:build) do
-          BuildModel.make(:cnb,
-                          app: app,
-                          package: package,
-                          created_by_user_guid: 'schneider',
-                          created_by_user_email: 'bob@loblaw.com',
-                          created_by_user_name: 'bobert')
+          create(:build_model, :cnb,
+                 app: app,
+                 package: package,
+                 created_by_user_guid: 'schneider',
+                 created_by_user_email: 'bob@loblaw.com',
+                 created_by_user_name: 'bobert')
         end
 
         it 'sets it on the droplet' do
@@ -316,7 +312,7 @@ module VCAP::CloudController
 
         context 'when the build does not contain created_by fields' do
           let(:build) do
-            BuildModel.make(:cnb, app:, package:)
+            create(:build_model, :cnb, app:, package:)
           end
 
           it 'sets the actor to UNKNOWN' do

@@ -10,10 +10,10 @@ module VCAP::CloudController
       let(:user_audit_info) { instance_double(UserAuditInfo).as_null_object }
       let(:volume_mount_services_enabled) { true }
 
-      let(:service) { Service.make(bindings_retrievable: true) }
-      let(:service_plan) { ServicePlan.make(service:) }
-      let(:app) { AppModel.make }
-      let(:service_instance) { ManagedServiceInstance.make(space: app.space, service_plan: service_plan) }
+      let(:service) { create(:service, bindings_retrievable: true) }
+      let(:service_plan) { create(:service_plan, service:) }
+      let(:app) { create(:app_model) }
+      let(:service_instance) { create(:managed_service_instance, space: app.space, service_plan: service_plan) }
       let(:client) { instance_double(VCAP::Services::ServiceBrokers::V2::Client, unbind: {}) }
       let(:accepts_incomplete) { false }
       let(:request) do
@@ -206,7 +206,7 @@ module VCAP::CloudController
 
       context 'when the instance has another operation in progress' do
         it 'fails' do
-          ServiceInstanceOperation.make(service_instance_id: service_instance.id, state: 'in progress')
+          create(:service_instance_operation, service_instance_id: service_instance.id, state: 'in progress')
 
           expect do
             service_binding_create.create(app, service_instance, message, volume_mount_services_enabled, accepts_incomplete)
@@ -244,7 +244,7 @@ module VCAP::CloudController
 
       context 'when volume mount services are disabled and the service requires volume_mount' do
         let(:volume_mount_services_enabled) { false }
-        let(:service_instance) { ManagedServiceInstance.make(:volume_mount, space_guid: app.space.guid) }
+        let(:service_instance) { create(:managed_service_instance, :volume_mount, space_guid: app.space.guid) }
 
         it 'raises a VolumeMountServiceDisabled error' do
           expect do
@@ -254,8 +254,8 @@ module VCAP::CloudController
       end
 
       context 'when the app and service instance are in different spaces' do
-        let(:app) { AppModel.make(space: Space.make) }
-        let(:service_instance) { ManagedServiceInstance.make(space: Space.make) }
+        let(:app) { create(:app_model, space: create(:space)) }
+        let(:service_instance) { create(:managed_service_instance, space: create(:space)) }
 
         context 'when the service instance has not been shared into the app space' do
           it 'raises a SpaceMismatch error' do
@@ -354,7 +354,7 @@ module VCAP::CloudController
           end
 
           context 'when bindings_retrievable is false' do
-            let(:service) { Service.make(bindings_retrievable: false) }
+            let(:service) { create(:service, bindings_retrievable: false) }
 
             it 'raises an error' do
               expect do

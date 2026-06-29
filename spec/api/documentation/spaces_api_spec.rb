@@ -3,7 +3,7 @@ require 'rspec_api_documentation/dsl'
 
 RSpec.resource 'Spaces', type: %i[api legacy_api] do
   let(:admin_auth_header) { admin_headers['HTTP_AUTHORIZATION'] }
-  let!(:space) { VCAP::CloudController::Space.make }
+  let!(:space) { FactoryBot.create(:space) }
   let(:guid) { space.guid }
 
   authenticated_request
@@ -54,7 +54,7 @@ RSpec.resource 'Spaces', type: %i[api legacy_api] do
     post '/v2/spaces/' do
       include_context 'createable_fields', required: true
       example 'Creating a Space' do
-        organization_guid = VCAP::CloudController::Organization.make.guid
+        organization_guid = create(:organization).guid
         client.post '/v2/spaces', Oj.dump(required_fields.merge(organization_guid:)), headers
         expect(status).to eq(201)
 
@@ -86,7 +86,7 @@ RSpec.resource 'Spaces', type: %i[api legacy_api] do
 
   describe 'Nested endpoints' do
     include_context 'guid_parameter'
-    let(:user) { VCAP::CloudController::User.make }
+    let(:user) { create(:user) }
 
     before do
       VCAP::CloudController::SecurityContext.set(user, 'valid_token')
@@ -98,8 +98,8 @@ RSpec.resource 'Spaces', type: %i[api legacy_api] do
 
     describe 'Routes' do
       before do
-        domain = VCAP::CloudController::PrivateDomain.make(owning_organization: space.organization)
-        VCAP::CloudController::Route.make(domain:, space:)
+        domain = create(:private_domain, owning_organization: space.organization)
+        create(:route, domain:, space:)
       end
 
       standard_model_list :route, VCAP::CloudController::RoutesController, outer_model: :space, exclude_parameters: ['organization_guid']
@@ -113,8 +113,8 @@ RSpec.resource 'Spaces', type: %i[api legacy_api] do
         allow_any_instance_of(VCAP::CloudController::UaaClient).to receive(:usernames_for_ids).and_return({ associated_developer.guid => 'developer@example.com' })
       end
 
-      let!(:associated_developer) { VCAP::CloudController::User.make }
-      let(:developer) { VCAP::CloudController::User.make }
+      let!(:associated_developer) { create(:user) }
+      let(:developer) { create(:user) }
 
       context 'by user guid' do
         let(:associated_developer_guid) { associated_developer.guid }
@@ -169,8 +169,8 @@ RSpec.resource 'Spaces', type: %i[api legacy_api] do
         allow_any_instance_of(VCAP::CloudController::UaaClient).to receive(:usernames_for_ids).and_return({ associated_manager.guid => 'manager@example.com' })
       end
 
-      let!(:associated_manager) { VCAP::CloudController::User.make }
-      let(:manager) { VCAP::CloudController::User.make }
+      let!(:associated_manager) { create(:user) }
+      let(:manager) { create(:user) }
 
       context 'by user guid' do
         let(:associated_manager_guid) { associated_manager.guid }
@@ -225,8 +225,8 @@ RSpec.resource 'Spaces', type: %i[api legacy_api] do
         allow_any_instance_of(VCAP::CloudController::UaaClient).to receive(:usernames_for_ids).and_return({ associated_auditor.guid => 'auditor@example.com' })
       end
 
-      let!(:associated_auditor) { VCAP::CloudController::User.make }
-      let(:auditor) { VCAP::CloudController::User.make }
+      let!(:associated_auditor) { create(:user) }
+      let(:auditor) { create(:user) }
 
       context 'by user guid' do
         let(:associated_auditor_guid) { associated_auditor.guid }
@@ -274,7 +274,7 @@ RSpec.resource 'Spaces', type: %i[api legacy_api] do
     end
 
     describe 'User Roles' do
-      let(:everything_user) { VCAP::CloudController::User.make }
+      let(:everything_user) { create(:user) }
 
       before do
         space.organization.add_user(everything_user)
@@ -313,7 +313,7 @@ RSpec.resource 'Spaces', type: %i[api legacy_api] do
 
     describe 'Service Instances' do
       before do
-        VCAP::CloudController::ManagedServiceInstance.make(space:)
+        create(:managed_service_instance, space:)
       end
 
       request_parameter :return_user_provided_service_instances, "When 'true', include user provided service instances."
@@ -323,9 +323,9 @@ RSpec.resource 'Spaces', type: %i[api legacy_api] do
 
     describe 'Services' do
       before do
-        some_service = VCAP::CloudController::Service.make(active: true)
-        VCAP::CloudController::ServicePlan.make(service: some_service, public: false)
-        VCAP::CloudController::ServicePlanVisibility.make(service_plan: some_service.service_plans.first, organization: space.organization)
+        some_service = create(:service, active: true)
+        create(:service_plan, service: some_service, public: false)
+        create(:service_plan_visibility, service_plan: some_service.service_plans.first, organization: space.organization)
       end
 
       standard_model_list :service, VCAP::CloudController::ServicesController, outer_model: :space, path: :service, exclude_parameters: ['provider']
@@ -333,7 +333,7 @@ RSpec.resource 'Spaces', type: %i[api legacy_api] do
 
     describe 'Events' do
       before do
-        user                   = VCAP::CloudController::User.make
+        user                   = create(:user)
         space_event_repository = VCAP::CloudController::Repositories::SpaceEventRepository.new
         space_event_repository.record_space_update(space, VCAP::CloudController::UserAuditInfo.new(user_guid: user.guid, user_email: 'user@example.com'), { 'name' => 'new_name' })
       end
@@ -342,9 +342,9 @@ RSpec.resource 'Spaces', type: %i[api legacy_api] do
     end
 
     describe 'Security Groups' do
-      let!(:associated_security_group) { VCAP::CloudController::SecurityGroup.make(space_guids: [space.guid]) }
+      let!(:associated_security_group) { create(:security_group, space_guids: [space.guid]) }
       let(:associated_security_group_guid) { associated_security_group.guid }
-      let(:security_group) { VCAP::CloudController::SecurityGroup.make }
+      let(:security_group) { create(:security_group) }
       let(:security_group_guid) { security_group.guid }
 
       standard_model_list :security_group, VCAP::CloudController::SecurityGroupsController, outer_model: :space
@@ -358,9 +358,9 @@ RSpec.resource 'Spaces', type: %i[api legacy_api] do
     end
 
     describe 'Isolation Segments (experimental)' do
-      let(:isolation_segment_model) { VCAP::CloudController::IsolationSegmentModel.make }
-      let(:isolation_segment_model2) { VCAP::CloudController::IsolationSegmentModel.make }
-      let(:org_manager) { VCAP::CloudController::User.make }
+      let(:isolation_segment_model) { create(:isolation_segment_model) }
+      let(:isolation_segment_model2) { create(:isolation_segment_model) }
+      let(:org_manager) { create(:user) }
       let(:assigner) { VCAP::CloudController::IsolationSegmentAssign.new }
 
       before do

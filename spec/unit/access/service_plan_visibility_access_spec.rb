@@ -4,12 +4,12 @@ module VCAP::CloudController
   RSpec.describe ServicePlanVisibilityAccess, type: :access do
     subject(:access) { ServicePlanVisibilityAccess.new(Security::AccessContext.new) }
 
-    let(:user) { VCAP::CloudController::User.make }
-    let(:service) { VCAP::CloudController::Service.make }
-    let(:org) { VCAP::CloudController::Organization.make }
-    let(:service_plan) { VCAP::CloudController::ServicePlan.make(service: service, public: false) }
+    let(:user) { create(:user) }
+    let(:service) { create(:service) }
+    let(:org) { create(:organization) }
+    let(:service_plan) { create(:service_plan, service: service, public: false) }
 
-    let(:object) { VCAP::CloudController::ServicePlanVisibility.make(organization: org, service_plan: service_plan) }
+    let(:object) { create(:service_plan_visibility, organization: org, service_plan: service_plan) }
 
     before { set_current_user(user) }
 

@@ -5,10 +5,10 @@ module VCAP::CloudController
   RSpec.describe IncludeRoutePoliciesDecorator do
     subject(:decorator) { IncludeRoutePoliciesDecorator }
 
-    let(:space) { Space.make }
-    let(:domain) { SharedDomain.make }
-    let(:route1) { Route.make(space: space, domain: domain) }
-    let(:route2) { Route.make(space: space, domain: domain) }
+    let(:space) { create(:space) }
+    let(:domain) { create(:shared_domain) }
+    let(:route1) { create(:route, space: space, domain: domain) }
+    let(:route2) { create(:route, space: space, domain: domain) }
 
     it 'decorates the given hash with route_policies from routes' do
       route_policy1 = RoutePolicy.create(route: route1, source_type: 'app', source_guid: 'app-guid-1')

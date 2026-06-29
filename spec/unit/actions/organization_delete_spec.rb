@@ -11,46 +11,44 @@ module VCAP::CloudController
     subject(:org_delete) { OrganizationDelete.new(space_delete, user_audit_info) }
 
     describe '#delete' do
-      let!(:org_1) { Organization.make }
-      let!(:org_2) { Organization.make }
-      let!(:org_3) { Organization.make }
-      let!(:space) { Space.make(organization: org_1) }
-      let!(:space_2) { Space.make(organization: org_1) }
-      let!(:space_3) { Space.make(organization: org_3) }
-      let!(:app) { AppModel.make(space_guid: space.guid) }
-      let!(:app_2) { AppModel.make(space_guid: space_3.guid) }
-      let!(:service_instance) { ManagedServiceInstance.make(space:) }
-      let!(:service_instance_2) { ManagedServiceInstance.make(space: space_2) }
-      let!(:private_domain_1) { PrivateDomain.make(owning_organization: org_1) }
-      let!(:private_domain_2) { PrivateDomain.make(owning_organization: org_2) }
-      let!(:service_broker) { ServiceBroker.make }
-      let!(:service) { Service.make(service_broker:) }
-      let!(:service_plan) { ServicePlan.make(service: service, public: false) }
+      let!(:org_1) { create(:organization) }
+      let!(:org_2) { create(:organization) }
+      let!(:org_3) { create(:organization) }
+      let!(:space) { create(:space, organization: org_1) }
+      let!(:space_2) { create(:space, organization: org_1) }
+      let!(:space_3) { create(:space, organization: org_3) }
+      let!(:app) { create(:app_model, space_guid: space.guid) }
+      let!(:app_2) { create(:app_model, space_guid: space_3.guid) }
+      let!(:service_instance) { create(:managed_service_instance, space:) }
+      let!(:service_instance_2) { create(:managed_service_instance, space: space_2) }
+      let!(:private_domain_1) { create(:private_domain, owning_organization: org_1) }
+      let!(:private_domain_2) { create(:private_domain, owning_organization: org_2) }
+      let!(:service_broker) { create(:service_broker) }
+      let!(:service) { create(:service, service_broker:) }
+      let!(:service_plan) { create(:service_plan, service: service, public: false) }
       let!(:service_plan_visibility) do
-        ServicePlanVisibility.make(organization_guid: org_1.guid, service_plan_guid: service_plan.guid)
+        create(:service_plan_visibility, organization_guid: org_1.guid, service_plan_guid: service_plan.guid)
       end
-      let!(:space_quota_definition) { SpaceQuotaDefinition.make(organization: org_1) }
-      let!(:isolation_segment) { IsolationSegmentModel.make(organization_guids: [org_1.guid]) }
-      let!(:user_1) { User.make }
+      let!(:space_quota_definition) { create(:space_quota_definition, organization: org_1) }
+      let!(:isolation_segment) { create(:isolation_segment_model, organization_guids: [org_1.guid]) }
+      let!(:user_1) { create(:user) }
 
       let!(:org1_label) do
-        OrganizationLabelModel.make(
-          key_prefix: 'indiana.edu',
-          key_name: 'state',
-          value: 'Indiana',
-          resource_guid: org_1.guid
-        )
+        create(:organization_label_model,
+               key_prefix: 'indiana.edu',
+               key_name: 'state',
+               value: 'Indiana',
+               resource_guid: org_1.guid)
       end
       let!(:org1_annotation) do
-        OrganizationAnnotationModel.make(
-          key_name: 'city',
-          value: 'Monticello',
-          resource_guid: org_1.guid
-        )
+        create(:organization_annotation_model,
+               key_name: 'city',
+               value: 'Monticello',
+               resource_guid: org_1.guid)
       end
 
       let!(:org_dataset) { Organization.where(guid: [org_1.guid, org_2.guid]) }
-      let(:user) { User.make }
+      let(:user) { create(:user) }
       let(:user_email) { 'user@example.com' }
 
       before do
@@ -208,7 +206,7 @@ module VCAP::CloudController
         end
 
         context 'when owned private domains are shared with other orgs' do
-          let!(:shared_with_org) { Organization.make }
+          let!(:shared_with_org) { create(:organization) }
 
           before do
             private_domain_1.add_shared_organization(shared_with_org)

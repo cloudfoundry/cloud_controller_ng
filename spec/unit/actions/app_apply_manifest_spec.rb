@@ -61,7 +61,7 @@ module VCAP::CloudController
           describe 'scaling instances' do
             let(:message) { AppManifestMessage.create_from_yml({ name: 'blah', instances: 4 }) }
             let(:manifest_process_scale_message) { message.manifest_process_scale_messages.first }
-            let(:process) { ProcessModel.make(instances: 1) }
+            let(:process) { create(:process_model, instances: 1) }
             let(:app) { process.app }
 
             context 'when the request is valid' do
@@ -82,7 +82,7 @@ module VCAP::CloudController
           describe 'scaling memory' do
             let(:message) { AppManifestMessage.create_from_yml({ name: 'blah', memory: '256MB' }) }
             let(:manifest_process_scale_message) { message.manifest_process_scale_messages.first }
-            let(:process) { ProcessModel.make(memory: 512) }
+            let(:process) { create(:process_model, memory: 512) }
             let(:app) { process.app }
 
             context 'when the request is valid' do
@@ -102,10 +102,10 @@ module VCAP::CloudController
         end
 
         describe 'updating buildpack' do
-          let(:buildpack) { VCAP::CloudController::Buildpack.make }
+          let(:buildpack) { create(:buildpack) }
           let(:message) { AppManifestMessage.create_from_yml({ name: 'blah', buildpack: buildpack.name }) }
           let(:app_update_message) { message.app_update_message }
-          let(:app) { AppModel.make }
+          let(:app) { create(:app_model) }
 
           context 'when the request is valid' do
             it 'returns the app' do
@@ -123,7 +123,7 @@ module VCAP::CloudController
 
             describe 'using cnb type' do
               let(:message) { AppManifestMessage.create_from_yml({ name: 'blah', buildpack: buildpack.name, lifecycle: 'cnb' }) }
-              let(:app) { AppModel.make(:cnb) }
+              let(:app) { create(:app_model, :cnb) }
 
               it 'calls AppUpdate with the correct arguments' do
                 app_apply_manifest.apply(app.guid, message)
@@ -151,10 +151,10 @@ module VCAP::CloudController
         end
 
         context 'cnb apps' do
-          let(:buildpack) { VCAP::CloudController::Buildpack.make }
+          let(:buildpack) { create(:buildpack) }
           let(:message) { AppManifestMessage.create_from_yml({ name: 'blah' }) }
           let(:app_update_message) { message.app_update_message }
-          let(:app) { AppModel.make(:cnb) }
+          let(:app) { create(:app_model, :cnb) }
 
           before do
             TestConfig.override(default_app_lifecycle: 'cnb')
@@ -184,7 +184,7 @@ module VCAP::CloudController
 
           context 'when the default differs from what is already set on the app' do
             let(:message) { AppManifestMessage.create_from_yml({ name: 'blah', buildpack: buildpack.name }) }
-            let(:app) { AppModel.make }
+            let(:app) { create(:app_model) }
 
             it 'preserves the apps lifecycle' do
               app_apply_manifest.apply(app.guid, message)
@@ -197,10 +197,10 @@ module VCAP::CloudController
         end
 
         context 'buildpack apps' do
-          let(:buildpack) { VCAP::CloudController::Buildpack.make }
+          let(:buildpack) { create(:buildpack) }
           let(:message) { AppManifestMessage.create_from_yml({ name: 'blah' }) }
           let(:app_update_message) { message.app_update_message }
-          let(:app) { AppModel.make }
+          let(:app) { create(:app_model) }
 
           before do
             TestConfig.override(default_app_lifecycle: 'buildpack')
@@ -230,7 +230,7 @@ module VCAP::CloudController
 
           context 'when the default differs from what is already set on the app' do
             let(:message) { AppManifestMessage.create_from_yml({ name: 'blah', buildpack: buildpack.name }) }
-            let(:app) { AppModel.make(:cnb) }
+            let(:app) { create(:app_model, :cnb) }
 
             it 'preserves the apps lifecycle' do
               app_apply_manifest.apply(app.guid, message)
@@ -245,7 +245,7 @@ module VCAP::CloudController
         describe 'updating stack' do
           let(:message) { AppManifestMessage.create_from_yml({ name: 'stack-test', stack: 'cflinuxfs4' }) }
           let(:app_update_message) { message.app_update_message }
-          let(:app) { AppModel.make }
+          let(:app) { create(:app_model) }
 
           context 'when the request is valid' do
             it 'returns the app' do
@@ -281,7 +281,7 @@ module VCAP::CloudController
         describe 'updating environment variables' do
           let(:message) { AppManifestMessage.create_from_yml({ env: { foo: 'bar' } }) }
           let(:app_update_environment_variables_message) { message.app_update_environment_variables_message }
-          let(:app) { AppModel.make }
+          let(:app) { create(:app_model) }
 
           context 'when the request is valid' do
             it 'returns the app' do
@@ -317,7 +317,7 @@ module VCAP::CloudController
         describe 'updating command' do
           let(:message) { AppManifestMessage.create_from_yml({ command: 'new-command' }) }
           let(:manifest_process_update_message) { message.manifest_process_update_messages.first }
-          let(:app) { AppModel.make }
+          let(:app) { create(:app_model) }
 
           context 'when the request is valid' do
             it 'returns the app' do
@@ -359,9 +359,9 @@ module VCAP::CloudController
                                                  ]
                                                })
           end
-          let!(:process1) { ProcessModel.make(type: 'web') }
+          let!(:process1) { create(:process_model, type: 'web') }
           let!(:app) { process1.app }
-          let!(:process2) { ProcessModel.make(app: app, type: 'worker') }
+          let!(:process2) { create(:process_model, app: app, type: 'worker') }
           let(:manifest_process_update_message1) { message.manifest_process_update_messages.first }
           let(:manifest_process_update_message2) { message.manifest_process_update_messages.last }
 
@@ -415,7 +415,7 @@ module VCAP::CloudController
                                                })
           end
 
-          let!(:app) { AppModel.make }
+          let!(:app) { create(:app_model) }
           let(:update_message) { message.manifest_process_update_messages.first }
           let(:scale_message) { message.manifest_process_scale_messages.first }
 
@@ -463,7 +463,7 @@ module VCAP::CloudController
         describe 'updating health check type' do
           let(:message) { AppManifestMessage.create_from_yml({ name: 'blah', health_check_type: 'process' }) }
           let(:manifest_process_update_message) { message.manifest_process_update_messages.first }
-          let(:process) { ProcessModel.make }
+          let(:process) { create(:process_model) }
           let(:app) { process.app }
 
           context 'when the request is invalid' do
@@ -499,7 +499,7 @@ module VCAP::CloudController
         describe 'updating readiness health check type' do
           let(:message) { AppManifestMessage.create_from_yml({ name: 'blah', readiness_health_check_type: 'port' }) }
           let(:manifest_process_update_message) { message.manifest_process_update_messages.first }
-          let(:process) { ProcessModel.make }
+          let(:process) { create(:process_model) }
           let(:app) { process.app }
 
           context 'when the request is invalid' do
@@ -535,7 +535,7 @@ module VCAP::CloudController
         describe 'updating health check invocation_timeout' do
           let(:message) { AppManifestMessage.create_from_yml({ name: 'blah', health_check_invocation_timeout: 47 }) }
           let(:manifest_process_update_message) { message.manifest_process_update_messages.first }
-          let(:process) { ProcessModel.make }
+          let(:process) { create(:process_model) }
           let(:app) { process.app }
 
           context 'when the request is valid' do
@@ -554,8 +554,8 @@ module VCAP::CloudController
         end
 
         describe 'updating sidecars' do
-          let(:app) { AppModel.make }
-          let!(:sidecar) { SidecarModel.make(name: 'existing-sidecar', app: app) }
+          let(:app) { create(:app_model) }
+          let!(:sidecar) { create(:sidecar_model, name: 'existing-sidecar', app: app) }
           let(:message) do
             AppManifestMessage.create_from_yml({ name: 'blah',
                                                  'sidecars' => [
@@ -585,7 +585,7 @@ module VCAP::CloudController
         describe 'updating routes' do
           let(:message) { AppManifestMessage.create_from_yml({ name: 'blah', routes: [{ route: 'http://tater.tots.com/tabasco' }] }) }
           let(:manifest_routes_update_message) { message.manifest_routes_update_message }
-          let(:process) { ProcessModel.make }
+          let(:process) { create(:process_model) }
           let(:app) { process.app }
 
           context 'when the request is valid' do
@@ -605,7 +605,7 @@ module VCAP::CloudController
         describe 'updating with a random-route' do
           let(:message) { AppManifestMessage.create_from_yml({ name: 'blah', random_route: true }) }
           let(:manifest_routes_update_message) { message.manifest_routes_update_message }
-          let(:process) { ProcessModel.make }
+          let(:process) { create(:process_model) }
           let(:app) { process.app }
 
           context 'when the app has no routes and the message specifies no routes' do
@@ -619,7 +619,7 @@ module VCAP::CloudController
             end
 
             context 'when there is no shared domain' do
-              let(:domain) { PrivateDomain.make(owning_organization: app.organization) }
+              let(:domain) { create(:private_domain, owning_organization: app.organization) }
 
               before do
                 Domain.dataset.destroy
@@ -650,8 +650,8 @@ module VCAP::CloudController
           end
 
           context 'when the app has existing routes' do
-            let(:route1) { Route.make(space: app.space) }
-            let!(:route_mapping1) { RouteMappingModel.make(app: app, route: route1, process_type: process.type) }
+            let(:route1) { create(:route, space: app.space) }
+            let!(:route_mapping1) { create(:route_mapping_model, app: app, route: route1, process_type: process.type) }
 
             it 'ignores the random_route' do
               app_apply_manifest.apply(app.guid, message)
@@ -687,7 +687,7 @@ module VCAP::CloudController
         describe 'updating with a default-route' do
           let(:message) { AppManifestMessage.create_from_yml({ name: 'blah', default_route: true }) }
           let(:manifest_routes_update_message) { message.manifest_routes_update_message }
-          let(:process) { ProcessModel.make }
+          let(:process) { create(:process_model) }
           let(:app) { process.app }
 
           context 'when the app has no routes and the message specifies no routes' do
@@ -702,7 +702,7 @@ module VCAP::CloudController
 
             context 'when the app name has special characters' do
               let(:message) { AppManifestMessage.create_from_yml({ name: 'blah!@#', default_route: true }) }
-              let(:app_model) { AppModel.make(name: 'blah!@#') }
+              let(:app_model) { create(:app_model, name: 'blah!@#') }
 
               it 'fails with a useful error message' do
                 expect do
@@ -715,7 +715,7 @@ module VCAP::CloudController
             context 'when the app name is too long' do
               let(:app_name) { 'a' * 100 }
               let(:message) { AppManifestMessage.create_from_yml({ name: app_name, default_route: true }) }
-              let(:app_model) { AppModel.make(name: app_name) }
+              let(:app_model) { create(:app_model, name: app_name) }
 
               it 'fails with a useful error' do
                 expect do
@@ -725,7 +725,7 @@ module VCAP::CloudController
             end
 
             context 'when there is no shared domain' do
-              let(:domain) { PrivateDomain.make(owning_organization: app.organization) }
+              let(:domain) { create(:private_domain, owning_organization: app.organization) }
 
               before do
                 Domain.dataset.destroy
@@ -756,8 +756,8 @@ module VCAP::CloudController
           end
 
           context 'when the app has existing routes' do
-            let(:route1) { Route.make(space: app.space) }
-            let!(:route_mapping1) { RouteMappingModel.make(app: app, route: route1, process_type: process.type) }
+            let(:route1) { create(:route, space: app.space) }
+            let!(:route_mapping1) { create(:route_mapping_model, app: app, route: route1, process_type: process.type) }
 
             it 'ignores the default_route' do
               app_apply_manifest.apply(app.guid, message)
@@ -792,12 +792,12 @@ module VCAP::CloudController
 
         describe 'deleting existing routes' do
           let(:manifest_routes_update_message) { message.manifest_routes_update_message }
-          let(:process) { ProcessModel.make }
+          let(:process) { create(:process_model) }
           let(:app) { process.app }
-          let(:route1) { Route.make(space: app.space) }
-          let(:route2) { Route.make(space: app.space) }
-          let!(:route_mapping1) { RouteMappingModel.make(app: app, route: route1, process_type: process.type) }
-          let!(:route_mapping2) { RouteMappingModel.make(app: app, route: route2, process_type: process.type) }
+          let(:route1) { create(:route, space: app.space) }
+          let(:route2) { create(:route, space: app.space) }
+          let!(:route_mapping1) { create(:route_mapping_model, app: app, route: route1, process_type: process.type) }
+          let!(:route_mapping2) { create(:route_mapping_model, app: app, route: route2, process_type: process.type) }
 
           context 'when no_route is true' do
             let(:message) { AppManifestMessage.create_from_yml({ name: 'blah', no_route: true, random_route: true }) }
@@ -841,16 +841,16 @@ module VCAP::CloudController
         end
 
         describe 'creating service bindings' do
-          let(:space) { Space.make }
-          let(:app) { AppModel.make(space:) }
+          let(:space) { create(:space) }
+          let(:app) { create(:app_model, space:) }
 
           before do
             TestConfig.override(volume_services_enabled: false)
           end
 
           context 'valid request with list of services' do
-            let!(:service_instance) { ManagedServiceInstance.make(name: 'si-name', space: space) }
-            let!(:service_instance_2) { ManagedServiceInstance.make(name: 'si2-name', space: space) }
+            let!(:service_instance) { create(:managed_service_instance, name: 'si-name', space: space) }
+            let!(:service_instance_2) { create(:managed_service_instance, name: 'si2-name', space: space) }
             let(:binding_name) { Sham.name }
             let(:message) do
               AppManifestMessage.create_from_yml({ services: [service_instance.name,
@@ -862,10 +862,10 @@ module VCAP::CloudController
 
             before do
               allow(ServiceCredentialAppBindingCreateMessage).to receive(:new).and_return(service_binding_create_message_1, service_binding_create_message_2)
-              allow(service_cred_binding_create).to receive(:bind) { ServiceBinding.make }
+              allow(service_cred_binding_create).to receive(:bind) { create(:service_binding) }
               allow_any_instance_of(ServiceBinding).to receive(:terminal_state?).and_return true
 
-              allow(service_cred_binding_create).to receive(:precursor).and_return(ServiceBinding.make)
+              allow(service_cred_binding_create).to receive(:precursor).and_return(create(:service_binding))
               allow(service_binding_create_message_1).to receive(:audit_hash).and_return({ foo: 'bar-1' })
               allow(service_binding_create_message_1).to receive(:parameters)
               allow(service_binding_create_message_2).to receive_messages(audit_hash: { foo: 'bar-2' }, parameters: { 'foo' => 'bar' })
@@ -948,7 +948,7 @@ module VCAP::CloudController
 
             context 'service binding already exists' do
               let(:message) { AppManifestMessage.create_from_yml({ services: [service_instance.name] }) }
-              let!(:binding) { ServiceBinding.make(service_instance:, app:) }
+              let!(:binding) { create(:service_binding, service_instance:, app:) }
 
               it 'does not create the binding' do
                 app_apply_manifest.apply(app.guid, message)
@@ -1005,8 +1005,8 @@ module VCAP::CloudController
 
             context 'service broker support sync or async bindings' do
               context 'action prefers sync binding' do
-                let(:binding1) { ServiceBinding.make(service_instance:, app:) }
-                let(:binding2) { ServiceBinding.make(service_instance: service_instance_2, app: app) }
+                let(:binding1) { create(:service_binding, service_instance:, app:) }
+                let(:binding2) { create(:service_binding, service_instance: service_instance_2, app: app) }
 
                 before do
                   allow_any_instance_of(ServiceBinding).to receive(:terminal_state?).and_call_original
@@ -1026,10 +1026,10 @@ module VCAP::CloudController
                   allow(service_cred_binding_create).to receive(:bind).with(anything, accepts_incomplete: false) do
                     count += 1
                     if count == 1
-                      ServiceBindingOperation.make(type: 'create', state: 'succeeded', service_binding: binding1)
+                      create(:service_binding_operation, type: 'create', state: 'succeeded', service_binding: binding1)
                       binding1
                     else
-                      ServiceBindingOperation.make(type: 'create', state: 'succeeded', service_binding: binding2)
+                      create(:service_binding_operation, type: 'create', state: 'succeeded', service_binding: binding2)
                       binding2
                     end
                   end
@@ -1045,8 +1045,8 @@ module VCAP::CloudController
 
             context 'broker only supports async bindings' do
               context 'action starts async binding' do
-                let(:binding1) { ServiceBinding.make(service_instance:, app:) }
-                let(:binding2) { ServiceBinding.make(service_instance: service_instance_2, app: app) }
+                let(:binding1) { create(:service_binding, service_instance:, app:) }
+                let(:binding2) { create(:service_binding, service_instance: service_instance_2, app: app) }
 
                 before do
                   response = double(body: '{}', code: '422')
@@ -1070,10 +1070,10 @@ module VCAP::CloudController
                   allow(service_cred_binding_create).to receive(:bind).with(anything, parameters: anything, accepts_incomplete: true) do
                     count += 1
                     if count == 1
-                      ServiceBindingOperation.make(type: 'create', state: 'initial', service_binding: binding1)
+                      create(:service_binding_operation, type: 'create', state: 'initial', service_binding: binding1)
                       binding1
                     else
-                      ServiceBindingOperation.make(type: 'create', state: 'initial', service_binding: binding2)
+                      create(:service_binding_operation, type: 'create', state: 'initial', service_binding: binding2)
                       binding2
                     end
                   end
@@ -1132,13 +1132,13 @@ module VCAP::CloudController
                 end
 
                 context 'async binding fails' do
-                  let(:binding) { ServiceBinding.make(service_instance:, app:) }
+                  let(:binding) { create(:service_binding, service_instance:, app:) }
 
                   before do
                     allow(service_cred_binding_create).to receive(:precursor) { binding }
 
                     allow(service_cred_binding_create).to receive(:bind).with(anything, parameters: anything, accepts_incomplete: true) do
-                      ServiceBindingOperation.make(type: 'create', state: 'initial', service_binding: binding)
+                      create(:service_binding_operation, type: 'create', state: 'initial', service_binding: binding)
                       binding
                     end
 
@@ -1191,7 +1191,7 @@ module VCAP::CloudController
 
               context 'when a create is in progress for the same binding' do
                 let!(:binding) do
-                  binding = ServiceBinding.make(service_instance:, app:)
+                  binding = create(:service_binding, service_instance:, app:)
                   binding.save_with_attributes_and_new_operation({}, { type: 'create', state: 'in progress' })
                   binding
                 end
@@ -1205,7 +1205,7 @@ module VCAP::CloudController
 
               context 'when a delete is in progress for the same binding' do
                 let!(:binding) do
-                  binding = ServiceBinding.make(service_instance:, app:)
+                  binding = create(:service_binding, service_instance:, app:)
                   binding.save_with_attributes_and_new_operation({}, { type: 'delete', state: 'in progress' })
                   binding
                 end
@@ -1219,7 +1219,7 @@ module VCAP::CloudController
 
               context 'when a delete failed for the same binding' do
                 let!(:binding) do
-                  binding = ServiceBinding.make(service_instance:, app:)
+                  binding = create(:service_binding, service_instance:, app:)
                   binding.save_with_attributes_and_new_operation({}, { type: 'delete', state: 'failed' })
                   binding
                 end
@@ -1394,7 +1394,7 @@ module VCAP::CloudController
         describe 'updating app features' do
           let(:message) { AppManifestMessage.create_from_yml({ features: { ssh: true } }) }
           let(:manifest_features_update_message) { message.manifest_features_update_message }
-          let(:app) { AppModel.make }
+          let(:app) { create(:app_model) }
 
           it 'returns the app' do
             expect(
@@ -1417,7 +1417,7 @@ module VCAP::CloudController
       describe '#apply' do
         context 'when changing memory' do
           let(:message) { AppManifestMessage.create_from_yml({ name: 'blah', memory: '256MB' }) }
-          let(:process) { ProcessModel.make(memory: 512, state: ProcessModel::STARTED, type: 'web') }
+          let(:process) { create(:process_model, memory: 512, state: ProcessModel::STARTED, type: 'web') }
           let(:app) { process.app }
 
           it "doesn't change the process's version" do
@@ -1429,7 +1429,7 @@ module VCAP::CloudController
           end
 
           context 'when there are additional app web processes' do
-            let(:process2) { ProcessModel.make(memory: 513, state: ProcessModel::STARTED, type: 'web', app: app, created_at: process.created_at + 1) }
+            let(:process2) { create(:process_model, memory: 513, state: ProcessModel::STARTED, type: 'web', app: app, created_at: process.created_at + 1) }
 
             it 'operates on the most recent process for a given app' do
               app.update(name: 'blah')

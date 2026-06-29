@@ -6,7 +6,7 @@ module VCAP::CloudController
     subject(:info) { BuildpackInfo.new(buildpack_name_or_url, buildpack_record) }
 
     let(:buildpack_name_or_url) { buildpack_record.name.upcase }
-    let(:buildpack_record) { Buildpack.make }
+    let(:buildpack_record) { create(:buildpack) }
 
     it 'returns the correct properties' do
       expect(info.buildpack).to eq(buildpack_name_or_url)
@@ -44,7 +44,7 @@ module VCAP::CloudController
 
     describe '#buildpack_enabled?' do
       context 'when the buildpack is enabled' do
-        let(:buildpack_record) { Buildpack.make enabled: true }
+        let(:buildpack_record) { create(:buildpack, enabled: true) }
 
         it 'is true' do
           expect(info).to be_buildpack_enabled
@@ -52,7 +52,7 @@ module VCAP::CloudController
       end
 
       context 'when the buildpack is NOT enabled' do
-        let(:buildpack_record) { Buildpack.make enabled: false }
+        let(:buildpack_record) { create(:buildpack, enabled: false) }
 
         it 'is false' do
           expect(info).not_to be_buildpack_enabled

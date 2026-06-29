@@ -7,7 +7,7 @@ RSpec.describe ResourceMatchesController, type: :controller do
   describe '#create' do
     include_context 'resource pool'
 
-    let(:user) { VCAP::CloudController::User.make }
+    let(:user) { create(:user) }
     let(:req_body) do
       {
         resources: [
@@ -33,8 +33,8 @@ RSpec.describe ResourceMatchesController, type: :controller do
     end
 
     describe 'permissions by role' do
-      let(:org) { VCAP::CloudController::Organization.make }
-      let(:space) { VCAP::CloudController::Space.make(organization: org) }
+      let(:org) { create(:organization) }
+      let(:space) { create(:space, organization: org) }
 
       role_to_expected_http_response = {
         'admin' => 201,
@@ -64,12 +64,12 @@ RSpec.describe ResourceMatchesController, type: :controller do
 
     context 'when resource matching feature flag is disabled' do
       before do
-        VCAP::CloudController::FeatureFlag.make(name: 'app_bits_upload', enabled: false)
+        create(:feature_flag, name: 'app_bits_upload', enabled: false)
       end
 
       context 'when the user is not an admin' do
         before do
-          set_current_user(VCAP::CloudController::User.make)
+          set_current_user(create(:user))
         end
 
         it 'raises FeatureDisabled' do
@@ -94,7 +94,7 @@ RSpec.describe ResourceMatchesController, type: :controller do
 
     context 'when resource matching feature flag is enabled' do
       before do
-        VCAP::CloudController::FeatureFlag.make(name: 'app_bits_upload', enabled: true)
+        create(:feature_flag, name: 'app_bits_upload', enabled: true)
       end
 
       context 'when no resources match' do

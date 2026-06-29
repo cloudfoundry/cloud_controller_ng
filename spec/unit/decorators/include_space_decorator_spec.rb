@@ -3,9 +3,9 @@ require 'spec_helper'
 module VCAP::CloudController
   RSpec.describe IncludeSpaceDecorator do
     subject(:decorator) { IncludeSpaceDecorator }
-    let(:space1) { Space.make(name: 'first-space', created_at: Time.now.utc - 1.second) }
-    let(:space2) { Space.make(name: 'second-space') }
-    let(:apps) { [AppModel.make(space: space1), AppModel.make(space: space2), AppModel.make(space: space1)] }
+    let(:space1) { create(:space, name: 'first-space', created_at: Time.now.utc - 1.second) }
+    let(:space2) { create(:space, name: 'second-space') }
+    let(:apps) { [create(:app_model, space: space1), create(:app_model, space: space2), create(:app_model, space: space1)] }
 
     before do
       allow(Permissions).to receive(:new).and_return(double(can_read_globally?: true))

@@ -5,10 +5,10 @@ module VCAP::CloudController
   module Presenters
     module V3
       RSpec.describe RoutePolicyPresenter do
-        let(:space)  { Space.make }
-        let(:domain) { SharedDomain.make(name: 'apps.identity', enforce_route_policies: true) }
-        let(:route)  { Route.make(space:, domain:) }
-        let(:app_model) { AppModel.make(space:) }
+        let(:space)  { create(:space) }
+        let(:domain) { create(:shared_domain, name: 'apps.identity', enforce_route_policies: true) }
+        let(:route)  { create(:route, space:, domain:) }
+        let(:app_model) { create(:app_model, space:) }
 
         subject(:result) { RoutePolicyPresenter.new(route_policy).to_hash }
 

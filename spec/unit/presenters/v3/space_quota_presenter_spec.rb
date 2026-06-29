@@ -3,27 +3,25 @@ require 'presenters/v3/space_quota_presenter'
 
 module VCAP::CloudController::Presenters::V3
   RSpec.describe SpaceQuotaPresenter do
-    let(:org) { VCAP::CloudController::Organization.make }
-    let(:space_1) { VCAP::CloudController::Space.make(organization: org) }
-    let(:space_2) { VCAP::CloudController::Space.make(organization: org) }
+    let(:org) { create(:organization) }
+    let(:space_1) { create(:space, organization: org) }
+    let(:space_2) { create(:space, organization: org) }
     let(:visible_space_guids) { [space_1.guid, space_2.guid] }
     let(:all_spaces_visible) { false }
 
     let(:space_quota) do
-      VCAP::CloudController::SpaceQuotaDefinition.make(
-        guid: 'quota-guid',
-        organization: org,
-        memory_limit: 2,
-        instance_memory_limit: 3,
-        app_instance_limit: 4,
-        app_task_limit: 5,
-        log_rate_limit: 2000,
-        non_basic_services_allowed: false,
-        total_services: 6,
-        total_service_keys: 7,
-        total_routes: 7,
-        total_reserved_route_ports: 2
-      )
+      create(:space_quota_definition, guid: 'quota-guid',
+                                      organization: org,
+                                      memory_limit: 2,
+                                      instance_memory_limit: 3,
+                                      app_instance_limit: 4,
+                                      app_task_limit: 5,
+                                      log_rate_limit: 2000,
+                                      non_basic_services_allowed: false,
+                                      total_services: 6,
+                                      total_service_keys: 7,
+                                      total_routes: 7,
+                                      total_reserved_route_ports: 2)
     end
 
     before do
@@ -59,19 +57,17 @@ module VCAP::CloudController::Presenters::V3
 
       context 'when using null values' do
         let(:space_quota) do
-          VCAP::CloudController::SpaceQuotaDefinition.make(
-            guid: 'quota-guid',
-            organization: org,
-            memory_limit: -1,
-            instance_memory_limit: -1,
-            app_instance_limit: -1,
-            app_task_limit: -1,
-            log_rate_limit: -1,
-            total_services: -1,
-            total_service_keys: -1,
-            total_routes: -1,
-            total_reserved_route_ports: -1
-          )
+          create(:space_quota_definition, guid: 'quota-guid',
+                                          organization: org,
+                                          memory_limit: -1,
+                                          instance_memory_limit: -1,
+                                          app_instance_limit: -1,
+                                          app_task_limit: -1,
+                                          log_rate_limit: -1,
+                                          total_services: -1,
+                                          total_service_keys: -1,
+                                          total_routes: -1,
+                                          total_reserved_route_ports: -1)
         end
 
         it "properly converts -1 sentinel values to JSON's null" do

@@ -16,47 +16,41 @@ RSpec.describe VCAP::CloudController::Presenters::V3::ServiceOfferingPresenter d
   let(:tags) { %w[foo bar] }
   let(:requires) { %w[syslog_drain route_forwarding volume_mount] }
   let(:updateable) { false }
-  let(:service_broker) { VCAP::CloudController::ServiceBroker.make }
+  let(:service_broker) { create(:service_broker) }
   let(:instances_retrievable) { false }
   let(:bindings_retrievable) { false }
   let(:allow_context_updates) { false }
   let(:created_at) { Time.now.round(0) - 100 }
 
   let(:service_offering) do
-    VCAP::CloudController::Service.make(
-      guid: guid,
-      label: name,
-      description: description,
-      active: available,
-      bindable: bindable,
-      extra: extra,
-      unique_id: id,
-      tags: tags,
-      requires: requires,
-      plan_updateable: updateable,
-      service_broker: service_broker,
-      instances_retrievable: instances_retrievable,
-      bindings_retrievable: bindings_retrievable,
-      allow_context_updates: allow_context_updates,
-      created_at: created_at
-    )
+    create(:service, guid: guid,
+                     label: name,
+                     description: description,
+                     active: available,
+                     bindable: bindable,
+                     extra: extra,
+                     unique_id: id,
+                     tags: tags,
+                     requires: requires,
+                     plan_updateable: updateable,
+                     service_broker: service_broker,
+                     instances_retrievable: instances_retrievable,
+                     bindings_retrievable: bindings_retrievable,
+                     allow_context_updates: allow_context_updates,
+                     created_at: created_at)
   end
 
   let!(:potato_label) do
-    VCAP::CloudController::ServiceOfferingLabelModel.make(
-      key_prefix: 'canberra.au',
-      key_name: 'potato',
-      value: 'mashed',
-      resource_guid: service_offering.guid
-    )
+    create(:service_offering_label_model, key_prefix: 'canberra.au',
+                                          key_name: 'potato',
+                                          value: 'mashed',
+                                          resource_guid: service_offering.guid)
   end
 
   let!(:mountain_annotation) do
-    VCAP::CloudController::ServiceOfferingAnnotationModel.make(
-      key_name: 'altitude',
-      value: '14,412',
-      resource_guid: service_offering.guid
-    )
+    create(:service_offering_annotation_model, key_name: 'altitude',
+                                               value: '14,412',
+                                               resource_guid: service_offering.guid)
   end
 
   describe '#to_hash' do
@@ -233,7 +227,7 @@ RSpec.describe VCAP::CloudController::Presenters::V3::ServiceOfferingPresenter d
 
       let(:result) { described_class.new(service_offering, decorators: [FakeDecorator]).to_hash.deep_symbolize_keys }
 
-      let(:service_offering) { VCAP::CloudController::Service.make }
+      let(:service_offering) { create(:service) }
 
       it 'uses the decorator' do
         expect(result[:included]).to match({ resource: { guid: service_offering.guid } })

@@ -5,15 +5,15 @@ require 'messages/organization_quota_apply_message'
 module VCAP::CloudController
   RSpec.describe OrganizationQuotaApply do
     describe '#apply' do
-      let(:user) { User.make }
+      let(:user) { create(:user) }
       let(:user_email) { 'user@example.com' }
       let(:user_name) { 'user-name' }
       let(:user_audit_info) { UserAuditInfo.new(user_guid: user.guid, user_email: user_email, user_name: user_name) }
 
       subject { OrganizationQuotaApply.new(user_audit_info) }
 
-      let(:org) { VCAP::CloudController::Organization.make }
-      let(:org_quota) { VCAP::CloudController::QuotaDefinition.make }
+      let(:org) { create(:organization) }
+      let(:org_quota) { create(:quota_definition) }
       let(:message) do
         VCAP::CloudController::OrganizationQuotaApplyMessage.new({
                                                                    data: [{ guid: org.guid }]
@@ -85,7 +85,7 @@ module VCAP::CloudController
       end
 
       context 'when applying quota to multiple orgs' do
-        let(:org2) { VCAP::CloudController::Organization.make }
+        let(:org2) { create(:organization) }
         let(:message) do
           VCAP::CloudController::OrganizationQuotaApplyMessage.new({
                                                                      data: [{ guid: org.guid }, { guid: org2.guid }]
@@ -124,10 +124,10 @@ module VCAP::CloudController
       end
 
       context 'when trying to set a log rate limit and there are apps with unlimited log rates' do
-        let(:space) { VCAP::CloudController::Space.make(guid: 'space-guid', organization: org) }
-        let(:app_model) { VCAP::CloudController::AppModel.make(name: 'name1', space: space) }
-        let!(:process_model) { VCAP::CloudController::ProcessModel.make(app: app_model, log_rate_limit: -1) }
-        let(:org_quota) { VCAP::CloudController::QuotaDefinition.make(log_rate_limit: 2000) }
+        let(:space) { create(:space, guid: 'space-guid', organization: org) }
+        let(:app_model) { create(:app_model, name: 'name1', space: space) }
+        let!(:process_model) { create(:process_model, app: app_model, log_rate_limit: -1) }
+        let(:org_quota) { create(:quota_definition, log_rate_limit: 2000) }
 
         it 'raises an error' do
           expect do

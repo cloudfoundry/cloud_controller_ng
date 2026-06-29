@@ -4,8 +4,8 @@ require 'request_spec_shared_examples'
 RSpec.describe 'Stacks Request' do
   let(:stack_config_file) { File.join(Paths::FIXTURES, 'config/stacks.yml') }
   let(:default_stack_name) { 'default-stack-name' }
-  let(:org) { VCAP::CloudController::Organization.make(created_at: 3.days.ago) }
-  let(:space) { VCAP::CloudController::Space.make(organization: org) }
+  let(:org) { create(:organization, created_at: 3.days.ago) }
+  let(:space) { create(:space, organization: org) }
 
   before { VCAP::CloudController::Stack.configure(stack_config_file) }
 
@@ -62,8 +62,8 @@ RSpec.describe 'Stacks Request' do
         let(:expected_codes_and_responses) do
           Hash.new({ code: 200, response_objects: stacks_response_objects }.freeze)
         end
-        let!(:stack1) { VCAP::CloudController::Stack.make }
-        let!(:stack2) { VCAP::CloudController::Stack.make(name: default_stack_name) }
+        let!(:stack1) { create(:stack) }
+        let!(:stack2) { create(:stack, name: default_stack_name) }
       end
     end
 
@@ -92,13 +92,13 @@ RSpec.describe 'Stacks Request' do
             updated_ats: { gt: Time.now.utc.iso8601 }
           }
         end
-        let!(:stack) { VCAP::CloudController::Stack.make(name: default_stack_name) }
+        let!(:stack) { create(:stack, name: default_stack_name) }
       end
 
       context 'When stacks exist' do
-        let!(:stack1) { VCAP::CloudController::Stack.make }
-        let!(:stack2) { VCAP::CloudController::Stack.make(name: default_stack_name) }
-        let!(:stack3) { VCAP::CloudController::Stack.make }
+        let!(:stack1) { create(:stack) }
+        let!(:stack2) { create(:stack, name: default_stack_name) }
+        let!(:stack3) { create(:stack) }
 
         it 'returns a paginated list of stacks' do
           get '/v3/stacks?page=1&per_page=2', nil, user_header
@@ -263,18 +263,16 @@ RSpec.describe 'Stacks Request' do
 
         context 'when there are labels' do
           let!(:stack1_label) do
-            VCAP::CloudController::StackLabelModel.make(
-              key_name: 'release',
-              value: 'stable',
-              resource_guid: stack1.guid
-            )
+            create(:stack_label_model,
+                   key_name: 'release',
+                   value: 'stable',
+                   resource_guid: stack1.guid)
           end
           let!(:stack2_label) do
-            VCAP::CloudController::StackLabelModel.make(
-              key_name: 'release',
-              value: 'unstable',
-              resource_guid: stack2.guid
-            )
+            create(:stack_label_model,
+                   key_name: 'release',
+                   value: 'unstable',
+                   resource_guid: stack2.guid)
           end
 
           it 'returns a list of label filtered stacks' do
@@ -331,7 +329,7 @@ RSpec.describe 'Stacks Request' do
     let(:user) { make_user }
     let(:user_header) { headers_for(user) }
     let(:api_call) { ->(user_header) { get "/v3/stacks/#{stack.guid}", nil, user_header } }
-    let!(:stack) { VCAP::CloudController::Stack.make }
+    let!(:stack) { create(:stack) }
     let(:stacks_response_object) do
       {
         'name' => stack.name,
@@ -362,16 +360,15 @@ RSpec.describe 'Stacks Request' do
   describe 'GET /v3/stacks/:guid/apps' do
     let(:user) { make_user }
     let(:headers) { headers_for(user) }
-    let!(:stack) { VCAP::CloudController::Stack.make(name: 'stack-name') }
-    let!(:buildpack) { VCAP::CloudController::Buildpack.make(name: 'bp-name') }
-    let!(:space2) { VCAP::CloudController::Space.make }
-    let!(:app_model1) { VCAP::CloudController::AppModel.make(name: 'name1', space: space) }
-    let!(:app_model2) { VCAP::CloudController::AppModel.make(name: 'name2', space: space2) }
+    let!(:stack) { create(:stack, name: 'stack-name') }
+    let!(:buildpack) { create(:buildpack, name: 'bp-name') }
+    let!(:space2) { create(:space) }
+    let!(:app_model1) { create(:app_model, name: 'name1', space: space) }
+    let!(:app_model2) { create(:app_model, name: 'name2', space: space2) }
     let!(:app_model3) do
-      VCAP::CloudController::AppModel.make(
-        :docker,
-        name: 'name2'
-      )
+      create(:app_model,
+             :docker,
+             name: 'name2')
     end
 
     before do
@@ -705,7 +702,7 @@ RSpec.describe 'Stacks Request' do
       let(:name) { 'the-name' }
 
       before do
-        VCAP::CloudController::Stack.make name:
+        create(:stack, name:)
       end
 
       it 'responds with 422' do
@@ -718,7 +715,7 @@ RSpec.describe 'Stacks Request' do
 
   describe 'PATCH /v3/stacks/:guid' do
     let(:user) { make_user(admin: true) }
-    let(:stack) { VCAP::CloudController::Stack.make }
+    let(:stack) { create(:stack) }
     let(:request_body) do
       {
         metadata: {
@@ -771,7 +768,7 @@ RSpec.describe 'Stacks Request' do
   describe 'DELETE /v3/stacks/:guid' do
     let(:user) { make_user(admin: true) }
     let(:headers) { admin_headers_for(user) }
-    let(:stack) { VCAP::CloudController::Stack.make }
+    let(:stack) { create(:stack) }
 
     it 'destroys the stack' do
       delete "/v3/stacks/#{stack.guid}", {}, headers

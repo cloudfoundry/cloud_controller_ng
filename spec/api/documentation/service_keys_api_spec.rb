@@ -3,8 +3,8 @@ require 'rspec_api_documentation/dsl'
 
 RSpec.resource 'Service Keys', type: %i[api legacy_api] do
   let(:admin_auth_header) { admin_headers['HTTP_AUTHORIZATION'] }
-  let(:service_instance) { VCAP::CloudController::ManagedServiceInstance.make }
-  let(:service_key) { VCAP::CloudController::ServiceKey.make }
+  let(:service_instance) { FactoryBot.create(:managed_service_instance) }
+  let(:service_key) { FactoryBot.create(:service_key) }
   let(:guid) { service_key.guid }
   authenticated_request
 

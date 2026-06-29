@@ -8,10 +8,10 @@ module VCAP::CloudController
 
     describe '#update' do
       context 'when creating a private domain' do
-        let(:domain) { PrivateDomain.make }
-        let(:organization) { Organization.make }
-        let(:shared_org1) { Organization.make }
-        let(:shared_org2) { Organization.make }
+        let(:domain) { create(:private_domain) }
+        let(:organization) { create(:organization) }
+        let(:shared_org1) { create(:organization) }
+        let(:shared_org2) { create(:organization) }
 
         let(:message) do
           DomainUpdateSharedOrgsMessage.new({

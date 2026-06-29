@@ -17,8 +17,8 @@ module VCAP::CloudController
         dbl
       end
 
-      let(:org) { Organization.make }
-      let(:space) { Space.make(organization: org) }
+      let(:org) { create(:organization) }
+      let(:space) { create(:space, organization: org) }
       let(:space_guid) { space.guid }
       let(:maintenance_info) do
         {
@@ -26,7 +26,7 @@ module VCAP::CloudController
           'description' => 'amazing plan'
         }
       end
-      let(:service_plan) { ServicePlan.make(maintenance_info:) }
+      let(:service_plan) { create(:service_plan, maintenance_info:) }
       let(:plan_guid) { service_plan.guid }
       let(:name) { 'si-test-name' }
       let(:arbitrary_parameters) { { foo: 'bar' } }
@@ -81,9 +81,9 @@ module VCAP::CloudController
         end
 
         describe 'broker is unavaliable' do
-          let(:broker) { ServiceBroker.make(state: ServiceBrokerStateEnum::SYNCHRONIZING) }
-          let(:offering) { Service.make(service_broker: broker) }
-          let(:service_plan) { ServicePlan.make(service: offering, maintenance_info: maintenance_info) }
+          let(:broker) { create(:service_broker, state: ServiceBrokerStateEnum::SYNCHRONIZING) }
+          let(:offering) { create(:service, service_broker: broker) }
+          let(:service_plan) { create(:service_plan, service: offering, maintenance_info: maintenance_info) }
 
           it 'raises' do
             expect { action.precursor(message:, service_plan:) }.to raise_error(
@@ -94,7 +94,7 @@ module VCAP::CloudController
         end
 
         context 'when service instance with the same name already exists' do
-          let(:instance) { ManagedServiceInstance.make(name:, space:) }
+          let(:instance) { create(:managed_service_instance, name:, space:) }
 
           context "when the last operation is in state 'create in progress'" do
             before do
@@ -239,9 +239,9 @@ module VCAP::CloudController
         context 'quotas' do
           context 'when service instance limit has been reached for the space' do
             before do
-              quota = SpaceQuotaDefinition.make(total_services: 1, organization: org)
+              quota = create(:space_quota_definition, total_services: 1, organization: org)
               quota.add_space(space)
-              ManagedServiceInstance.make(space:)
+              create(:managed_service_instance, space:)
             end
 
             it 'raises' do
@@ -255,9 +255,9 @@ module VCAP::CloudController
 
           context 'when service instance limit has been reached for the org' do
             before do
-              quotas = QuotaDefinition.make(total_services: 1)
+              quotas = create(:quota_definition, total_services: 1)
               quotas.add_organization(org)
-              ManagedServiceInstance.make(space:)
+              create(:managed_service_instance, space:)
             end
 
             it 'raises' do
@@ -270,10 +270,10 @@ module VCAP::CloudController
           end
 
           context 'when the space does not allow paid services' do
-            let(:service_plan) { ServicePlan.make(public: true, free: false, active: true) }
+            let(:service_plan) { create(:service_plan, public: true, free: false, active: true) }
 
             before do
-              quota = SpaceQuotaDefinition.make(non_basic_services_allowed: false, organization: org)
+              quota = create(:space_quota_definition, non_basic_services_allowed: false, organization: org)
               quota.add_space(space)
             end
 
@@ -287,10 +287,10 @@ module VCAP::CloudController
           end
 
           context 'when the org does not allow paid services' do
-            let(:service_plan) { ServicePlan.make(free: false, public: true, active: true) }
+            let(:service_plan) { create(:service_plan, free: false, public: true, active: true) }
 
             before do
-              quota = QuotaDefinition.make(non_basic_services_allowed: false)
+              quota = create(:quota_definition, non_basic_services_allowed: false)
               quota.add_organization(org)
             end
 
@@ -452,7 +452,7 @@ module VCAP::CloudController
       describe '#poll' do
         let(:provision_dashboard_url) { 'http://your-instance.com' }
         let!(:service_instance) do
-          VCAP::CloudController::ManagedServiceInstance.make.tap do |i|
+          create(:managed_service_instance).tap do |i|
             i.save_with_new_operation(
               {
                 service_plan: service_plan,
@@ -587,8 +587,8 @@ module VCAP::CloudController
 
           context 'retrieving service instance' do
             context 'when service instance is not retrievable' do
-              let(:service_offering) { Service.make(instances_retrievable: false) }
-              let(:service_plan) { ServicePlan.make(service: service_offering) }
+              let(:service_offering) { create(:service, instances_retrievable: false) }
+              let(:service_plan) { create(:service_plan, service: service_offering) }
 
               it 'does not call fetch service instance' do
                 action.poll(service_instance)
@@ -598,8 +598,8 @@ module VCAP::CloudController
             end
 
             context 'when service instance is retrievable' do
-              let(:service) { Service.make(instances_retrievable: true) }
-              let(:service_plan) { ServicePlan.make(service:) }
+              let(:service) { create(:service, instances_retrievable: true) }
+              let(:service_plan) { create(:service_plan, service:) }
 
               it 'fetches service instance' do
                 action.poll(service_instance)

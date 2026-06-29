@@ -7,7 +7,7 @@ module VCAP
       let(:fetcher) { described_class }
 
       describe 'fetch_all' do
-        let!(:route_bindings) { Array.new(3) { RouteBinding.make } }
+        let!(:route_bindings) { create_list(:route_binding, 3) }
 
         it 'returns all route bindings' do
           fetched_route_bindings = fetcher.fetch_all(
@@ -62,9 +62,9 @@ module VCAP
 
         context 'can be filtered by label selector' do
           before do
-            RouteBindingLabelModel.make(key_name: 'fruit', value: 'strawberry', route_binding: route_bindings[0])
-            RouteBindingLabelModel.make(key_name: 'fruit', value: 'strawberry', route_binding: route_bindings[1])
-            RouteBindingLabelModel.make(key_name: 'fruit', value: 'lemon', route_binding: route_bindings[2])
+            create(:route_binding_label_model, key_name: 'fruit', value: 'strawberry', route_binding: route_bindings[0])
+            create(:route_binding_label_model, key_name: 'fruit', value: 'strawberry', route_binding: route_bindings[1])
+            create(:route_binding_label_model, key_name: 'fruit', value: 'lemon', route_binding: route_bindings[2])
           end
 
           it 'returns instances with matching labels' do
@@ -80,15 +80,15 @@ module VCAP
       end
 
       describe 'fetch_some' do
-        let(:target_space) { Space.make }
+        let(:target_space) { create(:space) }
 
         before do
           make_other_route_bindings
         end
 
         it 'returns route bindings related to a set of space guids' do
-          service_instance_in_target_space = UserProvidedServiceInstance.make(:routing, space: target_space)
-          route_bindings_in_target_space = Array.new(3) { RouteBinding.make(service_instance: service_instance_in_target_space) }
+          service_instance_in_target_space = create(:user_provided_service_instance, :routing, space: target_space)
+          route_bindings_in_target_space = create_list(:route_binding, 3, service_instance: service_instance_in_target_space)
 
           fetched_route_bindings = fetcher.fetch_some(
             ServiceRouteBindingsListMessage.from_params({}),
@@ -100,8 +100,8 @@ module VCAP
 
         it 'can be filtered by service_instance_guids' do
           route_bindings_in_target_space = Array.new(3) do
-            service_instance_in_target_space = UserProvidedServiceInstance.make(:routing, space: target_space)
-            RouteBinding.make(service_instance: service_instance_in_target_space)
+            service_instance_in_target_space = create(:user_provided_service_instance, :routing, space: target_space)
+            create(:route_binding, service_instance: service_instance_in_target_space)
           end
 
           filtered_route_bindings = route_bindings_in_target_space[0..-2]
@@ -117,8 +117,8 @@ module VCAP
 
         it 'can be filtered by service_instance_names' do
           route_bindings_in_target_space = Array.new(3) do
-            service_instance_in_target_space = UserProvidedServiceInstance.make(:routing, space: target_space)
-            RouteBinding.make(service_instance: service_instance_in_target_space)
+            service_instance_in_target_space = create(:user_provided_service_instance, :routing, space: target_space)
+            create(:route_binding, service_instance: service_instance_in_target_space)
           end
 
           filtered_route_bindings = route_bindings_in_target_space[0..-2]
@@ -134,8 +134,8 @@ module VCAP
 
         it 'can be filtered by route_guids' do
           route_bindings_in_target_space = Array.new(3) do
-            service_instance_in_target_space = UserProvidedServiceInstance.make(:routing, space: target_space)
-            RouteBinding.make(service_instance: service_instance_in_target_space)
+            service_instance_in_target_space = create(:user_provided_service_instance, :routing, space: target_space)
+            create(:route_binding, service_instance: service_instance_in_target_space)
           end
 
           filtered_route_bindings = route_bindings_in_target_space[0..-2]
@@ -150,7 +150,7 @@ module VCAP
         end
 
         it 'eager loads the specified resources' do
-          RouteBinding.make(service_instance: UserProvidedServiceInstance.make(:routing, space: target_space))
+          create(:route_binding, service_instance: create(:user_provided_service_instance, :routing, space: target_space))
 
           dataset = fetcher.fetch_some(
             ServiceRouteBindingsListMessage.from_params({}),
@@ -163,7 +163,7 @@ module VCAP
         end
 
         def make_other_route_bindings
-          Array.new(3) { RouteBinding.make }
+          create_list(:route_binding, 3)
         end
       end
 

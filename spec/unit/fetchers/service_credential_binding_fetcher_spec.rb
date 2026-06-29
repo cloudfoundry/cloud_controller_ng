@@ -7,7 +7,7 @@ module VCAP
       let(:fetcher) { ServiceCredentialBindingFetcher.new }
 
       describe 'not a real guid' do
-        let!(:existing_credential_binding) { ServiceBinding.make }
+        let!(:existing_credential_binding) { create(:service_binding) }
 
         it 'returns nothing' do
           credential_binding = fetcher.fetch('does-not-exist', readable_spaces_query: nil)
@@ -16,10 +16,10 @@ module VCAP
       end
 
       describe 'service keys' do
-        let(:space) { Space.make }
+        let(:space) { create(:space) }
         let(:readable_spaces_query) { VCAP::CloudController::Space.where(id: [space].map(&:id)) }
-        let(:service_instance) { ManagedServiceInstance.make(space:) }
-        let!(:service_key) { ServiceKey.make(service_instance:) }
+        let(:service_instance) { create(:managed_service_instance, space:) }
+        let!(:service_key) { create(:service_key, service_instance:) }
 
         describe 'when in the space' do
           it 'can be found' do
@@ -35,7 +35,7 @@ module VCAP
         end
 
         describe 'when not in the space' do
-          let!(:other_space) { Space.make }
+          let!(:other_space) { create(:space) }
           let!(:readable_spaces_query) { VCAP::CloudController::Space.where(id: [other_space].map(&:id)) }
 
           it 'can not be found' do
@@ -48,10 +48,10 @@ module VCAP
 
       describe 'app bindings' do
         describe 'managed services' do
-          let(:space) { Space.make }
+          let(:space) { create(:space) }
           let(:readable_spaces_query) { VCAP::CloudController::Space.where(id: [space].map(&:id)) }
-          let(:service_instance) { ManagedServiceInstance.make(space:) }
-          let!(:app_binding) { ServiceBinding.make(service_instance: service_instance, name: 'some-name') }
+          let(:service_instance) { create(:managed_service_instance, space:) }
+          let!(:app_binding) { create(:service_binding, service_instance: service_instance, name: 'some-name') }
 
           it 'can be found' do
             credential_binding = fetcher.fetch(app_binding.guid, readable_spaces_query:)
@@ -67,7 +67,7 @@ module VCAP
           end
 
           describe 'when not in the space' do
-            let!(:other_space) { Space.make }
+            let!(:other_space) { create(:space) }
             let!(:readable_spaces_query) { VCAP::CloudController::Space.where(id: [other_space].map(&:id)) }
 
             it 'can not be found' do
@@ -79,10 +79,10 @@ module VCAP
         end
 
         describe 'user provided services' do
-          let(:space) { Space.make }
+          let(:space) { create(:space) }
           let(:readable_spaces_query) { VCAP::CloudController::Space.where(id: [space].map(&:id)) }
-          let(:service_instance) { UserProvidedServiceInstance.make(space:) }
-          let!(:app_binding) { ServiceBinding.make(service_instance: service_instance, name: 'some-name') }
+          let(:service_instance) { create(:user_provided_service_instance, space:) }
+          let!(:app_binding) { create(:service_binding, service_instance: service_instance, name: 'some-name') }
 
           it 'can be found' do
             credential_binding = fetcher.fetch(app_binding.guid, readable_spaces_query:)
@@ -98,7 +98,7 @@ module VCAP
           end
 
           describe 'when not in the space' do
-            let!(:other_space) { Space.make }
+            let!(:other_space) { create(:space) }
             let!(:readable_spaces_query) { VCAP::CloudController::Space.where(id: [other_space].map(&:id)) }
 
             it 'can not be found' do
@@ -110,10 +110,10 @@ module VCAP
         end
 
         describe 'with last operation' do
-          let(:service_instance) { ManagedServiceInstance.make }
+          let(:service_instance) { create(:managed_service_instance) }
           let(:readable_spaces_query) { VCAP::CloudController::Space.where(id: [service_instance.space].map(&:id)) }
           let!(:app_binding) do
-            binding = ServiceBinding.make(service_instance:)
+            binding = create(:service_binding, service_instance:)
             binding.save_with_new_operation({ state: 'succeeded', type: 'create', description: 'radical avocado' })
             binding
           end

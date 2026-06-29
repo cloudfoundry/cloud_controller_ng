@@ -7,7 +7,7 @@ module VCAP::CloudController
   RSpec.describe TasksCompletionController do
     describe 'POST /internal/v4/tasks/:task_guid/completed' do
       let(:url) { "/internal/v4/tasks/#{task.guid}/completed" }
-      let(:task) { TaskModel.make }
+      let(:task) { create(:task_model) }
       let(:task_response) do
         {
           task_guid: task.guid,
@@ -61,7 +61,7 @@ module VCAP::CloudController
 
       context 'when task is already in a completed state at the time the completion callback is evaluated' do
         context 'when task is already succeeded' do
-          let(:task) { TaskModel.make(state: 'SUCCEEDED') }
+          let(:task) { create(:task_model, state: 'SUCCEEDED') }
 
           it 'responds with a 400 status code' do
             post url, Oj.dump(task_response)
@@ -72,7 +72,7 @@ module VCAP::CloudController
         end
 
         context 'when task is already failed' do
-          let(:task) { TaskModel.make(state: 'FAILED') }
+          let(:task) { create(:task_model, state: 'FAILED') }
 
           it 'responds with a 400 status code' do
             post url, Oj.dump(task_response)
@@ -94,7 +94,7 @@ module VCAP::CloudController
         end
 
         context 'with an invalid task guid' do
-          let(:other_task) { TaskModel.make }
+          let(:other_task) { create(:task_model) }
           let(:url) { "/internal/v4/tasks/#{other_task.guid}/completed" }
 
           it 'fails with a 400' do

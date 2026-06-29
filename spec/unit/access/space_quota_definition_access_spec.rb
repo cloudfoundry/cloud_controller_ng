@@ -3,11 +3,11 @@ require 'spec_helper'
 module VCAP::CloudController
   RSpec.describe SpaceQuotaDefinitionAccess, type: :access do
     subject(:access) { SpaceQuotaDefinitionAccess.new(Security::AccessContext.new) }
-    let(:user) { VCAP::CloudController::User.make }
-    let(:org) { Organization.make }
+    let(:user) { create(:user) }
+    let(:org) { create(:organization) }
     let(:scopes) { nil }
-    let(:space) { Space.make(organization: org) }
-    let(:object) { VCAP::CloudController::SpaceQuotaDefinition.make(organization: org) }
+    let(:space) { create(:space, organization: org) }
+    let(:object) { create(:space_quota_definition, organization: org) }
 
     before { set_current_user(user, scopes:) }
 
@@ -21,7 +21,7 @@ module VCAP::CloudController
       it_behaves_like 'full access'
 
       context 'when the organization is suspended' do
-        let(:org) { Organization.make(status: 'suspended') }
+        let(:org) { create(:organization, status: 'suspended') }
 
         it_behaves_like 'read only access'
       end
@@ -110,7 +110,7 @@ module VCAP::CloudController
 
     context 'user in a different organization (defensive)' do
       before do
-        different_organization = VCAP::CloudController::Organization.make
+        different_organization = create(:organization)
         different_organization.add_user(user)
       end
 
@@ -119,7 +119,7 @@ module VCAP::CloudController
 
     context 'manager in a different organization (defensive)' do
       before do
-        different_organization = VCAP::CloudController::Organization.make
+        different_organization = create(:organization)
         different_organization.add_manager(user)
       end
 

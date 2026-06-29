@@ -2,22 +2,20 @@ require 'spec_helper'
 
 module VCAP::CloudController
   RSpec.describe Event, type: :model do
-    let(:space) { Space.make }
+    let(:space) { create(:space) }
 
     let(:event) do
-      Event.make(
-        type: 'audit.movie.premiere',
-        actor: 'ncage',
-        actor_type: 'One True God',
-        actor_name: 'Nicolas Cage',
-        actee: 'jtravolta',
-        actee_type: 'Scientologist',
-        actee_name: 'John Travolta',
-        timestamp: Time.new(1997, 6, 27).utc,
-        metadata: { 'popcorn_price' => '$(arm + leg)' },
-        space_guid: space.guid,
-        organization_guid: space.organization.guid
-      )
+      create(:event, type: 'audit.movie.premiere',
+                     actor: 'ncage',
+                     actor_type: 'One True God',
+                     actor_name: 'Nicolas Cage',
+                     actee: 'jtravolta',
+                     actee_type: 'Scientologist',
+                     actee_name: 'John Travolta',
+                     timestamp: Time.new(1997, 6, 27).utc,
+                     metadata: { 'popcorn_price' => '$(arm + leg)' },
+                     space_guid: space.guid,
+                     organization_guid: space.organization.guid)
     end
 
     it { is_expected.to have_timestamp_columns }
@@ -129,9 +127,9 @@ module VCAP::CloudController
       context 'when the space is deleted' do
         let(:space_guid) { 'space-guid-1234' }
 
-        let(:new_org) { Organization.make }
-        let(:new_space) { Space.make(guid: space_guid, organization: new_org) }
-        let!(:new_event) { Event.make(space_guid: new_space.guid, organization_guid: new_org.guid) }
+        let(:new_org) { create(:organization) }
+        let(:new_space) { create(:space, guid: space_guid, organization: new_org) }
+        let!(:new_event) { create(:event, space_guid: new_space.guid, organization_guid: new_org.guid) }
 
         before { new_space.destroy }
 

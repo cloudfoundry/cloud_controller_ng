@@ -5,9 +5,9 @@ module VCAP::CloudController
   RSpec.describe RoutePolicyCreate do
     subject(:action) { RoutePolicyCreate.new }
 
-    let(:space) { Space.make }
-    let(:domain) { SharedDomain.make(name: 'apps.identity', enforce_route_policies: true) }
-    let(:route) { Route.make(space:, domain:) }
+    let(:space) { create(:space) }
+    let(:domain) { create(:shared_domain, name: 'apps.identity', enforce_route_policies: true) }
+    let(:route) { create(:route, space:, domain:) }
     let(:app_guid) { SecureRandom.uuid }
     let(:message) { instance_double(RoutePolicyCreateMessage, source: "cf:app:#{app_guid}") }
 
@@ -73,7 +73,7 @@ module VCAP::CloudController
       end
 
       context 'when the domain has route_policies_scope: "space"' do
-        let(:domain) { SharedDomain.make(name: 'apps.identity', enforce_route_policies: true, route_policies_scope: 'space') }
+        let(:domain) { create(:shared_domain, name: 'apps.identity', enforce_route_policies: true, route_policies_scope: 'space') }
 
         it 'allows cf:app sources' do
           expect do
@@ -104,7 +104,7 @@ module VCAP::CloudController
       end
 
       context 'when the domain has route_policies_scope: "org"' do
-        let(:domain) { SharedDomain.make(name: 'apps.identity', enforce_route_policies: true, route_policies_scope: 'org') }
+        let(:domain) { create(:shared_domain, name: 'apps.identity', enforce_route_policies: true, route_policies_scope: 'org') }
 
         it 'allows cf:app sources' do
           expect do
@@ -135,7 +135,7 @@ module VCAP::CloudController
       end
 
       context 'when the domain has route_policies_scope: "any"' do
-        let(:domain) { SharedDomain.make(name: 'apps.identity', enforce_route_policies: true, route_policies_scope: 'any') }
+        let(:domain) { create(:shared_domain, name: 'apps.identity', enforce_route_policies: true, route_policies_scope: 'any') }
 
         it 'allows cf:any sources' do
           any_message = instance_double(RoutePolicyCreateMessage, source: 'cf:any')

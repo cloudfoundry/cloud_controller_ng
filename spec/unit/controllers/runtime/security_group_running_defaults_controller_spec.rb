@@ -4,7 +4,7 @@ require 'spec_helper'
 
 module VCAP::CloudController
   RSpec.describe SecurityGroupRunningDefaultsController do
-    before { set_current_user(User.make) }
+    before { set_current_user(create(:user)) }
 
     it 'allows non-admins to read running security groups' do
       set_current_user_as_admin
@@ -13,8 +13,8 @@ module VCAP::CloudController
     end
 
     it 'only returns SecurityGroups that are running defaults' do
-      SecurityGroup.make(running_default: false)
-      running_default = SecurityGroup.make(running_default: true)
+      create(:security_group, running_default: false)
+      running_default = create(:security_group, running_default: true)
 
       get '/v2/config/running_security_groups'
       expect(last_response.status).to eq(200)
@@ -26,7 +26,7 @@ module VCAP::CloudController
       before { set_current_user_as_admin }
 
       it 'sets running_default to true on the security group and return the security group' do
-        security_group = SecurityGroup.make(running_default: false)
+        security_group = create(:security_group, running_default: false)
 
         put "/v2/config/running_security_groups/#{security_group.guid}", {}
 
@@ -36,8 +36,8 @@ module VCAP::CloudController
       end
 
       it 'prevents non-admins from creating security groups' do
-        set_current_user(User.make)
-        security_group = SecurityGroup.make(running_default: false)
+        set_current_user(create(:user))
+        security_group = create(:security_group, running_default: false)
 
         put "/v2/config/running_security_groups/#{security_group.guid}", {}
 
@@ -56,15 +56,15 @@ module VCAP::CloudController
       before { set_current_user_as_admin }
 
       it 'does not allow non-admins to delete running security groups' do
-        set_current_user(User.make)
-        security_group = SecurityGroup.make(running_default: true)
+        set_current_user(create(:user))
+        security_group = create(:security_group, running_default: true)
 
         delete "/v2/config/running_security_groups/#{security_group.guid}"
         expect(last_response.status).to eq(403)
       end
 
       it 'sets running_default to false on the security group' do
-        security_group = SecurityGroup.make(running_default: true)
+        security_group = create(:security_group, running_default: true)
 
         delete "/v2/config/running_security_groups/#{security_group.guid}"
 

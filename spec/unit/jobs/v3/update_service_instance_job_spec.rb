@@ -31,14 +31,14 @@ module VCAP::CloudController
                                                   }
                                                 })
       end
-      let(:new_plan) { ServicePlan.make }
+      let(:new_plan) { create(:service_plan) }
       let(:new_tags) { %w[bar quz] }
       let(:arbitrary_parameters) { { foo: 'bar' } }
       let(:audit_hash) { { request: 'some_value' } }
       let(:user_info) { instance_double(UserAuditInfo, { user_guid: }) }
       let(:user_guid) { Sham.uaa_id }
       let(:service_instance) do
-        si = ManagedServiceInstance.make(service_plan: plan)
+        si = create(:managed_service_instance, service_plan: plan)
         si.save_with_new_operation(
           {},
           {
@@ -48,7 +48,7 @@ module VCAP::CloudController
         )
         si
       end
-      let(:plan) { ServicePlan.make(maintenance_info:) }
+      let(:plan) { create(:service_plan, maintenance_info:) }
       let(:maintenance_info) { { 'version' => '1.2.0' } }
       let(:params) { { some_data: 'some_value' } }
 
@@ -111,8 +111,8 @@ module VCAP::CloudController
         context 'first time' do
           context 'runs compatibility checks' do
             context 'volume mount' do
-              let(:service_offering) { Service.make(requires: %w[volume_mount]) }
-              let(:plan) { ServicePlan.make(service: service_offering) }
+              let(:service_offering) { create(:service, requires: %w[volume_mount]) }
+              let(:plan) { create(:service_plan, service: service_offering) }
 
               it 'adds to the warnings required but disabled' do
                 TestConfig.config[:volume_services_enabled] = false
@@ -128,8 +128,8 @@ module VCAP::CloudController
             end
 
             context 'route forwarding' do
-              let(:service_offering) { Service.make(requires: %w[route_forwarding]) }
-              let(:plan) { ServicePlan.make(service: service_offering) }
+              let(:service_offering) { create(:service, requires: %w[route_forwarding]) }
+              let(:plan) { create(:service_plan, service: service_offering) }
 
               it 'adds to the warnings required but disabled' do
                 TestConfig.config[:route_services_enabled] = false
@@ -159,7 +159,7 @@ module VCAP::CloudController
 
             context 'when the plan defines a duration' do
               let(:maximum_polling_duration) { 7465 }
-              let(:plan) { ServicePlan.make(maximum_polling_duration:) }
+              let(:plan) { create(:service_plan, maximum_polling_duration:) }
 
               it 'sets to the plan value' do
                 expect(job.maximum_duration_seconds).to eq(7465)

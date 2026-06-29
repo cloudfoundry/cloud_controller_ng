@@ -87,7 +87,7 @@ module VCAP::CloudController
       end
 
       context 'admin user' do
-        let(:member_a) { User.make }
+        let(:member_a) { create(:user) }
         let(:enumeration_expectation_a) { User.order(:id).limit(50) }
 
         include_examples 'permission enumeration', 'Admin',
@@ -100,8 +100,8 @@ module VCAP::CloudController
     end
 
     describe 'GET /v2/users' do
-      let(:greg) { User.make }
-      let(:timothy) { User.make }
+      let(:greg) { create(:user) }
+      let(:timothy) { create(:user) }
 
       before do
         set_current_user(greg, admin: true)
@@ -120,7 +120,7 @@ module VCAP::CloudController
     end
 
     describe 'GET /v2/users/:guid' do
-      let(:greg) { User.make }
+      let(:greg) { create(:user) }
 
       before do
         set_current_user(greg, admin: true)
@@ -136,9 +136,9 @@ module VCAP::CloudController
     end
 
     describe 'GET /v2/users/:guid/organizations' do
-      let(:mgr) { User.make }
-      let(:user) { User.make }
-      let(:org) { Organization.make(manager_guids: [mgr.guid], user_guids: [user.guid]) }
+      let(:mgr) { create(:user) }
+      let(:user) { create(:user) }
+      let(:org) { create(:organization, manager_guids: [mgr.guid], user_guids: [user.guid]) }
 
       before { set_current_user(user) }
 
@@ -154,10 +154,10 @@ module VCAP::CloudController
     end
 
     describe 'assigning org roles' do
-      let(:space) { Space.make }
+      let(:space) { create(:space) }
       let(:org) { space.organization }
-      let(:user) { User.make }
-      let(:other_user) { User.make(username: 'other_user') }
+      let(:user) { create(:user) }
+      let(:other_user) { create(:user, username: 'other_user') }
       let(:expected_response) do
         {
           'metadata' => {
@@ -391,9 +391,9 @@ module VCAP::CloudController
     end
 
     describe 'DELETE /v2/users/:guid/audited_organizations/:org_guid' do
-      let(:space) { Space.make }
+      let(:space) { create(:space) }
       let(:org) { space.organization }
-      let(:user) { User.make }
+      let(:user) { create(:user) }
       let(:event_type) { 'audit.user.organization_auditor_remove' }
 
       before do
@@ -416,7 +416,7 @@ module VCAP::CloudController
       end
 
       context 'when acting on another user' do
-        let(:other_user) { User.make }
+        let(:other_user) { create(:user) }
 
         before do
           org.add_auditor(other_user)
@@ -431,7 +431,7 @@ module VCAP::CloudController
 
       context 'as a manager' do
         context 'when acting on another user' do
-          let(:other_user) { User.make }
+          let(:other_user) { create(:user) }
 
           before do
             org.add_manager(user)
@@ -454,11 +454,11 @@ module VCAP::CloudController
     end
 
     describe 'DELETE /v2/users/:guid/audited_spaces/:space_guid' do
-      let(:space) { Space.make }
+      let(:space) { create(:space) }
       let(:org) { space.organization }
-      let(:user) { User.make }
+      let(:user) { create(:user) }
       let(:event_type) { 'audit.user.space_auditor_remove' }
-      let(:other_user) { User.make }
+      let(:other_user) { create(:user) }
 
       before do
         set_current_user(user)
@@ -523,9 +523,9 @@ module VCAP::CloudController
     end
 
     describe 'DELETE /v2/users/:guid/billing_managed_organizations/:org_guid' do
-      let(:space) { Space.make }
-      let(:user) { User.make }
-      let(:billing_manager) { User.make }
+      let(:space) { create(:space) }
+      let(:user) { create(:user) }
+      let(:billing_manager) { create(:user) }
       let(:org) { space.organization }
       let(:event_type) { 'audit.user.organization_billing_manager_remove' }
 
@@ -567,7 +567,7 @@ module VCAP::CloudController
       end
 
       describe 'when there are other billing managers' do
-        let(:other_billing_manager) { User.make }
+        let(:other_billing_manager) { create(:user) }
 
         before do
           org.add_billing_manager other_billing_manager
@@ -600,9 +600,9 @@ module VCAP::CloudController
     end
 
     describe 'DELETE /v2/users/:guid/managed_organizations/:org_guid' do
-      let(:space) { Space.make }
+      let(:space) { create(:space) }
       let(:org) { space.organization }
-      let(:org_manager) { User.make(username: 'org manager') }
+      let(:org_manager) { create(:user, username: 'org manager') }
       let(:event_type) { 'audit.user.organization_manager_remove' }
 
       before do
@@ -615,7 +615,7 @@ module VCAP::CloudController
 
       describe 'removing the last org manager' do
         context 'as an admin' do
-          let(:admin) { User.make(username: 'admin') }
+          let(:admin) { create(:user, username: 'admin') }
 
           before do
             set_current_user admin
@@ -650,7 +650,7 @@ module VCAP::CloudController
       end
 
       describe 'when there are other managers' do
-        before { org.add_manager User.make }
+        before { org.add_manager create(:user) }
 
         describe 'removing oneself' do
           before { set_current_user(org_manager) }
@@ -668,7 +668,7 @@ module VCAP::CloudController
         end
 
         context 'as a non-admin non-manager' do
-          let(:user) { User.make }
+          let(:user) { create(:user) }
 
           before do
             org.add_user user
@@ -685,9 +685,9 @@ module VCAP::CloudController
     end
 
     describe 'DELETE /v2/users/:guid/organizations/:org_guid' do
-      let(:space) { Space.make }
+      let(:space) { create(:space) }
       let(:org) { space.organization }
-      let(:user) { User.make }
+      let(:user) { create(:user) }
       let(:event_type) { 'audit.user.organization_user_remove' }
 
       before do
@@ -704,7 +704,7 @@ module VCAP::CloudController
         end
 
         context 'when acting on another org user' do
-          let(:other_user) { User.make }
+          let(:other_user) { create(:user) }
 
           before do
             org.add_user(other_user)
@@ -725,7 +725,7 @@ module VCAP::CloudController
 
         context 'when there are other managers' do
           before do
-            org.add_manager(User.make)
+            org.add_manager(create(:user))
           end
 
           it 'can remove itself' do
@@ -753,7 +753,7 @@ module VCAP::CloudController
 
         context 'when there are other billing managers' do
           before do
-            org.add_billing_manager(User.make)
+            org.add_billing_manager(create(:user))
           end
 
           it 'can remove itself' do
@@ -776,7 +776,7 @@ module VCAP::CloudController
 
       context 'as an admin' do
         context 'when acting on another user' do
-          let(:other_user) { User.make }
+          let(:other_user) { create(:user) }
 
           before do
             org.add_user other_user
@@ -799,10 +799,10 @@ module VCAP::CloudController
     end
 
     describe 'DELETE /v2/users/:guid/managed_spaces/:space_guid' do
-      let(:space) { Space.make }
+      let(:space) { create(:space) }
       let(:org) { space.organization }
-      let(:user) { User.make }
-      let(:other_user) { User.make(username: 'other_user') }
+      let(:user) { create(:user) }
+      let(:other_user) { create(:user, username: 'other_user') }
       let(:event_type) { 'audit.user.space_manager_remove' }
 
       before do
@@ -859,11 +859,11 @@ module VCAP::CloudController
     end
 
     describe 'DELETE /v2/users/:guid/spaces/:space_guid' do
-      let(:space) { Space.make }
+      let(:space) { create(:space) }
       let(:org) { space.organization }
-      let(:user) { User.make }
+      let(:user) { create(:user) }
       let(:event_type) { 'audit.user.space_developer_remove' }
-      let(:other_user) { User.make(username: 'other user') }
+      let(:other_user) { create(:user, username: 'other user') }
 
       before do
         set_current_user(user)
@@ -926,10 +926,10 @@ module VCAP::CloudController
     end
 
     describe 'assigning space roles' do
-      let(:other_user) { User.make(username: 'other_user') }
-      let(:space) { Space.make }
+      let(:other_user) { create(:user, username: 'other_user') }
+      let(:space) { create(:space) }
       let(:org) { space.organization }
-      let(:user)  { User.make }
+      let(:user)  { create(:user) }
 
       before do
         allow(uaa_client).to receive(:usernames_for_ids).and_return({ other_user.guid => other_user.username })

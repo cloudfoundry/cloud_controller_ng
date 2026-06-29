@@ -13,7 +13,7 @@ module VCAP::CloudController
       end
     end
 
-    let(:model_factory) { -> { model_class.make } }
+    let(:model_factory) { -> { create(model_class.name.demodulize.underscore.to_sym) } }
     let(:model_class) { described_class }
     let(:value_to_encrypt) { 'this-is-a-secret' }
     let!(:model) { new_model }

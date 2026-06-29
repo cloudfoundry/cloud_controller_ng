@@ -3,7 +3,7 @@ require 'spec_helper'
 module VCAP::CloudController
   module Repositories
     RSpec.describe ServiceEventRepository do
-      let(:user) { VCAP::CloudController::User.make }
+      let(:user) { create(:user) }
       let(:email) { 'email@example.com' }
       let(:user_name) { 'arthur' }
       let(:logger) { double(:logger, error: nil) }
@@ -14,7 +14,7 @@ module VCAP::CloudController
       end
 
       describe 'record_service_plan_visibility_event' do
-        let(:service_plan_visibility) { VCAP::CloudController::ServicePlanVisibility.make }
+        let(:service_plan_visibility) { create(:service_plan_visibility) }
 
         it 'creates the event' do
           params = {
@@ -39,7 +39,7 @@ module VCAP::CloudController
       end
 
       describe 'record_service_plan_update_visibility_event' do
-        let(:service_plan) { VCAP::CloudController::ServicePlan.make }
+        let(:service_plan) { create(:service_plan) }
 
         it 'creates the event' do
           params = {
@@ -65,8 +65,8 @@ module VCAP::CloudController
       end
 
       describe 'record_service_plan_delete_visibility_event' do
-        let(:service_plan) { VCAP::CloudController::ServicePlan.make }
-        let(:org) { VCAP::CloudController::Organization.make }
+        let(:service_plan) { create(:service_plan) }
+        let(:org) { create(:organization) }
 
         it 'creates the event' do
           repository.record_service_plan_delete_visibility_event(service_plan, org)
@@ -86,7 +86,7 @@ module VCAP::CloudController
       end
 
       describe '#record_broker_event' do
-        let(:service_broker) { VCAP::CloudController::ServiceBroker.make }
+        let(:service_broker) { create(:service_broker) }
         let(:params) do
           {
             name: service_broker.name,
@@ -140,7 +140,7 @@ module VCAP::CloudController
       end
 
       describe '#record_broker_event_with_request' do
-        let(:service_broker) { VCAP::CloudController::ServiceBroker.make }
+        let(:service_broker) { create(:service_broker) }
         let(:request) do
           {
             fake: 'request'
@@ -167,7 +167,7 @@ module VCAP::CloudController
       end
 
       describe '#with_service_event' do
-        let(:broker) { VCAP::CloudController::ServiceBroker.make }
+        let(:broker) { create(:service_broker) }
 
         context 'when the service is new' do
           let(:service) do
@@ -229,7 +229,7 @@ module VCAP::CloudController
         end
 
         context 'when the service already exists' do
-          let!(:service) { Service.make(service_broker: broker, description: 'description') }
+          let!(:service) { create(:service, service_broker: broker, description: 'description') }
 
           before do
             service.plan_updateable = true
@@ -270,8 +270,8 @@ module VCAP::CloudController
       end
 
       describe '#with_service_plan_event' do
-        let(:broker) { VCAP::CloudController::ServiceBroker.make }
-        let(:service) { VCAP::CloudController::Service.make(service_broker: broker) }
+        let(:broker) { create(:service_broker) }
+        let(:service) { create(:service, service_broker: broker) }
 
         context 'when the service is new' do
           let(:plan) do
@@ -325,7 +325,7 @@ module VCAP::CloudController
         end
 
         context 'when the service plan already exists' do
-          let!(:plan) { ServicePlan.make(service: service, description: 'description') }
+          let!(:plan) { create(:service_plan, service: service, description: 'description') }
 
           before do
             plan.extra = { 'extra' => 'data' }.to_json
@@ -364,8 +364,8 @@ module VCAP::CloudController
       end
 
       describe '#record_service_event' do
-        let(:broker) { VCAP::CloudController::ServiceBroker.make }
-        let(:service) { VCAP::CloudController::Service.make(service_broker: broker) }
+        let(:broker) { create(:service_broker) }
+        let(:service) { create(:service, service_broker: broker) }
 
         it 'creates an event with empty metadata because it is only used for delete events' do
           repository.record_service_event(:delete, service)
@@ -387,9 +387,9 @@ module VCAP::CloudController
       end
 
       describe '#record_service_plan_event' do
-        let(:broker) { VCAP::CloudController::ServiceBroker.make }
-        let(:service) { VCAP::CloudController::Service.make(service_broker: broker) }
-        let(:plan) { VCAP::CloudController::ServicePlan.make(service:) }
+        let(:broker) { create(:service_broker) }
+        let(:service) { create(:service, service_broker: broker) }
+        let(:plan) { create(:service_plan, service:) }
 
         it 'creates an event with empty metadata because it is only used for delete events' do
           repository.record_service_plan_event(:delete, plan)
@@ -411,7 +411,7 @@ module VCAP::CloudController
       end
 
       describe '#record_service_plan_delete_event' do
-        let(:plan) { VCAP::CloudController::ServicePlan.make }
+        let(:plan) { create(:service_plan) }
 
         it 'creates an event with empty metadata' do
           repository.record_service_plan_delete_event(plan)
@@ -433,7 +433,7 @@ module VCAP::CloudController
       end
 
       describe '#record_service_dashboard_client_event' do
-        let(:broker) { VCAP::CloudController::ServiceBroker.make }
+        let(:broker) { create(:service_broker) }
         let(:client_attrs) do
           {
             'id' => 'client-id',
@@ -484,7 +484,7 @@ module VCAP::CloudController
       end
 
       describe '#record_service_instance_event' do
-        let(:instance) { VCAP::CloudController::ServiceInstance.make }
+        let(:instance) { create(:service_instance) }
         let(:params) do
           {
             'service_plan_guid' => 'plan-guid',
@@ -560,7 +560,7 @@ module VCAP::CloudController
       end
 
       describe '#record_user_provided_service_instance_event' do
-        let(:instance) { VCAP::CloudController::UserProvidedServiceInstance.make }
+        let(:instance) { create(:user_provided_service_instance) }
         let(:params) do
           {
             'name' => 'my-upsi',
@@ -619,7 +619,7 @@ module VCAP::CloudController
       end
 
       describe '#record_service_key_event' do
-        let(:service_key) { VCAP::CloudController::ServiceKey.make }
+        let(:service_key) { create(:service_key) }
 
         def check_event_data(event_type, metadata)
           event = Event.first(type: event_type)
@@ -654,7 +654,7 @@ module VCAP::CloudController
       end
 
       describe '#record_service_purge_event' do
-        let(:service) { VCAP::CloudController::Service.make }
+        let(:service) { create(:service) }
 
         it 'records an event' do
           repository.record_service_purge_event(service)
@@ -679,7 +679,7 @@ module VCAP::CloudController
       end
 
       describe '#record_service_delete_event' do
-        let(:service) { VCAP::CloudController::Service.make }
+        let(:service) { create(:service) }
 
         it 'records an event' do
           repository.record_service_delete_event(service)
@@ -705,59 +705,59 @@ module VCAP::CloudController
         end
 
         specify 'record_service_plan_visibility_event logs an error but does not propagate errors' do
-          service_plan_visibility = VCAP::CloudController::ServicePlanVisibility.make
+          service_plan_visibility = create(:service_plan_visibility)
           repository.record_service_plan_visibility_event(:create, service_plan_visibility, {})
           expect(logger).to have_received(:error)
         end
 
         specify 'record_broker_event logs an error but does not propagate errors' do
-          broker = VCAP::CloudController::ServiceBroker.make
+          broker = create(:service_broker)
           repository.record_broker_event(:create, broker, {})
           expect(logger).to have_received(:error)
         end
 
         specify 'record_service_event logs an error but does not propagate errors' do
-          broker = VCAP::CloudController::ServiceBroker.make
-          service = VCAP::CloudController::Service.make(service_broker: broker)
+          broker = create(:service_broker)
+          service = create(:service, service_broker: broker)
           repository.record_service_event(:create, service)
           expect(logger).to have_received(:error)
         end
 
         specify 'record_service_plan_event logs an error but does not propagate errors' do
-          broker = VCAP::CloudController::ServiceBroker.make
-          service = VCAP::CloudController::Service.make(service_broker: broker)
-          service_plan = VCAP::CloudController::ServicePlan.make(service:)
+          broker = create(:service_broker)
+          service = create(:service, service_broker: broker)
+          service_plan = create(:service_plan, service:)
           repository.record_service_plan_event(:create, service_plan)
           expect(logger).to have_received(:error)
         end
 
         specify 'record_service_dashboard_client_event logs an error but does not propagate errors' do
-          broker = VCAP::CloudController::ServiceBroker.make
+          broker = create(:service_broker)
           repository.record_service_dashboard_client_event(:create, {}, broker)
           expect(logger).to have_received(:error)
         end
 
         specify 'record_service_instance_event logs an error but does not propagate errors' do
-          service_instance = VCAP::CloudController::ServiceInstance.make
+          service_instance = create(:service_instance)
           repository.record_service_instance_event(:create, service_instance, {})
           expect(logger).to have_received(:error)
         end
 
         specify 'record_user_provided_service_instance_event logs an error but does not propagate errors' do
-          service_instance = VCAP::CloudController::UserProvidedServiceInstance.make
+          service_instance = create(:user_provided_service_instance)
           repository.record_user_provided_service_instance_event(:create, service_instance, {})
           expect(logger).to have_received(:error)
         end
 
         specify 'record_service_purge_event logs an error but does not propagate errors' do
-          service = VCAP::CloudController::Service.make
+          service = create(:service)
           repository.record_service_purge_event(service)
           expect(logger).to have_received(:error)
         end
 
         specify 'with_service_event logs an error but does not propagate errors' do
-          broker = VCAP::CloudController::ServiceBroker.make
-          service = VCAP::CloudController::Service.make(service_broker: broker)
+          broker = create(:service_broker)
+          service = create(:service, service_broker: broker)
 
           plan = VCAP::CloudController::ServicePlan.new(
             service: service,
@@ -773,7 +773,7 @@ module VCAP::CloudController
         end
 
         specify 'with_service_plan_event logs an error but does not propagate errors' do
-          broker = VCAP::CloudController::ServiceBroker.make
+          broker = create(:service_broker)
           service = VCAP::CloudController::Service.new(
             service_broker: broker,
             label: 'name',

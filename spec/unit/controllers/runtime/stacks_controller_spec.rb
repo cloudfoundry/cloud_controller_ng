@@ -4,7 +4,7 @@ require 'spec_helper'
 
 module VCAP::CloudController
   RSpec.describe VCAP::CloudController::StacksController do
-    let(:user) { User.make }
+    let(:user) { create(:user) }
 
     before do
       set_current_user(user, admin: true)
@@ -57,7 +57,7 @@ module VCAP::CloudController
     end
 
     describe '#delete' do
-      let(:stack) { Stack.make }
+      let(:stack) { create(:stack) }
 
       context 'if no app exist' do
         it 'succeds' do

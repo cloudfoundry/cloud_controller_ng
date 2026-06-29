@@ -17,9 +17,9 @@ module CloudController::Presenters::V2
         allow(RelationsPresenter).to receive(:new).and_return(relations_presenter)
       end
 
-      let(:space) { VCAP::CloudController::Space.make }
-      let(:domain) { VCAP::CloudController::SharedDomain.make(router_group_guid: 'tcp-group') }
-      let(:service_instance) { VCAP::CloudController::ManagedServiceInstance.make(:routing, space:) }
+      let(:space) { create(:space) }
+      let(:domain) { create(:shared_domain, router_group_guid: 'tcp-group') }
+      let(:service_instance) { create(:managed_service_instance, :routing, space:) }
 
       it 'returns the domain entity and associated urls' do
         expect(subject.entity_hash(controller, domain, opts, depth, parents, orphans)).to eq(

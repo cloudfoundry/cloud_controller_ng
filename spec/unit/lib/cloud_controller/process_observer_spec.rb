@@ -111,9 +111,9 @@ module VCAP::CloudController
             end
 
             context 'when revisions are enabled' do
-              let(:process) { ProcessModel.make }
+              let(:process) { create(:process_model) }
               let(:app) { process.app }
-              let!(:revision) { RevisionModel.make(app:) }
+              let!(:revision) { create(:revision_model, app:) }
 
               before do
                 app.update(revisions_enabled: true)

@@ -3,7 +3,7 @@ require 'actions/package_create'
 
 module VCAP::CloudController
   RSpec.describe PackageCreate do
-    let(:app) { AppModel.make }
+    let(:app) { create(:app_model) }
     let(:type) { 'docker' }
     let(:relationships) { { app: { data: { guid: app.guid } } } }
     let(:message) do

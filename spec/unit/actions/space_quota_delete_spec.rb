@@ -3,7 +3,7 @@ require 'actions/space_quota_delete'
 
 module VCAP::CloudController
   RSpec.describe SpaceQuotaDeleteAction do
-    let(:user) { User.make }
+    let(:user) { create(:user) }
     let(:user_email) { 'user@example.com' }
     let(:user_name) { 'user-name' }
     let(:user_audit_info) { UserAuditInfo.new(user_guid: user.guid, user_email: user_email, user_name: user_name) }
@@ -11,8 +11,8 @@ module VCAP::CloudController
     subject(:space_quota_delete) { SpaceQuotaDeleteAction.new(user_audit_info) }
 
     describe '#delete' do
-      let(:org) { Organization.make }
-      let!(:quota) { SpaceQuotaDefinition.make(organization: org) }
+      let(:org) { create(:organization) }
+      let!(:quota) { create(:space_quota_definition, organization: org) }
 
       it 'deletes the space quota' do
         expect do

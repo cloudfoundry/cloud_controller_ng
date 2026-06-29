@@ -3,7 +3,7 @@ require 'rspec_api_documentation/dsl'
 
 RSpec.resource 'Service Plans', type: %i[api legacy_api] do
   let(:admin_auth_header) { admin_headers['HTTP_AUTHORIZATION'] }
-  let!(:service_plan) { VCAP::CloudController::ServicePlan.make }
+  let!(:service_plan) { FactoryBot.create(:service_plan) }
   let(:guid) { service_plan.guid }
   authenticated_request
 
@@ -32,7 +32,7 @@ RSpec.resource 'Service Plans', type: %i[api legacy_api] do
 
     describe 'Service Instances' do
       before do
-        VCAP::CloudController::ManagedServiceInstance.make(service_plan:)
+        create(:managed_service_instance, service_plan:)
       end
 
       standard_model_list :managed_service_instance,

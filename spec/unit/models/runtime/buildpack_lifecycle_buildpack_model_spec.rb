@@ -3,15 +3,15 @@ require 'spec_helper'
 module VCAP::CloudController
   RSpec.describe BuildpackLifecycleBuildpackModel do
     subject(:buildpack) { BuildpackLifecycleBuildpackModel.new }
-    let(:buildpack_lifecycle_data) { BuildpackLifecycleDataModel.make(buildpacks: ['ruby']) }
+    let(:buildpack_lifecycle_data) { create(:buildpack_lifecycle_data_model, buildpacks: ['ruby']) }
 
     before do
-      Buildpack.make(name: 'ruby')
+      create(:buildpack, name: 'ruby')
       buildpack.buildpack_lifecycle_data = buildpack_lifecycle_data
     end
 
     it_behaves_like 'a model with an encrypted attribute' do
-      let(:model_factory) { -> { BuildpackLifecycleBuildpackModel.make(:custom_buildpack) } }
+      let(:model_factory) { -> { create(:buildpack_lifecycle_buildpack_model, :custom_buildpack) } }
       let(:value_to_encrypt) { 'https://acme-buildpack.com' }
       let(:encrypted_attr) { :buildpack_url }
       let(:storage_column) { :encrypted_buildpack_url }
@@ -49,7 +49,7 @@ module VCAP::CloudController
       end
 
       context 'when a cnb buildpack is used' do
-        let(:cnb_lifecycle_data) { CNBLifecycleDataModel.make(buildpacks: ['docker://nginx:latest']) }
+        let(:cnb_lifecycle_data) { create(:cnb_lifecycle_data_model, buildpacks: ['docker://nginx:latest']) }
 
         before do
           buildpack.buildpack_lifecycle_data = nil

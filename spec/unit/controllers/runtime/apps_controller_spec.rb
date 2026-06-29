@@ -4,8 +4,8 @@ require 'spec_helper'
 
 module VCAP::CloudController
   RSpec.describe VCAP::CloudController::AppsController do
-    let(:admin_user) { User.make }
-    let(:non_admin_user) { User.make }
+    let(:admin_user) { create(:user) }
+    let(:non_admin_user) { create(:user) }
     let(:app_event_repository) { Repositories::AppEventRepository.new }
 
     before do
@@ -34,10 +34,10 @@ module VCAP::CloudController
     end
 
     describe 'querying by stack guid' do
-      let(:stack1) { Stack.make }
-      let(:stack2) { Stack.make }
-      let(:process1) { ProcessModel.make }
-      let(:process2) { ProcessModel.make }
+      let(:stack1) { create(:stack) }
+      let(:stack2) { create(:stack) }
+      let(:process1) { create(:process_model) }
+      let(:process2) { create(:process_model) }
 
       before do
         process1.app.lifecycle_data.update(stack: stack1.name)
@@ -129,14 +129,14 @@ module VCAP::CloudController
         before { set_current_user_as_admin }
 
         it 'does not return events with inline-relations-depth=0' do
-          process = ProcessModel.make
+          process = create(:process_model)
           get "/v2/apps/#{process.app.guid}?inline-relations-depth=0"
           expect(entity).to have_key('events_url')
           expect(entity).not_to have_key('events')
         end
 
         it 'does not return events with inline-relations-depth=1 since app_events dataset is relatively expensive to query' do
-          process = ProcessModel.make
+          process = create(:process_model)
           get "/v2/apps/#{process.app.guid}?inline-relations-depth=1"
           expect(entity).to have_key('events_url')
           expect(entity).not_to have_key('events')
@@ -145,7 +145,7 @@ module VCAP::CloudController
     end
 
     describe 'create app' do
-      let(:space) { Space.make }
+      let(:space) { create(:space) }
       let(:space_guid) { space.guid.to_s }
       let(:initial_hash) do
         {
@@ -361,7 +361,7 @@ module VCAP::CloudController
 
       context 'creating a buildpack app' do
         it 'creates the app correctly' do
-          stack   = Stack.make(name: 'stack-name')
+          stack   = create(:stack, name: 'stack-name')
           request = {
             name: 'maria',
             space_guid: space.guid,
@@ -406,7 +406,7 @@ module VCAP::CloudController
           end
 
           it 'does allow a buildpack name' do
-            admin_buildpack = Buildpack.make
+            admin_buildpack = create(:buildpack)
             post '/v2/apps', Oj.dump(request.merge(buildpack: admin_buildpack.name))
 
             expect(last_response.status).to eq(201)
@@ -500,7 +500,7 @@ module VCAP::CloudController
     end
 
     describe 'docker image credentials' do
-      let(:space) { Space.make }
+      let(:space) { create(:space) }
       let(:space_guid) { space.guid.to_s }
       let(:initial_hash) do
         {
@@ -634,7 +634,7 @@ module VCAP::CloudController
           process.destroy
         end
 
-        let!(:new_process) { ProcessModel.make(type: ProcessTypes::WEB, app: app_model) }
+        let!(:new_process) { create(:process_model, type: ProcessTypes::WEB, app: app_model) }
 
         it 'returns the app with the appropriate app guid' do
           expect(app_guid).not_to eq(new_process.guid)
@@ -704,7 +704,7 @@ module VCAP::CloudController
 
       describe 'app_scaling feature flag' do
         context 'when the flag is enabled' do
-          before { FeatureFlag.make(name: 'app_scaling', enabled: true) }
+          before { create(:feature_flag, name: 'app_scaling', enabled: true) }
 
           it 'allows updating memory' do
             put "/v2/apps/#{process.app.guid}", '{ "memory": 2 }'
@@ -713,7 +713,7 @@ module VCAP::CloudController
         end
 
         context 'when the flag is disabled' do
-          before { FeatureFlag.make(name: 'app_scaling', enabled: false, error_message: nil) }
+          before { create(:feature_flag, name: 'app_scaling', enabled: false, error_message: nil) }
 
           it 'fails with the proper error code and message' do
             put "/v2/apps/#{process.app.guid}", '{ "memory": 2 }'
@@ -727,8 +727,8 @@ module VCAP::CloudController
       context 'switch from dea to diego' do
         let(:process) { ProcessModelFactory.make(instances: 1, diego: false, type: 'web') }
         let(:developer) { make_developer_for_space(process.space) }
-        let(:route) { Route.make(space: process.space) }
-        let(:route_mapping) { RouteMappingModel.make(app: process.app, route: route) }
+        let(:route) { create(:route, space: process.space) }
+        let(:route_mapping) { create(:route_mapping_model, app: process.app, route: route) }
 
         it 'sets ports to 8080' do
           expect(process.ports).to be_nil
@@ -780,9 +780,9 @@ module VCAP::CloudController
         end
 
         context 'when updating an app with existing route mapping' do
-          let(:route) { Route.make(space: process.space) }
-          let!(:route_mapping) { RouteMappingModel.make(app: process.app, route: route, app_port: 9090) }
-          let!(:route_mapping2) { RouteMappingModel.make(app: process.app, route: route, app_port: 5222) }
+          let(:route) { create(:route, space: process.space) }
+          let!(:route_mapping) { create(:route_mapping_model, app: process.app, route: route, app_port: 9090) }
+          let!(:route_mapping2) { create(:route_mapping_model, app: process.app, route: route, app_port: 5222) }
 
           context 'when new app ports contains all existing route port mappings' do
             it 'updates the ports' do
@@ -847,9 +847,9 @@ module VCAP::CloudController
       end
 
       it 'updates the app' do
-        v2_app = ProcessModel.make
+        v2_app = create(:process_model)
         v3_app = v2_app.app
-        stack  = Stack.make(name: 'stack-name')
+        stack  = create(:stack, name: 'stack-name')
 
         request = {
           name: 'maria',
@@ -882,10 +882,10 @@ module VCAP::CloudController
         before do
           TestConfig.override(disable_custom_buildpacks: true)
           set_current_user(admin_user, admin: true)
-          process.app.lifecycle_data.update(buildpacks: [Buildpack.make.name])
+          process.app.lifecycle_data.update(buildpacks: [create(:buildpack).name])
         end
 
-        let(:process) { ProcessModel.make }
+        let(:process) { create(:process_model) }
 
         it 'does NOT allow a public git url' do
           put "/v2/apps/#{process.app.guid}", Oj.dump({ buildpack: 'http://example.com/buildpack' })
@@ -902,7 +902,7 @@ module VCAP::CloudController
         end
 
         it 'does allow a buildpack name' do
-          admin_buildpack = Buildpack.make
+          admin_buildpack = create(:buildpack)
           put "/v2/apps/#{process.app.guid}", Oj.dump({ buildpack: admin_buildpack.name })
 
           expect(last_response.status).to eq(201)
@@ -924,7 +924,7 @@ module VCAP::CloudController
       end
 
       describe 'setting stack' do
-        let(:new_stack) { Stack.make }
+        let(:new_stack) { create(:stack) }
 
         it 'changes the stack' do
           set_current_user(admin_user, admin: true)
@@ -963,7 +963,7 @@ module VCAP::CloudController
           let(:process) { ProcessModelFactory.make(state: 'STARTED') }
 
           before do
-            PackageModel.make(app: process.app, package_hash: 'some-hash', state: PackageModel::READY_STATE)
+            create(:package_model, app: process.app, package_hash: 'some-hash', state: PackageModel::READY_STATE)
             process.reload
           end
 
@@ -981,7 +981,7 @@ module VCAP::CloudController
         end
 
         context 'when the app was never staged' do
-          let(:process) { ProcessModel.make }
+          let(:process) { create(:process_model) }
 
           it 'does not mark the app for staging' do
             expect(process).not_to be_staged
@@ -999,7 +999,7 @@ module VCAP::CloudController
 
       describe 'changing lifecycle types' do
         context 'when changing from docker to buildpack' do
-          let(:process) { ProcessModel.make(app: AppModel.make(:docker)) }
+          let(:process) { create(:process_model, app: create(:app_model, :docker)) }
 
           it 'raises an error setting buildpack' do
             put "/v2/apps/#{process.app.guid}", Oj.dump({ buildpack: 'https://buildpack.example.com' })
@@ -1015,7 +1015,7 @@ module VCAP::CloudController
         end
 
         context 'when changing from buildpack to docker' do
-          let(:process) { ProcessModel.make(app: AppModel.make) }
+          let(:process) { create(:process_model, app: create(:app_model)) }
 
           it 'raises an error' do
             put "/v2/apps/#{process.app.guid}", Oj.dump({ docker_image: 'repo/great-image' })
@@ -1031,7 +1031,7 @@ module VCAP::CloudController
         end
 
         it 'creates a new docker package' do
-          process          = ProcessModelFactory.make(app: AppModel.make(:docker), docker_image: 'repo/original-image')
+          process          = ProcessModelFactory.make(app: create(:app_model, :docker), docker_image: 'repo/original-image')
           original_package = process.latest_package
 
           expect(process.docker_image).not_to eq('repo/new-image')
@@ -1055,7 +1055,7 @@ module VCAP::CloudController
           end
 
           it 'creates a new docker package with those credentials' do
-            process          = ProcessModelFactory.make(app: AppModel.make(:docker), docker_image: 'repo/original-image')
+            process          = ProcessModelFactory.make(app: create(:app_model, :docker), docker_image: 'repo/original-image')
             original_package = process.latest_package
 
             expect(process.docker_image).not_to eq('repo/new-image')
@@ -1082,7 +1082,7 @@ module VCAP::CloudController
 
           it 'returns an UnprocessableEntity error' do
             set_current_user(admin_user, admin: true)
-            process = ProcessModelFactory.make(app: AppModel.make(:docker), docker_image: 'repo/original-image')
+            process = ProcessModelFactory.make(app: create(:app_model, :docker), docker_image: 'repo/original-image')
 
             put "/v2/apps/#{process.app.guid}", Oj.dump({ docker_credentials: { username: 'username', password: 'foo' } })
 
@@ -1158,7 +1158,7 @@ module VCAP::CloudController
       end
 
       context 'when starting an app without a package' do
-        let(:process) { ProcessModel.make(instances: 1) }
+        let(:process) { create(:process_model, instances: 1) }
 
         it 'raises an error' do
           put "/v2/apps/#{process.app.guid}", Oj.dump({ state: 'STARTED' })
@@ -1170,7 +1170,7 @@ module VCAP::CloudController
       describe 'starting and stopping' do
         let(:parent_app) { process.app }
         let(:process) { ProcessModelFactory.make(instances: 1, state: state) }
-        let(:sibling) { ProcessModel.make(instances: 1, state: state, app: parent_app, type: 'worker') }
+        let(:sibling) { create(:process_model, instances: 1, state: state, app: parent_app, type: 'worker') }
 
         context 'starting' do
           let(:state) { 'STOPPED' }
@@ -1256,8 +1256,8 @@ module VCAP::CloudController
       end
 
       describe 'recursive deletion' do
-        let!(:svc_instance) { ManagedServiceInstance.make(space: process.space) }
-        let!(:service_binding) { ServiceBinding.make(app: process.app, service_instance: svc_instance) }
+        let!(:svc_instance) { create(:managed_service_instance, space: process.space) }
+        let!(:service_binding) { create(:service_binding, app: process.app, service_instance: svc_instance) }
         let(:guid_pattern) { '[[:alnum:]-]+' }
         let(:broker_response_code) { 200 }
 
@@ -1366,8 +1366,8 @@ module VCAP::CloudController
     describe 'route mapping' do
       let!(:process) { ProcessModelFactory.make(instances: 1, diego: true) }
       let!(:developer) { make_developer_for_space(process.space) }
-      let!(:route) { Route.make(space: process.space) }
-      let!(:route_mapping) { RouteMappingModel.make(app: process.app, route: route, process_type: process.type) }
+      let!(:route) { create(:route, space: process.space) }
+      let!(:route_mapping) { create(:route_mapping_model, app: process.app, route: route, process_type: process.type) }
 
       before do
         set_current_user(developer)
@@ -1419,7 +1419,7 @@ module VCAP::CloudController
       context 'when the user is a member of the space this app exists in' do
         context 'when the user is not a space developer' do
           before do
-            set_current_user(User.make)
+            set_current_user(create(:user))
           end
 
           it 'returns a JSON payload indicating they do not have permission to read this endpoint' do
@@ -1480,8 +1480,8 @@ module VCAP::CloudController
         end
 
         context 'when the user is space dev and has service instance bound to application' do
-          let!(:service_instance) { ManagedServiceInstance.make(space: process.space) }
-          let!(:service_binding) { ServiceBinding.make(app: process.app, service_instance: service_instance) }
+          let!(:service_instance) { create(:managed_service_instance, space: process.space) }
+          let!(:service_binding) { create(:service_binding, app: process.app, service_instance: service_instance) }
 
           it 'returns system environment with VCAP_SERVICES' do
             get "/v2/apps/#{process.app.guid}/env"
@@ -1491,7 +1491,7 @@ module VCAP::CloudController
           end
 
           context 'when the service binding is being asynchronously created' do
-            let(:operation) { ServiceBindingOperation.make(state: 'in progress') }
+            let(:operation) { create(:service_binding_operation, state: 'in progress') }
 
             before do
               service_binding.service_binding_operation = operation
@@ -1567,15 +1567,15 @@ module VCAP::CloudController
 
       context 'when the user reads environment variables from the app endpoint using inline-relations-depth=2' do
         let!(:test_environment_json) { { 'environ_key' => 'value' } }
-        let(:parent_app) { AppModel.make(environment_variables: test_environment_json) }
+        let(:parent_app) { create(:app_model, environment_variables: test_environment_json) }
         let!(:process) do
           ProcessModelFactory.make(
             detected_buildpack: 'buildpack-name',
             app: parent_app
           )
         end
-        let!(:service_instance) { ManagedServiceInstance.make(space: process.space) }
-        let!(:service_binding) { ServiceBinding.make(app: process.app, service_instance: service_instance) }
+        let!(:service_instance) { create(:managed_service_instance, space: process.space) }
+        let!(:service_binding) { create(:service_binding, app: process.app, service_instance: service_instance) }
 
         context 'when the user is a space developer' do
           it 'returns non-redacted environment values' do
@@ -1606,7 +1606,7 @@ module VCAP::CloudController
         let(:process) { ProcessModelFactory.make(detected_buildpack: 'buildpack-name') }
 
         before do
-          set_current_user(User.make)
+          set_current_user(create(:user))
         end
 
         it 'returns access denied' do
@@ -1633,7 +1633,7 @@ module VCAP::CloudController
 
       context 'when the space_developer_env_var_visibility feature flag is disabled' do
         before do
-          VCAP::CloudController::FeatureFlag.make(name: 'space_developer_env_var_visibility', enabled: false, error_message: nil)
+          create(:feature_flag, name: 'space_developer_env_var_visibility', enabled: false, error_message: nil)
         end
 
         it 'raises 403 for non-admins' do
@@ -1673,7 +1673,7 @@ module VCAP::CloudController
 
       context 'when the env_var_visibility feature flag is disabled' do
         before do
-          VCAP::CloudController::FeatureFlag.make(name: 'env_var_visibility', enabled: false, error_message: nil)
+          create(:feature_flag, name: 'env_var_visibility', enabled: false, error_message: nil)
         end
 
         it 'raises 403 all user' do
@@ -1686,7 +1686,7 @@ module VCAP::CloudController
 
         context 'when the space_developer_env_var_visibility feature flag is enabled' do
           before do
-            VCAP::CloudController::FeatureFlag.make(name: 'space_developer_env_var_visibility', enabled: true, error_message: nil)
+            create(:feature_flag, name: 'space_developer_env_var_visibility', enabled: true, error_message: nil)
           end
 
           it 'raises 403 for non-admins' do
@@ -1701,7 +1701,7 @@ module VCAP::CloudController
 
       context 'when the env_var_visibility feature flag is enabled' do
         before do
-          VCAP::CloudController::FeatureFlag.make(name: 'env_var_visibility', enabled: true, error_message: nil)
+          create(:feature_flag, name: 'env_var_visibility', enabled: true, error_message: nil)
         end
 
         it 'continues to show 403 for roles that never had access to envs' do
@@ -1745,7 +1745,7 @@ module VCAP::CloudController
 
         context 'when the space_developer_env_var_visibility feature flag is disabled' do
           before do
-            VCAP::CloudController::FeatureFlag.make(name: 'space_developer_env_var_visibility', enabled: false, error_message: nil)
+            create(:feature_flag, name: 'space_developer_env_var_visibility', enabled: false, error_message: nil)
           end
 
           it 'raises 403 for space developers' do
@@ -1764,7 +1764,7 @@ module VCAP::CloudController
 
       before do
         set_current_user(developer)
-        Buildpack.make
+        create(:buildpack)
       end
 
       context 'when app will be staged', isolation: :truncation do
@@ -1840,7 +1840,7 @@ module VCAP::CloudController
         TestConfig.override(directories: { tmpdir: File.dirname(valid_zip.path) })
       end
 
-      let(:process) { ProcessModel.make }
+      let(:process) { create(:process_model) }
 
       let(:tmpdir) { Dir.mktmpdir }
       after { FileUtils.rm_rf(tmpdir) }
@@ -1856,7 +1856,7 @@ module VCAP::CloudController
         let(:req_body) { { droplet: valid_zip } }
 
         it 'is allowed' do
-          set_current_user(User.make, admin: true)
+          set_current_user(create(:user), admin: true)
           put "/v2/apps/#{process.app.guid}/droplet/upload", req_body
 
           expect(last_response.status).to eq(201)
@@ -1905,7 +1905,7 @@ module VCAP::CloudController
     describe 'on route change', isolation: :truncation do
       let(:space) { process.space }
       let(:domain) do
-        PrivateDomain.make(name: 'jesse.cloud', owning_organization: space.organization)
+        create(:private_domain, name: 'jesse.cloud', owning_organization: space.organization)
       end
       let(:process) { ProcessModelFactory.make(diego: false, state: 'STARTED') }
 
@@ -2027,8 +2027,8 @@ module VCAP::CloudController
       include_context 'permissions'
 
       before do
-        @obj_a = ProcessModelFactory.make(app: AppModel.make(space: @space_a))
-        @obj_b = ProcessModelFactory.make(app: AppModel.make(space: @space_b))
+        @obj_a = ProcessModelFactory.make(app: create(:app_model, space: @space_a))
+        @obj_b = ProcessModelFactory.make(app: create(:app_model, space: @space_b))
       end
 
       describe 'Org Level Permissions' do
@@ -2115,7 +2115,7 @@ module VCAP::CloudController
       end
 
       it 'returns duplicate app name message correctly' do
-        existing_process = ProcessModel.make(app: AppModel.make(space:))
+        existing_process = create(:process_model, app: create(:app_model, space:))
         put "/v2/apps/#{process.app.guid}", Oj.dump(name: existing_process.name)
 
         expect(last_response.status).to eq(400)
@@ -2123,7 +2123,7 @@ module VCAP::CloudController
       end
 
       it 'returns organization quota memory exceeded message correctly' do
-        space.organization.quota_definition = QuotaDefinition.make(memory_limit: 0)
+        space.organization.quota_definition = create(:quota_definition, memory_limit: 0)
         space.organization.save(validate: false)
 
         put "/v2/apps/#{process.app.guid}", Oj.dump(memory: 128)
@@ -2133,7 +2133,7 @@ module VCAP::CloudController
       end
 
       it 'returns space quota memory exceeded message correctly' do
-        space.space_quota_definition = SpaceQuotaDefinition.make(memory_limit: 0)
+        space.space_quota_definition = create(:space_quota_definition, memory_limit: 0)
         space.save(validate: false)
 
         put "/v2/apps/#{process.app.guid}", Oj.dump(memory: 128)
@@ -2143,9 +2143,9 @@ module VCAP::CloudController
       end
 
       it 'validates space quota memory limit before organization quotas' do
-        space.organization.quota_definition = QuotaDefinition.make(memory_limit: 0)
+        space.organization.quota_definition = create(:quota_definition, memory_limit: 0)
         space.organization.save(validate: false)
-        space.space_quota_definition = SpaceQuotaDefinition.make(memory_limit: 0)
+        space.space_quota_definition = create(:space_quota_definition, memory_limit: 0)
         space.save(validate: false)
 
         put "/v2/apps/#{process.app.guid}", Oj.dump(memory: 128)
@@ -2162,7 +2162,7 @@ module VCAP::CloudController
       end
 
       it 'returns instance memory limit exceeded error correctly' do
-        space.organization.quota_definition = QuotaDefinition.make(instance_memory_limit: 100)
+        space.organization.quota_definition = create(:quota_definition, instance_memory_limit: 100)
         space.organization.save(validate: false)
 
         put "/v2/apps/#{process.app.guid}", Oj.dump(memory: 128)
@@ -2172,7 +2172,7 @@ module VCAP::CloudController
       end
 
       it 'returns space instance memory limit exceeded error correctly' do
-        space.space_quota_definition = SpaceQuotaDefinition.make(instance_memory_limit: 100)
+        space.space_quota_definition = create(:space_quota_definition, instance_memory_limit: 100)
         space.save(validate: false)
 
         put "/v2/apps/#{process.app.guid}", Oj.dump(memory: 128)
@@ -2182,7 +2182,7 @@ module VCAP::CloudController
       end
 
       it 'returns app instance limit exceeded error correctly' do
-        space.organization.quota_definition = QuotaDefinition.make(app_instance_limit: 4)
+        space.organization.quota_definition = create(:quota_definition, app_instance_limit: 4)
         space.organization.save(validate: false)
 
         put "/v2/apps/#{process.app.guid}", Oj.dump(instances: 5)
@@ -2192,9 +2192,9 @@ module VCAP::CloudController
       end
 
       it 'validates space quota instance memory limit before organization quotas' do
-        space.organization.quota_definition = QuotaDefinition.make(instance_memory_limit: 100)
+        space.organization.quota_definition = create(:quota_definition, instance_memory_limit: 100)
         space.organization.save(validate: false)
-        space.space_quota_definition = SpaceQuotaDefinition.make(instance_memory_limit: 100)
+        space.space_quota_definition = create(:space_quota_definition, instance_memory_limit: 100)
         space.save(validate: false)
 
         put "/v2/apps/#{process.app.guid}", Oj.dump(memory: 128)
@@ -2220,7 +2220,7 @@ module VCAP::CloudController
       end
 
       it 'validates space quota app instance limit' do
-        space.space_quota_definition = SpaceQuotaDefinition.make(app_instance_limit: 2)
+        space.space_quota_definition = create(:space_quota_definition, app_instance_limit: 2)
         space.save(validate: false)
 
         put "/v2/apps/#{process.app.guid}", Oj.dump(instances: 3)
@@ -2231,8 +2231,8 @@ module VCAP::CloudController
     end
 
     describe 'enumerate' do
-      let!(:web_process) { ProcessModel.make(type: 'web') }
-      let!(:other_app) { ProcessModel.make(type: 'other') }
+      let!(:web_process) { create(:process_model, type: 'web') }
+      let!(:other_app) { create(:process_model, type: 'other') }
 
       before do
         set_current_user_as_admin
@@ -2246,9 +2246,9 @@ module VCAP::CloudController
     end
 
     describe 'PUT /v2/apps/:app_guid/routes/:route_guid' do
-      let(:space) { Space.make }
+      let(:space) { create(:space) }
       let(:process) { ProcessModelFactory.make(space:) }
-      let(:route) { Route.make(space:) }
+      let(:route) { create(:route, space:) }
       let(:developer) { make_developer_for_space(space) }
 
       before do
@@ -2286,7 +2286,7 @@ module VCAP::CloudController
 
       context 'when the route is already mapped to the app' do
         before do
-          RouteMappingModel.make(app: process.app, route: route, process_type: process.type)
+          create(:route_mapping_model, app: process.app, route: route, process_type: process.type)
         end
 
         it 'succeeds' do
@@ -2299,7 +2299,7 @@ module VCAP::CloudController
 
       context 'when the user is not a developer in the apps space' do
         before do
-          set_current_user(User.make)
+          set_current_user(create(:user))
         end
 
         it 'returns 403' do
@@ -2309,7 +2309,7 @@ module VCAP::CloudController
       end
 
       context 'when the route is in a different space' do
-        let(:route) { Route.make }
+        let(:route) { create(:route) }
 
         it 'raises an error' do
           expect(process.reload.routes).to be_empty
@@ -2338,8 +2338,8 @@ module VCAP::CloudController
       end
 
       describe 'routes from tcp router groups' do
-        let(:domain) { SharedDomain.make(name: 'tcp.com', router_group_guid: 'router-group-guid') }
-        let(:route) { Route.make(space: process.space, domain: domain, port: 9090, host: '') }
+        let(:domain) { create(:shared_domain, name: 'tcp.com', router_group_guid: 'router-group-guid') }
+        let(:route) { create(:route, space: process.space, domain: domain, port: 9090, host: '') }
         let(:routing_api_client) { double('routing_api_client', router_group:) }
         let(:router_group) { double('router_group', type: 'tcp', guid: 'router-group-guid') }
 
@@ -2377,10 +2377,10 @@ module VCAP::CloudController
     end
 
     describe 'DELETE /v2/apps/:app_guid/routes/:route_guid' do
-      let(:space) { Space.make }
+      let(:space) { create(:space) }
       let(:process) { ProcessModelFactory.make(space:) }
-      let(:route) { Route.make(space:) }
-      let!(:route_mapping) { RouteMappingModel.make(app: process.app, route: route, process_type: process.type) }
+      let(:route) { create(:route, space:) }
+      let!(:route_mapping) { create(:route_mapping_model, app: process.app, route: route, process_type: process.type) }
       let(:developer) { make_developer_for_space(space) }
 
       before do
@@ -2427,7 +2427,7 @@ module VCAP::CloudController
 
       context 'when the user is not a developer in the apps space' do
         before do
-          set_current_user(User.make)
+          set_current_user(create(:user))
         end
 
         it 'returns 403' do
@@ -2438,8 +2438,8 @@ module VCAP::CloudController
     end
 
     describe 'GET /v2/apps/:app_guid/service_bindings' do
-      let(:space) { Space.make }
-      let(:managed_service_instance) { ManagedServiceInstance.make(space:) }
+      let(:space) { create(:space) }
+      let(:managed_service_instance) { create(:managed_service_instance, space:) }
       let(:developer) { make_developer_for_space(space) }
       let(:process1) { ProcessModelFactory.make(space: space, name: 'process1') }
       let(:process2) { ProcessModelFactory.make(space: space, name: 'process2') }
@@ -2447,9 +2447,9 @@ module VCAP::CloudController
 
       before do
         set_current_user(developer)
-        ServiceBinding.make(service_instance: managed_service_instance, app: process1.app, name: 'guava')
-        ServiceBinding.make(service_instance: managed_service_instance, app: process2.app, name: 'peach')
-        ServiceBinding.make(service_instance: managed_service_instance, app: process3.app, name: 'cilantro')
+        create(:service_binding, service_instance: managed_service_instance, app: process1.app, name: 'guava')
+        create(:service_binding, service_instance: managed_service_instance, app: process2.app, name: 'peach')
+        create(:service_binding, service_instance: managed_service_instance, app: process3.app, name: 'cilantro')
       end
 
       it "queries apps' service_bindings by name" do
@@ -2484,20 +2484,20 @@ module VCAP::CloudController
       # These tests show we can have at most one hit per name in the
       # apps/APPGUID/service_bindings endpoint.
       context 'when there are multiple services' do
-        let(:si1) { ManagedServiceInstance.make(space:) }
-        let(:si2) { ManagedServiceInstance.make(space:) }
+        let(:si1) { create(:managed_service_instance, space:) }
+        let(:si2) { create(:managed_service_instance, space:) }
         let(:developer) { make_developer_for_space(space) }
         let(:process1) { ProcessModelFactory.make(space: space, name: 'process1') }
         let(:process2) { ProcessModelFactory.make(space: space, name: 'process2') }
 
         before do
           set_current_user(developer)
-          ServiceBinding.make(service_instance: si1, app: process1.app, name: 'out')
-          ServiceBinding.make(service_instance: si2, app: process2.app, name: 'free')
+          create(:service_binding, service_instance: si1, app: process1.app, name: 'out')
+          create(:service_binding, service_instance: si2, app: process2.app, name: 'free')
         end
 
         it 'binding si2 to process1 with a name in use by process2 is ok' do
-          ServiceBinding.make(service_instance: si2, app: process1.app, name: 'free')
+          create(:service_binding, service_instance: si2, app: process1.app, name: 'free')
           get "/v2/apps/#{process1.app.guid}/service_bindings?results-per-page=2&page=1&q=name:free"
           expect(last_response.status).to eq(200), last_response.body
         end
@@ -2505,10 +2505,10 @@ module VCAP::CloudController
     end
 
     describe 'DELETE /v2/apps/:app_guid/service_bindings/:service_binding_guid' do
-      let(:space) { Space.make }
+      let(:space) { create(:space) }
       let(:process) { ProcessModelFactory.make(space:) }
-      let(:instance) { ManagedServiceInstance.make(space:) }
-      let!(:service_binding) { ServiceBinding.make(app: process.app, service_instance: instance) }
+      let(:instance) { create(:managed_service_instance, space:) }
+      let!(:service_binding) { create(:service_binding, app: process.app, service_instance: instance) }
       let(:developer) { make_developer_for_space(space) }
 
       before do
@@ -2548,7 +2548,7 @@ module VCAP::CloudController
 
       context 'when the user is not a developer in the apps space' do
         before do
-          set_current_user(User.make)
+          set_current_user(create(:user))
         end
 
         it 'returns 403' do
@@ -2560,8 +2560,8 @@ module VCAP::CloudController
 
     describe 'GET /v2/apps/:guid/permissions' do
       let(:process) { ProcessModelFactory.make(space:) }
-      let(:space) { Space.make }
-      let(:user) { User.make }
+      let(:space) { create(:space) }
+      let(:user) { create(:user) }
 
       before do
         space.organization.add_user(user)
@@ -2696,7 +2696,7 @@ module VCAP::CloudController
 
       context 'when the user is not part of the org or space' do
         before do
-          new_user = User.make
+          new_user = create(:user)
           set_current_user(new_user)
         end
 

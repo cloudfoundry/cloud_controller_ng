@@ -38,18 +38,18 @@ module VCAP::CloudController
         let!(:private_plan_1) { make_private_plan }
         let!(:private_plan_2) { make_private_plan }
 
-        let(:org_1) { Organization.make }
-        let(:org_2) { Organization.make }
-        let(:org_3) { Organization.make }
+        let(:org_1) { create(:organization) }
+        let(:org_2) { create(:organization) }
+        let(:org_3) { create(:organization) }
         let!(:org_restricted_plan_1) { make_org_restricted_plan(org_1) }
         let!(:org_restricted_plan_2) { make_org_restricted_plan(org_2) }
         let!(:org_restricted_plan_3) { make_org_restricted_plan(org_3) }
         let!(:org_restricted_plan_4) { make_org_restricted_plan(org_3) }
         let!(:org_restricted_plan_5) { make_org_restricted_plan(org_1, org_3) }
 
-        let(:space_1) { Space.make(organization: org_1) }
-        let(:space_2) { Space.make(organization: org_2) }
-        let(:space_3) { Space.make(organization: org_3) }
+        let(:space_1) { create(:space, organization: org_1) }
+        let(:space_2) { create(:space, organization: org_2) }
+        let(:space_3) { create(:space, organization: org_3) }
         let!(:space_scoped_plan_1) { make_space_scoped_plan(space_1) }
         let!(:space_scoped_plan_2) { make_space_scoped_plan(space_2) }
         let!(:space_scoped_plan_3) { make_space_scoped_plan(space_3) }
@@ -134,13 +134,13 @@ module VCAP::CloudController
       end
 
       describe 'filtering by organization_guids and space_guids' do
-        let(:org_1) { Organization.make }
-        let(:org_2) { Organization.make }
-        let(:org_3) { Organization.make }
-        let(:space_1_1) { Space.make(organization: org_1) }
-        let!(:space_1_2) { Space.make(organization: org_1) }
-        let(:space_2) { Space.make(organization: org_2) }
-        let(:space_3) { Space.make(organization: org_3) }
+        let(:org_1) { create(:organization) }
+        let(:org_2) { create(:organization) }
+        let(:org_3) { create(:organization) }
+        let(:space_1_1) { create(:space, organization: org_1) }
+        let!(:space_1_2) { create(:space, organization: org_1) }
+        let(:space_2) { create(:space, organization: org_2) }
+        let(:space_3) { create(:space, organization: org_3) }
 
         let!(:public_plan) { make_public_plan }
 
@@ -362,8 +362,8 @@ module VCAP::CloudController
           let(:message) { ServicePlansListMessage.from_params(params.with_indifferent_access) }
 
           describe 'available' do
-            let!(:available_plan) { ServicePlan.make(public: true, active: true) }
-            let!(:unavailable_plan) { ServicePlan.make(public: true, active: false) }
+            let!(:available_plan) { create(:service_plan, public: true, active: true) }
+            let!(:unavailable_plan) { create(:service_plan, public: true, active: false) }
             let(:params) { {} }
 
             it 'returns both when there is no filter' do
@@ -388,12 +388,12 @@ module VCAP::CloudController
           end
 
           describe 'service_broker_guids' do
-            let(:service_broker) { ServiceBroker.make }
-            let(:service_offering) { Service.make(service_broker:) }
-            let!(:plan_1) { ServicePlan.make(service: service_offering) }
-            let!(:plan_2) { ServicePlan.make(service: service_offering) }
-            let!(:plan_3) { ServicePlan.make }
-            let!(:plan_4) { ServicePlan.make }
+            let(:service_broker) { create(:service_broker) }
+            let(:service_offering) { create(:service, service_broker:) }
+            let!(:plan_1) { create(:service_plan, service: service_offering) }
+            let!(:plan_2) { create(:service_plan, service: service_offering) }
+            let!(:plan_3) { create(:service_plan) }
+            let!(:plan_4) { create(:service_plan) }
             let(:params) { { service_broker_guids: [service_broker.guid, plan_4.service.service_broker.guid].join(',') } }
 
             it 'can filter by service broker guids' do
@@ -402,12 +402,12 @@ module VCAP::CloudController
           end
 
           describe 'service_broker_names' do
-            let(:service_broker) { ServiceBroker.make }
-            let(:service_offering) { Service.make(service_broker:) }
-            let!(:plan_1) { ServicePlan.make(service: service_offering) }
-            let!(:plan_2) { ServicePlan.make(service: service_offering) }
-            let!(:plan_3) { ServicePlan.make }
-            let!(:plan_4) { ServicePlan.make }
+            let(:service_broker) { create(:service_broker) }
+            let(:service_offering) { create(:service, service_broker:) }
+            let!(:plan_1) { create(:service_plan, service: service_offering) }
+            let!(:plan_2) { create(:service_plan, service: service_offering) }
+            let!(:plan_3) { create(:service_plan) }
+            let!(:plan_4) { create(:service_plan) }
             let(:params) { { service_broker_names: [service_broker.name, plan_3.service.service_broker.name].join(',') } }
 
             it 'can filter by service broker names' do
@@ -416,15 +416,15 @@ module VCAP::CloudController
           end
 
           describe 'service_instance_guids' do
-            let!(:plan_1) { ServicePlan.make }
-            let!(:plan_2) { ServicePlan.make }
-            let!(:plan_3) { ServicePlan.make }
-            let!(:plan_4) { ServicePlan.make }
+            let!(:plan_1) { create(:service_plan) }
+            let!(:plan_2) { create(:service_plan) }
+            let!(:plan_3) { create(:service_plan) }
+            let!(:plan_4) { create(:service_plan) }
 
-            let!(:instance_1) { ManagedServiceInstance.make(service_plan: plan_1) }
-            let!(:instance_2) { ManagedServiceInstance.make(service_plan: plan_2) }
-            let!(:instance_3) { ManagedServiceInstance.make(service_plan: plan_3) }
-            let!(:instance_4) { ManagedServiceInstance.make(service_plan: plan_1) }
+            let!(:instance_1) { create(:managed_service_instance, service_plan: plan_1) }
+            let!(:instance_2) { create(:managed_service_instance, service_plan: plan_2) }
+            let!(:instance_3) { create(:managed_service_instance, service_plan: plan_3) }
+            let!(:instance_4) { create(:managed_service_instance, service_plan: plan_1) }
 
             let(:params) { { service_instance_guids: [instance_1.guid, instance_2.guid, instance_4.guid].join(',') } }
 
@@ -438,11 +438,11 @@ module VCAP::CloudController
           end
 
           describe 'service_offering_guids' do
-            let(:service_offering) { Service.make }
-            let!(:plan_1) { ServicePlan.make(service: service_offering) }
-            let!(:plan_2) { ServicePlan.make(service: service_offering) }
-            let!(:plan_3) { ServicePlan.make }
-            let!(:plan_4) { ServicePlan.make }
+            let(:service_offering) { create(:service) }
+            let!(:plan_1) { create(:service_plan, service: service_offering) }
+            let!(:plan_2) { create(:service_plan, service: service_offering) }
+            let!(:plan_3) { create(:service_plan) }
+            let!(:plan_4) { create(:service_plan) }
             let(:params) { { service_offering_guids: [service_offering.guid, plan_3.service.guid].join(',') } }
 
             it 'can filter by service offering guids' do
@@ -451,11 +451,11 @@ module VCAP::CloudController
           end
 
           describe 'service_offering_names' do
-            let(:service_offering) { Service.make }
-            let!(:plan_1) { ServicePlan.make(service: service_offering) }
-            let!(:plan_2) { ServicePlan.make(service: service_offering) }
-            let!(:plan_3) { ServicePlan.make }
-            let!(:plan_4) { ServicePlan.make }
+            let(:service_offering) { create(:service) }
+            let!(:plan_1) { create(:service_plan, service: service_offering) }
+            let!(:plan_2) { create(:service_plan, service: service_offering) }
+            let!(:plan_3) { create(:service_plan) }
+            let!(:plan_4) { create(:service_plan) }
             let(:params) { { service_offering_names: [service_offering.name, plan_3.service.name].join(',') } }
 
             it 'can filter by service offering names' do
@@ -464,11 +464,11 @@ module VCAP::CloudController
           end
 
           describe 'broker_catalog_ids' do
-            let(:service_offering) { Service.make }
-            let!(:plan_1) { ServicePlan.make(service: service_offering) }
-            let!(:plan_2) { ServicePlan.make(service: service_offering) }
-            let!(:plan_3) { ServicePlan.make }
-            let!(:plan_4) { ServicePlan.make }
+            let(:service_offering) { create(:service) }
+            let!(:plan_1) { create(:service_plan, service: service_offering) }
+            let!(:plan_2) { create(:service_plan, service: service_offering) }
+            let!(:plan_3) { create(:service_plan) }
+            let!(:plan_4) { create(:service_plan) }
             let(:params) { { broker_catalog_ids: [plan_1.unique_id, plan_4.unique_id].join(',') } }
 
             it 'can filter by service broker guids' do
@@ -477,9 +477,9 @@ module VCAP::CloudController
           end
 
           describe 'names' do
-            let!(:plan_one) { ServicePlan.make(name: 'one', public: true) }
-            let!(:plan_two) { ServicePlan.make(name: 'two', public: true) }
-            let!(:plan_three) { ServicePlan.make(name: 'three', public: true) }
+            let!(:plan_one) { create(:service_plan, name: 'one', public: true) }
+            let!(:plan_two) { create(:service_plan, name: 'two', public: true) }
+            let!(:plan_three) { create(:service_plan, name: 'three', public: true) }
             let(:params) { { names: 'one,three' } }
 
             it 'can filter by names' do
@@ -488,15 +488,15 @@ module VCAP::CloudController
           end
 
           describe 'label_selector' do
-            let!(:service_plan_1) { VCAP::CloudController::ServicePlan.make(public: true, active: true) }
-            let!(:service_plan_2) { VCAP::CloudController::ServicePlan.make(public: true, active: true) }
-            let!(:service_plan_3) { VCAP::CloudController::ServicePlan.make(public: true, active: true) }
+            let!(:service_plan_1) { create(:service_plan, public: true, active: true) }
+            let!(:service_plan_2) { create(:service_plan, public: true, active: true) }
+            let!(:service_plan_3) { create(:service_plan, public: true, active: true) }
             let(:message) { ServicePlansListMessage.from_params({ label_selector: 'flavor=orange' }.with_indifferent_access) }
 
             before do
-              VCAP::CloudController::ServicePlanLabelModel.make(resource_guid: service_plan_1.guid, key_name: 'flavor', value: 'orange')
-              VCAP::CloudController::ServicePlanLabelModel.make(resource_guid: service_plan_2.guid, key_name: 'flavor', value: 'orange')
-              VCAP::CloudController::ServicePlanLabelModel.make(resource_guid: service_plan_3.guid, key_name: 'flavor', value: 'apple')
+              create(:service_plan_label_model, resource_guid: service_plan_1.guid, key_name: 'flavor', value: 'orange')
+              create(:service_plan_label_model, resource_guid: service_plan_2.guid, key_name: 'flavor', value: 'orange')
+              create(:service_plan_label_model, resource_guid: service_plan_3.guid, key_name: 'flavor', value: 'apple')
             end
 
             it 'filters the matching service plans' do
@@ -512,8 +512,8 @@ module VCAP::CloudController
         end
 
         context 'when org user' do
-          let(:org_1) { Organization.make }
-          let(:space_1) { Space.make(organization: org_1) }
+          let(:org_1) { create(:organization) }
+          let(:space_1) { create(:space, organization: org_1) }
           let(:readable_orgs) { [org_1] }
           let(:readable_spaces) { [space_1] }
           let(:service_plans) do
@@ -536,23 +536,23 @@ module VCAP::CloudController
       end
 
       def make_public_plan
-        ServicePlan.make(public: true, active: true, name: "public-#{Sham.name}")
+        create(:service_plan, public: true, active: true, name: "public-#{Sham.name}")
       end
 
       def make_private_plan
-        ServicePlan.make(public: false, active: true, name: "private-#{Sham.name}")
+        create(:service_plan, public: false, active: true, name: "private-#{Sham.name}")
       end
 
       def make_space_scoped_plan(space)
-        service_broker = ServiceBroker.make(space:)
-        service_offering = Service.make(service_broker:)
-        ServicePlan.make(service: service_offering, name: "space-scoped-#{Sham.name}")
+        service_broker = create(:service_broker, space:)
+        service_offering = create(:service, service_broker:)
+        create(:service_plan, service: service_offering, name: "space-scoped-#{Sham.name}")
       end
 
       def make_org_restricted_plan(org1, org2=nil)
-        service_plan = ServicePlan.make(public: false, name: "org-restricted-#{Sham.name}")
-        ServicePlanVisibility.make(organization: org1, service_plan: service_plan)
-        ServicePlanVisibility.make(organization: org2, service_plan: service_plan) unless org2.nil?
+        service_plan = create(:service_plan, public: false, name: "org-restricted-#{Sham.name}")
+        create(:service_plan_visibility, organization: org1, service_plan: service_plan)
+        create(:service_plan_visibility, organization: org2, service_plan: service_plan) unless org2.nil?
         service_plan
       end
     end

@@ -2,9 +2,9 @@ require 'spec_helper'
 
 module VCAP::CloudController
   RSpec.describe Membership do
-    let(:user) { User.make }
-    let!(:space) { Space.make(organization:) }
-    let(:organization) { Organization.make }
+    let(:user) { create(:user) }
+    let!(:space) { create(:space, organization:) }
+    let(:organization) { create(:organization) }
 
     let(:membership) { Membership.new(user) }
 
@@ -493,10 +493,10 @@ module VCAP::CloudController
       let(:org_roles) { Permissions::ROLES_FOR_ORG_READING }
 
       context 'when the user has an org role' do
-        let(:other_user) { User.make }
-        let(:manager_user) { User.make }
-        let(:auditor_user) { User.make }
-        let(:billing_user) { User.make }
+        let(:other_user) { create(:user) }
+        let(:manager_user) { create(:user) }
+        let(:auditor_user) { create(:user) }
+        let(:billing_user) { create(:user) }
 
         before do
           organization.add_user(user)
@@ -513,8 +513,8 @@ module VCAP::CloudController
         end
 
         it 'does not include users from other orgs' do
-          other_org = Organization.make
-          unrelated_user = User.make
+          other_org = create(:organization)
+          unrelated_user = create(:user)
           other_org.add_user(unrelated_user)
 
           user_ids = membership.visible_user_ids_in_orgs(org_roles).select_map(:user_id)
@@ -538,7 +538,7 @@ module VCAP::CloudController
     end
 
     describe '#authorized_space_guids' do
-      let(:user) { User.make }
+      let(:user) { create(:user) }
 
       before do
         organization.add_user(user)
@@ -637,12 +637,12 @@ module VCAP::CloudController
       end
 
       context 'mix of org and space roles' do
-        let(:org_managed) { Organization.make }
-        let(:org_audited) { Organization.make }
-        let!(:space1_in_managed_org) { Space.make(organization: org_managed) }
-        let!(:space2_in_managed_org) { Space.make(organization: org_managed) }
-        let!(:space_in_audited_org) { Space.make(organization: org_audited) }
-        let!(:some_other_space) { Space.make }
+        let(:org_managed) { create(:organization) }
+        let(:org_audited) { create(:organization) }
+        let!(:space1_in_managed_org) { create(:space, organization: org_managed) }
+        let!(:space2_in_managed_org) { create(:space, organization: org_managed) }
+        let!(:space_in_audited_org) { create(:space, organization: org_audited) }
+        let!(:some_other_space) { create(:space) }
 
         before do
           org_managed.add_manager(user)

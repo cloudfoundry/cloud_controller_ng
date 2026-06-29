@@ -10,19 +10,19 @@ end
 
 RSpec::Matchers.define :export_attributes do |*attributes|
   failure_message do |_actual|
-    instance = described_class.make
+    instance = FactoryBot.create(described_class.name.demodulize.underscore.to_sym)
     actual_keys = instance.to_hash.keys.collect(&:to_sym)
     "expected #{described_class} to have exported attributes #{expected}, got: #{actual_keys}"
   end
 
   failure_message_when_negated do |_actual|
-    instance = described_class.make
+    instance = FactoryBot.create(described_class.name.demodulize.underscore.to_sym)
     actual_keys = instance.to_hash.keys.collect(&:to_sym)
     "expected #{described_class} to not have exported attributes #{expected}, got: #{actual_keys}"
   end
 
   match do |_|
-    instance = described_class.make
+    instance = FactoryBot.create(described_class.name.demodulize.underscore.to_sym)
     instance.to_hash.keys.collect(&:to_sym).sort == attributes.sort
   end
 end

@@ -4,7 +4,7 @@ require 'spec_helper'
 
 module VCAP::CloudController
   RSpec.describe ServicePlanVisibilitiesController, :services do
-    let(:user) { User.make }
+    let(:user) { create(:user) }
 
     before { set_current_user(user, admin: true, email: 'some-email-address@example.com') }
 
@@ -28,8 +28,8 @@ module VCAP::CloudController
       include_context 'permissions'
 
       before do
-        @obj_a = ServicePlanVisibility.make
-        @obj_b = ServicePlanVisibility.make
+        @obj_a = create(:service_plan_visibility)
+        @obj_b = create(:service_plan_visibility)
       end
 
       def self.user_sees_empty_enumerate(user_role, member_a_ivar, member_b_ivar)
@@ -59,8 +59,8 @@ module VCAP::CloudController
     end
 
     describe 'POST /v2/service_plan_visibilities' do
-      let!(:organization) { Organization.make }
-      let!(:service_plan) { ServicePlan.make(public: false) }
+      let!(:organization) { create(:organization) }
+      let!(:service_plan) { create(:service_plan, public: false) }
 
       it 'creates the service plan visibility' do
         params = { organization_guid: organization.guid, service_plan_guid: service_plan.guid }
@@ -95,10 +95,10 @@ module VCAP::CloudController
     end
 
     describe 'PUT /v2/service_plan_visibilities/:guid' do
-      let!(:organization) { Organization.make }
-      let!(:new_organization) { Organization.make }
-      let!(:service_plan) { ServicePlan.make(public: false) }
-      let!(:visibility) { ServicePlanVisibility.make(organization_guid: organization.guid, service_plan_guid: service_plan.guid) }
+      let!(:organization) { create(:organization) }
+      let!(:new_organization) { create(:organization) }
+      let!(:service_plan) { create(:service_plan, public: false) }
+      let!(:visibility) { create(:service_plan_visibility, organization_guid: organization.guid, service_plan_guid: service_plan.guid) }
 
       it 'updates the service plan visibility' do
         put "/v2/service_plan_visibilities/#{visibility.guid}", Oj.dump({ organization_guid: new_organization.guid })
@@ -127,9 +127,9 @@ module VCAP::CloudController
     end
 
     describe 'DELETE /v2/service_plan_visibilities/:guid' do
-      let!(:organization) { Organization.make }
-      let!(:service_plan) { ServicePlan.make(public: false) }
-      let!(:visibility) { ServicePlanVisibility.make(organization_guid: organization.guid, service_plan_guid: service_plan.guid) }
+      let!(:organization) { create(:organization) }
+      let!(:service_plan) { create(:service_plan, public: false) }
+      let!(:visibility) { create(:service_plan_visibility, organization_guid: organization.guid, service_plan_guid: service_plan.guid) }
 
       it 'deletes the service plan visibility' do
         delete "/v2/service_plan_visibilities/#{visibility.guid}"

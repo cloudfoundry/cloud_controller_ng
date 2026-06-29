@@ -4,10 +4,10 @@ require 'messages/apps_list_message'
 module VCAP::CloudController
   RSpec.describe AppListFetcher do
     subject { AppListFetcher.fetch_all(message) }
-    let!(:stack) { Stack.make }
-    let(:space) { Space.make(guid: 'main-space') }
-    let!(:app) { AppModel.make(space_guid: space.guid, name: 'app') }
-    let!(:sad_app) { AppModel.make(space_guid: space.guid) }
+    let!(:stack) { create(:stack) }
+    let(:space) { create(:space, guid: 'main-space') }
+    let!(:app) { create(:app_model, space: space, name: 'app') }
+    let!(:sad_app) { create(:app_model, space: space) }
     let(:org) { space.organization }
     let(:fetcher) { AppListFetcher }
     let(:space_guids) { [space.guid] }
@@ -15,14 +15,13 @@ module VCAP::CloudController
     let(:filters) { {} }
     let(:message) { AppsListMessage.from_params(filters) }
     let!(:lifecycle_data_for_app) do
-      BuildpackLifecycleDataModel.make(
-        app: app,
-        stack: stack.name,
-        buildpacks: [Buildpack.make.name]
-      )
+      create(:buildpack_lifecycle_data_model,
+             app: app,
+             stack: stack.name,
+             buildpacks: [create(:buildpack).name])
     end
     let!(:lifecycle_data_for_sad_app) do
-      BuildpackLifecycleDataModel.make(app: sad_app, stack: nil)
+      create(:buildpack_lifecycle_data_model, app: sad_app, stack: nil)
     end
 
     describe '#fetch_all' do
@@ -36,7 +35,7 @@ module VCAP::CloudController
       end
 
       it 'includes all the apps' do
-        app = AppModel.make
+        app = create(:app_model)
         expect(subject.all).to include(app, sad_app)
       end
     end
@@ -69,7 +68,7 @@ module VCAP::CloudController
 
       context 'when the app space_guids are provided' do
         let(:filters) { { space_guids: [space.guid] } }
-        let(:sad_app) { AppModel.make }
+        let(:sad_app) { create(:app_model) }
 
         it 'returns all of the desired apps' do
           expect(apps.all).to contain_exactly(app)
@@ -78,9 +77,9 @@ module VCAP::CloudController
 
       context 'when the organization guids are provided' do
         let(:filters) { { organization_guids: [org.guid] } }
-        let(:sad_org) { Organization.make }
-        let(:sad_space) { Space.make(organization_guid: sad_org.guid) }
-        let(:sad_app) { AppModel.make(space_guid: sad_space.guid) }
+        let(:sad_org) { create(:organization) }
+        let(:sad_space) { create(:space, organization: sad_org) }
+        let(:sad_app) { create(:app_model, space: sad_space) }
         let(:space_guids) { [space.guid, sad_space.guid] }
 
         it 'returns all of the desired apps' do
@@ -115,10 +114,10 @@ module VCAP::CloudController
       context 'when a label_selector is provided' do
         let(:filters) { { 'label_selector' => 'dog in (chihuahua,scooby-doo)' } }
         let!(:app_label) do
-          VCAP::CloudController::AppLabelModel.make(resource_guid: app.guid, key_name: 'dog', value: 'scooby-doo')
+          create(:app_label_model, resource_guid: app.guid, key_name: 'dog', value: 'scooby-doo')
         end
         let!(:sad_app_label) do
-          VCAP::CloudController::AppLabelModel.make(resource_guid: sad_app.guid, key_name: 'dog', value: 'poodle')
+          create(:app_label_model, resource_guid: sad_app.guid, key_name: 'dog', value: 'poodle')
         end
 
         it 'returns all of the desired apps' do
@@ -126,9 +125,9 @@ module VCAP::CloudController
         end
 
         context 'and other filters are present' do
-          let!(:happiest_app) { AppModel.make(space_guid: space.guid, name: 'bob') }
+          let!(:happiest_app) { create(:app_model, space: space, name: 'bob') }
           let!(:happiest_app_label) do
-            VCAP::CloudController::AppLabelModel.make(resource_guid: happiest_app.guid, key_name: 'dog', value: 'scooby-doo')
+            create(:app_label_model, resource_guid: happiest_app.guid, key_name: 'dog', value: 'scooby-doo')
           end
           let(:filters) { { 'names' => 'bob', 'label_selector' => 'dog in (chihuahua,scooby-doo)' } }
 
@@ -138,13 +137,13 @@ module VCAP::CloudController
         end
 
         context 'labels and spaces' do
-          let!(:happy_space) { Space.make(organization: space.organization, guid: 'happy_space') }
+          let!(:happy_space) { create(:space, organization: space.organization, guid: 'happy_space') }
           let!(:space_guids) { [happy_space.guid] }
-          let!(:happiest_app) { AppModel.make(space_guid: happy_space.guid, name: 'bob2') }
+          let!(:happiest_app) { create(:app_model, space: happy_space, name: 'bob2') }
           let!(:happiest_app_label) do
-            VCAP::CloudController::AppLabelModel.make(resource_guid: happiest_app.guid, key_name: 'dog', value: 'scooby-doo')
+            create(:app_label_model, resource_guid: happiest_app.guid, key_name: 'dog', value: 'scooby-doo')
           end
-          let!(:mildly_happy_app) { AppModel.make(space_guid: happy_space.guid, name: 'bob3') }
+          let!(:mildly_happy_app) { create(:app_model, space: happy_space, name: 'bob3') }
           let(:filters) { { space_guids: [happy_space.guid], 'label_selector' => 'dog in (chihuahua,scooby-doo)' } }
 
           it 'returns the desired app' do
@@ -168,8 +167,8 @@ module VCAP::CloudController
       end
 
       context 'when a lifecycle_type is provided' do
-        let!(:docker_app) { AppModel.make(:docker, name: 'docker-app', space_guid: space.guid) }
-        let!(:cnb_app) { AppModel.make(:cnb, name: 'cnb-app', space_guid: space.guid) }
+        let!(:docker_app) { create(:app_model, :docker, name: 'docker-app', space: space) }
+        let!(:cnb_app) { create(:app_model, :cnb, name: 'cnb-app', space: space) }
 
         before do
           docker_app.buildpack_lifecycle_data = nil
@@ -207,10 +206,10 @@ module VCAP::CloudController
           AppModel.plugin :timestamps, update_on_create: true, allow_manual_update: true
         end
 
-        let!(:resource_1) { AppModel.make(name: '1', created_at: '2020-05-26T18:47:01Z', space: space).tap { |r| r.update(updated_at: '2020-05-26T18:47:01Z') } }
-        let!(:resource_2) { AppModel.make(name: '2', created_at: '2020-05-26T18:47:02Z', space: space).tap { |r| r.update(updated_at: '2020-05-26T18:47:02Z') } }
-        let!(:resource_3) { AppModel.make(name: '3', created_at: '2020-05-26T18:47:03Z', space: space).tap { |r| r.update(updated_at: '2020-05-26T18:47:03Z') } }
-        let!(:resource_4) { AppModel.make(name: '4', created_at: '2020-05-26T18:47:04Z', space: space).tap { |r| r.update(updated_at: '2020-05-26T18:47:04Z') } }
+        let!(:resource_1) { create(:app_model, name: '1', created_at: '2020-05-26T18:47:01Z', space: space).tap { |r| r.update(updated_at: '2020-05-26T18:47:01Z') } }
+        let!(:resource_2) { create(:app_model, name: '2', created_at: '2020-05-26T18:47:02Z', space: space).tap { |r| r.update(updated_at: '2020-05-26T18:47:02Z') } }
+        let!(:resource_3) { create(:app_model, name: '3', created_at: '2020-05-26T18:47:03Z', space: space).tap { |r| r.update(updated_at: '2020-05-26T18:47:03Z') } }
+        let!(:resource_4) { create(:app_model, name: '4', created_at: '2020-05-26T18:47:04Z', space: space).tap { |r| r.update(updated_at: '2020-05-26T18:47:04Z') } }
 
         after do
           AppModel.plugin :timestamps, update_on_create: true, allow_manual_update: false

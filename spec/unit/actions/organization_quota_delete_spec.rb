@@ -3,7 +3,7 @@ require 'actions/organization_quota_delete'
 
 module VCAP::CloudController
   RSpec.describe OrganizationQuotaDeleteAction do
-    let(:user) { User.make }
+    let(:user) { create(:user) }
     let(:user_email) { 'user@example.com' }
     let(:user_name) { 'user-name' }
     let(:user_audit_info) { UserAuditInfo.new(user_guid: user.guid, user_email: user_email, user_name: user_name) }
@@ -11,7 +11,7 @@ module VCAP::CloudController
     subject(:org_quota_delete) { OrganizationQuotaDeleteAction.new(user_audit_info) }
 
     describe '#delete' do
-      let!(:quota) { QuotaDefinition.make }
+      let!(:quota) { create(:quota_definition) }
 
       it 'deletes the organization quota' do
         expect do

@@ -4,127 +4,114 @@ require 'spec_helper'
 
 module VCAP::CloudController
   RSpec.describe SyslogDrainUrlsInternalController do
-    let(:org) { Organization.make(name: 'org-1') }
-    let(:space) { Space.make(name: 'space-1', organization: org) }
-    let(:app_obj) { AppModel.make(name: 'app-1', space: space) }
-    let(:instance1) { UserProvidedServiceInstance.make(space: app_obj.space) }
-    let(:instance2) { UserProvidedServiceInstance.make(space: app_obj.space) }
-    let!(:binding_with_drain1) { ServiceBinding.make(syslog_drain_url: 'fish,finger', app: app_obj, service_instance: instance1) }
-    let!(:binding_with_drain2) { ServiceBinding.make(syslog_drain_url: 'foobar', app: app_obj, service_instance: instance2) }
+    let(:org) { create(:organization, name: 'org-1') }
+    let(:space) { create(:space, name: 'space-1', organization: org) }
+    let(:app_obj) { create(:app_model, name: 'app-1', space: space) }
+    let(:instance1) { create(:user_provided_service_instance, space: app_obj.space) }
+    let(:instance2) { create(:user_provided_service_instance, space: app_obj.space) }
+    let!(:binding_with_drain1) { create(:service_binding, syslog_drain_url: 'fish,finger', app: app_obj, service_instance: instance1) }
+    let!(:binding_with_drain2) { create(:service_binding, syslog_drain_url: 'foobar', app: app_obj, service_instance: instance2) }
 
     describe 'GET /internal/v5/syslog_drain_urls' do
       context 'basic functionality' do
-        let(:app_obj2) { AppModel.make(name: 'app-2', space: space) }
-        let(:app_obj3) { AppModel.make(name: 'app-3', space: space) }
-        let(:app_obj4) { AppModel.make(name: 'app-4', space: space) }
-        let(:app_obj5) { AppModel.make(name: 'app-5', space: space) }
-        let(:instance3) { UserProvidedServiceInstance.make(space: app_obj2.space) }
-        let(:instance4) { UserProvidedServiceInstance.make(space: app_obj3.space) }
-        let(:instance5) { UserProvidedServiceInstance.make(space: app_obj3.space) }
-        let(:instance6) { UserProvidedServiceInstance.make(space: app_obj4.space) }
-        let(:instance7) { UserProvidedServiceInstance.make(space: app_obj.space) }
-        let(:instance8) { UserProvidedServiceInstance.make(space: app_obj2.space) }
-        let(:instance9) { UserProvidedServiceInstance.make(space: app_obj3.space) }
-        let(:instance10) { UserProvidedServiceInstance.make(space: app_obj4.space) }
-        let(:instance11) { UserProvidedServiceInstance.make(space: app_obj.space) }
-        let(:instance12) { UserProvidedServiceInstance.make(space: app_obj.space) }
-        let(:instance13) { UserProvidedServiceInstance.make(space: app_obj.space) }
-        let(:instance14) { UserProvidedServiceInstance.make(space: app_obj.space) }
-        let(:instance15) { UserProvidedServiceInstance.make(space: app_obj.space) }
+        let(:app_obj2) { create(:app_model, name: 'app-2', space: space) }
+        let(:app_obj3) { create(:app_model, name: 'app-3', space: space) }
+        let(:app_obj4) { create(:app_model, name: 'app-4', space: space) }
+        let(:app_obj5) { create(:app_model, name: 'app-5', space: space) }
+        let(:instance3) { create(:user_provided_service_instance, space: app_obj2.space) }
+        let(:instance4) { create(:user_provided_service_instance, space: app_obj3.space) }
+        let(:instance5) { create(:user_provided_service_instance, space: app_obj3.space) }
+        let(:instance6) { create(:user_provided_service_instance, space: app_obj4.space) }
+        let(:instance7) { create(:user_provided_service_instance, space: app_obj.space) }
+        let(:instance8) { create(:user_provided_service_instance, space: app_obj2.space) }
+        let(:instance9) { create(:user_provided_service_instance, space: app_obj3.space) }
+        let(:instance10) { create(:user_provided_service_instance, space: app_obj4.space) }
+        let(:instance11) { create(:user_provided_service_instance, space: app_obj.space) }
+        let(:instance12) { create(:user_provided_service_instance, space: app_obj.space) }
+        let(:instance13) { create(:user_provided_service_instance, space: app_obj.space) }
+        let(:instance14) { create(:user_provided_service_instance, space: app_obj.space) }
+        let(:instance15) { create(:user_provided_service_instance, space: app_obj.space) }
 
         before do
-          ServiceBinding.make(syslog_drain_url: 'foobar', app: app_obj2, service_instance: instance3)
+          create(:service_binding, syslog_drain_url: 'foobar', app: app_obj2, service_instance: instance3)
 
-          ServiceBinding.make(
-            syslog_drain_url: 'barfoo',
-            app: app_obj3,
-            service_instance: instance4,
-            credentials: { 'cert' => 'cert1', 'key' => 'key1', 'ca' => 'ca1' }
-          )
+          create(:service_binding,
+                 syslog_drain_url: 'barfoo',
+                 app: app_obj3,
+                 service_instance: instance4,
+                 credentials: { 'cert' => 'cert1', 'key' => 'key1', 'ca' => 'ca1' })
 
-          ServiceBinding.make(
-            syslog_drain_url: 'barfoo2',
-            app: app_obj,
-            service_instance: instance7,
-            credentials: { 'cert' => 'cert1', 'key' => 'key1', 'ca' => 'ca1' }
-          )
+          create(:service_binding,
+                 syslog_drain_url: 'barfoo2',
+                 app: app_obj,
+                 service_instance: instance7,
+                 credentials: { 'cert' => 'cert1', 'key' => 'key1', 'ca' => 'ca1' })
 
-          ServiceBinding.make(
-            syslog_drain_url: 'barfoo2',
-            app: app_obj2,
-            service_instance: instance8,
-            credentials: { 'cert' => 'cert1', 'key' => 'key1', 'ca' => 'ca1' }
-          )
+          create(:service_binding,
+                 syslog_drain_url: 'barfoo2',
+                 app: app_obj2,
+                 service_instance: instance8,
+                 credentials: { 'cert' => 'cert1', 'key' => 'key1', 'ca' => 'ca1' })
 
-          ServiceBinding.make(
-            syslog_drain_url: 'barfoo2',
-            app: app_obj3,
-            service_instance: instance5,
-            credentials: { 'cert' => 'cert2', 'key' => 'key2', 'ca' => 'ca2' }
-          )
+          create(:service_binding,
+                 syslog_drain_url: 'barfoo2',
+                 app: app_obj3,
+                 service_instance: instance5,
+                 credentials: { 'cert' => 'cert2', 'key' => 'key2', 'ca' => 'ca2' })
 
-          ServiceBinding.make(
-            syslog_drain_url: 'barfoo2',
-            app: app_obj4,
-            service_instance: instance6,
-            credentials: { 'cert' => 'cert2', 'key' => 'key2', 'ca' => 'ca2' }
-          )
+          create(:service_binding,
+                 syslog_drain_url: 'barfoo2',
+                 app: app_obj4,
+                 service_instance: instance6,
+                 credentials: { 'cert' => 'cert2', 'key' => 'key2', 'ca' => 'ca2' })
 
-          ServiceBinding.make(
-            syslog_drain_url: 'barfoo2',
-            app: app_obj5,
-            service_instance: instance6,
-            credentials: { 'cert' => 'cert2', 'key' => 'key2', 'ca' => 'ca2' }
-          )
+          create(:service_binding,
+                 syslog_drain_url: 'barfoo2',
+                 app: app_obj5,
+                 service_instance: instance6,
+                 credentials: { 'cert' => 'cert2', 'key' => 'key2', 'ca' => 'ca2' })
 
-          ServiceBinding.make(
-            syslog_drain_url: 'no_credentials_1',
-            app: app_obj3,
-            service_instance: instance9,
-            credentials: nil
-          )
+          create(:service_binding,
+                 syslog_drain_url: 'no_credentials_1',
+                 app: app_obj3,
+                 service_instance: instance9,
+                 credentials: nil)
 
-          ServiceBinding.make(
-            syslog_drain_url: 'no_credentials_2',
-            app: app_obj4,
-            service_instance: instance10,
-            credentials: { 'cert' => '', 'key' => '', 'ca' => '' }
-          )
+          create(:service_binding,
+                 syslog_drain_url: 'no_credentials_2',
+                 app: app_obj4,
+                 service_instance: instance10,
+                 credentials: { 'cert' => '', 'key' => '', 'ca' => '' })
 
-          ServiceBinding.make(
-            syslog_drain_url: 'no_credentials_3',
-            app: app_obj,
-            service_instance: instance11,
-            credentials: { 'foo' => '', 'cert' => '', 'ca' => '' }
-          )
+          create(:service_binding,
+                 syslog_drain_url: 'no_credentials_3',
+                 app: app_obj,
+                 service_instance: instance11,
+                 credentials: { 'foo' => '', 'cert' => '', 'ca' => '' })
 
-          ServiceBinding.make(
-            syslog_drain_url: 'collision_test',
-            app: app_obj,
-            service_instance: instance12,
-            credentials: { 'cert' => '', 'key' => '', 'ca' => '' }
-          )
+          create(:service_binding,
+                 syslog_drain_url: 'collision_test',
+                 app: app_obj,
+                 service_instance: instance12,
+                 credentials: { 'cert' => '', 'key' => '', 'ca' => '' })
 
-          ServiceBinding.make(
-            syslog_drain_url: 'collision_test',
-            app: app_obj,
-            service_instance: instance13,
-            credentials: { 'cert' => 'has-cert', 'key' => '', 'ca' => '' }
-          )
+          create(:service_binding,
+                 syslog_drain_url: 'collision_test',
+                 app: app_obj,
+                 service_instance: instance13,
+                 credentials: { 'cert' => 'has-cert', 'key' => '', 'ca' => '' })
 
-          ServiceBinding.make(
-            syslog_drain_url: 'collision_test',
-            app: app_obj,
-            service_instance: instance14,
-            credentials: { 'cert' => '', 'key' => 'has-key', 'ca' => '' }
-          )
+          create(:service_binding,
+                 syslog_drain_url: 'collision_test',
+                 app: app_obj,
+                 service_instance: instance14,
+                 credentials: { 'cert' => '', 'key' => 'has-key', 'ca' => '' })
 
-          ServiceBinding.make(
-            syslog_drain_url: 'collision_test',
-            app: app_obj,
-            service_instance: instance15,
-            credentials: { 'key' => '', 'cert' => '', 'ca' => 'has-ca' }
-          )
+          create(:service_binding,
+                 syslog_drain_url: 'collision_test',
+                 app: app_obj,
+                 service_instance: instance15,
+                 credentials: { 'key' => '', 'cert' => '', 'ca' => 'has-ca' })
         end
 
         it 'returns a list of syslog drain urls and their credentials' do
@@ -294,7 +281,7 @@ module VCAP::CloudController
 
           context 'when an app has no service_bindings' do
             before do
-              AppModel.make(guid: '00000')
+              create(:app_model, guid: '00000')
             end
 
             it 'does not affect the paging results' do
@@ -309,10 +296,10 @@ module VCAP::CloudController
           end
 
           context 'when an app has no syslog_drain_urls' do
-            let(:app_with_first_ordered_guid) { AppModel.make(guid: '000', space: instance1.space) }
+            let(:app_with_first_ordered_guid) { create(:app_model, guid: '000', space: instance1.space) }
 
             before do
-              ServiceBinding.make(syslog_drain_url: nil, app: app_with_first_ordered_guid, service_instance: instance1)
+              create(:service_binding, syslog_drain_url: nil, app: app_with_first_ordered_guid, service_instance: instance1)
             end
 
             it 'does not affect the paging results' do
@@ -328,9 +315,9 @@ module VCAP::CloudController
       end
 
       context 'rfc-1034-compliance: whitespace converted to hyphens' do
-        let(:org) { Organization.make(name: 'org 2') }
-        let(:space) { Space.make(name: 'space 2', organization: org) }
-        let(:app_obj) { AppModel.make(name: 'app 2', space: space) }
+        let(:org) { create(:organization, name: 'org 2') }
+        let(:space) { create(:space, name: 'space 2', organization: org) }
+        let(:app_obj) { create(:app_model, name: 'app 2', space: space) }
 
         it 'truncates trailing hyphens' do
           get '/internal/v5/syslog_drain_urls', '{}'
@@ -349,9 +336,9 @@ module VCAP::CloudController
       end
 
       context 'rfc-1034-compliance: named end with hyphens' do
-        let(:org) { Organization.make(name: 'org-3-') }
-        let(:space) { Space.make(name: 'space-3--', organization: org) }
-        let(:app_obj) { AppModel.make(name: 'app-3---', space: space) }
+        let(:org) { create(:organization, name: 'org-3-') }
+        let(:space) { create(:space, name: 'space-3--', organization: org) }
+        let(:app_obj) { create(:app_model, name: 'app-3---', space: space) }
 
         it 'truncates trailing hyphens' do
           get '/internal/v5/syslog_drain_urls', '{}'
@@ -370,9 +357,9 @@ module VCAP::CloudController
       end
 
       context 'rfc-1034-compliance: remove disallowed characters' do
-        let(:org) { Organization.make(name: '!org@-4#' + [233].pack('U')) }
-        let(:space) { Space.make(name: '$space%-^4--&', organization: org) }
-        let(:app_obj) { AppModel.make(name: '";*app(-)4_-=-+-[]{}\\|;:,.<>/?`~', space: space) }
+        let(:org) { create(:organization, name: '!org@-4#' + [233].pack('U')) }
+        let(:space) { create(:space, name: '$space%-^4--&', organization: org) }
+        let(:app_obj) { create(:app_model, name: '";*app(-)4_-=-+-[]{}\\|;:,.<>/?`~', space: space) }
 
         it 'truncates trailing hyphens' do
           get '/internal/v5/syslog_drain_urls', '{}'
@@ -392,13 +379,13 @@ module VCAP::CloudController
         context 'rfc-1034-compliance: truncate overlong name components to first 63' do
           let(:orgName) { 'org-5-' + ('x' * (63 - 6)) }
           let(:orgNamePlus) { orgName + 'y' }
-          let(:org) { Organization.make(name: orgNamePlus) }
+          let(:org) { create(:organization, name: orgNamePlus) }
           let(:spaceName) { 'space-5-' + ('x' * (63 - 8)) }
           let(:spaceNamePlus) { spaceName + 'y' }
-          let(:space) { Space.make(name: spaceNamePlus, organization: org) }
+          let(:space) { create(:space, name: spaceNamePlus, organization: org) }
           let(:appName) { 'app-5-' + ('x' * (63 - 6)) }
           let(:appNamePlus) { appName + 'y' }
-          let(:app_obj) { AppModel.make(name: appNamePlus, space: space) }
+          let(:app_obj) { create(:app_model, name: appNamePlus, space: space) }
 
           it 'truncates trailing hyphens' do
             get '/internal/v5/syslog_drain_urls', '{}'
@@ -418,11 +405,11 @@ module VCAP::CloudController
 
         context 'rfc-1034-compliance: keep 63-char names' do
           let(:orgName) { 'org-5-' + ('x' * (63 - 6)) }
-          let(:org) { Organization.make(name: orgName) }
+          let(:org) { create(:organization, name: orgName) }
           let(:spaceName) { 'space-5-' + ('x' * (63 - 8)) }
-          let(:space) { Space.make(name: spaceName, organization: org) }
+          let(:space) { create(:space, name: spaceName, organization: org) }
           let(:appName) { 'app-5-' + ('x' * (63 - 6)) }
-          let(:app_obj) { AppModel.make(name: appName, space: space) }
+          let(:app_obj) { create(:app_model, name: appName, space: space) }
 
           it 'retains length-compliant names' do
             get '/internal/v5/syslog_drain_urls', '{}'
@@ -441,7 +428,7 @@ module VCAP::CloudController
         end
 
         context 'when an app has no service binding' do
-          let!(:app_no_binding) { AppModel.make }
+          let!(:app_no_binding) { create(:app_model) }
 
           it 'does not include that app' do
             get '/internal/v5/syslog_drain_urls', '{}'
@@ -458,7 +445,7 @@ module VCAP::CloudController
         end
 
         context "when an app's bindings have no syslog_drain_url" do
-          let!(:app_no_drain) { ServiceBinding.make.app }
+          let!(:app_no_drain) { create(:service_binding).app }
 
           it 'does not include that app' do
             get '/internal/v5/syslog_drain_urls', '{}'
@@ -474,7 +461,7 @@ module VCAP::CloudController
         end
 
         context "when an app's binding has blank syslog_drain_urls" do
-          let!(:app_empty_drain) { ServiceBinding.make(syslog_drain_url: '').app }
+          let!(:app_empty_drain) { create(:service_binding, syslog_drain_url: '').app }
 
           it 'includes the app without the empty syslog_drain_urls' do
             get '/internal/v5/syslog_drain_urls', '{}'
@@ -493,11 +480,10 @@ module VCAP::CloudController
         context 'when there are many service bindings on a single app' do
           before do
             50.times do |i|
-              ServiceBinding.make(
-                app: app_obj,
-                syslog_drain_url: "syslog://example.com/#{i}",
-                service_instance: UserProvidedServiceInstance.make(space: app_obj.space)
-              )
+              create(:service_binding,
+                     app: app_obj,
+                     syslog_drain_url: "syslog://example.com/#{i}",
+                     service_instance: create(:user_provided_service_instance, space: app_obj.space))
             end
           end
 
@@ -513,7 +499,7 @@ module VCAP::CloudController
         before do
           ServiceBinding.dataset.delete
           10.times do
-            ServiceBinding.make(syslog_drain_url: 'foodbar.example.com', app: AppModel.make(space: instance1.space), service_instance: instance1)
+            create(:service_binding, syslog_drain_url: 'foodbar.example.com', app: create(:app_model, space: instance1.space), service_instance: instance1)
           end
         end
 

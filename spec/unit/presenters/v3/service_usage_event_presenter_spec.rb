@@ -5,7 +5,7 @@ require 'presenters/v3/service_usage_event_presenter'
 RSpec.describe VCAP::CloudController::Presenters::V3::ServiceUsageEventPresenter do
   include LinkHelpers
 
-  let(:usage_event) { VCAP::CloudController::ServiceUsageEvent.make }
+  let(:usage_event) { create(:service_usage_event) }
 
   describe '#to_hash' do
     let(:result) { described_class.new(usage_event).to_hash }

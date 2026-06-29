@@ -4,13 +4,13 @@ require 'request_spec_shared_examples'
 RSpec.describe 'App Usage Events' do
   let(:user) { make_user }
   let(:admin_header) { admin_headers_for(user) }
-  let(:space) { VCAP::CloudController::Space.make }
+  let(:space) { create(:space) }
   let(:org) { space.organization }
 
   describe 'GET /v3/app_usage_events/:guid' do
     let(:api_call) { ->(user_headers) { get "/v3/app_usage_events/#{usage_event.guid}", nil, user_headers } }
 
-    let(:usage_event) { VCAP::CloudController::AppUsageEvent.make }
+    let(:usage_event) { create(:app_usage_event) }
 
     let(:usage_event_json) { build_usage_event_json(usage_event) }
 
@@ -55,8 +55,8 @@ RSpec.describe 'App Usage Events' do
   describe 'GET /v3/app_usage_events' do
     let(:api_call) { ->(user_headers) { get '/v3/app_usage_events', nil, user_headers } }
 
-    let!(:app_usage_event) { VCAP::CloudController::AppUsageEvent.make(created_at: Time.now - 5.minutes) }
-    let!(:app_usage_event_2) { VCAP::CloudController::AppUsageEvent.make(created_at: Time.now - 5.minutes) }
+    let!(:app_usage_event) { create(:app_usage_event, created_at: Time.now - 5.minutes) }
+    let!(:app_usage_event_2) { create(:app_usage_event, created_at: Time.now - 5.minutes) }
 
     let(:app_usage_event_json) { build_usage_event_json(app_usage_event) }
     let(:app_usage_event_2_json) { build_usage_event_json(app_usage_event_2) }
@@ -109,10 +109,10 @@ RSpec.describe 'App Usage Events' do
     end
 
     context 'filtering by timestamps' do
-      let!(:event_1) { VCAP::CloudController::AppUsageEvent.make(guid: '1', created_at: '2020-05-26T18:47:01Z') }
-      let!(:event_2) { VCAP::CloudController::AppUsageEvent.make(guid: '2', created_at: '2020-05-26T18:47:02Z') }
-      let!(:event_3) { VCAP::CloudController::AppUsageEvent.make(guid: '3', created_at: '2020-05-26T18:47:03Z') }
-      let!(:event_4) { VCAP::CloudController::AppUsageEvent.make(guid: '4', created_at: '2020-05-26T18:47:04Z') }
+      let!(:event_1) { create(:app_usage_event, guid: '1', created_at: '2020-05-26T18:47:01Z') }
+      let!(:event_2) { create(:app_usage_event, guid: '2', created_at: '2020-05-26T18:47:02Z') }
+      let!(:event_3) { create(:app_usage_event, guid: '3', created_at: '2020-05-26T18:47:03Z') }
+      let!(:event_4) { create(:app_usage_event, guid: '4', created_at: '2020-05-26T18:47:04Z') }
 
       it 'filters by the created at' do
         get "/v3/app_usage_events?created_ats[lt]=#{event_3.created_at.iso8601}", nil, admin_header
@@ -140,14 +140,14 @@ RSpec.describe 'App Usage Events' do
 
   describe 'POST /v3/app_usage_events/actions/destructively_purge_all_and_reseed', isolation: :truncation do
     let(:api_call) { ->(user_headers) { post '/v3/app_usage_events/actions/destructively_purge_all_and_reseed', nil, user_headers } }
-    let(:app_model) { VCAP::CloudController::AppModel.make(space:) }
+    let(:app_model) { create(:app_model, space:) }
 
     let!(:app_process) do
-      VCAP::CloudController::ProcessModel.make(state: 'STARTED', app_guid: app_model.guid)
+      create(:process_model, state: 'STARTED', app: app_model)
     end
 
     let!(:usage_event) do
-      VCAP::CloudController::AppUsageEvent.make(guid: 'some-guid')
+      create(:app_usage_event, guid: 'some-guid')
     end
 
     let(:expected_codes_and_responses) do

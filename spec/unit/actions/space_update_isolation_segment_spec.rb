@@ -5,12 +5,12 @@ module VCAP::CloudController
   RSpec.describe SpaceUpdateIsolationSegment do
     subject(:space_update) { SpaceUpdateIsolationSegment.new(user_audit_info) }
 
-    let(:org) { Organization.make }
-    let(:space) { Space.make(organization: org) }
+    let(:org) { create(:organization) }
+    let(:space) { create(:space, organization: org) }
     let(:user_guid) { double(:user, guid: '1337') }
     let(:user_email) { 'cool_dude@hoopy_frood.com' }
     let(:user_audit_info) { UserAuditInfo.new(user_email:, user_guid:) }
-    let(:isolation_segment) { IsolationSegmentModel.make }
+    let(:isolation_segment) { create(:isolation_segment_model) }
 
     describe '#update' do
       let(:message) do
