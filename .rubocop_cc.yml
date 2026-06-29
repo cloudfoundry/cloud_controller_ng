@@ -128,8 +128,6 @@ Migration/TooManyMigrationRuns:
     - spec/linters/migration/too_many_migration_runs.rb
 
 #### ENABLED SECTION
-Capybara/ClickLinkOrButtonStyle:
-  Enabled: true
 Capybara/FindAllFirst:
   Enabled: true
 Capybara/AssertStyle:
