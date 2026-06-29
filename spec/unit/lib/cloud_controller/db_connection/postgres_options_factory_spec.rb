@@ -1,4 +1,4 @@
-require 'spec_helper'
+require 'lightweight_spec_helper'
 require 'cloud_controller/db_connection/postgres_options_factory'
 
 RSpec.describe VCAP::CloudController::DbConnection::PostgresOptionsFactory do

@@ -1,4 +1,5 @@
-require 'spec_helper'
+require 'lightweight_spec_helper'
+require 'cgi'
 require 'below_min_cli_warning'
 
 module CloudFoundry
@@ -8,7 +9,7 @@ module CloudFoundry
       let(:app) { double(:app, call: [200, {}, 'a body']) }
       let(:env) { { 'HTTP_USER_AGENT' => 'mocked-user-agent', 'REQUEST_PATH' => '/v3/organizations' } }
 
-      before { TestConfig.override(info: { min_cli_version: '7.0.0' }, warn_if_below_min_cli_version: true) }
+      before { StubConfig.prepare(self, info: { min_cli_version: '7.0.0' }, warn_if_below_min_cli_version: true) }
 
       describe 'below min cli version middleware is called' do
         context 'called with outdated cf cli version' do

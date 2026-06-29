@@ -1,4 +1,5 @@
-require 'spec_helper'
+require 'lightweight_spec_helper'
+require 'securerandom'
 require 'cloud_controller/blobstore/url_generator/upload_url_generator'
 
 module CloudController
@@ -32,7 +33,7 @@ module CloudController
           end
 
           it 'gives out the mTLS url for droplet upload' do
-            droplet_guid = Sham.guid
+            droplet_guid = SecureRandom.uuid
             uri          = URI.parse(url_generator.droplet_upload_url(droplet_guid))
             expect(uri.scheme).to eql 'https'
             expect(uri.host).to eql blobstore_host
@@ -41,8 +42,8 @@ module CloudController
           end
 
           it 'gives out the mTLS url for buildpack_cache upload' do
-            app_guid = Sham.guid
-            stack    = Sham.name
+            app_guid = SecureRandom.uuid
+            stack    = "stack-#{SecureRandom.hex(4)}"
             uri      = URI.parse(url_generator.buildpack_cache_upload_url(app_guid, stack))
             expect(uri.scheme).to eql 'https'
             expect(uri.host).to eql blobstore_host

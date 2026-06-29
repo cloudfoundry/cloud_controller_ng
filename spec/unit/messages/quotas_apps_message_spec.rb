@@ -1,4 +1,5 @@
-require 'spec_helper'
+require 'lightweight_spec_helper'
+require 'messages/quotas_apps_message'
 
 module VCAP::CloudController
   RSpec.describe QuotasAppsMessage do

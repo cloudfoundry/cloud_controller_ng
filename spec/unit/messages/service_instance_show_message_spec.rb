@@ -1,4 +1,5 @@
-require 'spec_helper'
+require 'lightweight_spec_helper'
+require 'messages/base_message'
 require 'messages/service_instance_show_message'
 require 'field_message_spec_shared_examples'
 
