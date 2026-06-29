@@ -675,6 +675,16 @@ module VCAP::CloudController
       end
     end
 
+    describe '#readable_space_scoped_space_ids_query' do
+      it 'returns subquery from membership' do
+        membership = instance_double(Membership)
+        subquery = instance_double(Sequel::Dataset)
+        expect(Membership).to receive(:new).with(user).and_return(membership)
+        expect(membership).to receive(:authorized_space_ids_subquery).with(Permissions::SPACE_ROLES).and_return(subquery)
+        expect(permissions.readable_space_scoped_space_ids_query).to be(subquery)
+      end
+    end
+
     describe '#can_write_to_active_space?' do
       context 'user has no membership' do
         context 'and user is an admin' do

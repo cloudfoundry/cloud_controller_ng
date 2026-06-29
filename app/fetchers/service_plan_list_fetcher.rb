@@ -3,11 +3,16 @@ require 'fetchers/base_service_list_fetcher'
 module VCAP::CloudController
   class ServicePlanListFetcher < BaseServiceListFetcher
     class << self
-      def fetch(message, omniscient: false, readable_orgs_query: nil, readable_spaces_query: nil, eager_loaded_associations: [])
+      def fetch(message, omniscient: false,
+                readable_org_ids_query: nil, readable_orgs_query: nil,
+                readable_space_ids_query: nil, readable_spaces_query: nil,
+                eager_loaded_associations: [])
         super(ServicePlan,
               message,
               omniscient: omniscient,
+              readable_org_ids_query: readable_org_ids_query,
               readable_orgs_query: readable_orgs_query,
+              readable_space_ids_query: readable_space_ids_query,
               readable_spaces_query: readable_spaces_query,
               eager_loaded_associations: eager_loaded_associations.append(:orgs_visibility))
       end
