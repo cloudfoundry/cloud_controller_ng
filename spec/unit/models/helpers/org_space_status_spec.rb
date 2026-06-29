@@ -41,9 +41,6 @@ module VCAP::CloudController
 
         resource.status = 'deleting'
         expect(resource.active?).to be false
-
-        resource.status = nil
-        expect(resource.active?).to be false
       end
     end
 

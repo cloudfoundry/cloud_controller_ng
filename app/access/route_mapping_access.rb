@@ -56,7 +56,7 @@ module VCAP::CloudController
       return true if admin_user?
 
       space = route_mapping.route.space
-      return false if space.in_suspended_or_deleting_org? || space.suspended_or_deleting?
+      return false if space.in_suspended_or_deleting_org? || space.in_suspended_or_deleting_space?
 
       space.has_developer?(context.user)
     end

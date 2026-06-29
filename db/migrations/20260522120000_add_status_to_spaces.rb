@@ -1,7 +1,7 @@
 Sequel.migration do
   up do
     alter_table :spaces do
-      add_column :status, String, null: false, default: 'active', size: 255 unless @db.schema(:spaces).map(&:first).include?(:status)
+      add_column :status, String, default: 'active', size: 255 unless @db.schema(:spaces).map(&:first).include?(:status)
     end
   end
 

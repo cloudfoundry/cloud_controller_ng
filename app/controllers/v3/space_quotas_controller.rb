@@ -64,7 +64,7 @@ class SpaceQuotasController < ApplicationController
 
     unauthorized! unless permission_queryer.can_write_globally? ||
                          (space_quota && permission_queryer.can_write_to_active_org?(space_quota.organization_id))
-    require_writable_org!(space_quota.organization) if space_quota
+    require_writable_org_id!(space_quota.organization_id) if space_quota
 
     message = VCAP::CloudController::OrganizationQuotasUpdateMessage.new(hashed_params[:body])
     unprocessable!(message.errors.full_messages) unless message.valid?
@@ -87,7 +87,7 @@ class SpaceQuotasController < ApplicationController
 
     unauthorized! unless permission_queryer.can_write_globally? ||
                          (space_quota && permission_queryer.can_write_to_active_org?(space_quota.organization_id))
-    require_writable_org!(space_quota.organization) if space_quota
+    require_writable_org_id!(space_quota.organization_id) if space_quota
 
     message = SpaceQuotaApplyMessage.new(hashed_params[:body])
     unprocessable!(message.errors.full_messages) unless message.valid?
@@ -112,7 +112,7 @@ class SpaceQuotasController < ApplicationController
 
     unauthorized! unless permission_queryer.can_write_globally? ||
                          (space_quota && permission_queryer.can_write_to_active_org?(space_quota.organization_id))
-    require_writable_org!(space_quota.organization) if space_quota
+    require_writable_org_id!(space_quota.organization_id) if space_quota
 
     space_guid = hashed_params[:space_guid]
     space = Space.first(guid: space_guid)
@@ -134,7 +134,7 @@ class SpaceQuotasController < ApplicationController
 
     unauthorized! unless permission_queryer.can_write_globally? ||
                          (space_quota && permission_queryer.can_write_to_active_org?(space_quota.organization_id))
-    require_writable_org!(space_quota.organization) if space_quota
+    require_writable_org_id!(space_quota.organization_id) if space_quota
 
     unprocessable!('This quota is applied to one or more spaces. Remove this quota from all spaces before deleting.') unless space_quota.spaces_dataset.empty?
 

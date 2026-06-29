@@ -148,14 +148,16 @@ module VCAP::CloudController
         end
       end
 
-      context 'when reactivating a deleting organization' do
+      context 'when updating suspended on a deleting organization' do
         it 'rejects the update' do
           org.update(status: Organization::DELETING)
-          message = VCAP::CloudController::OrganizationUpdateMessage.new({ suspended: false })
 
-          expect do
-            org_update.update(org, message)
-          end.to raise_error(OrganizationUpdate::Error, /is being deleted and cannot be reactivated/)
+          [true, false].each do |suspended|
+            message = VCAP::CloudController::OrganizationUpdateMessage.new({ suspended: suspended })
+            expect do
+              org_update.update(org, message)
+            end.to raise_error(OrganizationUpdate::Error, /is being deleted and cannot be updated/)
+          end
         end
       end
     end

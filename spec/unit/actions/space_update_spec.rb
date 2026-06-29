@@ -102,13 +102,15 @@ module VCAP::CloudController
           expect(updated.reload.status).to eq(Space::ACTIVE)
         end
 
-        it 'rejects reactivating a deleting space' do
+        it 'rejects updating suspended on a deleting space' do
           space.update(status: Space::DELETING)
-          message = VCAP::CloudController::SpaceUpdateMessage.new({ suspended: false })
 
-          expect do
-            SpaceUpdate.new(user_audit_info).update(space, message)
-          end.to raise_error(SpaceUpdate::Error, /is being deleted and cannot be reactivated/)
+          [true, false].each do |suspended|
+            message = VCAP::CloudController::SpaceUpdateMessage.new({ suspended: suspended })
+            expect do
+              SpaceUpdate.new(user_audit_info).update(space, message)
+            end.to raise_error(SpaceUpdate::Error, /is being deleted and cannot be updated/)
+          end
         end
       end
     end

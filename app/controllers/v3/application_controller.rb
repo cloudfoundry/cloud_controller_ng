@@ -163,25 +163,19 @@ class ApplicationController < ActionController::Base
   end
 
   def require_writable_org_id!(org_id)
-    case permission_queryer.writable_org_state(org_id)
-    when :active
-      nil
-    when :deleting
-      resource_being_deleted!('organization')
-    when :suspended
-      suspended!
-    end
+    org_state = permission_queryer.writable_org_state(org_id)
+    resource_being_deleted!('organization') if org_state == :deleting
+    suspended! if org_state == :suspended
   end
 
   def require_writable_space!(space)
     org_state = permission_queryer.writable_org_state(space.organization_id)
-    return resource_being_deleted!('organization') if org_state == :deleting
+    resource_being_deleted!('organization') if org_state == :deleting
 
-    space_state = permission_queryer.writable_space_state(space.id)
-    return resource_being_deleted!('space') if space_state == :deleting
+    space_state = permission_queryer.writable_space_state(space.id, org_state)
+    resource_being_deleted!('space') if space_state == :deleting
 
-    return suspended! if org_state == :suspended
-
+    suspended! if org_state == :suspended
     space_suspended! if space_state == :suspended
   end
 

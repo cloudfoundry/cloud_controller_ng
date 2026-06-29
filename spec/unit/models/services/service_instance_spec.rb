@@ -364,6 +364,36 @@ module VCAP::CloudController
       end
     end
 
+    describe '#in_suspended_or_deleting_space?' do
+      let(:space) { create(:space) }
+
+      subject(:service_instance) { VCAP::CloudController::ServiceInstance.new(space:) }
+
+      context 'when the space is suspended or deleting' do
+        before { allow(space).to receive(:in_suspended_or_deleting_space?).and_return(true) }
+
+        it 'is true' do
+          expect(service_instance).to be_in_suspended_or_deleting_space
+        end
+      end
+
+      context 'when the space is active' do
+        before { allow(space).to receive(:in_suspended_or_deleting_space?).and_return(false) }
+
+        it 'is false' do
+          expect(service_instance).not_to be_in_suspended_or_deleting_space
+        end
+      end
+
+      context 'when the service instance space is not visible' do
+        let(:space) { nil }
+
+        it 'is false' do
+          expect(service_instance).not_to be_in_suspended_or_deleting_space
+        end
+      end
+    end
+
     describe '#to_hash' do
       let(:opts)      { { attrs: [:credentials] } }
       let(:developer) { make_developer_for_space(service_instance.space) }

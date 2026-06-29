@@ -176,7 +176,11 @@ module VCAP::CloudController
     alias_method 'credentials', 'credentials_with_serialization'
 
     def in_suspended_or_deleting_org?
-      space&.in_suspended_or_deleting_org?
+      space&.in_suspended_or_deleting_org? || false
+    end
+
+    def in_suspended_or_deleting_space?
+      space&.in_suspended_or_deleting_space? || false
     end
 
     def after_create

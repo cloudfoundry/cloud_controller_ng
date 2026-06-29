@@ -333,6 +333,10 @@ module VCAP::CloudController
       organization.suspended_or_deleting?
     end
 
+    def in_suspended_or_deleting_space?
+      suspended_or_deleting?
+    end
+
     def members
       User.dataset.where(id: Role.where(space_id: id).distinct.select(:user_id))
     end

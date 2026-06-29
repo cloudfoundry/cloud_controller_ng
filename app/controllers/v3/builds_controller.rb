@@ -41,7 +41,7 @@ class BuildsController < ApplicationController
     package = PackageModel.where(guid: message.package_guid).
               eager(:app, :space, space: :organization, app: %i[buildpack_lifecycle_data cnb_lifecycle_data]).first
     unprocessable_package! unless package && permission_queryer.can_manage_apps_in_active_space?(package.space.id)
-    require_writable_space!(package.space) if package
+    require_writable_space!(package.space)
 
     FeatureFlag.raise_unless_enabled!(:diego_docker) if package.type == PackageModel::DOCKER_TYPE
 

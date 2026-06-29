@@ -1667,6 +1667,28 @@ module VCAP::CloudController
           end
         end
       end
+
+      describe '#in_suspended_or_deleting_space?' do
+        let(:space) { create(:space) }
+
+        subject(:route) { Route.new(space:) }
+
+        context 'when the space is suspended or deleting' do
+          before { allow(space).to receive(:in_suspended_or_deleting_space?).and_return(true) }
+
+          it 'is true' do
+            expect(route).to be_in_suspended_or_deleting_space
+          end
+        end
+
+        context 'when the space is active' do
+          before { allow(space).to receive(:in_suspended_or_deleting_space?).and_return(false) }
+
+          it 'is false' do
+            expect(route).not_to be_in_suspended_or_deleting_space
+          end
+        end
+      end
     end
 
     describe 'relations' do

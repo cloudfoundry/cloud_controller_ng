@@ -1011,7 +1011,14 @@ RSpec.describe 'Spaces' do
         patch "/v3/spaces/#{space1.guid}", { suspended: false }.to_json, admin_header
 
         expect(last_response.status).to eq(422)
-        expect(parsed_response['errors'][0]['detail']).to include("Space '#{space1.name}' is being deleted and cannot be reactivated.")
+        expect(parsed_response['errors'][0]['detail']).to include("Space '#{space1.name}' is being deleted and cannot be updated.")
+      end
+
+      it 'rejects an admin attempt to set suspended:true' do
+        patch "/v3/spaces/#{space1.guid}", { suspended: true }.to_json, admin_header
+
+        expect(last_response.status).to eq(422)
+        expect(parsed_response['errors'][0]['detail']).to include("Space '#{space1.name}' is being deleted and cannot be updated.")
       end
     end
 
@@ -1035,7 +1042,7 @@ RSpec.describe 'Spaces' do
     end
 
     context 'when a non-authorized role mutates the suspended field' do
-      let(:space) { VCAP::CloudController::Space.make }
+      let(:space) { create(:space) }
       let(:org) { space.organization }
 
       context 'on an active space with suspended: true' do

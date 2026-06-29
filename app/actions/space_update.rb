@@ -12,7 +12,7 @@ module VCAP::CloudController
         space.lock!
         space.name = message.name if message.requested?(:name)
         if message.requested?(:suspended)
-          error!("Space '#{space.name}' is being deleted and cannot be reactivated.") if space.deleting? && message.suspended == false
+          error!("Space '#{space.name}' is being deleted and cannot be updated.") if space.deleting?
           space.status = message.suspended ? Space::SUSPENDED : Space::ACTIVE
         end
         MetadataUpdate.update(space, message)

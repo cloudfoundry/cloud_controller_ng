@@ -74,7 +74,7 @@ class RolesController < ApplicationController
       require_writable_space!(role.space)
     else
       unauthorized! unless permission_queryer.can_write_to_active_org?(role.organization_id)
-      require_writable_org!(role.organization)
+      require_writable_org_id!(role.organization_id)
 
       if role.type == VCAP::CloudController::RoleTypes::ORGANIZATION_USER
         org = Organization.find(id: role.organization_id)
