@@ -36,14 +36,12 @@ module VCAP::CloudController
       validate_cf_any_exclusivity
     end
 
-    def after_create
-      super
-      notify_processes_of_route_update
-    end
+    def notify_diego
+      return unless route
 
-    def after_destroy
-      super
-      notify_processes_of_route_update
+      route.apps.each do |process|
+        ProcessRouteHandler.new(process).notify_backend_of_route_update
+      end
     end
 
     private
@@ -58,16 +56,6 @@ module VCAP::CloudController
         errors.add(:source, "'cf:any' cannot coexist with other route policies on the same route")
       elsif siblings.where(source_type: 'any').any?
         errors.add(:source, "cannot coexist with the existing 'cf:any' policy on this route")
-      end
-    end
-
-    def notify_processes_of_route_update
-      return unless route
-
-      db.after_commit do
-        route.apps.each do |process|
-          ProcessRouteHandler.new(process).notify_backend_of_route_update
-        end
       end
     end
   end

@@ -1767,6 +1767,33 @@ module VCAP::CloudController
           end
         end
       end
+
+      context 'with route policies' do
+        let(:space) { create(:space) }
+        let(:domain) { create(:shared_domain, name: 'apps.identity', enforce_route_policies: true) }
+        let(:route) { create(:route, space:, domain:) }
+        let(:process) { ProcessModelFactory.make(space: space, state: 'STARTED', diego: false) }
+        let(:fake_route_handler) { instance_double(ProcessRouteHandler, notify_backend_of_route_update: nil) }
+
+        before do
+          create(:route_mapping_model, app: process.app, route: route, process_type: process.type)
+          route.reload
+          allow(ProcessRouteHandler).to receive(:new).with(route.apps.first).and_return(fake_route_handler)
+          RoutePolicy.create(source: "cf:app:#{SecureRandom.uuid}", route: route)
+          RoutePolicy.create(source: "cf:app:#{SecureRandom.uuid}", route: route)
+          RoutePolicy.create(source: "cf:app:#{SecureRandom.uuid}", route: route)
+        end
+
+        it 'deletes the associated route_policies' do
+          expect { route.destroy }.to change { RoutePolicy.where(route_id: route.id).count }.from(3).to(0)
+        end
+
+        it 'notifies diego exactly once per associated process, regardless of the policy count' do
+          expect(fake_route_handler).to receive(:notify_backend_of_route_update).once
+
+          route.destroy
+        end
+      end
     end
 
     def assert_valid_path(path)
