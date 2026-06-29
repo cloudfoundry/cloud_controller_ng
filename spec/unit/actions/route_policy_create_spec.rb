@@ -55,7 +55,7 @@ module VCAP::CloudController
         it 'raises an error' do
           expect do
             action.create(route:, message:)
-          end.to raise_error(RoutePolicyCreate::Error, /cannot add 'cf:any'/i)
+          end.to raise_error(RoutePolicyCreate::Error, /'cf:any' cannot coexist with other route policies/)
         end
       end
 
@@ -68,7 +68,7 @@ module VCAP::CloudController
           other_message = instance_double(RoutePolicyCreateMessage, source: "cf:app:#{SecureRandom.uuid}")
           expect do
             action.create(route: route, message: other_message)
-          end.to raise_error(RoutePolicyCreate::Error, /already has a 'cf:any' policy/)
+          end.to raise_error(RoutePolicyCreate::Error, /cannot coexist with the existing 'cf:any' policy/)
         end
       end
 

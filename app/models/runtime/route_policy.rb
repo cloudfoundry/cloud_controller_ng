@@ -33,6 +33,7 @@ module VCAP::CloudController
     def validate
       validates_presence :source_type
       validates_presence :route_id
+      validate_cf_any_exclusivity
     end
 
     def after_create
@@ -46,6 +47,19 @@ module VCAP::CloudController
     end
 
     private
+
+    def validate_cf_any_exclusivity
+      return unless route_id
+
+      siblings = RoutePolicy.where(route_id: route_id).exclude(id: id)
+      return if siblings.empty?
+
+      if source_type == 'any'
+        errors.add(:source, "'cf:any' cannot coexist with other route policies on the same route")
+      elsif siblings.where(source_type: 'any').any?
+        errors.add(:source, "cannot coexist with the existing 'cf:any' policy on this route")
+      end
+    end
 
     def notify_processes_of_route_update
       return unless route

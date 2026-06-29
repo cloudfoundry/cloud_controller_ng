@@ -103,6 +103,46 @@ module VCAP::CloudController
         expect(rule.valid?).to be false
         expect(rule.errors[:route_id]).to include(:presence)
       end
+
+      describe 'cf:any exclusivity' do
+        it 'rejects cf:any when another policy already exists on the route' do
+          RoutePolicy.create(source: "cf:app:#{app_guid}", route: route)
+          policy = RoutePolicy.new(source: 'cf:any', route: route)
+
+          expect(policy.valid?).to be false
+          expect(policy.errors[:source]).to include("'cf:any' cannot coexist with other route policies on the same route")
+        end
+
+        it 'rejects a non-cf:any policy when a cf:any policy already exists on the route' do
+          RoutePolicy.create(source: 'cf:any', route: route)
+          policy = RoutePolicy.new(source: "cf:app:#{app_guid}", route: route)
+
+          expect(policy.valid?).to be false
+          expect(policy.errors[:source]).to include("cannot coexist with the existing 'cf:any' policy on this route")
+        end
+
+        it 'raises Sequel::ValidationFailed when saving a conflicting cf:any policy' do
+          RoutePolicy.create(source: "cf:app:#{app_guid}", route: route)
+
+          expect do
+            RoutePolicy.create(source: 'cf:any', route: route)
+          end.to raise_error(Sequel::ValidationFailed)
+        end
+
+        it 'allows multiple non-cf:any policies on the same route' do
+          RoutePolicy.create(source: "cf:app:#{app_guid}", route: route)
+
+          expect do
+            RoutePolicy.create(source: "cf:app:#{SecureRandom.uuid}", route: route)
+          end.not_to raise_error
+        end
+
+        it 'allows cf:any when the route has no other policies' do
+          expect do
+            RoutePolicy.create(source: 'cf:any', route: route)
+          end.not_to raise_error
+        end
+      end
     end
 
     describe 'associations' do
