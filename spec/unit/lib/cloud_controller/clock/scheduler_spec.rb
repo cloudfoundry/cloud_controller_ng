@@ -22,6 +22,7 @@ module VCAP::CloudController
           pollable_jobs: { cutoff_age_in_days: 2 },
           service_operations_initial_cleanup: { frequency_in_seconds: 600 },
           service_operations_create_in_progress_cleanup: { frequency_in_seconds: 600 },
+          lifecycle_type_backfill: { frequency_in_seconds: 500 },
           service_usage_events: { cutoff_age_in_days: 5 },
           completed_tasks: { cutoff_age_in_days: 6 },
           pending_droplets: { frequency_in_seconds: 300, expiration_in_seconds: 600 },
@@ -166,6 +167,12 @@ module VCAP::CloudController
           expect(args).to eql(name: 'service_operations_create_in_progress_cleanup', interval: 600)
           expect(Jobs::Runtime::ServiceOperationsCreateInProgressCleanup).to receive(:new).and_call_original
           expect(block.call).to be_instance_of(Jobs::Runtime::ServiceOperationsCreateInProgressCleanup)
+        end
+
+        expect(clock).to receive(:schedule_frequent_worker_job) do |args, &block|
+          expect(args).to eql(name: 'lifecycle_type_backfill', interval: 500)
+          expect(Jobs::Runtime::LifecycleTypeBackfill).to receive(:new).and_call_original
+          expect(block.call).to be_instance_of(Jobs::Runtime::LifecycleTypeBackfill)
         end
 
         schedule.start

@@ -192,6 +192,27 @@ namespace :db do
     VCAP::BigintMigration.backfill(logger, db, args.table.to_sym, batch_size: args.batch_size.to_i, iterations: args.iterations.to_i)
   end
 
+  # One-off backfill - to be removed in a future version.
+  desc 'Backfill lifecycle_type column on apps, droplets, and builds (pass -1 for batches_per_run to drain)'
+  task :lifecycle_type_backfill, %i[batch_size batches_per_run] => :environment do |_t, args|
+    args.with_defaults(batch_size: 1_000, batches_per_run: 10)
+
+    RakeConfig.context = :api
+
+    batch_size      = args.batch_size.to_i
+    batches_per_run = args.batches_per_run.to_i
+    BackgroundJobEnvironment.new(RakeConfig.config).setup_environment do
+      # Ensure we always log to stdout (regardless of `stdout_sink_enabled`).
+      VCAP::CloudController::StenoConfigurer.new(RakeConfig.config.get(:logging)).configure do |steno_config_hash|
+        steno_config_hash[:sinks] << Steno::Sink::IO.new($stdout)
+      end
+      logger = Steno.logger('cc.db.lifecycle_type_backfill')
+      logger.info("starting lifecycle_type backfill (batch_size: #{batch_size}, batches_per_run: #{batches_per_run})")
+      VCAP::CloudController::Jobs::Runtime::LifecycleTypeBackfill.new(batch_size:, batches_per_run:).perform
+      logger.info('finished lifecycle_type backfill')
+    end
+  end
+
   namespace :dev do
     desc 'Migrate the database set in spec/support/bootstrap/db_config'
     task migrate: :environment do
