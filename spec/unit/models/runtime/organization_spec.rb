@@ -448,7 +448,7 @@ module VCAP::CloudController
       end
 
       describe 'when status == deleting' do
-        subject(:org) { Organization.make(status: 'deleting') }
+        subject(:org) { create(:organization, status: 'deleting') }
         it('is not active') { expect(org).not_to be_active }
         it('is not suspended') { expect(org).not_to be_suspended }
         it('is deleting') { expect(org).to be_deleting }

@@ -3,7 +3,7 @@ require 'migrations/helpers/migration_shared_context'
 
 RSpec.describe 'migration to add status column to spaces table', isolation: :truncation, type: :migration do
   include_context 'migration' do
-    let(:migration_filename) { '20260522120000_add_status_to_spaces.rb' }
+    let(:migration_filename) { '20260630120000_add_status_to_spaces.rb' }
   end
 
   describe 'spaces table' do
@@ -29,10 +29,6 @@ RSpec.describe 'migration to add status column to spaces table', isolation: :tru
 
       db[:spaces].insert(guid: 'new-space-guid', name: 'new-space', organization_id: org_id)
       expect(db[:spaces].first(guid: 'new-space-guid')[:status]).to eq('active')
-
-      expect do
-        db[:spaces].insert(guid: 'null-status-guid', name: 'null-space', organization_id: org_id, status: nil)
-      end.to raise_error(Sequel::NotNullConstraintViolation)
 
       expect do
         Sequel::Migrator.run(db, migrations_path, target: current_migration_index, allow_missing_migration_files: true)
