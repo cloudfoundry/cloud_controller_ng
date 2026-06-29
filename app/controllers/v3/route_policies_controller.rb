@@ -111,7 +111,7 @@ class RoutePoliciesController < ApplicationController
     route = VCAP::CloudController::Route.find(guid: route_guid)
     resource_not_found!(:route) unless route && permission_queryer.can_read_from_space?(route.space.id, route.space.organization_id)
     unauthorized! unless permission_queryer.can_write_to_active_space?(route.space.id)
-    suspended! unless permission_queryer.is_space_active?(route.space.id)
+    require_writable_space!(route.space)
     route
   end
 
@@ -119,7 +119,7 @@ class RoutePoliciesController < ApplicationController
     route = route_policy.route
     resource_not_found!(:route_policy) unless route && permission_queryer.can_read_route_policy_from_space?(route.space.id, route.space.organization_id)
     unauthorized! unless permission_queryer.can_write_to_active_space?(route.space.id)
-    suspended! unless permission_queryer.is_space_active?(route.space.id)
+    require_writable_space!(route.space)
   end
 
   def validate_route_domain(route)
