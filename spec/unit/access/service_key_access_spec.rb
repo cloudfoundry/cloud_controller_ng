@@ -97,10 +97,18 @@ module VCAP::CloudController
       it { is_expected.to allow_op_on_object :delete, object }
       it { is_expected.to allow_op_on_object(:read_env, object) }
 
-      context 'when the organization is suspended' do
-        before { allow(object).to receive(:in_suspended_org?).and_return(true) }
+      %i[suspended deleting].each do |state|
+        context "when the organization is #{state}" do
+          before { allow(object.service_instance.space.organization).to receive(:"#{state}?").and_return(true) }
 
-        it_behaves_like 'read only access'
+          it_behaves_like 'read only access'
+        end
+
+        context "when the space is #{state}" do
+          before { allow(object.service_instance.space).to receive(:"#{state}?").and_return(true) }
+
+          it_behaves_like 'read only access'
+        end
       end
     end
 

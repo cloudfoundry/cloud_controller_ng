@@ -51,6 +51,7 @@ RSpec.describe 'Spaces' do
           'created_at' => iso8601,
           'updated_at' => iso8601,
           'name' => 'space1',
+          'suspended' => false,
           'relationships' => {
             'organization' => {
               'data' => { 'guid' => created_space.organization_guid }
@@ -123,6 +124,7 @@ RSpec.describe 'Spaces' do
         {
           'guid' => space1.guid,
           'name' => 'Catan',
+          'suspended' => false,
           'created_at' => iso8601,
           'updated_at' => iso8601,
           'relationships' => {
@@ -199,6 +201,7 @@ RSpec.describe 'Spaces' do
           {
             'guid' => space1.guid,
             'name' => 'Catan',
+            'suspended' => false,
             'created_at' => iso8601,
             'updated_at' => iso8601,
             'relationships' => {
@@ -305,6 +308,7 @@ RSpec.describe 'Spaces' do
               {
                 'guid' => space1.guid,
                 'name' => 'Catan',
+                'suspended' => false,
                 'created_at' => iso8601,
                 'updated_at' => iso8601,
                 'relationships' => {
@@ -324,6 +328,7 @@ RSpec.describe 'Spaces' do
               {
                 'guid' => space2.guid,
                 'name' => 'Ticket to Ride',
+                'suspended' => false,
                 'created_at' => iso8601,
                 'updated_at' => iso8601,
                 'relationships' => {
@@ -838,6 +843,7 @@ RSpec.describe 'Spaces' do
         {
           guid: space.guid,
           name: 'codenames',
+          suspended: false,
           created_at: iso8601,
           updated_at: iso8601,
           relationships: {
@@ -938,6 +944,7 @@ RSpec.describe 'Spaces' do
           {
             'guid' => space1.guid,
             'name' => space1.name,
+            'suspended' => false,
             'created_at' => iso8601,
             'updated_at' => iso8601,
             'relationships' => {
@@ -972,6 +979,7 @@ RSpec.describe 'Spaces' do
           {
             'guid' => space1.guid,
             'name' => space1.name,
+            'suspended' => false,
             'created_at' => iso8601,
             'updated_at' => iso8601,
             'relationships' => {
@@ -991,6 +999,89 @@ RSpec.describe 'Spaces' do
             'links' => build_space_links(space1)
           }
         )
+      end
+    end
+
+    context 'when the space is being deleted' do
+      before do
+        space1.update(status: VCAP::CloudController::Space::DELETING)
+      end
+
+      it 'rejects an admin attempt to set suspended:false' do
+        patch "/v3/spaces/#{space1.guid}", { suspended: false }.to_json, admin_header
+
+        expect(last_response.status).to eq(422)
+        expect(parsed_response['errors'][0]['detail']).to include("Space '#{space1.name}' is being deleted and cannot be updated.")
+      end
+
+      it 'rejects an admin attempt to set suspended:true' do
+        patch "/v3/spaces/#{space1.guid}", { suspended: true }.to_json, admin_header
+
+        expect(last_response.status).to eq(422)
+        expect(parsed_response['errors'][0]['detail']).to include("Space '#{space1.name}' is being deleted and cannot be updated.")
+      end
+    end
+
+    context 'updating the suspended attribute' do
+      it 'allows an admin to suspend a space' do
+        patch "/v3/spaces/#{space1.guid}", { suspended: true }.to_json, admin_header
+
+        expect(last_response.status).to eq(200)
+        expect(parsed_response['suspended']).to be(true)
+        expect(space1.reload.status).to eq(VCAP::CloudController::Space::SUSPENDED)
+      end
+
+      it 'allows an admin to unsuspend a suspended space' do
+        space1.update(status: VCAP::CloudController::Space::SUSPENDED)
+        patch "/v3/spaces/#{space1.guid}", { suspended: false }.to_json, admin_header
+
+        expect(last_response.status).to eq(200)
+        expect(parsed_response['suspended']).to be(false)
+        expect(space1.reload.status).to eq(VCAP::CloudController::Space::ACTIVE)
+      end
+    end
+
+    context 'when a non-authorized role mutates the suspended field' do
+      let(:space) { create(:space) }
+      let(:org) { space.organization }
+
+      context 'on an active space with suspended: true' do
+        let(:api_call) do
+          ->(user_headers) { patch "/v3/spaces/#{space.guid}", { suspended: true }.to_json, user_headers.merge('CONTENT_TYPE' => 'application/json') }
+        end
+        let(:expected_codes_and_responses) do
+          h = Hash.new({ code: 403, errors: CF_NOT_AUTHORIZED }.freeze)
+          h['admin'] = { code: 200 }
+          h['org_manager'] = { code: 200 }
+          h['org_billing_manager'] = { code: 404 }
+          h['org_auditor'] = { code: 404 }
+          h['no_role'] = { code: 404 }
+          h
+        end
+
+        it_behaves_like 'permissions for single object endpoint', ALL_PERMISSIONS
+      end
+
+      context 'on a suspended space with suspended: false (un-suspend)' do
+        let(:api_call) do
+          ->(user_headers) { patch "/v3/spaces/#{space.guid}", { suspended: false }.to_json, user_headers.merge('CONTENT_TYPE' => 'application/json') }
+        end
+        let(:expected_codes_and_responses) do
+          h = Hash.new({ code: 403, errors: CF_NOT_AUTHORIZED }.freeze)
+          h['admin'] = { code: 200 }
+          h['org_manager'] = { code: 200 }
+          h['space_manager'] = { code: 403, errors: CF_SPACE_SUSPENDED }
+          h['org_billing_manager'] = { code: 404 }
+          h['org_auditor'] = { code: 404 }
+          h['no_role'] = { code: 404 }
+          h
+        end
+
+        before do
+          space.update(status: VCAP::CloudController::Space::SUSPENDED)
+        end
+
+        it_behaves_like 'permissions for single object endpoint', ALL_PERMISSIONS
       end
     end
   end

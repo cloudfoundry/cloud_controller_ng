@@ -237,7 +237,7 @@ RSpec.describe DeploymentsController, type: :controller do
         it 'returns 422 with an error message' do
           post :create, params: request_body, as: :json
           expect(response).to have_http_status :unprocessable_content
-          expect(response.body).to include('Unable to use app. Ensure that the app exists and you have access to it and the organization is not suspended.')
+          expect(response.body).to include('Unable to use app. Ensure that the app exists and you have access to it.')
         end
       end
 
@@ -414,7 +414,7 @@ RSpec.describe DeploymentsController, type: :controller do
       it 'returns 422 with an error message' do
         post :create, params: request_body, as: :json
         expect(response).to have_http_status :unprocessable_content
-        expect(response.body).to include('Unable to use app. Ensure that the app exists and you have access to it and the organization is not suspended.')
+        expect(response.body).to include('Unable to use app. Ensure that the app exists and you have access to it.')
       end
     end
 

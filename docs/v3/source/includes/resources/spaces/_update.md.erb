@@ -32,12 +32,14 @@ Content-Type: application/json
 Name | Type | Description
 ---- | ---- | -----------
 **name** | _string_ | New space name |
+**suspended** | _boolean_ | Whether a space is suspended or not
 **metadata.labels** | [_label object_](#labels) | Labels applied to the space
 **metadata.annotations** | [_annotation object_](#annotations) | Annotations applied to the space
 
 #### Permitted roles
- |
---- | ---
+
+Role | Notes
+---- | -----
 Admin |
 Org Manager |
-Space Manager |
+Space Manager | Cannot change the `suspended` field

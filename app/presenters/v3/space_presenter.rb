@@ -18,6 +18,7 @@ module VCAP::CloudController::Presenters::V3
         created_at: space.created_at,
         updated_at: space.updated_at,
         name: space.name,
+        suspended: space.suspended?,
         relationships: {
           organization: {
             data: {

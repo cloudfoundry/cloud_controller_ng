@@ -1393,6 +1393,30 @@ module VCAP::CloudController
           it_behaves_like 'permissions for single object endpoint', ALL_PERMISSIONS
         end
       end
+
+      context 'when the organization is being deleted' do
+        before do
+          set_current_user(user, { admin: true })
+          allow_user_read_access_for(user, orgs: [organization1])
+          organization1.update(status: VCAP::CloudController::Organization::DELETING)
+        end
+
+        it 'rejects an admin attempt to set suspended:false' do
+          patch "/v3/organizations/#{organization1.guid}", { suspended: false }.to_json,
+                admin_headers_for(user).merge('CONTENT_TYPE' => 'application/json')
+
+          expect(last_response.status).to eq(422)
+          expect(parsed_response['errors'][0]['detail']).to include("Organization '#{organization1.name}' is being deleted and cannot be updated.")
+        end
+
+        it 'rejects an admin attempt to set suspended:true' do
+          patch "/v3/organizations/#{organization1.guid}", { suspended: true }.to_json,
+                admin_headers_for(user).merge('CONTENT_TYPE' => 'application/json')
+
+          expect(last_response.status).to eq(422)
+          expect(parsed_response['errors'][0]['detail']).to include("Organization '#{organization1.name}' is being deleted and cannot be updated.")
+        end
+      end
     end
 
     describe 'DELETE /v3/organizations/:guid' do

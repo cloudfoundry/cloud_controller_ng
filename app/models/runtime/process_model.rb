@@ -13,7 +13,7 @@ require 'cloud_controller/integer_array_serializer'
 require_relative 'buildpack'
 
 module VCAP::CloudController
-  class ProcessModel < Sequel::Model(:processes)
+  class ProcessModel < Sequel::Model(:processes) # rubocop:disable Metrics/ClassLength
     include Serializer
 
     plugin :serialization
@@ -345,7 +345,13 @@ module VCAP::CloudController
       started?
     end
 
-    delegate :in_suspended_org?, to: :space
+    def in_suspended_or_deleting_org?
+      space&.in_suspended_or_deleting_org? || false
+    end
+
+    def in_suspended_or_deleting_space?
+      space&.in_suspended_or_deleting_space? || false
+    end
 
     def being_started?
       column_changed?(:state) && started?

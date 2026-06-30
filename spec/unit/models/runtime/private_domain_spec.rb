@@ -165,23 +165,23 @@ module VCAP::CloudController
       end
     end
 
-    describe '#in_suspended_org?' do
+    describe '#in_suspended_or_deleting_org?' do
       let(:org) { create(:organization) }
       let(:private_domain) { PrivateDomain.new(owning_organization: org) }
 
       context 'when in a suspended organization' do
-        before { allow(org).to receive(:suspended?).and_return(true) }
+        before { allow(org).to receive(:suspended_or_deleting?).and_return(true) }
 
         it 'is true' do
-          expect(private_domain).to be_in_suspended_org
+          expect(private_domain).to be_in_suspended_or_deleting_org
         end
       end
 
       context 'when in an un-suspended organization' do
-        before { allow(org).to receive(:suspended?).and_return(false) }
+        before { allow(org).to receive(:suspended_or_deleting?).and_return(false) }
 
         it 'is false' do
-          expect(private_domain).not_to be_in_suspended_org
+          expect(private_domain).not_to be_in_suspended_or_deleting_org
         end
       end
     end

@@ -76,7 +76,7 @@ module VCAP::CloudController
 
     def can_write_to_route(route, is_create=false)
       return true if context.queryer.can_write_globally?
-      return false if route.in_suspended_org?
+      return false if route.in_suspended_or_deleting_org? || route.in_suspended_or_deleting_space?
       return false if route.wildcard_host? && route.domain.shared?
 
       FeatureFlag.raise_unless_enabled!(:route_creation) if is_create

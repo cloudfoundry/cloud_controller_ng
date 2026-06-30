@@ -54,9 +54,11 @@ module VCAP::CloudController
 
     def create?(route_mapping, _params=nil)
       return true if admin_user?
-      return false if route_mapping.route.in_suspended_org?
 
-      route_mapping.route.space.has_developer?(context.user)
+      space = route_mapping.route.space
+      return false if space.in_suspended_or_deleting_org? || space.in_suspended_or_deleting_space?
+
+      space.has_developer?(context.user)
     end
 
     def read_for_update?(route_mapping, _params=nil)

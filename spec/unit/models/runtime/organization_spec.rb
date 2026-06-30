@@ -250,8 +250,8 @@ module VCAP::CloudController
       end
 
       describe 'status' do
-        it "allows 'active' and 'suspended'" do
-          %w[active suspended].each do |status|
+        it "allows 'active', 'suspended', and 'deleting'" do
+          %w[active suspended deleting].each do |status|
             org.status = status
             expect do
               org.save
@@ -437,12 +437,21 @@ module VCAP::CloudController
         subject(:org) { create(:organization, status: 'active') }
         it('is active') { expect(org).to be_active }
         it('is not suspended') { expect(org).not_to be_suspended }
+        it('is not deleting') { expect(org).not_to be_deleting }
       end
 
       describe 'when status == suspended' do
         subject(:org) { create(:organization, status: 'suspended') }
         it('is not active') { expect(org).not_to be_active }
         it('is suspended') { expect(org).to be_suspended }
+        it('is not deleting') { expect(org).not_to be_deleting }
+      end
+
+      describe 'when status == deleting' do
+        subject(:org) { create(:organization, status: 'deleting') }
+        it('is not active') { expect(org).not_to be_active }
+        it('is not suspended') { expect(org).not_to be_suspended }
+        it('is deleting') { expect(org).to be_deleting }
       end
     end
 

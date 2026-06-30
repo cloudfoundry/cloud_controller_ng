@@ -66,7 +66,7 @@ module VCAP::CloudController
 
     def update?(private_domain, _params=nil)
       return true if admin_user?
-      return false if private_domain.in_suspended_org?
+      return false if private_domain.in_suspended_or_deleting_org?
 
       private_domain.owning_organization.managers.include?(context.user)
     end

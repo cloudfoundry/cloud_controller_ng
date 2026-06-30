@@ -38,6 +38,7 @@ module VCAP::CloudController::Presenters::V3
         expect(result[:created_at]).to eq(space.created_at)
         expect(result[:updated_at]).to eq(space.updated_at)
         expect(result[:name]).to eq(space.name)
+        expect(result[:suspended]).to be(false)
         expect(result[:links][:self][:href]).to match(%r{/v3/spaces/#{space.guid}$})
         expect(result[:links][:self][:href]).to eq("#{link_prefix}/v3/spaces/#{space.guid}")
         expect(result[:links][:features][:href]).to match(%r{/v3/spaces/#{space.guid}/features$})
@@ -49,6 +50,22 @@ module VCAP::CloudController::Presenters::V3
         expect(result[:relationships][:quota][:data]).to be_nil
         expect(result[:metadata][:labels]).to eq('release' => 'stable', 'maine.gov/potato' => 'mashed')
         expect(result[:metadata][:annotations]).to eq('altitude' => '14,411', 'grass' => 'yes')
+      end
+
+      context 'when the space is suspended' do
+        before { space.update(status: VCAP::CloudController::Space::SUSPENDED) }
+
+        it 'presents suspended as true' do
+          expect(result[:suspended]).to be(true)
+        end
+      end
+
+      context 'when the space is deleting' do
+        before { space.update(status: VCAP::CloudController::Space::DELETING) }
+
+        it 'presents suspended as false' do
+          expect(result[:suspended]).to be(false)
+        end
       end
 
       context 'when the space has a space quota applied to it' do

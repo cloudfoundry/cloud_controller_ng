@@ -587,14 +587,14 @@ module VCAP::CloudController
       }
     end
 
-    describe '#in_suspended_org?' do
+    describe '#in_suspended_or_deleting_org?' do
       subject(:process) { create(:process_model) }
 
       context 'when in a space in a suspended organization' do
         before { process.organization.update(status: 'suspended') }
 
         it 'is true' do
-          expect(process).to be_in_suspended_org
+          expect(process).to be_in_suspended_or_deleting_org
         end
       end
 
@@ -602,7 +602,7 @@ module VCAP::CloudController
         before { process.organization.update(status: 'active') }
 
         it 'is false' do
-          expect(process).not_to be_in_suspended_org
+          expect(process).not_to be_in_suspended_or_deleting_org
         end
       end
     end

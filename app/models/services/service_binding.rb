@@ -75,7 +75,13 @@ module VCAP::CloudController
       { guid: }
     end
 
-    delegate :in_suspended_org?, to: :space
+    def in_suspended_or_deleting_org?
+      space&.in_suspended_or_deleting_org? || false
+    end
+
+    def in_suspended_or_deleting_space?
+      space&.in_suspended_or_deleting_space? || false
+    end
 
     delegate :space, to: :app
 

@@ -31,13 +31,24 @@ module VCAP::CloudController
 
       it_behaves_like 'full access'
 
-      context 'when the organization is suspended' do
-        before do
-          org.status = 'suspended'
-          org.save
+      %i[suspended deleting].each do |state|
+        context "when the organization is #{state}" do
+          before do
+            org.status = state.to_s
+            org.save
+          end
+
+          it_behaves_like 'read only access'
         end
 
-        it_behaves_like 'read only access'
+        context "when the space is #{state}" do
+          before do
+            space.status = state.to_s
+            space.save
+          end
+
+          it_behaves_like 'read only access'
+        end
       end
     end
   end

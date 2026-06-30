@@ -334,24 +334,24 @@ module VCAP::CloudController
       end
     end
 
-    describe '#in_suspended_org?' do
+    describe '#in_suspended_or_deleting_org?' do
       let(:space) { create(:space) }
 
       subject(:service_instance) { VCAP::CloudController::ServiceInstance.new(space:) }
 
       context 'when in a suspended organization' do
-        before { allow(space).to receive(:in_suspended_org?).and_return(true) }
+        before { allow(space).to receive(:in_suspended_or_deleting_org?).and_return(true) }
 
         it 'is true' do
-          expect(service_instance).to be_in_suspended_org
+          expect(service_instance).to be_in_suspended_or_deleting_org
         end
       end
 
       context 'when in an unsuspended organization' do
-        before { allow(space).to receive(:in_suspended_org?).and_return(false) }
+        before { allow(space).to receive(:in_suspended_or_deleting_org?).and_return(false) }
 
         it 'is false' do
-          expect(service_instance).not_to be_in_suspended_org
+          expect(service_instance).not_to be_in_suspended_or_deleting_org
         end
       end
 
@@ -359,7 +359,37 @@ module VCAP::CloudController
         let(:space) { nil }
 
         it 'is false' do
-          expect(service_instance).not_to be_in_suspended_org
+          expect(service_instance).not_to be_in_suspended_or_deleting_org
+        end
+      end
+    end
+
+    describe '#in_suspended_or_deleting_space?' do
+      let(:space) { create(:space) }
+
+      subject(:service_instance) { VCAP::CloudController::ServiceInstance.new(space:) }
+
+      context 'when the space is suspended or deleting' do
+        before { allow(space).to receive(:in_suspended_or_deleting_space?).and_return(true) }
+
+        it 'is true' do
+          expect(service_instance).to be_in_suspended_or_deleting_space
+        end
+      end
+
+      context 'when the space is active' do
+        before { allow(space).to receive(:in_suspended_or_deleting_space?).and_return(false) }
+
+        it 'is false' do
+          expect(service_instance).not_to be_in_suspended_or_deleting_space
+        end
+      end
+
+      context 'when the service instance space is not visible' do
+        let(:space) { nil }
+
+        it 'is false' do
+          expect(service_instance).not_to be_in_suspended_or_deleting_space
         end
       end
     end

@@ -197,24 +197,24 @@ module VCAP::CloudController
       end
     end
 
-    describe '#in_suspended_org?' do
+    describe '#in_suspended_or_deleting_org?' do
       let(:app_model) { create(:app_model) }
 
       subject(:service_binding) { VCAP::CloudController::ServiceBinding.new(app: app_model) }
 
       context 'when in a suspended organization' do
-        before { allow(app_model.space).to receive(:in_suspended_org?).and_return(true) }
+        before { allow(app_model.space).to receive(:in_suspended_or_deleting_org?).and_return(true) }
 
         it 'is true' do
-          expect(service_binding).to be_in_suspended_org
+          expect(service_binding).to be_in_suspended_or_deleting_org
         end
       end
 
       context 'when in an unsuspended organization' do
-        before { allow(app_model.space).to receive(:in_suspended_org?).and_return(false) }
+        before { allow(app_model.space).to receive(:in_suspended_or_deleting_org?).and_return(false) }
 
         it 'is false' do
-          expect(service_binding).not_to be_in_suspended_org
+          expect(service_binding).not_to be_in_suspended_or_deleting_org
         end
       end
     end
