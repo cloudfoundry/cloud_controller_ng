@@ -121,4 +121,7 @@ allOf:
         cancel:
           $ref: ./Link.yaml
           description: The URL to cancel this deployment
+        continue:
+          $ref: ./Link.yaml
+          description: The URL to continue this deployment
 description: "Deployments are objects that manage updates to applications with zero downtime. They can either: - Manage updating an app\u2019s droplet directly after an application package is staged - Roll an app back to a specific revision along with its associated droplet\nDeployment strategies supported: - Rolling deployments allow for applications to be deployed without incurring downtime by gradually rolling out instances. Max-in-flight can be configured to specify how many instances are rolled out simultaneously. - Canary deployments deploy a single instance and pause for user evaluation. If the canary instance is deemed successful, the deployment can be resumed via the continue action. The deployment then continues like a rolling deployment. This feature is experimental and is subject to change.\n"
