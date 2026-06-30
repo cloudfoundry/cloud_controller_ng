@@ -137,9 +137,16 @@ module VCAP::CloudController
     def create_stop_event_if_needed
       app_usage_repo = Repositories::AppUsageEventRepository.new
 
-      start_event = app_usage_repo.find_by_task_and_state(task: self, state: 'TASK_STARTED')
-      existing_stop_event = app_usage_repo.find_by_task_and_state(task: self, state: 'TASK_STOPPED')
-      return if start_event.nil? || existing_stop_event.present?
+      return if app_usage_repo.find_by_task_and_state(task: self, state: 'TASK_STOPPED').present?
+
+      # Record the stop only when there is recorded evidence that the task
+      # started: the TASK_STARTED event, or the TASK_WAS_RUNNING baseline seeded
+      # for tasks that were already running when the keep-running cleanup was
+      # introduced. Without either, no consumer ever saw the task start, so a
+      # stop event would be unmatched noise.
+      started = app_usage_repo.find_by_task_and_state(task: self, state: 'TASK_STARTED') ||
+                app_usage_repo.find_by_task_and_state(task: self, state: 'TASK_WAS_RUNNING')
+      return if started.nil?
 
       create_stop_event
     end

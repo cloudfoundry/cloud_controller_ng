@@ -26,3 +26,13 @@ Name | Type | Description
 **service_broker.guid** | _string_ or `null` | Unique identifier of the service broker that this event pertains to, if applicable
 **service_broker.name** | _string_ or `null` | Name of the service broker that this event pertains to, if applicable
 **links** | [_links object_](#links) | Links to related resources
+
+#### WAS_RUNNING events
+
+`WAS_RUNNING` is a synthetic value for `state` recorded once per existing service instance by a one-time data migration when the keep-running cleanup feature was introduced. It marks every service instance that existed at the time of the upgrade so that billing consumers can bootstrap from a complete baseline of service instances even if the original `CREATED` events have been pruned.
+
+**Consumer interpretation:**
+
+* If you have not previously recorded a `CREATED` event for this service instance, treat `WAS_RUNNING` as equivalent to `CREATED`.
+* If you have already recorded `CREATED` (or an earlier `WAS_RUNNING`) for this instance, treat as a redundant baseline confirmation and ignore.
+* `created_at` reflects when the backfill migration ran, **not** when the service instance was created. Treat `WAS_RUNNING` as a baseline marker that the instance already existed as of that timestamp.
