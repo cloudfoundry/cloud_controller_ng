@@ -1,4 +1,5 @@
 require 'delayed_job/quit_trap'
+require 'delayed_job/local_worker_drain_plugin'
 require 'delayed_job/delayed_worker'
 
 namespace :jobs do
