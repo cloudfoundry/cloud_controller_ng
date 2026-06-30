@@ -12,6 +12,10 @@ module VCAP::CloudController
       def self.generic
         'cc-generic'
       end
+
+      def self.local?(queue_name)
+        queue_name.start_with?('cc-') && queue_name != 'cc-generic'
+      end
     end
   end
 end
