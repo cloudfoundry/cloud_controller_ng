@@ -35,9 +35,13 @@ module VCAP::CloudController
           if droplet
             droplet.db.transaction do
               droplet.lock!
-              droplet.error_description = e.message
-              droplet.state = DropletModel::FAILED_STATE
-              droplet.save
+              if droplet.staged?
+                logger.info('droplet-upload.skipping-failed-state', droplet_guid: @droplet_guid, error: e.message)
+              else
+                droplet.error_description = e.message
+                droplet.state = DropletModel::FAILED_STATE
+                droplet.save
+              end
             end
           end
           raise
@@ -65,6 +69,10 @@ module VCAP::CloudController
 
         def blobstore
           @blobstore ||= CloudController::DependencyLocator.instance.droplet_blobstore
+        end
+
+        def logger
+          @logger ||= Steno.logger('cc.jobs.v3.droplet_upload')
         end
       end
     end

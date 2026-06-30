@@ -146,6 +146,24 @@ module VCAP::CloudController
                 }.from(true).to(false)
               end
             end
+
+            context 'when the droplet is already STAGED' do
+              let(:staged_droplet) { create(:droplet_model, state: DropletModel::STAGED_STATE, droplet_hash: nil, sha256_checksum: nil, set_as_current_droplet: false) }
+
+              before do
+                staged_job = DropletUpload.new(local_file.path, staged_droplet.guid, skip_state_transition:)
+                Delayed::Job.enqueue(staged_job, queue: worker.name)
+                worker.work_off 1
+              end
+
+              it 'does not overwrite the droplet state' do
+                expect(staged_droplet.refresh.state).to eq(DropletModel::STAGED_STATE)
+              end
+
+              it 'does not set an error description' do
+                expect(staged_droplet.refresh.error_description).to be_nil
+              end
+            end
           end
 
           context 'if the file is missing' do
