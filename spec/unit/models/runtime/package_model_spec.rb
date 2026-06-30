@@ -79,6 +79,36 @@ module VCAP::CloudController
       end
     end
 
+    describe '#fail_upload!' do
+      context 'when the package is READY' do
+        let!(:package) { create(:package_model, state: PackageModel::READY_STATE) }
+
+        it 'does not downgrade the state' do
+          package.fail_upload!('something went wrong')
+          expect(package.reload.state).to eq(PackageModel::READY_STATE)
+        end
+
+        it 'does not set an error' do
+          package.fail_upload!('something went wrong')
+          expect(package.reload.error).to be_nil
+        end
+      end
+
+      context 'when the package is PENDING' do
+        let!(:package) { create(:package_model, state: PackageModel::PENDING_STATE) }
+
+        it 'marks the package as FAILED' do
+          package.fail_upload!('something went wrong')
+          expect(package.reload.state).to eq(PackageModel::FAILED_STATE)
+        end
+
+        it 'sets the error' do
+          package.fail_upload!('something went wrong')
+          expect(package.reload.error).to eq('something went wrong')
+        end
+      end
+    end
+
     describe 'metadata' do
       let(:package) { create(:package_model) }
       let(:annotation) { create(:package_annotation_model, package: package, key_name: 'test1', value: 'bommel') }

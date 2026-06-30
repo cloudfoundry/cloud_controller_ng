@@ -97,6 +97,9 @@ module VCAP::CloudController
     def fail_upload!(err_msg)
       db.transaction do
         lock!
+
+        return if ready?
+
         self.state = VCAP::CloudController::PackageModel::FAILED_STATE
         self.error = err_msg
         save
