@@ -6,7 +6,8 @@ require 'presenters/v3/route_policy_presenter'
 require 'decorators/include_route_policy_source_decorator'
 require 'decorators/include_route_policy_route_decorator'
 require 'actions/route_policy_create'
-require 'repositories/route_policy_event_repository'
+require 'actions/route_policy_update'
+require 'actions/route_policy_destroy'
 require 'fetchers/label_selector_query_generator'
 
 class RoutePoliciesController < ApplicationController
@@ -53,13 +54,7 @@ class RoutePoliciesController < ApplicationController
     route = find_and_authorize_route(message.route_guid)
     validate_route_domain(route)
 
-    route_policy = VCAP::CloudController::RoutePolicyCreate.new.create(route: route, message: message)
-
-    route_policy_event_repository.record_route_policy_create(
-      route_policy,
-      user_audit_info,
-      { 'source' => message.source, 'route_guid' => message.route_guid }
-    )
+    route_policy = VCAP::CloudController::RoutePolicyCreate.new(user_audit_info).create(route: route, message: message)
 
     render status: :created, json: Presenters::V3::RoutePolicyPresenter.new(route_policy)
   rescue VCAP::CloudController::RoutePolicyCreate::Error => e
@@ -75,13 +70,7 @@ class RoutePoliciesController < ApplicationController
     message = RoutePolicyUpdateMessage.new(hashed_params[:body])
     unprocessable!(message.errors.full_messages) unless message.valid?
 
-    VCAP::CloudController::MetadataUpdate.update(route_policy, message)
-
-    route_policy_event_repository.record_route_policy_update(
-      route_policy.reload,
-      user_audit_info,
-      message.audit_hash
-    )
+    VCAP::CloudController::RoutePolicyUpdate.new(user_audit_info).update(route_policy, message)
 
     render status: :ok, json: Presenters::V3::RoutePolicyPresenter.new(route_policy.reload)
   end
@@ -92,20 +81,12 @@ class RoutePoliciesController < ApplicationController
 
     find_and_authorize_route_for_policy(route_policy)
 
-    route_policy.destroy
+    VCAP::CloudController::RoutePolicyDestroy.new(user_audit_info).delete(route_policy)
 
-    route_policy_event_repository.record_route_policy_delete(
-      route_policy,
-      user_audit_info
-    )
     head :no_content
   end
 
   private
-
-  def route_policy_event_repository
-    @route_policy_event_repository ||= Repositories::RoutePolicyEventRepository.new
-  end
 
   def find_and_authorize_route(route_guid)
     route = VCAP::CloudController::Route.find(guid: route_guid)

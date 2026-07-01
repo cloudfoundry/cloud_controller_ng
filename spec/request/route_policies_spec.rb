@@ -580,14 +580,15 @@ RSpec.describe 'Route Policies' do
     end
 
     describe 'filtering by label_selector' do
-      let(:another_route) { create(:route, space: space, domain: mtls_domain) }
+      let(:second_route) { create(:route, space: space, domain: mtls_domain) }
+      let(:third_route) { create(:route, space: space, domain: mtls_domain) }
       let!(:labelled_policy) do
-        policy = VCAP::CloudController::RoutePolicy.create(source: 'cf:any', route_id: mtls_route.id)
+        policy = VCAP::CloudController::RoutePolicy.create(source: 'cf:any', route_id: second_route.id)
         VCAP::CloudController::RoutePolicyLabelModel.create(resource_guid: policy.guid, key_name: 'env', value: 'prod')
         policy
       end
       let!(:unlabelled_policy) do
-        VCAP::CloudController::RoutePolicy.create(source: 'cf:any', route_id: another_route.id)
+        VCAP::CloudController::RoutePolicy.create(source: 'cf:any', route_id: third_route.id)
       end
 
       it 'returns only policies matching the label selector' do
@@ -715,7 +716,7 @@ RSpec.describe 'Route Policies' do
       let!(:rule_on_route1) do
         VCAP::CloudController::RoutePolicy.create(
           guid: SecureRandom.uuid,
-          source: 'cf:any',
+          source: "cf:app:#{SecureRandom.uuid}",
           route_id: mtls_route.id
         )
       end

@@ -3,8 +3,9 @@ require 'actions/route_policy_create'
 
 module VCAP::CloudController
   RSpec.describe RoutePolicyCreate do
-    subject(:action) { RoutePolicyCreate.new }
+    subject(:action) { RoutePolicyCreate.new(user_audit_info) }
 
+    let(:user_audit_info) { UserAuditInfo.new(user_email: 'user@example.com', user_guid: 'some-user-guid') }
     let(:space) { create(:space) }
     let(:domain) { create(:shared_domain, name: 'apps.identity', enforce_route_policies: true) }
     let(:route) { create(:route, space:, domain:) }
@@ -33,6 +34,20 @@ module VCAP::CloudController
         expect(policy.source_guid).to eq('')
       end
 
+      it 'notifies diego after the transaction commits' do
+        expect_any_instance_of(RoutePolicy).to receive(:notify_diego).once
+
+        action.create(route:, message:)
+      end
+
+      it 'records a route_policy_create audit event' do
+        expect_any_instance_of(Repositories::RoutePolicyEventRepository).
+          to receive(:record_route_policy_create).
+          with(instance_of(RoutePolicy), user_audit_info, { 'source' => "cf:app:#{app_guid}", 'route_guid' => route.guid })
+
+        action.create(route:, message:)
+      end
+
       context 'when the same source already exists for the route' do
         before do
           RoutePolicy.create(source: "cf:app:#{app_guid}", route_id: route.id)
@@ -55,7 +70,7 @@ module VCAP::CloudController
         it 'raises an error' do
           expect do
             action.create(route:, message:)
-          end.to raise_error(RoutePolicyCreate::Error, /cannot add 'cf:any'/i)
+          end.to raise_error(RoutePolicyCreate::Error, /'cf:any' cannot coexist with other route policies/)
         end
       end
 
@@ -68,7 +83,7 @@ module VCAP::CloudController
           other_message = instance_double(RoutePolicyCreateMessage, source: "cf:app:#{SecureRandom.uuid}")
           expect do
             action.create(route: route, message: other_message)
-          end.to raise_error(RoutePolicyCreate::Error, /already has a 'cf:any' policy/)
+          end.to raise_error(RoutePolicyCreate::Error, /cannot coexist with the existing 'cf:any' policy/)
         end
       end
 
