@@ -22,7 +22,6 @@ module CloudController
 
       # DEPRECATED: Legacy fog provider names (remove after migration window)
       LEGACY_PROVIDER_TO_STORAGE_CLI_TYPE = {
-        'AzureRM' => 'azurebs',
         'AWS' => 's3',
         'Google' => 'gcs',
         'webdav' => 'dav'
@@ -34,7 +33,6 @@ module CloudController
         config_file_path = config_path_for(resource_type)
         cfg = fetch_config(resource_type)
 
-        # Get provider field (can contain either fog name or storage-cli type)
         provider = cfg['provider']&.to_s
         raise BlobstoreError.new("No provider specified in config file: #{File.basename(config_file_path)}") if provider.nil? || provider.empty?
 
