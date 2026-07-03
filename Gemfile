@@ -42,7 +42,6 @@ gem 'railties', '~> 8.1.1'
 
 gem 'fog-aws'
 gem 'fog-core', '~> 2.6.0'
-gem 'fog-google', '~> 1.29.4'
 
 gem 'cf-uaa-lib', '~> 4.0.9'
 

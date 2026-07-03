@@ -7,6 +7,5 @@ original = Fog::Logger[:deprecation]
 Fog::Logger[:deprecation] = nil
 
 require 'fog/aws'
-require 'fog/google'
 
 Fog::Logger[:deprecation] = original
