@@ -9,7 +9,6 @@ module VCAP::CloudController
           fog_aws_storage_options: {
             encryption: 'AES256'
           },
-          fog_gcp_storage_options: {},
           app_package_directory_key: 'app_key'
         },
         droplets: {
@@ -389,7 +388,6 @@ module VCAP::CloudController
             fog_aws_storage_options: {
               encryption: 'AES256'
             },
-            fog_gcp_storage_options: {},
             app_package_directory_key: 'app_key'
           },
           droplets: {
@@ -552,7 +550,6 @@ module VCAP::CloudController
                                                        fog_aws_storage_options: {
                                                          encryption: 'AES256'
                                                        },
-                                                       fog_gcp_storage_options: {},
                                                        app_package_directory_key: 'app_key'
                                                      })
         expect(config_instance.get(:packages, :fog_aws_storage_options)).to eq(encryption: 'AES256')

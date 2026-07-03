@@ -184,7 +184,6 @@ resource_pool:
   blobstore_type: local-temp-storage
   fog_connection: {}
   fog_aws_storage_options: {}
-  fog_gcp_storage_options: {}
 
 packages:
   app_package_directory_key: "cc-packages"
@@ -193,7 +192,6 @@ packages:
   blobstore_type: local-temp-storage
   fog_connection: {}
   fog_aws_storage_options: {}
-  fog_gcp_storage_options: {}
 
 droplets:
   droplet_directory_key: cc-droplets
@@ -201,14 +199,12 @@ droplets:
   blobstore_type: local-temp-storage
   fog_connection: {}
   fog_aws_storage_options: {}
-  fog_gcp_storage_options: {}
 
 buildpacks:
   buildpack_directory_key: cc-buildpacks
   blobstore_type: local-temp-storage
   fog_connection: {}
   fog_aws_storage_options: {}
-  fog_gcp_storage_options: {}
 
 db_encryption_key: "asdfasdfasdf"
 database_encryption:
