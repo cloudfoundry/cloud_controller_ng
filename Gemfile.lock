@@ -77,7 +77,6 @@ GEM
     diff-lcs (1.6.2)
     digest-xxhash (0.2.9)
     docile (1.1.5)
-    domain_name (0.6.20240107)
     drb (2.2.3)
     erb (6.0.4)
     erubi (1.13.1)
@@ -180,8 +179,6 @@ GEM
       googleapis-common-protos-types (~> 1.0)
     hashdiff (1.2.1)
     highline (3.0.1)
-    http-cookie (1.1.6)
-      domain_name (~> 0.5)
     httpclient (2.9.0)
       mutex_m
     i18n (1.15.2)
@@ -204,7 +201,7 @@ GEM
       rexml (>= 3.4.4)
     kramdown-parser-gfm (1.1.0)
       kramdown (~> 2.0)
-    language_server-protocol (3.17.0.5)
+    language_server-protocol (3.17.0.6)
     lint_roller (1.1.0)
     listen (3.10.0)
       logger
@@ -391,7 +388,7 @@ GEM
       rubocop-ast (>= 1.49.0, < 2.0)
       ruby-progressbar (~> 1.7)
       unicode-display_width (>= 2.4.0, < 4.0)
-    rubocop-ast (1.49.1)
+    rubocop-ast (1.50.0)
       parser (>= 3.3.7.2)
       prism (~> 1.7)
     rubocop-capybara (3.0.0)
@@ -400,7 +397,7 @@ GEM
     rubocop-factory_bot (2.28.0)
       lint_roller (~> 1.1)
       rubocop (~> 1.72, >= 1.72.1)
-    rubocop-rails (2.34.3)
+    rubocop-rails (2.35.5)
       activesupport (>= 4.2.0)
       lint_roller (~> 1.1)
       rack (>= 1.1)
@@ -584,7 +581,7 @@ DEPENDENCIES
   rubocop (~> 1.88.1)
   rubocop-capybara
   rubocop-factory_bot
-  rubocop-rails (~> 2.34)
+  rubocop-rails (~> 2.35)
   rubocop-rspec (~> 3.10)
   rubocop-rspec_rails
   rubocop-sequel (~> 0.4.1)
