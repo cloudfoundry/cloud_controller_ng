@@ -1060,6 +1060,9 @@ specified, then the app will default to the operator-configured default stack.</
 </tr>
 </tbody></table>
 
+<p>For records whose historical lifecycle data is no longer available,
+<strong>data.buildpacks</strong> may be an empty list and <strong>data.stack</strong> may be <code class="prettyprint">null</code>.</p>
+
 <h3 id="cloud-native-buildpacks-lifecycle-experimental">Cloud Native Buildpacks Lifecycle <em>(experimental)</em></h3>
 <div class="highlight"><pre class="highlight plaintext"><code>Example Cloud Native Buildpacks lifecycle
 </code></pre></div><div class="highlight"><pre class="highlight json"><code><span class="p">{</span><span class="w">
@@ -1116,6 +1119,9 @@ specified, then the app will default to the operator-configured default stack.</
 <td>The root filesystem to use with the buildpack, for example <code class="prettyprint">cflinuxfs4</code></td>
 </tr>
 </tbody></table>
+
+<p>For records whose historical lifecycle data is no longer available,
+<strong>data.buildpacks</strong> may be an empty list and <strong>data.stack</strong> may be <code class="prettyprint">null</code>.</p>
 
 <h3 id="docker-lifecycle">Docker lifecycle</h3>
 <div class="highlight"><pre class="highlight plaintext"><code>Example Docker Lifecycle
