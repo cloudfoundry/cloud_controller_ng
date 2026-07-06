@@ -109,10 +109,13 @@ module VCAP::CloudController
     end
 
     def lifecycle_data
-      return buildpack_lifecycle_data if lifecycle_type == BuildpackLifecycleDataModel::LIFECYCLE_TYPE
-      return cnb_lifecycle_data if lifecycle_type == CNBLifecycleDataModel::LIFECYCLE_TYPE
+      # The lifecycle_data row can be destroyed independently of this
+      # app; fall back to a frozen empty instance so callers never see
+      # nil (and can't accidentally persist the stand-in).
+      return buildpack_lifecycle_data || BuildpackLifecycleDataModel.new.freeze if lifecycle_type == BuildpackLifecycleDataModel::LIFECYCLE_TYPE
+      return cnb_lifecycle_data || CNBLifecycleDataModel.new.freeze if lifecycle_type == CNBLifecycleDataModel::LIFECYCLE_TYPE
 
-      DockerLifecycleDataModel.new
+      DockerLifecycleDataModel.new.freeze
     end
 
     def current_package

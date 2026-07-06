@@ -146,6 +146,52 @@ module VCAP::CloudController
           expect(build_model.buildpack_lifecycle_data).to be_nil
           expect(build_model.cnb_lifecycle_data).to be_nil
         end
+
+        it 'returns a frozen instance so callers cannot persist the stand-in' do
+          expect(build_model.lifecycle_data).to be_frozen
+        end
+      end
+
+      context 'when lifecycle_type is buildpack but the associated row is missing' do
+        let(:build_model) { create(:build_model, app: nil) }
+
+        before do
+          build_model.buildpack_lifecycle_data.destroy
+          build_model.reload
+        end
+
+        it 'returns an empty buildpack lifecycle data stand-in' do
+          expect(build_model.lifecycle_data).to be_a(BuildpackLifecycleDataModel)
+        end
+
+        it 'returns a frozen instance so callers cannot persist the stand-in' do
+          expect(build_model.lifecycle_data).to be_frozen
+        end
+
+        it 'produces an empty to_hash' do
+          expect(build_model.lifecycle_data.to_hash).to eq(buildpacks: [], stack: nil)
+        end
+      end
+
+      context 'when lifecycle_type is cnb but the associated row is missing' do
+        let(:build_model) { create(:build_model, :cnb, app: nil) }
+
+        before do
+          build_model.cnb_lifecycle_data.destroy
+          build_model.reload
+        end
+
+        it 'returns an empty cnb lifecycle data stand-in' do
+          expect(build_model.lifecycle_data).to be_a(CNBLifecycleDataModel)
+        end
+
+        it 'returns a frozen instance so callers cannot persist the stand-in' do
+          expect(build_model.lifecycle_data).to be_frozen
+        end
+
+        it 'produces an empty to_hash' do
+          expect(build_model.lifecycle_data.to_hash).to eq(buildpacks: [], stack: nil)
+        end
       end
     end
 
