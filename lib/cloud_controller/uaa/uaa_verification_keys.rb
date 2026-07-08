@@ -34,7 +34,7 @@ module VCAP::CloudController
       uaa_keys = { keys: [] }
 
       validation_hash.each_value do |key|
-        uaa_keys[:keys] << key['value']
+        uaa_keys[:keys] << OpenSSL::PKey::RSA.new(key['value'])
       end
 
       uaa_keys[:requested_time] = Time.now
