@@ -23,8 +23,7 @@ module CloudController
                      root_dir: nil,
                      min_size: nil,
                      max_size: nil,
-                     aws_storage_options: nil,
-                     gcp_storage_options: nil)
+                     aws_storage_options: nil)
         @root_dir = root_dir
         @connection_config = connection_config
         @directory_key = directory_key
@@ -32,7 +31,6 @@ module CloudController
         @min_size = min_size || 0
         @max_size = max_size
         @aws_storage_options = aws_storage_options
-        @gcp_storage_options = gcp_storage_options
         logger.warn('blobstore.fog-deprecated', message: DEPRECATION_MESSAGE)
       end
 
@@ -141,11 +139,6 @@ module CloudController
           encrypt_opt = opts.delete(:encryption)
           opts['x-amz-server-side-encryption'] = encrypt_opt
           opts
-
-        elsif [Fog::Google::StorageJSON, Fog::Google::StorageXML].include?(connection.service)
-          return {} unless @gcp_storage_options
-
-          @gcp_storage_options
 
         else
           {}

@@ -383,58 +383,6 @@ module CloudController
                 end
               end
             end
-
-            context 'gcp' do
-              let(:gcp_connection_config) do
-                {
-                  provider: 'Google',
-                  google_project: 'gcs_project',
-                  google_client_email: 'gcs_service_account_email',
-                  google_json_key_string: 'gcs_service_account_json_key'
-                }
-              end
-
-              context 'when uniform flag is specified' do
-                let(:client_with_encryption) do
-                  FogClient.new(connection_config: gcp_connection_config,
-                                directory_key: directory_key,
-                                gcp_storage_options: { uniform: false, other: 'thing' })
-                end
-
-                it 'passes the storage options to gcp' do
-                  path = File.join(local_dir, 'empty_file.png')
-                  FileUtils.touch(path)
-
-                  client_with_encryption.cp_to_blobstore(path, 'abcdef123456')
-
-                  expect(files).to have_received(:create).with(key: anything,
-                                                               body: anything,
-                                                               content_type: anything,
-                                                               public: anything,
-                                                               uniform: false,
-                                                               other: 'thing')
-                end
-              end
-
-              context 'when gcp uniform flag is not specified' do
-                let(:client_with_encryption) do
-                  FogClient.new(connection_config: gcp_connection_config,
-                                directory_key: directory_key)
-                end
-
-                it 'has empty storage options' do
-                  path = File.join(local_dir, 'empty_file.png')
-                  FileUtils.touch(path)
-
-                  client_with_encryption.cp_to_blobstore(path, 'abcdef123456')
-
-                  expect(files).to have_received(:create).with(key: anything,
-                                                               body: anything,
-                                                               content_type: anything,
-                                                               public: anything)
-                end
-              end
-            end
           end
         end
 

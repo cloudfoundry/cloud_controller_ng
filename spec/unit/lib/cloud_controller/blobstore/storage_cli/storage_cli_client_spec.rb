@@ -43,26 +43,6 @@ module CloudController
           end
         end
 
-        it 'maps Google legacy provider to gcs storage-cli type' do
-          droplets_cfg = write_config_file(
-            provider: 'Google',
-            bucket_name: 'test-bucket',
-            json_key: '{}'
-          )
-          begin
-            stub_config_for_droplets(droplets_cfg.path)
-
-            client = StorageCliClient.new(
-              directory_key: 'dummy-key',
-              root_dir: 'dummy-root',
-              resource_type: 'droplets'
-            )
-            expect(client.instance_variable_get(:@storage_type)).to eq('gcs')
-          ensure
-            droplets_cfg.close!
-          end
-        end
-
         it 'maps webdav legacy provider to dav storage-cli type' do
           droplets_cfg = write_config_file(
             provider: 'webdav',

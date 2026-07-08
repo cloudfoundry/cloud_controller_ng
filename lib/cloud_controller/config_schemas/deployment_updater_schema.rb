@@ -126,7 +126,6 @@ module VCAP::CloudController
             fog_connection: Hash,
             optional(:connection_config) => Hash,
             fog_aws_storage_options: Hash,
-            fog_gcp_storage_options: Hash,
             optional(:webdav_config) => Hash,
             optional(:cdn) => Hash
           },
@@ -138,7 +137,6 @@ module VCAP::CloudController
             fog_connection: Hash,
             optional(:connection_config) => Hash,
             fog_aws_storage_options: Hash,
-            fog_gcp_storage_options: Hash,
             optional(:webdav_config) => Hash,
             optional(:cdn) => Hash
           },
@@ -151,7 +149,6 @@ module VCAP::CloudController
             fog_connection: Hash,
             optional(:connection_config) => Hash,
             fog_aws_storage_options: Hash,
-            fog_gcp_storage_options: Hash,
             optional(:webdav_config) => Hash,
             optional(:cdn) => Hash
           },
@@ -163,7 +160,6 @@ module VCAP::CloudController
             fog_connection: Hash,
             optional(:connection_config) => Hash,
             fog_aws_storage_options: Hash,
-            fog_gcp_storage_options: Hash,
             optional(:webdav_config) => Hash,
             optional(:cdn) => Hash
           },

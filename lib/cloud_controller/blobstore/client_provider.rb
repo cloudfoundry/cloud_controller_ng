@@ -6,7 +6,6 @@ require 'cloud_controller/blobstore/webdav/dav_client'
 require 'cloud_controller/blobstore/local/local_client'
 require 'cloud_controller/blobstore/safe_delete_client'
 require 'cloud_controller/blobstore/storage_cli/storage_cli_client'
-require 'google/apis/errors'
 
 module CloudController
   module Blobstore
@@ -40,8 +39,7 @@ module CloudController
             root_dir: root_dir,
             min_size: options[:minimum_size],
             max_size: options[:maximum_size],
-            aws_storage_options: options[:fog_aws_storage_options],
-            gcp_storage_options: options[:fog_gcp_storage_options]
+            aws_storage_options: options[:fog_aws_storage_options]
           )
 
           logger = Steno.logger('cc.blobstore')
@@ -52,8 +50,7 @@ module CloudController
           # and https://github.com/fog/fog-aws/issues/265
           # and intermittent GCS blobstore download errors
           errors = [Excon::Errors::BadRequest, Excon::Errors::SocketError, SystemCallError,
-                    Excon::Errors::InternalServerError, Excon::Errors::ServiceUnavailable,
-                    Google::Apis::ServerError, Google::Apis::TransmissionError, OpenSSL::OpenSSLError]
+                    Excon::Errors::InternalServerError, Excon::Errors::ServiceUnavailable, OpenSSL::OpenSSLError]
           retryable_client = RetryableClient.new(client:, errors:, logger:)
 
           Client.new(ErrorHandlingClient.new(SafeDeleteClient.new(retryable_client, root_dir)))
