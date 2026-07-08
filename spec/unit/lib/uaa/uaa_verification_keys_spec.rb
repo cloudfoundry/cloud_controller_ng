@@ -7,7 +7,9 @@ module VCAP::CloudController
 
     let(:config_hash) { { url: 'http://uaa-url' } }
     let(:uaa_info) { double(CF::UAA::Info) }
-    let(:key_hash) { { 'key-name' => { 'value' => 'value-from-uaa' } } }
+    let(:rsa_key) { OpenSSL::PKey::RSA.new(2048) }
+    let(:rsa_pem) { rsa_key.public_key.to_pem }
+    let(:key_hash) { { 'key-name' => { 'value' => rsa_pem } } }
     let(:my_logger) { double(Steno::Logger) }
 
     describe '#value' do
@@ -24,9 +26,11 @@ module VCAP::CloudController
         end
 
         context 'when key was never fetched' do
-          it 'is fetched' do
+          it 'is fetched and returns parsed RSA key objects' do
             expect(uaa_info).to receive(:validation_keys_hash)
-            expect(subject.value).to eq ['value-from-uaa']
+            result = subject.value
+            expect(result.length).to eq(1)
+            expect(result.first).to be_a(OpenSSL::PKey::RSA)
           end
         end
       end
@@ -38,15 +42,18 @@ module VCAP::CloudController
         end
 
         context 'when key was never fetched' do
-          it 'is fetched' do
+          it 'is fetched and returns parsed RSA key objects' do
             expect(uaa_info).to receive(:validation_keys_hash)
-            expect(subject.value).to eq ['value-from-uaa']
+            result = subject.value
+            expect(result.length).to eq(1)
+            expect(result.first).to be_a(OpenSSL::PKey::RSA)
           end
         end
       end
 
       context 'when key was fetched more than 30 seconds ago' do
-        let(:key_hash2) { { 'key-name' => { 'value' => 'another-from-uaa' } } }
+        let(:rsa_key2) { OpenSSL::PKey::RSA.new(2048) }
+        let(:key_hash2) { { 'key-name' => { 'value' => rsa_key2.public_key.to_pem } } }
 
         before { allow(uaa_info).to receive(:validation_keys_hash).and_return(key_hash, key_hash2) }
 
@@ -57,12 +64,16 @@ module VCAP::CloudController
             subject.value
           end
 
-          expect(subject.value).to eq(['another-from-uaa'])
+          result = subject.value
+          expect(result.length).to eq(1)
+          expect(result.first).to be_a(OpenSSL::PKey::RSA)
+          expect(result.first.public_key.to_pem).to eq(rsa_key2.public_key.to_pem)
         end
       end
 
       context 'when key was fetched less than 30 seconds ago' do
-        let(:key_hash2) { { 'key-name' => { 'value' => 'another-from-uaa' } } }
+        let(:rsa_key2) { OpenSSL::PKey::RSA.new(2048) }
+        let(:key_hash2) { { 'key-name' => { 'value' => rsa_key2.public_key.to_pem } } }
 
         before { allow(uaa_info).to receive(:validation_keys_hash).and_return(key_hash, key_hash2) }
 
@@ -72,7 +83,9 @@ module VCAP::CloudController
             Timecop.travel(25)
             subject.value
           end
-          expect(subject.value).to eq(['value-from-uaa'])
+          result = subject.value
+          expect(result.length).to eq(1)
+          expect(result.first.public_key.to_pem).to eq(rsa_pem)
         end
       end
 
@@ -101,9 +114,11 @@ module VCAP::CloudController
 
           it 'returns the previously fetched verification keys' do
             Timecop.freeze do
-              expect(subject.value).to eq(['value-from-uaa'])
+              result1 = subject.value
+              expect(result1.first).to be_a(OpenSSL::PKey::RSA)
               Timecop.travel(40)
-              expect(subject.value).to eq(['value-from-uaa'])
+              result2 = subject.value
+              expect(result2.first.public_key.to_pem).to eq(rsa_pem)
             end
           end
         end
@@ -131,10 +146,11 @@ module VCAP::CloudController
         end
 
         context 'when key was never fetched' do
-          it 'is fetched' do
+          it 'is fetched and returns parsed RSA key objects' do
             expect(uaa_info).to receive(:validation_keys_hash)
             subject.refresh
-            expect(subject.value).to eq(['value-from-uaa'])
+            result = subject.value
+            expect(result.first).to be_a(OpenSSL::PKey::RSA)
           end
         end
 
@@ -147,7 +163,8 @@ module VCAP::CloudController
           it 'is RE-fetched again' do
             expect(uaa_info).to receive(:validation_keys_hash)
             subject.refresh
-            expect(subject.value).to eq(['value-from-uaa'])
+            result = subject.value
+            expect(result.first).to be_a(OpenSSL::PKey::RSA)
           end
         end
       end
