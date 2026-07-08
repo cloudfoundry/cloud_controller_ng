@@ -13,6 +13,14 @@ Sequel.migration do
       VCAP::WasRunningBackfill.with_advisory_lock(self, wait: true) do
         VCAP::WasRunningBackfill.seed_task_usage_events(self, logger)
       end
+      # This is the last of the three seed migrations, so remind the operator
+      # here. The migrations run at the start of a rolling deploy, while old
+      # API servers are still serving traffic; their old cleanup code can
+      # still delete start events that the new code depends on. The seed
+      # cannot see the future, so the operator has to close that window by
+      # running the backfill once more after the deploy finishes.
+      logger.info("WAS_RUNNING usage event backfill complete. If old API servers were still serving traffic during this deploy, run 'rake db:was_running_backfill' " \
+                  'once after the deploy finishes to repair anything they changed in the meantime.')
     end
   end
 
