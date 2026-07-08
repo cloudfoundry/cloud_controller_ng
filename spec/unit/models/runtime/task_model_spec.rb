@@ -44,12 +44,27 @@ module VCAP::CloudController
 
         context 'when there is neither a TASK_STARTED event nor a TASK_WAS_RUNNING baseline' do
           let!(:start_event) { nil }
+          let(:fake_logger) { instance_double(Steno::Logger, info: nil, warn: nil, debug: nil, error: nil) }
+
+          before do
+            allow(Steno).to receive(:logger).and_return(fake_logger)
+          end
 
           it 'does not create a TASK_STOPPED event, since no consumer ever saw the task start' do
             task.update(state: TaskModel::SUCCEEDED_STATE)
 
             event = AppUsageEvent.find(task_guid: task.guid, state: 'TASK_STOPPED')
             expect(event).to be_nil
+          end
+
+          it 'logs a warning, because a task that reached RUNNING must have had a start record once' do
+            task.update(state: TaskModel::SUCCEEDED_STATE)
+
+            expect(fake_logger).to have_received(:warn).with(
+              "Not writing a TASK_STOPPED usage event for task #{task.guid}: the task was running but has no " \
+              'TASK_STARTED or TASK_WAS_RUNNING usage event on record. This should not happen. Run ' \
+              "'rake db:was_running_backfill' and check whether usage events were deleted or purged."
+            )
           end
         end
       end
@@ -81,6 +96,11 @@ module VCAP::CloudController
 
           context 'when there is neither a TASK_STARTED event nor a TASK_WAS_RUNNING baseline' do
             let!(:start_event) { nil }
+            let(:fake_logger) { instance_double(Steno::Logger, info: nil, warn: nil, debug: nil, error: nil) }
+
+            before do
+              allow(Steno).to receive(:logger).and_return(fake_logger)
+            end
 
             it 'does not create a TASK_STOPPED event, since no consumer ever saw the task start' do
               task.update(state: TaskModel::FAILED_STATE)
@@ -88,17 +108,38 @@ module VCAP::CloudController
               event = AppUsageEvent.find(task_guid: task.guid, state: 'TASK_STOPPED')
               expect(event).to be_nil
             end
+
+            it 'logs a warning, because a task that reached RUNNING must have had a start record once' do
+              task.update(state: TaskModel::FAILED_STATE)
+
+              expect(fake_logger).to have_received(:warn).with(
+                "Not writing a TASK_STOPPED usage event for task #{task.guid}: the task was running but has no " \
+                'TASK_STARTED or TASK_WAS_RUNNING usage event on record. This should not happen. Run ' \
+                "'rake db:was_running_backfill' and check whether usage events were deleted or purged."
+              )
+            end
           end
         end
 
         context 'when the task is moving from the PENDING state' do
           let(:task) { create(:task_model, app: parent_app, state: TaskModel::PENDING_STATE) }
+          let(:fake_logger) { instance_double(Steno::Logger, info: nil, warn: nil, debug: nil, error: nil) }
+
+          before do
+            allow(Steno).to receive(:logger).and_return(fake_logger)
+          end
 
           it 'does not create a TASK_STOPPED event' do
             task.update(state: TaskModel::FAILED_STATE)
 
             event = AppUsageEvent.find(task_guid: task.guid, state: 'TASK_STOPPED')
             expect(event).to be_nil
+          end
+
+          it 'does not log a warning, because a task that never ran is not supposed to have a start record' do
+            task.update(state: TaskModel::FAILED_STATE)
+
+            expect(fake_logger).not_to have_received(:warn)
           end
         end
 
@@ -131,12 +172,24 @@ module VCAP::CloudController
 
           context 'when the task does not have a TASK_STARTED event' do
             let!(:start_event) { nil }
+            let(:fake_logger) { instance_double(Steno::Logger, info: nil, warn: nil, debug: nil, error: nil) }
+
+            before do
+              allow(Steno).to receive(:logger).and_return(fake_logger)
+            end
 
             it 'does not create a TASK_STOPPED event' do
               task.update(state: TaskModel::FAILED_STATE)
 
               event = AppUsageEvent.find(task_guid: task.guid, state: 'TASK_STOPPED')
               expect(event).to be_nil
+            end
+
+            it 'does not log a warning, because a task canceled while PENDING also passes through CANCELING, ' \
+               'so we cannot be sure this task ever ran' do
+              task.update(state: TaskModel::FAILED_STATE)
+
+              expect(fake_logger).not_to have_received(:warn)
             end
           end
         end
@@ -203,6 +256,11 @@ module VCAP::CloudController
 
       context 'when the TASK_STARTED event has been pruned and a TASK_WAS_RUNNING baseline exists' do
         let!(:start_event) { create(:app_usage_event, task_guid: task.guid, state: 'TASK_WAS_RUNNING') }
+        let(:fake_logger) { instance_double(Steno::Logger, info: nil, warn: nil, debug: nil, error: nil) }
+
+        before do
+          allow(Steno).to receive(:logger).and_return(fake_logger)
+        end
 
         it 'still creates a TASK_STOPPED event' do
           task.destroy
@@ -210,17 +268,58 @@ module VCAP::CloudController
           event = AppUsageEvent.find(task_guid: task.guid, state: 'TASK_STOPPED')
           expect(event).not_to be_nil
         end
+
+        it 'does not log a warning, because the stop event was written' do
+          task.destroy
+
+          expect(fake_logger).not_to have_received(:warn)
+        end
       end
 
       context 'when there is neither a TASK_STARTED event nor a TASK_WAS_RUNNING baseline' do
-        let(:task) { create(:task_model, app: parent_app, state: TaskModel::PENDING_STATE) }
         let!(:start_event) { nil }
+        let(:fake_logger) { instance_double(Steno::Logger, info: nil, warn: nil, debug: nil, error: nil) }
 
-        it 'does not create a TASK_STOPPED event, since no consumer ever saw the task start' do
-          task.destroy
+        before do
+          allow(Steno).to receive(:logger).and_return(fake_logger)
+        end
 
-          event = AppUsageEvent.find(task_guid: task.guid, state: 'TASK_STOPPED')
-          expect(event).to be_nil
+        context 'when the task is PENDING' do
+          let(:task) { create(:task_model, app: parent_app, state: TaskModel::PENDING_STATE) }
+
+          it 'does not create a TASK_STOPPED event, since no consumer ever saw the task start' do
+            task.destroy
+
+            event = AppUsageEvent.find(task_guid: task.guid, state: 'TASK_STOPPED')
+            expect(event).to be_nil
+          end
+
+          it 'does not log a warning, because a task that never ran is not supposed to have a start record' do
+            task.destroy
+
+            expect(fake_logger).not_to have_received(:warn)
+          end
+        end
+
+        context 'when the task is RUNNING' do
+          let(:task) { create(:task_model, app: parent_app, state: TaskModel::RUNNING_STATE) }
+
+          it 'does not create a TASK_STOPPED event, since no consumer ever saw the task start' do
+            task.destroy
+
+            event = AppUsageEvent.find(task_guid: task.guid, state: 'TASK_STOPPED')
+            expect(event).to be_nil
+          end
+
+          it 'logs a warning, because a task that reached RUNNING must have had a start record once' do
+            task.destroy
+
+            expect(fake_logger).to have_received(:warn).with(
+              "Not writing a TASK_STOPPED usage event for task #{task.guid}: the task was running but has no " \
+              'TASK_STARTED or TASK_WAS_RUNNING usage event on record. This should not happen. Run ' \
+              "'rake db:was_running_backfill' and check whether usage events were deleted or purged."
+            )
+          end
         end
       end
 

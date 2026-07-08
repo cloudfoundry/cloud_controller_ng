@@ -155,13 +155,38 @@ module VCAP::CloudController
         Repositories::AppUsageEventRepository::TASK_WAS_RUNNING_EVENT_STATE
       ]
       started = app_usage_repo.find_by_task_and_state(task: self, state: start_evidence_states)
-      return if started.nil?
+      if started.nil?
+        warn_if_running_task_has_no_start_record
+        return
+      end
 
       create_stop_event
     end
 
     def create_stop_event
       Repositories::AppUsageEventRepository.new.create_from_task(self, 'TASK_STOPPED')
+    end
+
+    # The skip above is silent. That is fine for a task that never ran. But a
+    # task can only reach RUNNING through the state change that also writes
+    # its TASK_STARTED event, in the same transaction. So a running task with
+    # no start record means something deleted the record later: the
+    # destructive v2 purge, or the events cleanup job of an older version
+    # that did not yet keep the start events of running tasks. Someone should
+    # find out which, so log a warning. We warn only for RUNNING because only
+    # RUNNING is certain: a task canceled while still PENDING also passes
+    # through CANCELING, so a CANCELING task may never have run.
+    def warn_if_running_task_has_no_start_record
+      state_before_stop = column_changed?(:state) ? initial_value(:state) : state
+      return unless state_before_stop == RUNNING_STATE
+
+      logger.warn("Not writing a TASK_STOPPED usage event for task #{guid}: the task was running but has no " \
+                  'TASK_STARTED or TASK_WAS_RUNNING usage event on record. This should not happen. Run ' \
+                  "'rake db:was_running_backfill' and check whether usage events were deleted or purged.")
+    end
+
+    def logger
+      @logger ||= Steno.logger('cc.models.task')
     end
   end
 end
