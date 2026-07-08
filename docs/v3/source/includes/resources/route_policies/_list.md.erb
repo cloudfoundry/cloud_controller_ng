@@ -72,9 +72,8 @@ curl "https://api.example.org/v3/route_policies?include=route,source" \
 
 #### Use cases
 
-**Allow a frontend app to call a backend API:**
+**Create a policy to allow a frontend app to call a backend API:**
 ```shell
-# Create route policy
 curl "https://api.example.org/v3/route_policies" \
   -X POST \
   -H "Authorization: bearer [token]" \
@@ -130,7 +129,6 @@ curl "https://api.example.org/v3/route_policies?space_guids=my-space-guid" \
 
 **Find stale policies referencing a deleted app:**
 ```shell
-# After deleting an app, find policies that referenced it
 curl "https://api.example.org/v3/route_policies?source_guids=deleted-app-guid&include=source" \
   -X GET \
   -H "Authorization: bearer [token]"
