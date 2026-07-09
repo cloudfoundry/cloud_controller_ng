@@ -44,11 +44,12 @@ GEM
     builder (3.3.0)
     byebug (13.0.0)
       reline (>= 0.6.0)
-    cf-uaa-lib (4.0.9)
+    cf-uaa-lib (4.0.10)
       addressable (~> 2.8, >= 2.8.0)
       base64
       httpclient (~> 2.8, >= 2.8.2.4)
       json (~> 2.7)
+      logger
       mutex_m
     clockwork (4.0.1)
       activesupport
@@ -471,7 +472,7 @@ DEPENDENCIES
   addressable
   bootsnap
   byebug
-  cf-uaa-lib (~> 4.0.9)
+  cf-uaa-lib (~> 4.0.10)
   clockwork
   cloudfront-signer
   codeclimate-test-reporter (>= 1.0.8)
