@@ -43,7 +43,7 @@ gem 'railties', '~> 8.1.1'
 gem 'fog-aws'
 gem 'fog-core', '~> 2.6.0'
 
-gem 'cf-uaa-lib', '~> 4.0.9'
+gem 'cf-uaa-lib', '~> 4.0.10'
 
 group :db do
   gem 'mysql2', '~> 0.5.7'
