@@ -1279,6 +1279,25 @@ RSpec.describe 'Route Destinations Request' do
       end
     end
 
+    context 'when the destination belongs to a different route than the one in the URL' do
+      let(:other_space) { create(:space) }
+      let(:other_route) { create(:route, space: other_space) }
+      let(:other_app) { create(:app_model, space: other_space) }
+      let!(:other_destination) { create(:route_mapping_model, app: other_app, route: other_route, process_type: 'web') }
+
+      before do
+        set_current_user_as_role(user: user, role: 'space_developer', org: org, space: space)
+      end
+
+      it 'returns 422 and does not modify the destination' do
+        patch "/v3/routes/#{route.guid}/destinations/#{other_destination.guid}",
+              { protocol: 'http2' }.to_json, headers_for(user)
+        expect(last_response.status).to eq(422)
+        expect(last_response).to have_error_message('Unable to unmap route from destination. Ensure the route has a destination with this guid.')
+        expect(other_destination.reload.protocol).not_to eq('http2')
+      end
+    end
+
     context 'when the route has a protocol of tcp' do
       let(:routing_api_client) { double('routing_api_client', router_group:) }
       let(:router_group) { double('router_group', type: 'tcp', guid: 'router-group-guid') }
@@ -1418,6 +1437,24 @@ RSpec.describe 'Route Destinations Request' do
         delete "/v3/routes/#{route.guid}/destinations/does-not-exist", nil, admin_header
         expect(last_response.status).to eq(422)
         expect(last_response).to have_error_message('Unable to unmap route from destination. Ensure the route has a destination with this guid.')
+      end
+    end
+
+    context 'when the destination belongs to a different route than the one in the URL' do
+      let(:other_space) { create(:space) }
+      let(:other_route) { create(:route, space: other_space) }
+      let(:other_app) { create(:app_model, space: other_space) }
+      let!(:other_destination) { create(:route_mapping_model, app: other_app, route: other_route, process_type: 'web') }
+
+      before do
+        set_current_user_as_role(user: user, role: 'space_developer', org: org, space: space)
+      end
+
+      it 'returns 422 and does not delete the destination' do
+        delete "/v3/routes/#{route.guid}/destinations/#{other_destination.guid}", nil, headers_for(user)
+        expect(last_response.status).to eq(422)
+        expect(last_response).to have_error_message('Unable to unmap route from destination. Ensure the route has a destination with this guid.')
+        expect { other_destination.reload }.not_to raise_error
       end
     end
 

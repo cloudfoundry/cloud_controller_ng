@@ -249,7 +249,7 @@ class RoutesController < ApplicationController
     require_writable_space!(route.space)
 
     destination = RouteMappingModel.find(guid: hashed_params[:destination_guid])
-    unprocessable_destination! unless destination
+    unprocessable_destination! unless destination && destination.route_guid == route.guid
 
     RouteDestinationUpdate.update(destination, message)
 
@@ -286,7 +286,7 @@ class RoutesController < ApplicationController
     require_writable_space!(route.space)
 
     destination = RouteMappingModel.find(guid: hashed_params[:destination_guid])
-    unprocessable_destination! unless destination
+    unprocessable_destination! unless destination && destination.route_guid == route.guid
 
     UpdateRouteDestinations.delete(destination, route, user_audit_info)
 
