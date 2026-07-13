@@ -62,7 +62,9 @@ namespace :jobs do
       'pending_builds',
       'prune_completed_deployments',
       'prune_completed_builds',
-      'prune_excess_app_revisions'
+      'prune_excess_app_revisions',
+      # One-off backfill - to be removed in a future version.
+      'lifecycle_type_backfill'
     ]
 
     require 'cloud_controller/metrics/custom_process_id'

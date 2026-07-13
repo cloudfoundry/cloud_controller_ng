@@ -13,6 +13,8 @@ module VCAP::CloudController
       ClockJob.db.transaction do
         job = ClockJob.find(name:).lock!
 
+        remove_duplicate_untouched_jobs(job.name)
+
         need_to_run_job = need_to_run_job?(job, interval, timeout, fudge)
 
         if need_to_run_job
@@ -67,9 +69,33 @@ module VCAP::CloudController
       end
     end
 
+    # Keep only the newest untouched job on the queue and remove the rest.
+    def remove_duplicate_untouched_jobs(name)
+      return if name == 'diego_sync'
+
+      newest = untouched_jobs(name).order(Sequel.desc(:created_at), Sequel.desc(:id)).first
+      return if newest.nil?
+
+      deleted = untouched_jobs(name).exclude(id: newest.id).delete
+      @logger.info("Removed #{deleted} duplicate untouched job(s) from queue #{name}") if deleted > 0
+    end
+
+    def untouched_job_queued?(job)
+      return false if job.name == 'diego_sync'
+
+      queued = untouched_jobs(job.name).any?
+      @logger.info("An untouched job is already queued for #{job.name}, skipping enqueue") if queued
+      queued
+    end
+
+    def untouched_jobs(name)
+      Delayed::Job.where(queue: name, failed_at: nil, locked_at: nil)
+    end
+
     def need_to_run_job?(job, interval, timeout, fudge=0)
       return true if never_run?(job)
       return false unless interval_elapsed?(job, interval, fudge)
+      return false if untouched_job_queued?(job)
       return true unless job_in_progress?(job)
 
       if timeout.nil?
