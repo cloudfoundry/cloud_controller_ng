@@ -1,0 +1,385 @@
+/v3/service_plans:
+  get:
+    summary: List service plans
+    description: This endpoint retrieves the service plans the user has access to.
+    operationId: listServicePlans
+    tags:
+      - Service Plans
+    parameters:
+      - $ref: ../components/parameters/Page.yaml
+      - $ref: ../components/parameters/PerPage.yaml
+      - $ref: ../components/parameters/OrderBy.yaml
+      - name: names
+        in: query
+        schema:
+          type: array
+          items:
+            type: string
+        description: Comma-delimited list of service plan names to filter by
+      - name: available
+        in: query
+        schema:
+          type: boolean
+        description: Filter by the `available` property; valid values are `true` or `false`
+      - name: service_offering_guids
+        in: query
+        schema:
+          type: array
+          items:
+            type: string
+        description: Comma-delimited list of service offering guids to filter by
+      - name: service_instance_guids
+        in: query
+        schema:
+          type: array
+          items:
+            type: string
+        description: Comma-delimited list of service instance guids to filter by
+      - name: space_guids
+        in: query
+        schema:
+          type: array
+          items:
+            type: string
+        description: Comma-delimited list of space guids to filter by
+      - name: organization_guids
+        in: query
+        schema:
+          type: array
+          items:
+            type: string
+        description: Comma-delimited list of organization guids to filter by
+      - name: broker_catalog_ids
+        in: query
+        schema:
+          type: array
+          items:
+            type: string
+        description: Comma-delimited list of broker catalog IDs to filter by
+      - name: service_broker_guids
+        in: query
+        schema:
+          type: array
+          items:
+            type: string
+        description: Comma-delimited list of service broker GUIDs to filter by
+      - name: service_broker_names
+        in: query
+        schema:
+          type: array
+          items:
+            type: string
+        description: Comma-delimited list of service broker names to filter by
+      - name: service_offering_names
+        in: query
+        schema:
+          type: array
+          items:
+            type: string
+        description: Comma-delimited list of service offering names to filter by
+      - name: include
+        in: query
+        schema:
+          type: array
+          items:
+            type: string
+            enum:
+              - space.organization
+              - service_offering
+        description: Optionally include a list of unique related resources in the response
+      - $ref: ../components/parameters/LabelSelector.yaml
+      - name: fields
+        in: query
+        schema:
+          type: object
+        description: Fields to include in the response
+      - $ref: ../components/parameters/CreatedAts.yaml
+      - $ref: ../components/parameters/UpdatedAts.yaml
+    responses:
+      '200':
+        description: OK
+        content:
+          application/json:
+            schema:
+              $ref: ../components/schemas/ServicePlanList.yaml
+      '400':
+        $ref: ../components/responses/BadRequest.yaml
+      '401':
+        $ref: ../components/responses/Unauthorized.yaml
+      '403':
+        $ref: ../components/responses/Forbidden.yaml
+      '409':
+        $ref: ../components/responses/Conflict.yaml
+      '422':
+        $ref: ../components/responses/UnprocessableEntity.yaml
+      '500':
+        $ref: ../components/responses/500.yaml
+      '502':
+        $ref: ../components/responses/BadGateway.yaml
+      '503':
+        $ref: ../components/responses/ServiceUnavailable.yaml
+/v3/service_plans/{guid}:
+  get:
+    summary: Get a service plan
+    description: This endpoint retrieves the service plan by GUID.
+    operationId: getServicePlan
+    tags:
+      - Service Plans
+    parameters:
+      - $ref: ../components/parameters/Guid.yaml
+      - name: include
+        in: query
+        schema:
+          type: array
+          items:
+            type: string
+            enum:
+              - space.organization
+              - service_offering
+        description: Optionally include a list of unique related resources in the response
+    responses:
+      '200':
+        description: OK
+        content:
+          application/json:
+            schema:
+              $ref: ../components/schemas/ServicePlan.yaml
+            examples:
+              default:
+                summary: default
+                value:
+                  guid: 123e4567-e89b-12d3-a456-426614174000
+                  name: my_big_service_plan
+                  description: Big
+                  visibility_type: public
+                  available: true
+                  free: false
+                  costs:
+                    - currency: USD
+                      amount: 199.99
+                      unit: Monthly
+                  created_at: '2019-11-28T13:44:02Z'
+                  updated_at: '2019-11-28T13:44:02Z'
+                  maintenance_info:
+                    version: 1.0.0+dev4
+                    description: Database version 7.8.0
+                  broker_catalog:
+                    id: db730a8c-11e5-11ea-838a-0f4fff3b1cfb
+                    metadata:
+                      custom-key: custom-information
+                    maximum_polling_duration: null
+                    features:
+                      plan_updateable: true
+                      bindable: true
+                  schemas:
+                    service_instance:
+                      create:
+                        parameters:
+                          $schema: http://json-schema.org/draft-04/schema#
+                          type: object
+                          properties:
+                            billing-account:
+                              description: Billing account number used to charge use of shared fake server.
+                              type: string
+                      update:
+                        parameters: {}
+                    service_binding:
+                      create:
+                        parameters: {}
+                  relationships:
+                    service_offering:
+                      data:
+                        guid: 123e4567-e89b-12d3-a456-426614174000
+                  metadata:
+                    labels: {}
+                    annotations: {}
+                  links:
+                    self:
+                      href: https://api.example.org/v3/service_plans/bf7eb420-11e5-11ea-b7db-4b5d5e7976a9
+                    service_offering:
+                      href: https://api.example.org/v3/service_offerings/13c60e38-11e7-11ea-9106-33ee3c5bd4d7
+                    visibility:
+                      href: https://api.example.org/v3/service_plans/bf7eb420-11e5-11ea-b7db-4b5d5e7976a9/visibility
+      '401':
+        $ref: ../components/responses/Unauthorized.yaml
+      '403':
+        $ref: ../components/responses/Forbidden.yaml
+      '404':
+        $ref: ../components/responses/NotFound.yaml
+  patch:
+    summary: Update a service plan
+    description: This endpoint updates a service plan with labels and annotations.
+    operationId: updateServicePlan
+    tags:
+      - Service Plans
+    parameters:
+      - $ref: ../components/parameters/Guid.yaml
+    requestBody:
+      content:
+        application/json:
+          schema:
+            properties:
+              metadata:
+                $ref: ../components/schemas/Metadata.yaml
+    responses:
+      '200':
+        description: OK
+        content:
+          application/json:
+            schema:
+              $ref: ../components/schemas/ServicePlan.yaml
+      '400':
+        $ref: ../components/responses/BadRequest.yaml
+      '401':
+        $ref: ../components/responses/Unauthorized.yaml
+      '403':
+        $ref: ../components/responses/Forbidden.yaml
+      '404':
+        $ref: ../components/responses/NotFound.yaml
+      '409':
+        $ref: ../components/responses/Conflict.yaml
+      '422':
+        $ref: ../components/responses/UnprocessableEntity.yaml
+      '500':
+        $ref: ../components/responses/500.yaml
+      '503':
+        $ref: ../components/responses/ServiceUnavailable.yaml
+  delete:
+    summary: Delete a service plan
+    description: |-
+      This endpoint deletes a service plan. This is used to remove service plans from the Cloud Foundry database when they
+      are no longer provided by the service broker.
+    operationId: deleteServicePlan
+    tags:
+      - Service Plans
+    parameters:
+      - $ref: ../components/parameters/Guid.yaml
+    responses:
+      '204':
+        description: No Content
+      '401':
+        $ref: ../components/responses/Unauthorized.yaml
+      '403':
+        $ref: ../components/responses/Forbidden.yaml
+      '404':
+        $ref: ../components/responses/NotFound.yaml
+      '422':
+        $ref: ../components/responses/UnprocessableEntity.yaml
+      '500':
+        $ref: ../components/responses/500.yaml
+/v3/service_plans/{guid}/visibility:
+  get:
+    summary: Get a service plan visibility
+    description: This endpoint retrieves the service plan visibility for a given plan.
+    operationId: getServicePlanVisibility
+    tags:
+      - Service Plans
+    parameters:
+      - $ref: ../components/parameters/Guid.yaml
+    responses:
+      '200':
+        description: OK
+        content:
+          application/json:
+            schema:
+              $ref: ../components/schemas/ServicePlanVisibility.yaml
+            examples:
+              default:
+                summary: default
+                value:
+                  type: public
+      '401':
+        $ref: ../components/responses/Unauthorized.yaml
+      '403':
+        $ref: ../components/responses/Forbidden.yaml
+      '404':
+        $ref: ../components/responses/NotFound.yaml
+  patch:
+    summary: Update a service plan visibility
+    description: This endpoint updates a service plan visibility. It behaves similar to the [POST service plan visibility endpoint](#apply-a-service-plan-visibility) but this endpoint will replace the existing list of organizations when the service plan is `organization` visible.
+    operationId: updateServicePlanVisibility
+    tags:
+      - Service Plans
+    parameters:
+      - $ref: ../components/parameters/Guid.yaml
+    requestBody:
+      $ref: ../components/requestBodies/ServicePlanVisibilityUpdateRequestBody.yaml
+    responses:
+      '200':
+        description: OK
+        content:
+          application/json:
+            schema:
+              $ref: ../components/schemas/ServicePlanVisibility.yaml
+      '401':
+        $ref: ../components/responses/Unauthorized.yaml
+      '403':
+        $ref: ../components/responses/Forbidden.yaml
+      '404':
+        $ref: ../components/responses/NotFound.yaml
+      '422':
+        $ref: ../components/responses/UnprocessableEntity.yaml
+  post:
+    summary: Apply a service plan visibility
+    description: This endpoint applies a service plan visibility. It behaves similar to the [PATCH service plan visibility endpoint](#update-a-service-plan-visibility) but this endpoint will append to the existing list of organizations when the service plan is `organization` visible.
+    operationId: applyServicePlanVisibility
+    tags:
+      - Service Plans
+    parameters:
+      - $ref: ../components/parameters/Guid.yaml
+    requestBody:
+      $ref: ../components/requestBodies/ServicePlanVisibilityCreateRequestBody.yaml
+    responses:
+      '200':
+        description: OK
+        content:
+          application/json:
+            schema:
+              $ref: ../components/schemas/ServicePlanVisibility.yaml
+            examples:
+              default:
+                summary: default
+                value:
+                  type: organization
+      '400':
+        $ref: ../components/responses/BadRequest.yaml
+      '401':
+        $ref: ../components/responses/Unauthorized.yaml
+      '403':
+        $ref: ../components/responses/Forbidden.yaml
+      '404':
+        $ref: ../components/responses/NotFound.yaml
+      '409':
+        $ref: ../components/responses/Conflict.yaml
+      '422':
+        $ref: ../components/responses/UnprocessableEntity.yaml
+      '500':
+        $ref: ../components/responses/500.yaml
+      '503':
+        $ref: ../components/responses/ServiceUnavailable.yaml
+/v3/service_plans/{guid}/visibility/{organization_guid}:
+  delete:
+    summary: Remove organization from a service plan visibility
+    description: This endpoint removes an organization from a service plan visibility list of organizations. It is only defined for service plans which are org-restricted. It will fail with a HTTP status code of 422 for any other visibility type (e.g. Public).
+    operationId: removeOrganizationFromServicePlanVisibility
+    tags:
+      - Service Plans
+    parameters:
+      - $ref: ../components/parameters/Guid.yaml
+      - name: organization_guid
+        in: path
+        required: true
+        schema:
+          type: string
+          format: uuid
+    responses:
+      '204':
+        description: No Content
+      '401':
+        $ref: ../components/responses/Unauthorized.yaml
+      '403':
+        $ref: ../components/responses/Forbidden.yaml
+      '404':
+        $ref: ../components/responses/NotFound.yaml
+      '422':
+        $ref: ../components/responses/UnprocessableEntity.yaml

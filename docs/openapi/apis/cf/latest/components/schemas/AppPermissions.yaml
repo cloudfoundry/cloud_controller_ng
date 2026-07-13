@@ -1,0 +1,12 @@
+type: object
+properties:
+  read_basic_data:
+    type: boolean
+    description: Whether the user can read basic app data
+  read_sensitive_data:
+    type: boolean
+    description: Whether the user can read sensitive app data
+required:
+  - read_basic_data
+  - read_sensitive_data
+description: 'User permissions for an app'

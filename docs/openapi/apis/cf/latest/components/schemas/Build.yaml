@@ -1,0 +1,79 @@
+type: object
+allOf:
+  - $ref: './BaseSchema.yaml'
+  - properties:
+      state:
+        type: string
+        description: State of the build
+        enum:
+          - STAGING
+          - STAGED
+          - FAILED
+      staging_memory_in_mb:
+        type: [integer, "null"]
+        description: Memory in MB allocated for staging of the build
+      staging_disk_in_mb:
+        type: [integer, "null"]
+        description: Disk space in MB allocated for staging of the build
+      staging_log_rate_limit_bytes_per_second:
+        type: integer
+        description: Log rate limit in bytes per second allocated for staging of the build
+      error:
+        type: [string, 'null']
+        description: A string describing errors during the build process
+      lifecycle:
+        $ref: './Lifecycle.yaml'
+        description: Provides the lifecycle object to use during staging; this will override the build’s application’s default lifecycle for this build
+      checksum:
+        type: object
+        properties:
+          type:
+            type: string
+            description: Hashing algorithm for checksum; supported algorithms are sha256 and sha1
+          value:
+            type: string
+            description: Checksum of build
+      metadata:
+        $ref: './Metadata.yaml'
+      relationships:
+        $ref: './Relationships.yaml'
+      package:
+        type: object
+        properties:
+          guid:
+            type: string
+            format: uuid
+        description: The package that is the input to the staging process
+      droplet:
+        type: [object, 'null']
+        properties:
+          guid:
+            type: string
+            format: uuid
+        description: A resulting droplet from the staging process; `droplet` will be `null` if staging has not completed
+      created_by:
+        type: object
+        properties:
+          guid:
+            type: string
+            description: The guid of the user that created the build
+          name:
+            type: [string, "null"]
+            description: The name of the user that created the build
+          email:
+            type: [string, "null"]
+            description: The email of the user that created the build
+      links:
+        type: object
+        properties:
+          self:
+            $ref: './Link.yaml'
+            description: The URL to get this build
+          app:
+            $ref: './Link.yaml'
+            description: The URL to get the app for this build
+          droplet:
+            $ref: './Link.yaml'
+            description: The URL to get the droplet for this build
+description: >
+  Builds represent the process of transforming source code into a runnable artifact. Builds can be triggered manually or automatically as part of the app lifecycle. A successful build results in a droplet that can be used to run the app.

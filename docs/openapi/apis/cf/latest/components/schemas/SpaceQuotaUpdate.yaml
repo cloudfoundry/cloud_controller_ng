@@ -1,0 +1,49 @@
+type: object
+properties:
+  name:
+    type: [string, "null"]
+    description: Name of the space quota
+  apps:
+    type: object
+    properties:
+      total_memory_in_mb:
+        type: [integer, "null"]
+        description: Total memory allowed for all apps in MB
+      per_process_memory_in_mb:
+        type: [integer, "null"]
+        description: Maximum memory per process in MB
+      log_rate_limit_in_bytes_per_second:
+        type: [integer, "null"]
+        description: Log rate limit in bytes per second
+      total_instances:
+        type: [integer, "null"]
+        description: Total number of app instances allowed
+      per_app_tasks:
+        type: [integer, "null"]
+        description: Maximum number of tasks per app
+    description: App limits for the space quota
+  services:
+    type: object
+    properties:
+      paid_services_allowed:
+        type: boolean
+        description: Whether paid services are allowed
+      total_service_instances:
+        type: [integer, "null"]
+        description: Total number of service instances allowed
+      total_service_keys:
+        type: [integer, "null"]
+        description: Total number of service keys allowed
+    description: Service limits for the space quota
+  routes:
+    type: object
+    properties:
+      total_routes:
+        type: [integer, "null"]
+        description: Total number of routes allowed
+      total_reserved_ports:
+        type: [integer, "null"]
+        description: Total number of reserved ports allowed
+    description: Route limits for the space quota
+  metadata:
+    $ref: ./Metadata.yaml

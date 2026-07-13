@@ -1,0 +1,15 @@
+description: Roles retrieved
+content:
+  application/json:
+    schema:
+      type: object
+      properties:
+        pagination:
+          $ref: '../schemas/Pagination.yaml'
+        resources:
+          type: array
+          items:
+            $ref: '../schemas/Role.yaml'
+        included:
+          $ref: '../schemas/IncludedResources.yaml'
+          description: Additional related resources included in the response when using the include parameter

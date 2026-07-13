@@ -1,0 +1,32 @@
+name: Test CF API V3 Documentation
+on:
+  pull_request:
+    branches:
+      - main
+  workflow_dispatch:
+
+concurrency:
+  group: '${{ github.workflow }}-${{ github.head_ref || github.run_id }}'
+  cancel-in-progress: true
+
+jobs:
+  test:
+    name: Test
+    runs-on: ubuntu-latest
+    container:
+      image: node:24-alpine
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+      - name: Setup
+        run: |
+          apk add python3 make g++
+          yarn install
+      - name: Stats
+        run: yarn redocly stats --format markdown >> $GITHUB_STEP_SUMMARY
+      - name: Lint
+        run: |
+          yarn redocly lint --max-problems 9999 --format markdown >> $GITHUB_STEP_SUMMARY || true
+          yarn redocly lint --max-problems 9999 --format github-actions
+      - name: Build
+        run: yarn build

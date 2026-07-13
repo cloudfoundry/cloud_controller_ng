@@ -1,0 +1,19 @@
+description: Stack object that needs to be created
+required: true
+content:
+  application/json:
+    schema:
+      type: object
+      properties:
+        name:
+          type: string
+          description: Name of the stack; must be unique and no longer than 250 characters
+          maxLength: 250
+        description:
+          type: [string, "null"]
+          description: Description of the stack; must no longer than 250 characters
+          maxLength: 250
+        metadata:
+          $ref: '../schemas/Metadata.yaml'
+      required:
+        - name

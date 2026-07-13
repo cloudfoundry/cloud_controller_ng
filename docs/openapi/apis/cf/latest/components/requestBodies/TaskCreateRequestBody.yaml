@@ -1,0 +1,49 @@
+description: Task object that needs to be created
+required: true
+content:
+  application/json:
+    schema:
+      type: object
+      properties:
+        command:
+          type: string
+          description: The command to run for the task. **NOTE:** optional if a `template.process.guid` is provided
+        name:
+          type: string
+          description: Human-readable name for the task
+        memory_in_mb:
+          type: integer
+          description: Amount of memory to allocate for the task in MB
+        disk_in_mb:
+          type: integer
+          description: Amount of disk to allocate for the task in MB
+        log_rate_limit_in_bytes_per_second:
+          type: integer
+          description: Amount of log rate limit to allocate for the task in bytes per second
+        droplet_guid:
+          type: string
+          format: uuid
+          description: The GUID of a droplet to use to run the task
+        template:
+          type: object
+          description: An object with a process field to template the task from
+          properties:
+            process:
+              type: object
+              properties:
+                guid:
+                  type: string
+                  format: uuid
+              required:
+                - guid
+              description: The guid of the process that will be used as a template
+        metadata:
+          $ref: ../schemas/Metadata.yaml
+      description: Request schema for creating a task
+    examples:
+      default:
+        summary: default
+        value:
+          template:
+            process:
+              guid: 123e4567-e89b-12d3-a456-426614174000

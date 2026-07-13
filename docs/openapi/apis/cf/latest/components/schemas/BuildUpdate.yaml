@@ -1,0 +1,26 @@
+type: object
+properties:
+  state:
+    type: string
+    description: State of the build
+    enum:
+      - STAGING
+      - STAGED
+      - FAILED
+  staging_memory_in_mb:
+    type: [integer, "null"]
+    description: Memory in MB allocated for staging of the build
+  staging_disk_in_mb:
+    type: [integer, "null"]
+    description: Disk space in MB allocated for staging of the build
+  staging_log_rate_limit_bytes_per_second:
+    type: integer
+    description: Log rate limit in bytes per second allocated for staging of the build
+  error:
+    type: [string, 'null']
+    description: A string describing errors during the build process
+  lifecycle:
+    $ref: './Lifecycle.yaml'
+    description: Provides the lifecycle object to use during staging
+  metadata:
+    $ref: './Metadata.yaml'

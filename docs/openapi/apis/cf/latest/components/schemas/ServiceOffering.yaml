@@ -1,0 +1,22 @@
+type: object
+allOf:
+  - $ref: './BaseSchema.yaml'
+  - properties:
+      service_broker_guid:
+        type: string
+      service_broker_name:
+        type: string
+      metadata:
+        $ref: './Metadata.yaml'
+      links:
+        type: object
+        properties:
+          self:
+            $ref: './Link.yaml'
+            description: The URL to get this service offering
+          service_plans:
+            $ref: './Link.yaml'
+            description: The URL to get the service plans for this offering
+          service_broker:
+            $ref: './Link.yaml'
+            description: The URL to get the service broker for this offering

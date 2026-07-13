@@ -1,0 +1,7 @@
+name: per_page
+in: query
+required: false
+schema:
+  type: integer
+description: Number of results per page, valid values are 1 through 5000
+example: 50

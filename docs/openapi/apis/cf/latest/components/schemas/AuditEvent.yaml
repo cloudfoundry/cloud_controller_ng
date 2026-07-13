@@ -1,0 +1,54 @@
+type: object
+allOf:
+  - $ref: './BaseSchema.yaml'
+  - properties:
+      type:
+        type: string
+        description: The type of the event
+      actor:
+        type: object
+        properties:
+          guid:
+            type: string
+            description: The unique identifier for the actor (user or system resource that performed the action)
+          type:
+            type: string
+            description: The actor type
+          name:
+            type: string
+            description: The name of the actor
+      target:
+        type: object
+        properties:
+          guid:
+            type: string
+            description: The unique identifier for the target (resource that the event acted upon)
+          type:
+            type: string
+            description: The target type
+          name:
+            type: string
+            description: The name of the target
+      data:
+        type: object
+        description: Additional information about event
+      space:
+        type: [object, "null"]
+        properties:
+          guid:
+            type: string
+            description: Unique identifier for the space where the event occurred; if the event did not occur within a space, the `space` field will be `null`
+      organization:
+        type: [object, "null"]
+        properties:
+          guid:
+            type: string
+            description: Unique identifier for the organization where the event occurred; if the event did not occur within an organization, the `organization` field will be `null`
+      links:
+        type: object
+        properties:
+          self:
+            $ref: './Link.yaml'
+            description: The URL to get this audit event
+description: >
+  Audit events help Cloud Foundry operators monitor actions taken against resources (such as apps) via user or system actions.

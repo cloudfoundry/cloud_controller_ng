@@ -1,0 +1,5 @@
+description: Role retrieved
+content:
+  application/json:
+    schema:
+      $ref: '../schemas/Role.yaml'

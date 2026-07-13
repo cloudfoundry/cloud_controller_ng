@@ -1,0 +1,6 @@
+type: object
+properties:
+  guid:
+    type: string
+    format: uuid
+    description: The GUID of the resource

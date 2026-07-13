@@ -1,0 +1,10 @@
+description: Domain object that needs to be updated
+required: true
+content:
+  application/json:
+    schema:
+      type: object
+      properties:
+        metadata:
+          $ref: '../schemas/Metadata.yaml'
+      description: Request schema for updating a domain

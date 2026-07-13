@@ -1,0 +1,26 @@
+description: A list of route destinations
+content:
+  application/json:
+    schema:
+      type: object
+      properties:
+        destinations:
+          type: array
+          items:
+            $ref: ../schemas/RouteDestination.yaml
+          description: List of destinations to add to route; destinations without `process.type` specified will get process type `"web"` by default
+    examples:
+      default:
+        summary: default
+        value:
+          destinations:
+            - app:
+                guid: 123e4567-e89b-12d3-a456-426614174000
+              weight: 61
+            - app:
+                guid: 123e4567-e89b-12d3-a456-426614174000
+                process:
+                  type: api
+              weight: 39
+              port: 9000
+              protocol: http1

@@ -1,0 +1,19 @@
+allOf:
+  - $ref: ./Link.yaml
+  - type: object
+    properties:
+      meta:
+        type: object
+        description: Contains metadata about the link
+        properties:
+          version:
+            type: string
+            description: The version of the API
+          host_key_fingerprint:
+            type: string
+            description: The host key fingerprint of the link
+          oauth_client:
+            type: string
+            description: The oauth client for the link
+description: |
+  Each link is keyed by its type and will include a href for the URL and an optional method for links that cannot be followed using GET. Can include a meta object with metadata about the link.

@@ -1,0 +1,353 @@
+/v3/tasks:
+  get:
+    summary: List tasks
+    description: Retrieve all tasks the user has access to. The `command` field is excluded in the response.
+    operationId: listTasks
+    tags:
+      - Tasks
+    parameters:
+      - $ref: ../components/parameters/Page.yaml
+      - $ref: ../components/parameters/PerPage.yaml
+      - $ref: ../components/parameters/OrderBy.yaml
+      - $ref: ../components/parameters/CreatedAts.yaml
+      - $ref: ../components/parameters/UpdatedAts.yaml
+      - $ref: ../components/parameters/LabelSelector.yaml
+      - name: guids
+        in: query
+        schema:
+          type: array
+          items:
+            type: string
+        description: Comma-delimited list of task guids to filter by
+      - name: names
+        in: query
+        schema:
+          type: array
+          items:
+            type: string
+        description: Comma-delimited list of task names to filter by
+      - name: states
+        in: query
+        schema:
+          type: array
+          items:
+            type: string
+            enum:
+              - PENDING
+              - RUNNING
+              - SUCCEEDED
+              - CANCELING
+              - FAILED
+        description: Comma-delimited list of task states to filter by
+      - name: app_guids
+        in: query
+        schema:
+          type: array
+          items:
+            type: string
+        description: Comma-delimited list of app guids to filter by
+      - name: space_guids
+        in: query
+        schema:
+          type: array
+          items:
+            type: string
+        description: Comma-delimited list of space guids to filter by
+      - name: organization_guids
+        in: query
+        schema:
+          type: array
+          items:
+            type: string
+        description: Comma-delimited list of organization guids to filter by
+      - name: sequence_ids
+        in: query
+        schema:
+          type: array
+          items:
+            type: integer
+        description: Comma-delimited list of sequence ids to filter by
+    responses:
+      '200':
+        description: OK
+        content:
+          application/json:
+            schema:
+              $ref: ../components/schemas/TaskList.yaml
+      '400':
+        $ref: ../components/responses/BadRequest.yaml
+      '401':
+        $ref: ../components/responses/Unauthorized.yaml
+      '403':
+        $ref: ../components/responses/Forbidden.yaml
+      '409':
+        $ref: ../components/responses/Conflict.yaml
+      '422':
+        $ref: ../components/responses/UnprocessableEntity.yaml
+      '500':
+        $ref: ../components/responses/500.yaml
+      '502':
+        $ref: ../components/responses/BadGateway.yaml
+      '503':
+        $ref: ../components/responses/ServiceUnavailable.yaml
+/v3/apps/{guid}/tasks:
+  get:
+    summary: List tasks for an app
+    description: Retrieve tasks for an app.
+    operationId: listAppTasks
+    tags:
+      - Tasks
+    parameters:
+      - $ref: ../components/parameters/Guid.yaml
+      - $ref: ../components/parameters/Page.yaml
+      - $ref: ../components/parameters/PerPage.yaml
+      - $ref: ../components/parameters/OrderBy.yaml
+      - $ref: ../components/parameters/CreatedAts.yaml
+      - $ref: ../components/parameters/UpdatedAts.yaml
+      - $ref: ../components/parameters/LabelSelector.yaml
+      - name: guids
+        in: query
+        schema:
+          type: array
+          items:
+            type: string
+        description: Comma-delimited list of task guids to filter by
+      - name: names
+        in: query
+        schema:
+          type: array
+          items:
+            type: string
+        description: Comma-delimited list of task names to filter by
+      - name: states
+        in: query
+        schema:
+          type: array
+          items:
+            type: string
+            enum:
+              - PENDING
+              - RUNNING
+              - SUCCEEDED
+              - CANCELING
+              - FAILED
+        description: Comma-delimited list of task states to filter by
+      - name: sequence_ids
+        in: query
+        schema:
+          type: array
+          items:
+            type: integer
+        description: Comma-delimited list of sequence ids to filter by
+    responses:
+      '200':
+        description: OK
+        content:
+          application/json:
+            schema:
+              $ref: ../components/schemas/TaskList.yaml
+      '401':
+        $ref: ../components/responses/Unauthorized.yaml
+      '403':
+        $ref: ../components/responses/Forbidden.yaml
+      '404':
+        $ref: ../components/responses/NotFound.yaml
+  post:
+    summary: Create a task
+    description: Create a task.
+    operationId: createTask
+    tags:
+      - Tasks
+    parameters:
+      - $ref: ../components/parameters/Guid.yaml
+    requestBody:
+      $ref: ../components/requestBodies/TaskCreateRequestBody.yaml
+    responses:
+      '202':
+        description: Accepted
+        content:
+          application/json:
+            schema:
+              $ref: ../components/schemas/Task.yaml
+        links:
+          app:
+            operationId: getApp
+            parameters:
+              guid: $response.body#/relationships/app/data/guid
+            description: Retrieve the app for this task
+          droplet:
+            operationId: getDroplet
+            parameters:
+              guid: $response.body#/droplet_guid
+            description: Retrieve the droplet for this task
+      '400':
+        $ref: ../components/responses/BadRequest.yaml
+      '401':
+        $ref: ../components/responses/Unauthorized.yaml
+      '403':
+        $ref: ../components/responses/Forbidden.yaml
+      '404':
+        $ref: ../components/responses/NotFound.yaml
+      '409':
+        $ref: ../components/responses/Conflict.yaml
+      '422':
+        $ref: ../components/responses/UnprocessableEntity.yaml
+      '500':
+        $ref: ../components/responses/500.yaml
+      '503':
+        $ref: ../components/responses/ServiceUnavailable.yaml
+/v3/tasks/{guid}:
+  get:
+    summary: Get a task
+    description: Retrieve a task. The `command` field may be excluded in the response based on the user’s role.
+    operationId: getTask
+    tags:
+      - Tasks
+    parameters:
+      - $ref: ../components/parameters/Guid.yaml
+    responses:
+      '200':
+        description: OK
+        content:
+          application/json:
+            schema:
+              $ref: ../components/schemas/Task.yaml
+        links:
+          app:
+            operationId: getApp
+            parameters:
+              guid: $response.body#/relationships/app/data/guid
+            description: Retrieve the app for this task
+          droplet:
+            operationId: getDroplet
+            parameters:
+              guid: $response.body#/droplet_guid
+            description: Retrieve the droplet for this task
+      '401':
+        $ref: ../components/responses/Unauthorized.yaml
+      '403':
+        $ref: ../components/responses/Forbidden.yaml
+      '404':
+        $ref: ../components/responses/NotFound.yaml
+  patch:
+    summary: Update a task
+    description: Update a task.
+    operationId: updateTask
+    tags:
+      - Tasks
+    parameters:
+      - $ref: ../components/parameters/Guid.yaml
+    requestBody:
+      content:
+        application/json:
+          schema:
+            properties:
+              metadata:
+                $ref: ../components/schemas/Metadata.yaml
+          examples:
+            default:
+              summary: default
+              value:
+                metadata:
+                  labels:
+                    key: value
+                  annotations:
+                    note: detailed information
+    responses:
+      '200':
+        description: OK
+        content:
+          application/json:
+            schema:
+              $ref: ../components/schemas/Task.yaml
+      '400':
+        $ref: ../components/responses/BadRequest.yaml
+      '401':
+        $ref: ../components/responses/Unauthorized.yaml
+      '403':
+        $ref: ../components/responses/Forbidden.yaml
+      '404':
+        $ref: ../components/responses/NotFound.yaml
+      '409':
+        $ref: ../components/responses/Conflict.yaml
+      '422':
+        $ref: ../components/responses/UnprocessableEntity.yaml
+      '500':
+        $ref: ../components/responses/500.yaml
+      '503':
+        $ref: ../components/responses/ServiceUnavailable.yaml
+/v3/tasks/{guid}/actions/cancel:
+  post:
+    summary: Cancel a task
+    description: Cancels a running task. Canceled tasks will initially be in state `CANCELING` and will move to state `FAILED` once the cancel request has been processed. Cancel requests are idempotent and will be processed according to the state of the task when the request is executed. Canceling a task that is in `SUCCEEDED` or `FAILED` state will return an error.
+    operationId: cancelTask
+    tags:
+      - Tasks
+    parameters:
+      - $ref: ../components/parameters/Guid.yaml
+    responses:
+      '202':
+        description: OK
+        content:
+          application/json:
+            schema:
+              $ref: ../components/schemas/Task.yaml
+      '401':
+        $ref: ../components/responses/Unauthorized.yaml
+      '403':
+        $ref: ../components/responses/Forbidden.yaml
+      '404':
+        $ref: ../components/responses/NotFound.yaml
+      '422':
+        $ref: ../components/responses/UnprocessableEntity.yaml
+  put:
+    summary: Cancel a task (PUT)
+    description: Cancels a running task using PUT method. Canceled tasks will initially be in state `CANCELING` and will move to state `FAILED` once the cancel request has been processed. Cancel requests are idempotent and will be processed according to the state of the task when the request is executed. Canceling a task that is in `SUCCEEDED` or `FAILED` state will return an error.
+    operationId: cancelTaskPut
+    tags:
+      - Tasks
+    parameters:
+      - $ref: ../components/parameters/Guid.yaml
+    responses:
+      '202':
+        description: OK
+        content:
+          application/json:
+            schema:
+              $ref: ../components/schemas/Task.yaml
+      '400':
+        $ref: ../components/responses/BadRequest.yaml
+      '401':
+        $ref: ../components/responses/Unauthorized.yaml
+      '403':
+        $ref: ../components/responses/Forbidden.yaml
+      '404':
+        $ref: ../components/responses/NotFound.yaml
+      '422':
+        $ref: ../components/responses/UnprocessableEntity.yaml
+      '500':
+        $ref: ../components/responses/500.yaml
+/v3/tasks/{guid}/cancel:
+  put:
+    summary: DEPRECATED - Cancel a task (short path)
+    description: DEPRECATED - Use /v3/tasks/{guid}/actions/cancel instead.
+    operationId: cancelTaskShort
+    tags:
+      - Tasks
+    parameters:
+      - $ref: ../components/parameters/Guid.yaml
+    responses:
+      '202':
+        description: OK
+        content:
+          application/json:
+            schema:
+              $ref: ../components/schemas/Task.yaml
+      '401':
+        $ref: ../components/responses/Unauthorized.yaml
+      '403':
+        $ref: ../components/responses/Forbidden.yaml
+      '404':
+        $ref: ../components/responses/NotFound.yaml
+      '422':
+        $ref: ../components/responses/UnprocessableEntity.yaml

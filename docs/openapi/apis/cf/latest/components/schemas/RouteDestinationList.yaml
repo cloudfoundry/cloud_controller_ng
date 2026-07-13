@@ -1,0 +1,9 @@
+type: object
+properties:
+  pagination:
+    $ref: './Pagination.yaml'
+  destinations:
+    type: array
+    items:
+      $ref: './RouteDestination.yaml'
+description: A list of route destinations

@@ -1,0 +1,53 @@
+description: Role to create
+content:
+  application/json:
+    schema:
+      type: object
+      properties:
+        type:
+          type: string
+          description: Role to create
+          enum:
+            - organization_user
+            - organization_auditor
+            - organization_manager
+            - organization_billing_manager
+            - space_auditor
+            - space_developer
+            - space_manager
+            - space_supporter
+        relationships:
+          type: object
+          properties:
+            user:
+              $ref: ../schemas/UserRelationshipToOne.yaml
+            organization:
+              $ref: ../schemas/RelationshipToOne.yaml
+              description: A relationship to an organization; required only when creating an organization role
+            space:
+              $ref: ../schemas/RelationshipToOne.yaml
+              description: A relationship to a space; required only when creating a space role
+    examples:
+      by_user_guid:
+        summary: by user guid
+        value:
+          type: organization_auditor
+          relationships:
+            user:
+              data:
+                guid: 123e4567-e89b-12d3-a456-426614174000
+            organization:
+              data:
+                guid: 123e4567-e89b-12d3-a456-426614174000
+      by_username_and_origin:
+        summary: by username and origin
+        value:
+          type: organization_auditor
+          relationships:
+            user:
+              data:
+                username: user-name
+                origin: ldap
+            organization:
+              data:
+                guid: 123e4567-e89b-12d3-a456-426614174000

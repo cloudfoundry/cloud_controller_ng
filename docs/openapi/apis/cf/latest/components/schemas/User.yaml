@@ -1,0 +1,30 @@
+type: object
+properties:
+  guid:
+    type: string
+    description: Unique identifier for the user, matching either a UAA user id or client id. A client id may not be a uuid.
+  created_at:
+    type: string
+    format: date-time
+    description: The ISO8601 compatible date and time when resource was created
+  updated_at:
+    type: string
+    format: date-time
+    description: The ISO8601 compatible date and time when resource was last updated
+  username:
+    type: [string, "null"]
+    description: The username of the user
+  presentation_name:
+    type: string
+    description: The presentation name of the user
+  origin:
+    type: [string, "null"]
+    description: The origin of the user
+  metadata:
+    $ref: './Metadata.yaml'
+  links:
+    type: object
+    properties:
+      self:
+        $ref: './Link.yaml'
+        description: The URL to get this user

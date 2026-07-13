@@ -1,0 +1,47 @@
+# From capi-openapi-spec
+capi/*.json
+capi/*.yml
+.DS_Store
+openapitools.json
+clients/
+sdk/
+node_modules/
+
+# Test SDK integration generated files
+test/sdk-integration/python/capi_client/
+test/sdk-integration/python/docs/
+test/sdk-integration/python/test/
+test/sdk-integration/python/.openapi-generator/
+test/sdk-integration/python/*.egg-info/
+test/sdk-integration/python/build/
+test/sdk-integration/python/dist/
+test/sdk-integration/python/.tox/
+test/sdk-integration/python/.pytest_cache/
+test/sdk-integration/python/__pycache__/
+test/sdk-integration/python/.coverage
+test/sdk-integration/python/htmlcov/
+test/sdk-integration/python/README.md
+test/sdk-integration/python/setup.py
+test/sdk-integration/python/setup.cfg
+test/sdk-integration/python/pyproject.toml
+test/sdk-integration/python/requirements.txt
+test/sdk-integration/python/test-requirements.txt
+test/sdk-integration/python/tox.ini
+test/sdk-integration/python/git_push.sh
+test/sdk-integration/python/.github/
+test/sdk-integration/python/.gitlab-ci.yml
+test/sdk-integration/python/.travis.yml
+
+# Test SDK integration Go generated files (if any beyond the test files)
+test/sdk-integration/go/vendor/
+test/sdk-integration/go/pkg/
+test/sdk-integration/go/bin/
+
+# From cf-api-openapi-poc
+.idea
+*.iml
+dist
+node_modules
+out
+tmp
+.tmp

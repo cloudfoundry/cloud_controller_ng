@@ -1,0 +1,147 @@
+/v3/spaces/{guid}/actions/apply_manifest:
+  post:
+    summary: Apply a manifest to a space
+    description: 'Apply changes specified in a manifest to the named apps and their
+      underlying processes. The apps must reside in the space. These changes are additive
+      and will not modify any unspecified properties or remove any existing environment
+      variables, app features, routes, or services.
+
+
+      Apply manifest will only trigger an immediate update for the “instances” property
+      or routing changes. All other properties require an app restart to take effect.'
+    operationId: applyManifest
+    tags:
+    - Manifests
+    parameters:
+    - $ref: '../components/parameters/Guid.yaml'
+    requestBody:
+      content:
+        application/x-yaml:
+          schema:
+            type: string
+    responses:
+      '202':
+        description: Accepted
+        headers:
+          Location:
+            description: URL of the job that is applying the manifest
+            schema:
+              type: string
+              format: uri
+      '401':
+        $ref: '../components/responses/Unauthorized.yaml'
+      '404':
+        $ref: '../components/responses/NotFound.yaml'
+      '403':
+        $ref: '../components/responses/Forbidden.yaml'
+      '422':
+        $ref: '../components/responses/UnprocessableEntity.yaml'
+      '400':
+        $ref: '../components/responses/BadRequest.yaml'
+      '500':
+        $ref: '../components/responses/500.yaml'
+      '503':
+        $ref: '../components/responses/ServiceUnavailable.yaml'
+      '409':
+        $ref: '../components/responses/Conflict.yaml'
+/v3/apps/{guid}/manifest:
+  get:
+    summary: Generate a manifest for an app
+    description: Generate a manifest for an app and its underlying processes.
+    operationId: generateManifest
+    tags:
+    - Manifests
+    parameters:
+    - $ref: '../components/parameters/Guid.yaml'
+    responses:
+      '200':
+        description: OK
+        content:
+          application/x-yaml:
+            schema:
+              type: string
+      '401':
+        $ref: '../components/responses/Unauthorized.yaml'
+      '404':
+        $ref: '../components/responses/NotFound.yaml'
+      '403':
+        $ref: '../components/responses/Forbidden.yaml'
+      '400':
+        $ref: '../components/responses/BadRequest.yaml'
+      '500':
+        $ref: '../components/responses/500.yaml'
+      '502':
+        $ref: '../components/responses/BadGateway.yaml'
+      '503':
+        $ref: '../components/responses/ServiceUnavailable.yaml'
+      '422':
+        $ref: '../components/responses/UnprocessableEntity.yaml'
+      '409':
+        $ref: '../components/responses/Conflict.yaml'
+/v3/spaces/{guid}/manifest_diff:
+  post:
+    summary: Create a manifest diff for a space (experimental)
+    description: 'This endpoint returns a JSON representation of the difference between
+      the provided manifest and the current state of a space.
+
+
+      Currently, this endpoint can only diff [version 1](#the-manifest-schema) manifests.'
+    operationId: createManifestDiff
+    tags:
+    - Manifests
+    parameters:
+    - $ref: '../components/parameters/Guid.yaml'
+    requestBody:
+      content:
+        application/x-yaml:
+          schema:
+            type: string
+    responses:
+      '201':
+        description: Created
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                diff:
+                  type: array
+                  items:
+                    type: object
+                    properties:
+                      op:
+                        type: string
+                      path:
+                        type: string
+                      was:
+                        type: string
+                      value:
+                        type: string
+      '202':
+        description: Accepted
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                diff:
+                  type: array
+                  items:
+                    type: object
+                    properties:
+                      op:
+                        type: string
+                      path:
+                        type: string
+                      was:
+                        type: string
+                      value:
+                        type: string
+      '401':
+        $ref: '../components/responses/Unauthorized.yaml'
+      '404':
+        $ref: '../components/responses/NotFound.yaml'
+      '403':
+        $ref: '../components/responses/Forbidden.yaml'
+      '422':
+        $ref: '../components/responses/UnprocessableEntity.yaml'

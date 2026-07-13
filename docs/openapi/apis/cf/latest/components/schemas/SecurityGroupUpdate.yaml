@@ -1,0 +1,40 @@
+type: object
+properties:
+  name:
+    type: string
+    description: Name of the security group
+  globally_enabled:
+    type: object
+    properties:
+      running:
+        type: boolean
+        description: Whether the security group is globally enabled for running apps
+      staging:
+        type: boolean
+        description: Whether the security group is globally enabled for staging apps
+  rules:
+    type: array
+    items:
+      type: object
+      properties:
+        protocol:
+          type: string
+          description: Protocol for the rule
+        destination:
+          type: string
+          description: Destination for the rule
+        ports:
+          type: string
+          description: Ports for the rule
+        type:
+          type: integer
+          description: Type for ICMP rules
+        code:
+          type: integer
+          description: Code for ICMP rules
+        description:
+          type: [string, "null"]
+          description: Description of the rule
+    description: Rules for the security group
+  metadata:
+    $ref: './Metadata.yaml'

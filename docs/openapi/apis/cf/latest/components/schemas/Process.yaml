@@ -1,0 +1,63 @@
+type: object
+allOf:
+  - $ref: './BaseSchema.yaml'
+  - properties:
+      version:
+        type: string
+        format: uuid
+        description: Random identifier that changes every time the process will be recreated in the runtime
+      type:
+        type: string
+        description: Process type; a unique identifier for processes belonging to an app
+      command:
+        type: [string, "null"]
+        description: The command used to start the process; use null to revert to the buildpack-detected or procfile-provided start command
+      user:
+        type: [string, "null"]
+        description: The user used to run the process; use null to revert to the docker-detected or default 'vcap' user
+      instances:
+        type: integer
+        description: The number of instances to run
+      memory_in_mb:
+        type: [integer, "null"]
+        description: The memory in MB allocated per instance
+      disk_in_mb:
+        type: [integer, "null"]
+        description: The disk in MB allocated per instance
+      log_rate_limit_in_bytes_per_second:
+        type: integer
+        description: The log rate in bytes per second allocated per instance
+      health_check:
+        $ref: './HealthCheck.yaml'
+      readiness_health_check:
+        $ref: './HealthCheck.yaml'
+      relationships:
+        type: object
+        properties:
+          app:
+            $ref: './RelationshipToOne.yaml'
+          revision:
+            oneOf:
+              - $ref: './RelationshipToOne.yaml'
+              - type: 'null'
+      metadata:
+        $ref: './Metadata.yaml'
+      links:
+        type: object
+        properties:
+          self:
+            $ref: './Link.yaml'
+            description: The URL to get this process
+          scale:
+            $ref: './Link.yaml'
+            description: The URL to scale this process
+          app:
+            $ref: './Link.yaml'
+            description: The URL to get the app for this process
+          space:
+            $ref: './Link.yaml'
+            description: The URL to get the space for this process
+          stats:
+            $ref: './Link.yaml'
+            description: The URL to get the stats for this process
+description: 'A process defines the runnable units of an app'

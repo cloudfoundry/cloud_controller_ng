@@ -1,0 +1,62 @@
+description: Organization quota object that needs to be updated
+required: true
+content:
+  application/json:
+    schema:
+      type: object
+      properties:
+        name:
+          type: string
+          description: Name of the quota
+        apps:
+          type: object
+          description: Quotas that affect applications and application sub-resources
+          properties:
+            per_process_memory_in_mb:
+              type: [integer, "null"]
+              description: Maximum memory for a single process or task
+            total_memory_in_mb:
+              type: [integer, "null"]
+              description: Total memory allowed for all the started processes and running tasks in an organization
+            total_instances:
+              type: [integer, "null"]
+              description: Total instances of all the started processes allowed in an organization
+            log_rate_limit_in_bytes_per_second:
+              type: [integer, "null"]
+              description: Total log rate limit allowed for all the started processes and running tasks in an organization
+            per_app_tasks:
+              type: [integer, "null"]
+              description: Maximum number of running tasks in an organization
+        services:
+          type: object
+          description: Quotas that affect services
+          properties:
+            paid_services_allowed:
+              type: boolean
+              description: Specifies whether instances of paid service plans can be created
+            total_service_instances:
+              type: [integer, "null"]
+              description: Total number of service instances allowed in an organization
+            total_service_keys:
+              type: [integer, "null"]
+              description: Total number of service keys allowed in an organization
+        routes:
+          type: object
+          description: Quotas that affect routes
+          properties:
+            total_routes:
+              type: [integer, "null"]
+              description: Total number of routes allowed in an organization
+            total_reserved_ports:
+              type: [integer, "null"]
+              description: Total number of ports that are reservable by routes in an organization
+        domains:
+          type: object
+          description: Quotas that affect domains
+          properties:
+            total_domains:
+              type: [integer, "null"]
+              description: Total number of domains that can be scoped to an organization
+        metadata:
+          $ref: '../schemas/Metadata.yaml'
+      description: Request schema for updating an organization quota
