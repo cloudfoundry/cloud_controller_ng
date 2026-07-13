@@ -426,6 +426,14 @@ RSpec.describe 'Route Destinations Request' do
             expect(last_response.status).to eq(422)
             expect(last_response).to have_error_message("Routes destinations must be in either the route's space or the route's shared spaces")
           end
+
+          it 'returns 422 even when the user has space_developer in both the route space and the app space' do
+            # Having write access to both spaces is not enough — the route must be explicitly shared
+            set_current_user_as_role(user: user, role: 'space_developer', org: space.organization, space: space)
+            post "/v3/routes/#{route.guid}/destinations", params.to_json, user_header
+            expect(last_response.status).to eq(422)
+            expect(last_response).to have_error_message("Routes destinations must be in either the route's space or the route's shared spaces")
+          end
         end
 
         context 'when the app does not exist' do
@@ -582,6 +590,34 @@ RSpec.describe 'Route Destinations Request' do
           expect(last_response).to have_error_message('Destinations cannot be inserted when there are weighted destinations already configured.')
         end
       end
+    end
+
+    context "when the app is in the route's shared space" do
+      let(:shared_app_space) { create(:space) }
+      let(:shared_app) { create(:app_model, space: shared_app_space) }
+      let(:api_call) do
+        ->(user_headers) do
+          params = { destinations: [{ app: { guid: shared_app.guid, process: { type: 'web' } } }] }
+          post "/v3/routes/#{route.guid}/destinations", params.to_json, user_headers
+        end
+      end
+      let(:expected_codes_and_responses) do
+        h = Hash.new({ code: 403, errors: CF_NOT_AUTHORIZED }.freeze)
+        h['admin'] = { code: 200 }
+        h['space_developer'] = { code: 200 }
+        h['space_supporter'] = { code: 200 }
+        h['org_billing_manager'] = { code: 404 }
+        h['no_role'] = { code: 404 }
+        h
+      end
+
+      before do
+        route.add_shared_space shared_app_space
+        shared_app_space.organization.add_user(user)
+        shared_app_space.add_developer(user)
+      end
+
+      it_behaves_like 'permissions for single object endpoint', ALL_PERMISSIONS
     end
   end
 
@@ -1175,32 +1211,31 @@ RSpec.describe 'Route Destinations Request' do
     end
 
     context "when the app is in the route's shared space" do
-      let(:app_model) { create(:app_model) }
-      let(:params) do
-        {
-          destinations: [
-            {
-              app: {
-                guid: app_model.guid,
-                process: {
-                  type: 'web'
-                }
-              }
-            }
-          ]
-        }
+      let(:shared_app_space) { create(:space) }
+      let(:shared_app) { create(:app_model, space: shared_app_space) }
+      let(:api_call) do
+        ->(user_headers) do
+          params = { destinations: [{ app: { guid: shared_app.guid, process: { type: 'web' } } }] }
+          patch "/v3/routes/#{route.guid}/destinations", params.to_json, user_headers
+        end
+      end
+      let(:expected_codes_and_responses) do
+        h = Hash.new({ code: 403, errors: CF_NOT_AUTHORIZED }.freeze)
+        h['admin'] = { code: 200 }
+        h['space_developer'] = { code: 200 }
+        h['space_supporter'] = { code: 200 }
+        h['org_billing_manager'] = { code: 404 }
+        h['no_role'] = { code: 404 }
+        h
       end
 
       before do
-        route.add_shared_space app_model.space
-        set_current_user_as_role(user: user, role: 'space_developer', org: space.organization, space: space)
-        set_current_user_as_role(user: user, role: 'space_developer', org: app_model.space.organization, space: app_model.space)
+        route.add_shared_space shared_app_space
+        shared_app_space.organization.add_user(user)
+        shared_app_space.add_developer(user)
       end
 
-      it 'succeeds' do
-        patch "/v3/routes/#{route.guid}/destinations", params.to_json, user_header
-        expect(last_response.status).to eq(200)
-      end
+      it_behaves_like 'permissions for single object endpoint', ALL_PERMISSIONS
     end
   end
 
@@ -1296,6 +1331,29 @@ RSpec.describe 'Route Destinations Request' do
         expect(last_response).to have_error_message('Unable to unmap route from destination. Ensure the route has a destination with this guid.')
         expect(other_destination.reload.protocol).not_to eq('http2')
       end
+    end
+
+    context "when the destination app is in the route's shared space" do
+      let(:shared_app_space) { create(:space) }
+      let(:shared_app) { create(:app_model, space: shared_app_space) }
+      let!(:shared_destination) do
+        create(:route_mapping_model, app: shared_app, route: route, process_type: 'web',
+                                     app_port: VCAP::CloudController::ProcessModel::DEFAULT_HTTP_PORT, weight: nil)
+      end
+      let(:api_call) { ->(user_headers) { patch "/v3/routes/#{route.guid}/destinations/#{shared_destination.guid}", { protocol: 'http1' }.to_json, user_headers } }
+      let(:expected_codes_and_responses) do
+        h = Hash.new({ code: 403, errors: CF_NOT_AUTHORIZED }.freeze)
+        h['admin'] = { code: 200 }
+        h['space_developer'] = { code: 200 }
+        h['space_supporter'] = { code: 200 }
+        h['org_billing_manager'] = { code: 404 }
+        h['no_role'] = { code: 404 }
+        h
+      end
+
+      before { route.add_shared_space shared_app_space }
+
+      it_behaves_like 'permissions for single object endpoint', ALL_PERMISSIONS
     end
 
     context 'when the route has a protocol of tcp' do
@@ -1456,6 +1514,30 @@ RSpec.describe 'Route Destinations Request' do
         expect(last_response).to have_error_message('Unable to unmap route from destination. Ensure the route has a destination with this guid.')
         expect { other_destination.reload }.not_to raise_error
       end
+    end
+
+    context "when the destination app is in the route's shared space" do
+      let(:shared_app_space) { create(:space) }
+      let(:shared_app) { create(:app_model, space: shared_app_space) }
+      let!(:shared_destination) do
+        create(:route_mapping_model, app: shared_app, route: route, process_type: 'web',
+                                     app_port: VCAP::CloudController::ProcessModel::DEFAULT_HTTP_PORT, weight: nil)
+      end
+      let(:api_call) { ->(user_headers) { delete "/v3/routes/#{route.guid}/destinations/#{shared_destination.guid}", nil, user_headers } }
+      let(:db_check) { -> {} }
+      let(:expected_codes_and_responses) do
+        h = Hash.new({ code: 403, errors: CF_NOT_AUTHORIZED }.freeze)
+        h['admin'] = { code: 204 }
+        h['space_developer'] = { code: 204 }
+        h['space_supporter'] = { code: 204 }
+        h['org_billing_manager'] = { code: 404 }
+        h['no_role'] = { code: 404 }
+        h
+      end
+
+      before { route.add_shared_space shared_app_space }
+
+      it_behaves_like 'permissions for delete endpoint', ALL_PERMISSIONS
     end
 
     context 'when there is an existing weighted destination' do
