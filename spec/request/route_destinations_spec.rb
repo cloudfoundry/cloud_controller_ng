@@ -596,7 +596,7 @@ RSpec.describe 'Route Destinations Request' do
       let(:shared_app_space) { create(:space) }
       let(:shared_app) { create(:app_model, space: shared_app_space) }
       let(:api_call) do
-        ->(user_headers) do
+        lambda do |user_headers|
           params = { destinations: [{ app: { guid: shared_app.guid, process: { type: 'web' } } }] }
           post "/v3/routes/#{route.guid}/destinations", params.to_json, user_headers
         end
@@ -615,6 +615,41 @@ RSpec.describe 'Route Destinations Request' do
         route.add_shared_space shared_app_space
         shared_app_space.organization.add_user(user)
         shared_app_space.add_developer(user)
+      end
+
+      it_behaves_like 'permissions for single object endpoint', ALL_PERMISSIONS
+    end
+
+    context "when the app is in the route's shared space - roles in the shared space" do
+      let(:route_space) { create(:space) }
+      let(:route) { create(:route, space: route_space) }
+      let(:shared_app_space) { create(:space) }
+      let(:org) { shared_app_space.organization }
+      let(:space) { shared_app_space }
+      let(:shared_app) { create(:app_model, space: shared_app_space) }
+      let(:api_call) do
+        lambda do |user_headers|
+          params = { destinations: [{ app: { guid: shared_app.guid, process: { type: 'web' } } }] }
+          post "/v3/routes/#{route.guid}/destinations", params.to_json, user_headers
+        end
+      end
+      let(:expected_codes_and_responses) do
+        h = Hash.new({ code: 422 }.freeze)
+        h['admin'] = { code: 200 }
+        h['space_developer'] = { code: 200 }
+        h['space_manager'] = { code: 200 }
+        h['space_auditor'] = { code: 200 }
+        h['space_supporter'] = { code: 200 }
+        h['org_manager'] = { code: 200 }
+        h['admin_read_only'] = { code: 200 }
+        h['global_auditor'] = { code: 200 }
+        h
+      end
+
+      before do
+        route.add_shared_space shared_app_space
+        route_space.organization.add_user(user)
+        route_space.add_developer(user)
       end
 
       it_behaves_like 'permissions for single object endpoint', ALL_PERMISSIONS
@@ -1214,7 +1249,7 @@ RSpec.describe 'Route Destinations Request' do
       let(:shared_app_space) { create(:space) }
       let(:shared_app) { create(:app_model, space: shared_app_space) }
       let(:api_call) do
-        ->(user_headers) do
+        lambda do |user_headers|
           params = { destinations: [{ app: { guid: shared_app.guid, process: { type: 'web' } } }] }
           patch "/v3/routes/#{route.guid}/destinations", params.to_json, user_headers
         end
@@ -1233,6 +1268,41 @@ RSpec.describe 'Route Destinations Request' do
         route.add_shared_space shared_app_space
         shared_app_space.organization.add_user(user)
         shared_app_space.add_developer(user)
+      end
+
+      it_behaves_like 'permissions for single object endpoint', ALL_PERMISSIONS
+    end
+
+    context "when the app is in the route's shared space - roles in the shared space" do
+      let(:route_space) { create(:space) }
+      let(:route) { create(:route, space: route_space) }
+      let(:shared_app_space) { create(:space) }
+      let(:org) { shared_app_space.organization }
+      let(:space) { shared_app_space }
+      let(:shared_app) { create(:app_model, space: shared_app_space) }
+      let(:api_call) do
+        lambda do |user_headers|
+          params = { destinations: [{ app: { guid: shared_app.guid, process: { type: 'web' } } }] }
+          patch "/v3/routes/#{route.guid}/destinations", params.to_json, user_headers
+        end
+      end
+      let(:expected_codes_and_responses) do
+        h = Hash.new({ code: 422 }.freeze)
+        h['admin'] = { code: 200 }
+        h['space_developer'] = { code: 200 }
+        h['space_manager'] = { code: 200 }
+        h['space_auditor'] = { code: 200 }
+        h['space_supporter'] = { code: 200 }
+        h['org_manager'] = { code: 200 }
+        h['admin_read_only'] = { code: 200 }
+        h['global_auditor'] = { code: 200 }
+        h
+      end
+
+      before do
+        route.add_shared_space shared_app_space
+        route_space.organization.add_user(user)
+        route_space.add_developer(user)
       end
 
       it_behaves_like 'permissions for single object endpoint', ALL_PERMISSIONS
@@ -1352,6 +1422,32 @@ RSpec.describe 'Route Destinations Request' do
       end
 
       before { route.add_shared_space shared_app_space }
+
+      it_behaves_like 'permissions for single object endpoint', ALL_PERMISSIONS
+    end
+
+    context "when the destination app is in the route's shared space - roles in the shared space" do
+      let(:route_space) { create(:space) }
+      let(:route) { create(:route, space: route_space) }
+      let(:shared_app_space) { create(:space) }
+      let(:org) { shared_app_space.organization }
+      let(:space) { shared_app_space }
+      let(:shared_app) { create(:app_model, space: shared_app_space) }
+      let!(:shared_destination) do
+        create(:route_mapping_model, app: shared_app, route: route, process_type: 'web',
+                                     app_port: VCAP::CloudController::ProcessModel::DEFAULT_HTTP_PORT, weight: nil)
+      end
+      let(:api_call) { ->(user_headers) { patch "/v3/routes/#{route.guid}/destinations/#{shared_destination.guid}", { protocol: 'http1' }.to_json, user_headers } }
+      let(:expected_codes_and_responses) do
+        h = Hash.new({ code: 200 }.freeze)
+        h
+      end
+
+      before do
+        route.add_shared_space shared_app_space
+        route_space.organization.add_user(user)
+        route_space.add_developer(user)
+      end
 
       it_behaves_like 'permissions for single object endpoint', ALL_PERMISSIONS
     end
@@ -1536,6 +1632,33 @@ RSpec.describe 'Route Destinations Request' do
       end
 
       before { route.add_shared_space shared_app_space }
+
+      it_behaves_like 'permissions for delete endpoint', ALL_PERMISSIONS
+    end
+
+    context "when the destination app is in the route's shared space - roles in the shared space" do
+      let(:route_space) { create(:space) }
+      let(:route) { create(:route, space: route_space) }
+      let(:shared_app_space) { create(:space) }
+      let(:org) { shared_app_space.organization }
+      let(:space) { shared_app_space }
+      let(:shared_app) { create(:app_model, space: shared_app_space) }
+      let!(:shared_destination) do
+        create(:route_mapping_model, app: shared_app, route: route, process_type: 'web',
+                                     app_port: VCAP::CloudController::ProcessModel::DEFAULT_HTTP_PORT, weight: nil)
+      end
+      let(:api_call) { ->(user_headers) { delete "/v3/routes/#{route.guid}/destinations/#{shared_destination.guid}", nil, user_headers } }
+      let(:db_check) { -> {} }
+      let(:expected_codes_and_responses) do
+        h = Hash.new({ code: 204 }.freeze)
+        h
+      end
+
+      before do
+        route.add_shared_space shared_app_space
+        route_space.organization.add_user(user)
+        route_space.add_developer(user)
+      end
 
       it_behaves_like 'permissions for delete endpoint', ALL_PERMISSIONS
     end
