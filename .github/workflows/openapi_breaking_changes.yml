@@ -1,8 +1,12 @@
 name: OpenAPI Breaking Changes
+
 on:
   pull_request:
     branches:
       - main
+    paths:
+      - 'docs/openapi/**'
+      - '.github/workflows/openapi_breaking_changes.yml'
 
 concurrency:
   group: ${{ github.workflow }}-${{ github.event.pull_request.number || github.ref }}
@@ -16,13 +20,12 @@ jobs:
     runs-on: ubuntu-latest
     timeout-minutes: 10
     steps:
-      # 1. Checkout Branches
       - name: Checkout PR
         uses: actions/checkout@v4
         with:
           path: pr
           persist-credentials: false
-          
+
       - name: Checkout Base Branch
         uses: actions/checkout@v4
         with:
@@ -36,27 +39,24 @@ jobs:
           node-version: 22
           cache: 'yarn'
           cache-dependency-path: |
-            pr/yarn.lock
-            base/yarn.lock
+            pr/docs/openapi/yarn.lock
+            base/docs/openapi/yarn.lock
 
-      # 2. Build Specs
       - name: Build PR Spec
-        working-directory: pr
-        run: |
-          yarn install --frozen-lockfile --ignore-scripts
-          yarn build
-          
-      - name: Build Base Spec
-        working-directory: base
+        working-directory: pr/docs/openapi
         run: |
           yarn install --frozen-lockfile --ignore-scripts
           yarn build
 
-      # 3. Compare with oasdiff
+      - name: Build Base Spec
+        working-directory: base/docs/openapi
+        run: |
+          yarn install --frozen-lockfile --ignore-scripts
+          yarn build
+
       - name: Check for Breaking Changes
         uses: oasdiff/oasdiff-action/breaking@v0.0.37
         with:
-          base: 'base/dist/latest/openapi.yaml'
-          revision: 'pr/dist/latest/openapi.yaml'
+          base: 'base/docs/openapi/dist/latest/openapi.yaml'
+          revision: 'pr/docs/openapi/dist/latest/openapi.yaml'
           fail-on: 'ERR'
-

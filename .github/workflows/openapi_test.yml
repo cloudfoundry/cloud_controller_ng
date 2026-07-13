@@ -1,9 +1,12 @@
-name: Test CF API V3 Documentation
+name: OpenAPI Docs Test
+
 on:
-  pull_request:
-    branches:
-      - main
   workflow_dispatch:
+  pull_request:
+    branches: [ main ]
+    paths:
+      - 'docs/openapi/**'
+      - '.github/workflows/openapi_test.yml'
 
 concurrency:
   group: '${{ github.workflow }}-${{ github.head_ref || github.run_id }}'
@@ -15,6 +18,9 @@ jobs:
     runs-on: ubuntu-latest
     container:
       image: node:24-alpine
+    defaults:
+      run:
+        working-directory: docs/openapi
     steps:
       - name: Checkout
         uses: actions/checkout@v4

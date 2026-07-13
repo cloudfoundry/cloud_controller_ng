@@ -1,8 +1,12 @@
-name: Deploy CF API V3 Documentation
+name: Deploy CF API V3 OpenAPI Documentation
+
 on:
   push:
     branches:
       - main
+    paths:
+      - 'docs/openapi/**'
+      - '.github/workflows/openapi_deploy.yml'
   workflow_dispatch:
 
 jobs:
@@ -11,10 +15,13 @@ jobs:
     runs-on: ubuntu-latest
     container:
       image: node:24-alpine
+    defaults:
+      run:
+        working-directory: docs/openapi
     permissions:
       contents: write
       id-token: write
-      pages: write 
+      pages: write
     steps:
       - name: Checkout
         uses: actions/checkout@v4
@@ -28,7 +35,7 @@ jobs:
       - name: Upload artifact
         uses: actions/upload-pages-artifact@v3
         with:
-          path: 'dist'
+          path: 'docs/openapi/dist'
       - name: Deploy to GitHub Pages
         id: deployment
         uses: actions/deploy-pages@v4
