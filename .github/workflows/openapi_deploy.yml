@@ -11,31 +11,45 @@ on:
 
 jobs:
   deploy:
-    name: Deploy
+    name: Build and publish to gh-pages
     runs-on: ubuntu-latest
     container:
       image: node:24-alpine
-    defaults:
-      run:
-        working-directory: docs/openapi
     permissions:
       contents: write
-      id-token: write
-      pages: write
     steps:
-      - name: Checkout
+      - name: Checkout main
         uses: actions/checkout@v4
+        with:
+          path: main
+
       - name: Setup
+        working-directory: main/docs/openapi
         run: |
           apk add python3 make g++ git tar
           yarn install
+
       - name: Build
-        run: |
-          yarn build
-      - name: Upload artifact
-        uses: actions/upload-pages-artifact@v3
+        working-directory: main/docs/openapi
+        run: yarn build
+
+      - name: Checkout gh-pages
+        uses: actions/checkout@v4
         with:
-          path: 'docs/openapi/dist'
-      - name: Deploy to GitHub Pages
-        id: deployment
-        uses: actions/deploy-pages@v4
+          ref: gh-pages
+          path: gh-pages
+
+      - name: Sync built docs into gh-pages/openapi
+        run: |
+          rm -rf gh-pages/openapi
+          mkdir -p gh-pages/openapi
+          cp -r main/docs/openapi/dist/. gh-pages/openapi/
+
+      - name: Commit and push
+        working-directory: gh-pages
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "github-actions[bot]@users.noreply.github.com"
+          git add openapi
+          git diff --cached --quiet && echo "No changes to publish" || \
+            (git commit -m "Update openapi docs from ${GITHUB_SHA}" && git push)
