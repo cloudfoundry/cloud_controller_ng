@@ -9,7 +9,7 @@ module VCAP::CloudController
     let(:fake_req) { '' }
     let(:dependencies) do
       {
-        statsd_client: double(Statsd)
+        statsd_client: double(StatsD::Instrument::Client)
       }
     end
 

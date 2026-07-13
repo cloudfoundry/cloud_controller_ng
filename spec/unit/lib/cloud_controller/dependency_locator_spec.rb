@@ -479,11 +479,13 @@ RSpec.describe CloudController::DependencyLocator do
         statsd_port: port
       )
 
-      expected_client = double(Statsd)
+      sink = instance_double(StatsD::Instrument::Sink)
+      expected_client = instance_double(StatsD::Instrument::Client)
 
-      allow(Statsd).to receive(:new).with(host, port).
-        and_return(expected_client)
+      allow(StatsD::Instrument::Sink).to receive(:for_addr).with("#{host}:#{port}").and_return(sink)
+      allow(StatsD::Instrument::Client).to receive(:new).with(sink: sink).and_return(expected_client)
 
+      locator.instance_variable_set(:@statsd_sinks, nil)
       expect(locator.statsd_client).to eq(expected_client)
     end
 
@@ -510,11 +512,13 @@ RSpec.describe CloudController::DependencyLocator do
         enable_statsd_metrics: nil
       )
 
-      expected_client = double(Statsd)
+      sink = instance_double(StatsD::Instrument::Sink)
+      expected_client = instance_double(StatsD::Instrument::Client)
 
-      allow(Statsd).to receive(:new).with(host, port).
-        and_return(expected_client)
+      allow(StatsD::Instrument::Sink).to receive(:for_addr).with("#{host}:#{port}").and_return(sink)
+      allow(StatsD::Instrument::Client).to receive(:new).with(sink: sink).and_return(expected_client)
 
+      locator.instance_variable_set(:@statsd_sinks, nil)
       expect(locator.statsd_client).to eq(expected_client)
     end
   end

@@ -24,6 +24,7 @@ require 'cloud_controller/resource_pool_wrapper'
 require 'cloud_controller/packager/local_bits_packer'
 require 'credhub/client'
 require 'cloud_controller/metrics/prometheus_updater'
+require 'statsd/instrument'
 require 'cloud_controller/execution_context'
 
 module CloudController
@@ -367,8 +368,7 @@ module CloudController
       if @dependencies[:statsd_client]
         @dependencies[:statsd_client]
       elsif config.get(:enable_statsd_metrics) == true || config.get(:enable_statsd_metrics).nil?
-        Statsd.logger = Steno.logger('statsd.client')
-        register(:statsd_client, Statsd.new(config.get(:statsd_host), config.get(:statsd_port)))
+        register(:statsd_client, StatsD::Instrument::Client.new(sink: statsd_sink))
       else
         register(:statsd_client, NullStatsdClient.new)
       end
@@ -377,6 +377,14 @@ module CloudController
     end
 
     private
+
+    # Memoized per address so one long-lived UDP socket serves the process; statsd-instrument
+    # pins its socket in a thread-local store and never reclaims it, so a fresh sink per call would leak one.
+    def statsd_sink
+      addr = "#{config.get(:statsd_host)}:#{config.get(:statsd_port)}"
+      @statsd_sinks ||= {}
+      @statsd_sinks[addr] ||= StatsD::Instrument::Sink.for_addr(addr)
+    end
 
     def build_stager_client
       build_bbs_stager_client
@@ -464,19 +472,15 @@ module CloudController
   end
 
   class NullStatsdClient
-    def timing(_key, _value)
+    def gauge(_stat, _value, *)
       # Null implementation
     end
 
-    def increment(_key)
+    def increment(_stat, _value=1, *)
       # Null implementation
     end
 
-    def gauge(_stat, _value, _sample_rate=1)
-      # Null implementation
-    end
-
-    def batch
+    def measure(_stat, _value=nil, *)
       # Null implementation
     end
   end

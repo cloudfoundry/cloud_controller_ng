@@ -1,6 +1,6 @@
 require 'cloud_controller/diego/processes_sync'
 require 'cloud_controller/diego/tasks_sync'
-require 'statsd'
+require 'statsd/instrument'
 
 module VCAP::CloudController
   module Jobs
@@ -25,7 +25,7 @@ module VCAP::CloudController
             ##       so feed in the entire value!
             elapsed_ms = ((finish - start) * 1000).round
 
-            @statsd.timing('cc.diego_sync.duration', elapsed_ms)
+            @statsd.measure('cc.diego_sync.duration', elapsed_ms)
           end
         end
 

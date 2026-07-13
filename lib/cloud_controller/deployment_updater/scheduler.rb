@@ -57,7 +57,7 @@ module VCAP::CloudController
           ##       milliseconds, then do know that the lack of precision here is not desired
           ##       so feed in the entire value!
           update_duration_ms = update_duration * 1000
-          statsd_client.timing('cc.deployments.update.duration', update_duration_ms)
+          statsd_client.measure('cc.deployments.update.duration', update_duration_ms)
 
           logger.info("Update loop took #{update_duration}s")
 

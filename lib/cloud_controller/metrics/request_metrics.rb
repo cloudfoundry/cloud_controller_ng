@@ -1,4 +1,4 @@
-require 'statsd'
+require 'statsd/instrument'
 
 module VCAP::CloudController
   module Metrics

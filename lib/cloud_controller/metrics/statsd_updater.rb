@@ -1,4 +1,4 @@
-require 'statsd'
+require 'statsd/instrument'
 
 module VCAP::CloudController::Metrics
   class StatsdUpdater
@@ -16,64 +16,50 @@ module VCAP::CloudController::Metrics
     end
 
     def update_job_queue_length(pending_job_count_by_queue, total)
-      @statsd.batch do |batch|
-        pending_job_count_by_queue.each do |key, value|
-          batch.gauge("cc.job_queue_length.#{key}", value)
-        end
-        batch.gauge('cc.job_queue_length.total', total)
+      pending_job_count_by_queue.each do |key, value|
+        @statsd.gauge("cc.job_queue_length.#{key}", value)
       end
+      @statsd.gauge('cc.job_queue_length.total', total)
     end
 
     def update_job_queue_load(pending_job_load_by_queue, total)
-      @statsd.batch do |batch|
-        pending_job_load_by_queue.each do |key, value|
-          batch.gauge("cc.job_queue_load.#{key}", value)
-        end
-        batch.gauge('cc.job_queue_load.total', total)
+      pending_job_load_by_queue.each do |key, value|
+        @statsd.gauge("cc.job_queue_load.#{key}", value)
       end
+      @statsd.gauge('cc.job_queue_load.total', total)
     end
 
     def update_thread_info_thin(thread_info)
-      @statsd.batch do |batch|
-        batch.gauge('cc.thread_info.thread_count', thread_info[:thread_count])
-        batch.gauge('cc.thread_info.event_machine.connection_count', thread_info[:event_machine][:connection_count])
-        batch.gauge('cc.thread_info.event_machine.threadqueue.size', thread_info[:event_machine][:threadqueue][:size])
-        batch.gauge('cc.thread_info.event_machine.threadqueue.num_waiting', thread_info[:event_machine][:threadqueue][:num_waiting])
-        batch.gauge('cc.thread_info.event_machine.resultqueue.size', thread_info[:event_machine][:resultqueue][:size])
-        batch.gauge('cc.thread_info.event_machine.resultqueue.num_waiting', thread_info[:event_machine][:resultqueue][:num_waiting])
-      end
+      @statsd.gauge('cc.thread_info.thread_count', thread_info[:thread_count])
+      @statsd.gauge('cc.thread_info.event_machine.connection_count', thread_info[:event_machine][:connection_count])
+      @statsd.gauge('cc.thread_info.event_machine.threadqueue.size', thread_info[:event_machine][:threadqueue][:size])
+      @statsd.gauge('cc.thread_info.event_machine.threadqueue.num_waiting', thread_info[:event_machine][:threadqueue][:num_waiting])
+      @statsd.gauge('cc.thread_info.event_machine.resultqueue.size', thread_info[:event_machine][:resultqueue][:size])
+      @statsd.gauge('cc.thread_info.event_machine.resultqueue.num_waiting', thread_info[:event_machine][:resultqueue][:num_waiting])
     end
 
     def update_failed_job_count(failed_jobs_by_queue, total)
-      @statsd.batch do |batch|
-        failed_jobs_by_queue.each do |key, value|
-          batch.gauge("cc.failed_job_count.#{key}", value)
-        end
-        batch.gauge('cc.failed_job_count.total', total)
+      failed_jobs_by_queue.each do |key, value|
+        @statsd.gauge("cc.failed_job_count.#{key}", value)
       end
+      @statsd.gauge('cc.failed_job_count.total', total)
     end
 
     def update_vitals(vitals)
-      @statsd.batch do |batch|
-        vitals.each do |key, val|
-          batch.gauge("cc.vitals.#{key}", val)
-        end
+      vitals.each do |key, val|
+        @statsd.gauge("cc.vitals.#{key}", val)
       end
     end
 
     def update_log_counts(counts)
-      @statsd.batch do |batch|
-        counts.each do |key, val|
-          batch.gauge("cc.log_count.#{key}", val)
-        end
+      counts.each do |key, val|
+        @statsd.gauge("cc.log_count.#{key}", val)
       end
     end
 
     def update_task_stats(total_running_tasks, total_memory_in_mb)
-      @statsd.batch do |batch|
-        batch.gauge('cc.tasks_running.count', total_running_tasks)
-        batch.gauge('cc.tasks_running.memory_in_mb', total_memory_in_mb)
-      end
+      @statsd.gauge('cc.tasks_running.count', total_running_tasks)
+      @statsd.gauge('cc.tasks_running.memory_in_mb', total_memory_in_mb)
     end
 
     def update_synced_invalid_lrps(lrp_count)
@@ -86,12 +72,12 @@ module VCAP::CloudController::Metrics
 
     def report_staging_success_metrics(duration_ns)
       @statsd.increment('cc.staging.succeeded')
-      @statsd.timing('cc.staging.succeeded_duration', nanoseconds_to_milliseconds(duration_ns))
+      @statsd.measure('cc.staging.succeeded_duration', nanoseconds_to_milliseconds(duration_ns))
     end
 
     def report_staging_failure_metrics(duration_ns)
       @statsd.increment('cc.staging.failed')
-      @statsd.timing('cc.staging.failed_duration', nanoseconds_to_milliseconds(duration_ns))
+      @statsd.measure('cc.staging.failed_duration', nanoseconds_to_milliseconds(duration_ns))
     end
 
     def start_request
@@ -103,11 +89,9 @@ module VCAP::CloudController::Metrics
       http_status_code = "#{status.to_s[0]}XX"
       http_status_metric = "cc.http_status.#{http_status_code}"
       @statsd.gauge('cc.requests.outstanding.gauge', store.decrement_request_outstanding_gauge)
-      @statsd.batch do |batch|
-        batch.decrement 'cc.requests.outstanding'
-        batch.increment 'cc.requests.completed'
-        batch.increment http_status_metric
-      end
+      @statsd.increment('cc.requests.outstanding', -1)
+      @statsd.increment('cc.requests.completed')
+      @statsd.increment(http_status_metric)
     end
 
     private

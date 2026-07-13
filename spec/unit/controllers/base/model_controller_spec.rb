@@ -8,7 +8,7 @@ module VCAP::CloudController
       {
         object_renderer: nil,
         collection_renderer: nil,
-        statsd_client: double(Statsd)
+        statsd_client: double(StatsD::Instrument::Client)
       }
     end
     let(:config) { double(Config, get: nil) }
