@@ -39,6 +39,7 @@ namespace :jobs do
 
   desc 'Start a delayed_job worker.'
   task :generic, %i[name num_threads thread_grace_period_seconds] => :environment do |_t, args|
+    require 'cloud_controller/clock/scheduler'
     puts RUBY_DESCRIPTION
     args.with_defaults(name: ENV.fetch('HOSTNAME', nil))
     args.with_defaults(num_threads: nil)
@@ -46,25 +47,7 @@ namespace :jobs do
 
     queues = [
       VCAP::CloudController::Jobs::Queues.generic,
-      'app_usage_events',
-      'audit_events',
-      'failed_jobs',
-      'service_operations_initial_cleanup',
-      'service_operations_create_in_progress_cleanup',
-      'service_usage_events',
-      'completed_tasks',
-      'expired_blob_cleanup',
-      'expired_resource_cleanup',
-      'expired_orphaned_blob_cleanup',
-      'orphaned_blobs_cleanup',
-      'pollable_job_cleanup',
-      'pending_droplets',
-      'pending_builds',
-      'prune_completed_deployments',
-      'prune_completed_builds',
-      'prune_excess_app_revisions',
-      # One-off backfill - to be removed in a future version.
-      'lifecycle_type_backfill'
+      *VCAP::CloudController::Scheduler.queue_names
     ]
 
     require 'cloud_controller/metrics/custom_process_id'
