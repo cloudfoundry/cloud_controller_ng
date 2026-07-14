@@ -1,8 +1,6 @@
 require 'spec_helper'
 require 'webrick'
 require_relative '../client_shared'
-require 'fog/aws/models/storage/files'
-require 'fog/aws/models/storage/directories'
 
 module CloudController
   module Blobstore
@@ -12,9 +10,7 @@ module CloudController
       let(:local_dir) { Dir.mktmpdir }
       let(:connection_config) do
         {
-          provider: 'AWS',
-          aws_access_key_id: 'fake_access_key_id',
-          aws_secret_access_key: 'fake_secret_access_key'
+          provider: 'local'
         }
       end
 
@@ -341,48 +337,6 @@ module CloudController
             before do
               allow_any_instance_of(FogClient).to receive(:files).and_return(files)
             end
-
-            context 'aws' do
-              context 'when encryption type is specified' do
-                let(:client_with_encryption) do
-                  FogClient.new(connection_config: connection_config,
-                                directory_key: directory_key,
-                                aws_storage_options: { encryption: 'my-algo' })
-                end
-
-                it 'passes the encryption options to aws' do
-                  path = File.join(local_dir, 'empty_file.png')
-                  FileUtils.touch(path)
-
-                  client_with_encryption.cp_to_blobstore(path, 'abcdef123456')
-
-                  expect(files).to have_received(:create).with(key: anything,
-                                                               body: anything,
-                                                               content_type: anything,
-                                                               public: anything,
-                                                               'x-amz-server-side-encryption' => 'my-algo')
-                end
-              end
-
-              context 'when encryption type is not specified' do
-                let(:client_with_encryption) do
-                  FogClient.new(connection_config:,
-                                directory_key:)
-                end
-
-                it 'does not pass the encryption options to aws' do
-                  path = File.join(local_dir, 'empty_file.png')
-                  FileUtils.touch(path)
-
-                  client_with_encryption.cp_to_blobstore(path, 'abcdef123456')
-
-                  expect(files).to have_received(:create).with(key: anything,
-                                                               body: anything,
-                                                               content_type: anything,
-                                                               public: anything)
-                end
-              end
-            end
           end
         end
 
@@ -428,38 +382,6 @@ module CloudController
             end
           end
 
-          context 'encryption' do
-            let(:encryption) { 'my-algo' }
-            let(:client) do
-              FogClient.new(connection_config: connection_config,
-                            directory_key: directory_key,
-                            aws_storage_options: { encryption: encryption, other: 'thing' })
-            end
-            let(:dest_file) { double(:file, copy: true, save: true, nil?: false) }
-            let(:src_file) { double(:file, copy: true, nil?: false) }
-
-            before do
-              allow_any_instance_of(FogClient).to receive(:file).with(src_key).and_return(src_file)
-              allow_any_instance_of(FogClient).to receive(:file).with(dest_key).and_return(dest_file)
-            end
-
-            context 'when encryption type is specified' do
-              it 'passes the encryption options to aws' do
-                client.cp_file_between_keys(src_key, dest_key)
-                options = { 'x-amz-server-side-encryption' => 'my-algo', other: 'thing' }
-                expect(src_file).to have_received(:copy).with('a-directory-key', 'xy/z7/xyz789', options)
-              end
-            end
-
-            context 'when encryption type is not specified' do
-              let(:encryption) { nil }
-
-              it 'does not pass the encryption options to aws' do
-                client.cp_file_between_keys(src_key, dest_key)
-                expect(src_file).to have_received(:copy).with('a-directory-key', 'xy/z7/xyz789', {})
-              end
-            end
-          end
         end
 
         describe '#delete_all' do
@@ -489,44 +411,6 @@ module CloudController
             expect do
               client.delete_all
             end.not_to raise_error
-          end
-
-          context 'when the underlying blobstore allows multiple deletes in a single request' do
-            let(:connection_config) do
-              {
-                provider: 'AWS',
-                aws_access_key_id: 'fake_access_key_id',
-                aws_secret_access_key: 'fake_secret_access_key'
-              }
-            end
-
-            it 'is ok if there are no files' do
-              expect(directory.files).to have(0).items
-              expect do
-                client.delete_all
-              end.not_to raise_error
-            end
-
-            it 'deletes in groups of the page_size' do
-              connection = client.send(:connection)
-              allow(connection).to receive(:delete_multiple_objects)
-
-              file = File.join(local_dir, 'empty_file')
-              FileUtils.touch(file)
-
-              client.cp_to_blobstore(file, 'abcdef1')
-              client.cp_to_blobstore(file, 'abcdef2')
-              client.cp_to_blobstore(file, 'abcdef3')
-              expect(client).to exist('abcdef1')
-              expect(client).to exist('abcdef2')
-              expect(client).to exist('abcdef3')
-
-              page_size = 2
-              client.delete_all(page_size)
-
-              expect(connection).to have_received(:delete_multiple_objects).with(directory_key, ['ab/cd/abcdef1', 'ab/cd/abcdef2'])
-              expect(connection).to have_received(:delete_multiple_objects).with(directory_key, ['ab/cd/abcdef3'])
-            end
           end
 
           context 'when a root dir is provided' do
@@ -596,24 +480,6 @@ module CloudController
             expect do
               client.delete_all_in_path('nonsense_path')
             end.not_to raise_error
-          end
-
-          context 'when the underlying blobstore allows multiple deletes in a single request' do
-            let(:connection_config) do
-              {
-                provider: 'AWS',
-                aws_access_key_id: 'fake_access_key_id',
-                aws_secret_access_key: 'fake_secret_access_key'
-              }
-            end
-
-            it 'is ok if there are no files' do
-              Fog.mock!
-              expect(directory.files).to have(0).items
-              expect do
-                client.delete_all_in_path('path!')
-              end.not_to raise_error
-            end
           end
 
           context 'when a root dir is provided' do
@@ -704,21 +570,22 @@ module CloudController
           end
 
           it 'gets the bucket' do
-            expect_any_instance_of(Fog::AWS::Storage::Directories).to receive(:get).with(directory_key, max_keys: 1)
+            expect(subject.send(:connection).directories).to receive(:get).with(directory_key, max_keys: 1).and_call_original
             subject.ensure_bucket_exists
           end
 
           context 'the bucket exists' do
             it 'does not create the bucket' do
               subject.ensure_bucket_exists
-              expect_any_instance_of(Fog::AWS::Storage::Directories).not_to receive(:create).with(key: directory_key, public: false)
+              expect(subject.send(:connection).directories).not_to receive(:create).with(key: directory_key, public: false)
               subject.ensure_bucket_exists
             end
           end
 
           context 'the bucket does not exist' do
             it 'creates the bucket' do
-              expect_any_instance_of(Fog::AWS::Storage::Directories).to receive(:create).with(key: directory_key, public: false)
+              allow(subject.send(:connection).directories).to receive(:get).with(directory_key, max_keys: 1).and_return(nil)
+              expect(subject.send(:connection).directories).to receive(:create).with(key: directory_key, public: false)
               subject.ensure_bucket_exists
             end
           end

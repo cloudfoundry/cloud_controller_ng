@@ -215,7 +215,6 @@ module VCAP::CloudController
             optional(:local_blobstore_path) => String,
             fog_connection: Hash,
             optional(:connection_config) => Hash,
-            fog_aws_storage_options: Hash,
             optional(:webdav_config) => Hash,
             optional(:cdn) => Hash
           },
@@ -226,7 +225,6 @@ module VCAP::CloudController
             optional(:local_blobstore_path) => String,
             fog_connection: Hash,
             optional(:connection_config) => Hash,
-            fog_aws_storage_options: Hash,
             optional(:webdav_config) => Hash,
             optional(:cdn) => Hash
           },
@@ -239,7 +237,6 @@ module VCAP::CloudController
             optional(:local_blobstore_path) => String,
             fog_connection: Hash,
             optional(:connection_config) => Hash,
-            fog_aws_storage_options: Hash,
             optional(:webdav_config) => Hash,
             optional(:cdn) => Hash
           },
@@ -251,7 +248,6 @@ module VCAP::CloudController
             optional(:local_blobstore_path) => String,
             fog_connection: Hash,
             optional(:connection_config) => Hash,
-            fog_aws_storage_options: Hash,
             optional(:webdav_config) => Hash,
             optional(:cdn) => Hash
           },

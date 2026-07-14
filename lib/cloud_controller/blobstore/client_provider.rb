@@ -38,17 +38,14 @@ module CloudController
             cdn: cdn,
             root_dir: root_dir,
             min_size: options[:minimum_size],
-            max_size: options[:maximum_size],
-            aws_storage_options: options[:fog_aws_storage_options]
+            max_size: options[:maximum_size]
           )
 
           logger = Steno.logger('cc.blobstore')
 
           # work around https://github.com/fog/fog/issues/3137
           # and Fog raising an EOFError SocketError intermittently
-          # and https://github.com/fog/fog-aws/issues/264
-          # and https://github.com/fog/fog-aws/issues/265
-          # and intermittent GCS blobstore download errors
+          # and intermittent blobstore download errors
           errors = [Excon::Errors::BadRequest, Excon::Errors::SocketError, SystemCallError,
                     Excon::Errors::InternalServerError, Excon::Errors::ServiceUnavailable, OpenSSL::OpenSSLError]
           retryable_client = RetryableClient.new(client:, errors:, logger:)

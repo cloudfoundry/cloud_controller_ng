@@ -22,15 +22,14 @@ module CloudController
                      cdn: nil,
                      root_dir: nil,
                      min_size: nil,
-                     max_size: nil,
-                     aws_storage_options: nil)
+                     max_size: nil)
+)
         @root_dir = root_dir
         @connection_config = connection_config
         @directory_key = directory_key
         @cdn = cdn
         @min_size = min_size || 0
         @max_size = max_size
-        @aws_storage_options = aws_storage_options
         logger.warn('blobstore.fog-deprecated', message: DEPRECATION_MESSAGE)
       end
 
@@ -132,18 +131,7 @@ module CloudController
       end
 
       def formatted_storage_options
-        if connection.service.equal?(Fog::AWS::Storage)
-          return {} unless @aws_storage_options && @aws_storage_options[:encryption]
-
-          opts = @aws_storage_options.dup
-          encrypt_opt = opts.delete(:encryption)
-          opts['x-amz-server-side-encryption'] = encrypt_opt
-          opts
-
-        else
-          {}
-
-        end
+        {}
       end
 
       def delete_file(file)
@@ -152,9 +140,6 @@ module CloudController
 
       def delete_files(files_to_delete, page_size)
         if connection.respond_to?(:delete_multiple_objects)
-          # AWS needs the file key to work; other providers with multiple delete
-          # are currently not supported. When support is added this code may
-          # need an update.
           each_slice(files_to_delete, page_size) do |file_group|
             connection.delete_multiple_objects(@directory_key, file_group.map(&:key))
           end

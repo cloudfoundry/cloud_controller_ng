@@ -6,9 +6,6 @@ module VCAP::CloudController
       {
         packages: {
           fog_connection: {},
-          fog_aws_storage_options: {
-            encryption: 'AES256'
-          },
           app_package_directory_key: 'app_key'
         },
         droplets: {
@@ -385,9 +382,6 @@ module VCAP::CloudController
         {
           packages: {
             fog_connection: {},
-            fog_aws_storage_options: {
-              encryption: 'AES256'
-            },
             app_package_directory_key: 'app_key'
           },
           droplets: {
@@ -547,12 +541,8 @@ module VCAP::CloudController
       it 'returns a hash for nested properties' do
         expect(config_instance.get(:packages)).to eq({
                                                        fog_connection: {},
-                                                       fog_aws_storage_options: {
-                                                         encryption: 'AES256'
-                                                       },
                                                        app_package_directory_key: 'app_key'
                                                      })
-        expect(config_instance.get(:packages, :fog_aws_storage_options)).to eq(encryption: 'AES256')
       end
 
       it 'raises an exception when given an invalid key' do
@@ -565,12 +555,6 @@ module VCAP::CloudController
         expect do
           config_instance.get(:external_domain, :pantaloons)
         end.to raise_error Config::InvalidConfigPath, /"external_domain.pantaloons" is not a valid config key/
-      end
-
-      it 'raises when you dig into hashes' do
-        expect do
-          config_instance.get(:packages, :fog_aws_storage_options, :encryption)
-        end.to raise_error Config::InvalidConfigPath, /"packages.fog_aws_storage_options.encryption" is not a valid config key/
       end
 
       it 'raises when given a path with an invalid key' do

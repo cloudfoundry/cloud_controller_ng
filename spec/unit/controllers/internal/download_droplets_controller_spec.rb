@@ -9,18 +9,14 @@ module VCAP::CloudController
         {
           packages: {
             fog_connection: {
-              provider: 'AWS',
-              aws_access_key_id: 'fake',
-              aws_secret_access_key: 'fake'
+              provider: 'local'
             },
             app_package_directory_key: 'cc-packages'
           },
           droplets: {
             droplet_directory_key: 'cc-droplets',
             fog_connection: {
-              provider: 'AWS',
-              aws_access_key_id: 'fake',
-              aws_secret_access_key: 'fake'
+              provider: 'local'
             }
           }
         }
@@ -101,18 +97,14 @@ module VCAP::CloudController
         {
           packages: {
             fog_connection: {
-              provider: 'AWS',
-              aws_access_key_id: 'fake',
-              aws_secret_access_key: 'fake'
+              provider: 'local'
             },
             app_package_directory_key: 'cc-packages'
           },
           droplets: {
             droplet_directory_key: 'cc-droplets',
             fog_connection: {
-              provider: 'AWS',
-              aws_access_key_id: 'fake',
-              aws_secret_access_key: 'fake'
+              provider: 'local'
             }
           }
         }

@@ -7,7 +7,7 @@ module VCAP::CloudController
 
       let(:package_bits_path) { File.expand_path('../../../fixtures/good.zip', File.dirname(__FILE__)) }
       let(:package_blobstore) do
-        CloudController::Blobstore::FogClient.new(connection_config: { provider: 'AWS', aws_access_key_id: 'fake', aws_secret_access_key: 'fake' },
+        CloudController::Blobstore::FogClient.new(connection_config: { provider: 'local' },
                                                   directory_key: 'package')
       end
       let(:source_package) { create(:package_model, type: 'bits', package_hash: 'something', sha256_checksum: 'sha256') }

@@ -7,7 +7,7 @@ module VCAP::CloudController
 
       let(:droplet_bits_path) { File.expand_path('../../../fixtures/good.zip', File.dirname(__FILE__)) }
       let(:droplet_blobstore) do
-        CloudController::Blobstore::FogClient.new(connection_config: { provider: 'AWS', aws_access_key_id: 'fake', aws_secret_access_key: 'fake' },
+        CloudController::Blobstore::FogClient.new(connection_config: { provider: 'local' },
                                                   directory_key: 'droplet')
       end
       let(:source_droplet) { create(:droplet_model, droplet_hash: 'abcdef1234', sha256_checksum: '4321fedcba', state: DropletModel::STAGED_STATE, set_as_current_droplet: false) }

@@ -12,7 +12,7 @@ module CloudController::Packager
     let(:max_size) { 8 }
     let(:global_app_bits_cache) do
       CloudController::Blobstore::FogClient.new(
-        connection_config: { provider: 'AWS', aws_access_key_id: 'fake', aws_secret_access_key: 'fake' },
+        connection_config: { provider: 'local' },
         directory_key: 'global_app_bits_cache',
         min_size: min_size,
         max_size: max_size
@@ -20,7 +20,7 @@ module CloudController::Packager
     end
     let(:package_blobstore) do
       CloudController::Blobstore::FogClient.new(
-        connection_config: { provider: 'AWS', aws_access_key_id: 'fake', aws_secret_access_key: 'fake' },
+        connection_config: { provider: 'local' },
         directory_key: 'package'
       )
     end

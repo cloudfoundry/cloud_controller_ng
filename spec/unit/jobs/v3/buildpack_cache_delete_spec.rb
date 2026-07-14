@@ -6,7 +6,7 @@ module VCAP::CloudController
     RSpec.describe BuildpackCacheDelete, job_context: :worker do
       let(:app_guid) { 'some-guid' }
       let!(:blobstore) do
-        CloudController::Blobstore::FogClient.new(connection_config: { provider: 'AWS', aws_access_key_id: 'fake', aws_secret_access_key: 'fake' },
+        CloudController::Blobstore::FogClient.new(connection_config: { provider: 'local' },
                                                   directory_key: 'directory_key')
       end
       let(:path_1) { Presenters::V3::CacheKeyPresenter.cache_key(guid: app_guid, stack_name: 'stack1') }

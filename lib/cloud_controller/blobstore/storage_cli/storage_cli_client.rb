@@ -22,7 +22,6 @@ module CloudController
 
       # DEPRECATED: Legacy fog provider names (remove after migration window)
       LEGACY_PROVIDER_TO_STORAGE_CLI_TYPE = {
-        'AWS' => 's3',
         'webdav' => 'dav'
       }.freeze
 

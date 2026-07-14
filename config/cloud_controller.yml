@@ -183,7 +183,6 @@ resource_pool:
   resource_directory_key: "spec-cc-resources"
   blobstore_type: local-temp-storage
   fog_connection: {}
-  fog_aws_storage_options: {}
 
 packages:
   app_package_directory_key: "cc-packages"
@@ -191,20 +190,17 @@ packages:
   max_valid_packages_stored: 42
   blobstore_type: local-temp-storage
   fog_connection: {}
-  fog_aws_storage_options: {}
 
 droplets:
   droplet_directory_key: cc-droplets
   max_staged_droplets_stored: 42
   blobstore_type: local-temp-storage
   fog_connection: {}
-  fog_aws_storage_options: {}
 
 buildpacks:
   buildpack_directory_key: cc-buildpacks
   blobstore_type: local-temp-storage
   fog_connection: {}
-  fog_aws_storage_options: {}
 
 db_encryption_key: "asdfasdfasdf"
 database_encryption:

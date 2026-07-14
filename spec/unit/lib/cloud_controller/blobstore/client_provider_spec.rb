@@ -32,36 +32,6 @@ module CloudController
           expect(FogClient).to have_received(:new)
         end
 
-        context 'when an aws encryption option is requested' do
-          before do
-            options.merge!(fog_aws_storage_options: { encryption: 'my organic algo' })
-          end
-
-          it 'passes the specified encryption option to the fog client' do
-            allow(FogClient).to receive(:new).and_call_original
-            ClientProvider.provide(options: options, directory_key: 'key')
-            expect(FogClient).to have_received(:new).with(connection_config: anything,
-                                                          directory_key: anything,
-                                                          cdn: anything,
-                                                          root_dir: anything,
-                                                          min_size: anything,
-                                                          max_size: anything,
-                                                          aws_storage_options: { encryption: 'my organic algo' })
-          end
-
-          context 'fog methods' do
-            describe '#download_from_blobstore' do
-              it 'receives all arguments' do
-                allow_any_instance_of(FogClient).to receive(:download_from_blobstore).and_return(nil)
-
-                client = ClientProvider.provide(options: options, directory_key: 'key')
-                expect_any_instance_of(FogClient).to receive(:download_from_blobstore).with('key', 'dest', mode: 775)
-                client.download_from_blobstore('key', 'dest', mode: 775)
-              end
-            end
-          end
-        end
-
         context 'when a cdn is requested in the options' do
           before do
             options.merge!(cdn: { uri: 'http://cdn.com' })
@@ -75,8 +45,7 @@ module CloudController
                                                           cdn: an_instance_of(Cdn),
                                                           root_dir: anything,
                                                           min_size: anything,
-                                                          max_size: anything,
-                                                          aws_storage_options: anything)
+                                                          max_size: anything)
           end
         end
 

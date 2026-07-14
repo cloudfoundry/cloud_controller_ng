@@ -15,7 +15,6 @@ module VCAP::CloudController
           optional(:webdav_config) => Hash,
           optional(:cdn) => Hash,
 
-          fog_aws_storage_options: Hash,
 
           optional(:resource_directory_key) => String,
           optional(:buildpack_directory_key) => String,

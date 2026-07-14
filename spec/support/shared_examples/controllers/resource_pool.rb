@@ -43,11 +43,7 @@ RSpec.shared_context 'resource pool' do
       maximum_size: maximum_file_size,
       minimum_size: minimum_file_size,
       resource_directory_key: 'spec-cc-resources',
-      fog_connection: {
-        provider: 'AWS',
-        aws_access_key_id: 'fake_aws_key_id',
-        aws_secret_access_key: 'fake_secret_access_key'
-      }
+      fog_connection: {}
     }
   end
 

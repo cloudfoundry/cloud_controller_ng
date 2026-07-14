@@ -40,7 +40,6 @@ gem 'actionview', '~> 8.1.3'
 gem 'activemodel', '~> 8.1.2'
 gem 'railties', '~> 8.1.1'
 
-gem 'fog-aws'
 gem 'fog-core', '~> 2.6.0'
 
 gem 'cf-uaa-lib', '~> 4.0.10'
