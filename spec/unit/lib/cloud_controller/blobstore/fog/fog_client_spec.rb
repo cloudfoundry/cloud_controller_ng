@@ -21,11 +21,10 @@ module CloudController
 
       def initialize
         @store = {}
+        @directories = DirectoryProxy.new(self)
       end
 
-      def directories = DirectoryProxy.new(self)
-
-      def respond_to?(method, *) = method == :directories || super
+      attr_reader :directories
 
       def store_file(bucket, key, body, content_type)
         @store[bucket] ||= {}
