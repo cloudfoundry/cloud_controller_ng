@@ -6,11 +6,16 @@ module VCAP::CloudController
       subject(:job) { PackageBitsCopier.new(source_package.guid, destination_package.guid) }
 
       let(:package_bits_path) { File.expand_path('../../../fixtures/good.zip', File.dirname(__FILE__)) }
+      let(:blobstore_path) { Dir.mktmpdir }
       let(:package_blobstore) do
-        CloudController::Blobstore::LocalClient.new(directory_key: 'package', base_path: Dir.mktmpdir)
+        CloudController::Blobstore::LocalClient.new(directory_key: 'package', base_path: blobstore_path)
       end
       let(:source_package) { create(:package_model, type: 'bits', package_hash: 'something', sha256_checksum: 'sha256') }
       let(:destination_package) { create(:package_model, type: 'bits') }
+
+      after do
+        FileUtils.rm_rf(blobstore_path)
+      end
 
       it { is_expected.to be_a_valid_job }
 

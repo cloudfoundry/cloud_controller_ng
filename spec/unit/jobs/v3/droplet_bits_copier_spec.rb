@@ -6,11 +6,16 @@ module VCAP::CloudController
       subject(:job) { DropletBitsCopier.new(source_droplet.guid, destination_droplet.guid) }
 
       let(:droplet_bits_path) { File.expand_path('../../../fixtures/good.zip', File.dirname(__FILE__)) }
+      let(:blobstore_path) { Dir.mktmpdir }
       let(:droplet_blobstore) do
-        CloudController::Blobstore::LocalClient.new(directory_key: 'droplet', base_path: Dir.mktmpdir)
+        CloudController::Blobstore::LocalClient.new(directory_key: 'droplet', base_path: blobstore_path)
       end
       let(:source_droplet) { create(:droplet_model, droplet_hash: 'abcdef1234', sha256_checksum: '4321fedcba', state: DropletModel::STAGED_STATE, set_as_current_droplet: false) }
       let(:destination_droplet) { create(:droplet_model, droplet_hash: nil, sha256_checksum: nil, state: DropletModel::STAGING_STATE, set_as_current_droplet: false) }
+
+      after do
+        FileUtils.rm_rf(blobstore_path)
+      end
 
       it { is_expected.to be_a_valid_job }
 

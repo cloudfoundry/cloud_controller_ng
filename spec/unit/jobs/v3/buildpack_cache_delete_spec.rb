@@ -5,8 +5,9 @@ module VCAP::CloudController
   module Jobs::V3
     RSpec.describe BuildpackCacheDelete, job_context: :worker do
       let(:app_guid) { 'some-guid' }
+      let(:blobstore_path) { Dir.mktmpdir }
       let!(:blobstore) do
-        CloudController::Blobstore::LocalClient.new(directory_key: 'directory_key', base_path: Dir.mktmpdir)
+        CloudController::Blobstore::LocalClient.new(directory_key: 'directory_key', base_path: blobstore_path)
       end
       let(:path_1) { Presenters::V3::CacheKeyPresenter.cache_key(guid: app_guid, stack_name: 'stack1') }
       let(:path_2) { Presenters::V3::CacheKeyPresenter.cache_key(guid: app_guid, stack_name: 'stack2') }
@@ -22,6 +23,10 @@ module VCAP::CloudController
       end
 
       subject(:job) { BuildpackCacheDelete.new(app_guid) }
+
+      after do
+        FileUtils.rm_rf(blobstore_path)
+      end
 
       it { is_expected.to be_a_valid_job }
 
