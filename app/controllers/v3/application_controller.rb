@@ -268,8 +268,4 @@ class ApplicationController < ActionController::Base
   def null_coalesce_body
     hashed_params[:body] ||= {}
   end
-
-  def membership
-    @membership ||= Membership.new(current_user)
-  end
 end

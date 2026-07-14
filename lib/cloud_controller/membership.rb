@@ -25,7 +25,7 @@ module VCAP::CloudController
     end
 
     def authorized_org_guids_subquery(roles)
-      authorized_orgs_subquery(roles).select(:guid)
+      Organization.where(id: authorized_org_ids_subquery(roles)).select(:guid)
     end
 
     def authorized_orgs_subquery(roles)
@@ -50,7 +50,7 @@ module VCAP::CloudController
     end
 
     def authorized_space_guids_subquery(roles)
-      authorized_spaces_subquery(roles).select(:guid)
+      Space.where(id: authorized_space_ids_subquery(roles)).select(:guid)
     end
 
     def authorized_spaces_subquery(roles)

@@ -22,7 +22,7 @@ class ServiceCredentialBindingsController < ApplicationController
     invalid_param!(message.errors.full_messages) unless message.valid?
 
     results = list_fetcher.fetch(
-      readable_spaces_query: spaces_query,
+      readable_space_ids_query: space_ids_query,
       message: message,
       eager_loaded_associations: Presenters::V3::ServiceCredentialBindingPresenter.associated_resources
     )
@@ -332,14 +332,14 @@ class ServiceCredentialBindingsController < ApplicationController
   end
 
   def service_credential_binding
-    @service_credential_binding ||= fetcher.fetch(hashed_params[:guid], readable_spaces_query: spaces_query)
+    @service_credential_binding ||= fetcher.fetch(hashed_params[:guid], readable_space_ids_query: space_ids_query)
   end
 
-  def spaces_query
+  def space_ids_query
     if permission_queryer.can_read_globally?
       nil
     else
-      permission_queryer.readable_spaces_query
+      permission_queryer.readable_space_ids_query
     end
   end
 
