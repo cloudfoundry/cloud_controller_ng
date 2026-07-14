@@ -59,7 +59,15 @@ module VCAP::CloudController
             log_db_queries: bool,
             ssl_verify_hostname: bool,
             connection_validation_timeout: Integer,
-            optional(:ca_cert_path) => String
+            optional(:ca_cert_path) => String,
+            optional(:psql) => {
+              optional(:statement_timeout) => Integer,
+              optional(:idle_in_transaction_session_timeout) => Integer,
+              optional(:keepalives) => Integer,
+              optional(:keepalives_idle) => Integer,
+              optional(:keepalives_interval) => Integer,
+              optional(:keepalives_count) => Integer
+            }
           },
 
           staging: {

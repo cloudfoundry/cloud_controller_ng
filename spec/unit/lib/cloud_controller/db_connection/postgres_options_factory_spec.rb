@@ -17,10 +17,8 @@ RSpec.describe VCAP::CloudController::DbConnection::PostgresOptionsFactory do
       )
     end
 
-    it 'sets the timezone via a Proc' do
-      connection = double('connection', exec: '')
-      postgres_options[:after_connect].call(connection)
-      expect(connection).to have_received(:exec).with("SET time zone 'UTC'")
+    it 'sets the timezone via connect_sqls' do
+      expect(postgres_options[:connect_sqls]).to include("SET time zone 'UTC'")
     end
 
     describe 'when the CA cert path is not set' do
@@ -54,6 +52,103 @@ RSpec.describe VCAP::CloudController::DbConnection::PostgresOptionsFactory do
           it 'sets the sslmode to "verify-ca"' do
             expect(postgres_options[:sslmode]).to eq('verify-ca')
           end
+        end
+      end
+    end
+
+    describe 'connection parameters' do
+      context 'when no connection parameters are set' do
+        let(:postgres_options) do
+          VCAP::CloudController::DbConnection::PostgresOptionsFactory.build(
+            database: { adapter: 'postgres' }
+          )
+        end
+
+        it 'only sets the timezone in connect_sqls' do
+          expect(postgres_options[:connect_sqls]).to eq(["SET time zone 'UTC'"])
+        end
+
+        it 'does not include any keepalive options in the returned hash' do
+          expect(postgres_options[:keepalives]).to be_nil
+          expect(postgres_options[:keepalives_idle]).to be_nil
+          expect(postgres_options[:keepalives_interval]).to be_nil
+          expect(postgres_options[:keepalives_count]).to be_nil
+        end
+      end
+
+      context 'when SQL params are set' do
+        let(:postgres_options) do
+          VCAP::CloudController::DbConnection::PostgresOptionsFactory.build(
+            database: { adapter: 'postgres' },
+            psql: {
+              statement_timeout: 3_600_000,
+              idle_in_transaction_session_timeout: 600_000
+            }
+          )
+        end
+
+        it 'sets the SQL params via connect_sqls' do
+          expect(postgres_options[:connect_sqls]).to include("SET time zone 'UTC'")
+          expect(postgres_options[:connect_sqls]).to include("SET statement_timeout TO '3600000'")
+          expect(postgres_options[:connect_sqls]).to include("SET idle_in_transaction_session_timeout TO '600000'")
+        end
+
+        it 'does not put SQL params into the returned options hash' do
+          expect(postgres_options[:statement_timeout]).to be_nil
+          expect(postgres_options[:idle_in_transaction_session_timeout]).to be_nil
+        end
+      end
+
+      context 'when libpq keepalive params are set' do
+        let(:postgres_options) do
+          VCAP::CloudController::DbConnection::PostgresOptionsFactory.build(
+            database: { adapter: 'postgres' },
+            psql: {
+              keepalives: 1,
+              keepalives_idle: 30,
+              keepalives_interval: 10,
+              keepalives_count: 3
+            }
+          )
+        end
+
+        it 'merges keepalive params into the returned options hash' do
+          expect(postgres_options[:keepalives]).to eq(1)
+          expect(postgres_options[:keepalives_idle]).to eq(30)
+          expect(postgres_options[:keepalives_interval]).to eq(10)
+          expect(postgres_options[:keepalives_count]).to eq(3)
+        end
+
+        it 'does not SET keepalive params via connect_sqls' do
+          expect(postgres_options[:connect_sqls]).not_to include(match(/SET keepalives/))
+        end
+      end
+
+      context 'when both SQL and libpq params are set' do
+        let(:postgres_options) do
+          VCAP::CloudController::DbConnection::PostgresOptionsFactory.build(
+            database: { adapter: 'postgres' },
+            psql: {
+              statement_timeout: 3_600_000,
+              keepalives: 1,
+              keepalives_idle: 30,
+              keepalives_interval: 10,
+              keepalives_count: 3
+            }
+          )
+        end
+
+        it 'sets SQL params via connect_sqls and merges libpq params into options hash' do
+          expect(postgres_options[:connect_sqls]).to include("SET statement_timeout TO '3600000'")
+          expect(postgres_options[:keepalives]).to eq(1)
+          expect(postgres_options[:keepalives_idle]).to eq(30)
+          expect(postgres_options[:keepalives_interval]).to eq(10)
+          expect(postgres_options[:keepalives_count]).to eq(3)
+        end
+
+        it 'does not mix up the two kinds: SQL params not in options hash, libpq params not SET via SQL' do
+          expect(postgres_options[:statement_timeout]).to be_nil
+          expect(postgres_options[:connect_sqls]).not_to include(match(/SET keepalives/))
         end
       end
     end

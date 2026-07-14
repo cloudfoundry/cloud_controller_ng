@@ -46,10 +46,8 @@ RSpec.describe VCAP::CloudController::DbConnection::OptionsFactory do
         let(:adapter) { 'postgres' }
 
         it 'returns postgres-specific options' do
-          connection = double('connection', exec: '')
           postgres_options = VCAP::CloudController::DbConnection::OptionsFactory.build(required_options)
-          postgres_options[:after_connect].call(connection)
-          expect(connection).to have_received(:exec).with("SET time zone 'UTC'")
+          expect(postgres_options[:connect_sqls]).to include("SET time zone 'UTC'")
         end
       end
     end
