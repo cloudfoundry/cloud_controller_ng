@@ -20,7 +20,7 @@ module CloudController
       # Native storage-cli type names supported by CC
       STORAGE_CLI_TYPES = %w[azurebs alioss s3 gcs dav].freeze
 
-      # DEPRECATED: Legacy fog provider names (remove after migration window)
+      # DEPRECATED: Legacy fog provider names (remove completely after migration window)
       LEGACY_PROVIDER_TO_STORAGE_CLI_TYPE = {
         'webdav' => 'dav'
       }.freeze
