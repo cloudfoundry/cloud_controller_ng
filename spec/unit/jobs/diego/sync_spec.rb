@@ -3,7 +3,7 @@ require 'spec_helper'
 module VCAP::CloudController
   module Jobs::Diego
     RSpec.describe Sync, job_context: :clock do
-      let(:statsd_client) { instance_double(Statsd) }
+      let(:statsd_client) { instance_double(StatsD::Instrument::Client) }
       let(:processes_sync) { instance_double(Diego::ProcessesSync) }
       let(:tasks_sync) { instance_double(Diego::ProcessesSync) }
 
@@ -15,7 +15,7 @@ module VCAP::CloudController
           allow(Diego::ProcessesSync).to receive(:new).and_return(processes_sync)
           allow(Diego::TasksSync).to receive(:new).and_return(tasks_sync)
 
-          allow(statsd_client).to receive(:timing)
+          allow(statsd_client).to receive(:measure)
           allow(processes_sync).to receive(:sync)
           allow(tasks_sync).to receive(:sync)
         end
@@ -38,7 +38,7 @@ module VCAP::CloudController
           expect(processes_sync).to receive(:sync)
           expect(tasks_sync).to receive(:sync)
           expect(Time).to receive(:now).twice # Ensure that we get two time measurements. _Hopefully_ they get turned into an elapsed time and passed in where they need to be!
-          expect(statsd_client).to receive(:timing).with('cc.diego_sync.duration', kind_of(Numeric))
+          expect(statsd_client).to receive(:measure).with('cc.diego_sync.duration', kind_of(Numeric))
 
           job.perform
         end

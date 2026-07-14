@@ -4,7 +4,7 @@ require 'cloud_controller/metrics/statsd_updater'
 module VCAP::CloudController::Metrics
   RSpec.describe StatsdUpdater do
     let(:updater) { StatsdUpdater.new(statsd_client) }
-    let(:statsd_client) { Statsd.new('localhost', 9999) }
+    let(:statsd_client) { StatsD::Instrument::Client.new(sink: StatsD::Instrument::Sink.for_addr('localhost:9999')) }
     let(:store) { double(:store) }
 
     describe '#update_deploying_count' do
@@ -36,11 +36,8 @@ module VCAP::CloudController::Metrics
     end
 
     describe '#update_job_queue_length' do
-      let(:batch) { double(:batch) }
-
       before do
-        allow(statsd_client).to receive(:batch).and_yield(batch)
-        allow(batch).to receive(:gauge)
+        allow(statsd_client).to receive(:gauge)
       end
 
       it 'emits the length of the delayed job queues and total to statsd' do
@@ -55,18 +52,15 @@ module VCAP::CloudController::Metrics
 
         updater.update_job_queue_length(pending_job_count_by_queue, total)
 
-        expect(batch).to have_received(:gauge).with('cc.job_queue_length.cc_local', expected_local_length)
-        expect(batch).to have_received(:gauge).with('cc.job_queue_length.cc_generic', expected_generic_length)
-        expect(batch).to have_received(:gauge).with('cc.job_queue_length.total', total)
+        expect(statsd_client).to have_received(:gauge).with('cc.job_queue_length.cc_local', expected_local_length)
+        expect(statsd_client).to have_received(:gauge).with('cc.job_queue_length.cc_generic', expected_generic_length)
+        expect(statsd_client).to have_received(:gauge).with('cc.job_queue_length.total', total)
       end
     end
 
     describe '#update_job_queue_load' do
-      let(:batch) { double(:batch) }
-
       before do
-        allow(statsd_client).to receive(:batch).and_yield(batch)
-        allow(batch).to receive(:gauge)
+        allow(statsd_client).to receive(:gauge)
       end
 
       it 'emits the load of the delayed job queues and total to statsd' do
@@ -81,18 +75,15 @@ module VCAP::CloudController::Metrics
 
         updater.update_job_queue_load(pending_job_load_by_queue, total)
 
-        expect(batch).to have_received(:gauge).with('cc.job_queue_load.cc_local', expected_local_load)
-        expect(batch).to have_received(:gauge).with('cc.job_queue_load.cc_generic', expected_generic_load)
-        expect(batch).to have_received(:gauge).with('cc.job_queue_load.total', total)
+        expect(statsd_client).to have_received(:gauge).with('cc.job_queue_load.cc_local', expected_local_load)
+        expect(statsd_client).to have_received(:gauge).with('cc.job_queue_load.cc_generic', expected_generic_load)
+        expect(statsd_client).to have_received(:gauge).with('cc.job_queue_load.total', total)
       end
     end
 
     describe '#update_failed_job_count' do
-      let(:batch) { double(:batch) }
-
       before do
-        allow(statsd_client).to receive(:batch).and_yield(batch)
-        allow(batch).to receive(:gauge)
+        allow(statsd_client).to receive(:gauge)
       end
 
       it 'emits the number of failed jobs in the delayed job queue and the total to statsd' do
@@ -107,18 +98,15 @@ module VCAP::CloudController::Metrics
 
         updater.update_failed_job_count(failed_jobs_by_queue, total)
 
-        expect(batch).to have_received(:gauge).with('cc.failed_job_count.cc_local', expected_local_length)
-        expect(batch).to have_received(:gauge).with('cc.failed_job_count.cc_generic', expected_generic_length)
-        expect(batch).to have_received(:gauge).with('cc.failed_job_count.total', total)
+        expect(statsd_client).to have_received(:gauge).with('cc.failed_job_count.cc_local', expected_local_length)
+        expect(statsd_client).to have_received(:gauge).with('cc.failed_job_count.cc_generic', expected_generic_length)
+        expect(statsd_client).to have_received(:gauge).with('cc.failed_job_count.total', total)
       end
     end
 
     describe '#update_vitals' do
-      let(:batch) { double(:batch) }
-
       before do
-        allow(statsd_client).to receive(:batch).and_yield(batch)
-        allow(batch).to receive(:gauge)
+        allow(statsd_client).to receive(:gauge)
       end
 
       it 'sends vitals to statsd' do
@@ -134,22 +122,19 @@ module VCAP::CloudController::Metrics
 
         updater.update_vitals(vitals)
 
-        expect(batch).to have_received(:gauge).with('cc.vitals.uptime', 33)
-        expect(batch).to have_received(:gauge).with('cc.vitals.cpu_load_avg', 0.5)
-        expect(batch).to have_received(:gauge).with('cc.vitals.mem_used_bytes', 542)
-        expect(batch).to have_received(:gauge).with('cc.vitals.mem_free_bytes', 927)
-        expect(batch).to have_received(:gauge).with('cc.vitals.mem_bytes', 1)
-        expect(batch).to have_received(:gauge).with('cc.vitals.cpu', 2.0)
-        expect(batch).to have_received(:gauge).with('cc.vitals.num_cores', 4)
+        expect(statsd_client).to have_received(:gauge).with('cc.vitals.uptime', 33)
+        expect(statsd_client).to have_received(:gauge).with('cc.vitals.cpu_load_avg', 0.5)
+        expect(statsd_client).to have_received(:gauge).with('cc.vitals.mem_used_bytes', 542)
+        expect(statsd_client).to have_received(:gauge).with('cc.vitals.mem_free_bytes', 927)
+        expect(statsd_client).to have_received(:gauge).with('cc.vitals.mem_bytes', 1)
+        expect(statsd_client).to have_received(:gauge).with('cc.vitals.cpu', 2.0)
+        expect(statsd_client).to have_received(:gauge).with('cc.vitals.num_cores', 4)
       end
     end
 
     describe '#update_log_counts' do
-      let(:batch) { double(:batch) }
-
       before do
-        allow(statsd_client).to receive(:batch).and_yield(batch)
-        allow(batch).to receive(:gauge)
+        allow(statsd_client).to receive(:gauge)
       end
 
       it 'sends log counts to statsd' do
@@ -167,30 +152,28 @@ module VCAP::CloudController::Metrics
 
         updater.update_log_counts(counts)
 
-        expect(batch).to have_received(:gauge).with('cc.log_count.off', 1)
-        expect(batch).to have_received(:gauge).with('cc.log_count.fatal', 2)
-        expect(batch).to have_received(:gauge).with('cc.log_count.error', 3)
-        expect(batch).to have_received(:gauge).with('cc.log_count.warn', 4)
-        expect(batch).to have_received(:gauge).with('cc.log_count.info', 5)
-        expect(batch).to have_received(:gauge).with('cc.log_count.debug', 6)
-        expect(batch).to have_received(:gauge).with('cc.log_count.debug1', 7)
-        expect(batch).to have_received(:gauge).with('cc.log_count.debug2', 8)
-        expect(batch).to have_received(:gauge).with('cc.log_count.all', 9)
+        expect(statsd_client).to have_received(:gauge).with('cc.log_count.off', 1)
+        expect(statsd_client).to have_received(:gauge).with('cc.log_count.fatal', 2)
+        expect(statsd_client).to have_received(:gauge).with('cc.log_count.error', 3)
+        expect(statsd_client).to have_received(:gauge).with('cc.log_count.warn', 4)
+        expect(statsd_client).to have_received(:gauge).with('cc.log_count.info', 5)
+        expect(statsd_client).to have_received(:gauge).with('cc.log_count.debug', 6)
+        expect(statsd_client).to have_received(:gauge).with('cc.log_count.debug1', 7)
+        expect(statsd_client).to have_received(:gauge).with('cc.log_count.debug2', 8)
+        expect(statsd_client).to have_received(:gauge).with('cc.log_count.all', 9)
       end
     end
 
     describe '#update_task_stats' do
-      let(:batch) { instance_double(Statsd::Batch, gauge: nil) }
-
       before do
-        allow(statsd_client).to receive(:batch).and_yield(batch)
+        allow(statsd_client).to receive(:gauge)
       end
 
       it 'emits number of running tasks and task memory to statsd' do
         updater.update_task_stats(5, 512)
 
-        expect(batch).to have_received(:gauge).with('cc.tasks_running.count', 5)
-        expect(batch).to have_received(:gauge).with('cc.tasks_running.memory_in_mb', 512)
+        expect(statsd_client).to have_received(:gauge).with('cc.tasks_running.count', 5)
+        expect(statsd_client).to have_received(:gauge).with('cc.tasks_running.memory_in_mb', 512)
       end
     end
 
@@ -219,7 +202,7 @@ module VCAP::CloudController::Metrics
     describe '#report_staging_success_metrics' do
       before do
         allow(statsd_client).to receive(:increment)
-        allow(statsd_client).to receive(:timing)
+        allow(statsd_client).to receive(:measure)
       end
 
       it 'emits staging success metrics' do
@@ -228,14 +211,14 @@ module VCAP::CloudController::Metrics
 
         updater.report_staging_success_metrics(duration_ns)
         expect(statsd_client).to have_received(:increment).with('cc.staging.succeeded')
-        expect(statsd_client).to have_received(:timing).with('cc.staging.succeeded_duration', duration_ms)
+        expect(statsd_client).to have_received(:measure).with('cc.staging.succeeded_duration', duration_ms)
       end
     end
 
     describe '#report_staging_failure_metrics' do
       before do
         allow(statsd_client).to receive(:increment)
-        allow(statsd_client).to receive(:timing)
+        allow(statsd_client).to receive(:measure)
       end
 
       it 'emits staging failure metrics' do
@@ -244,7 +227,7 @@ module VCAP::CloudController::Metrics
 
         updater.report_staging_failure_metrics(duration_ns)
         expect(statsd_client).to have_received(:increment).with('cc.staging.failed')
-        expect(statsd_client).to have_received(:timing).with('cc.staging.failed_duration', duration_ms)
+        expect(statsd_client).to have_received(:measure).with('cc.staging.failed_duration', duration_ms)
       end
     end
 
@@ -266,14 +249,11 @@ module VCAP::CloudController::Metrics
     end
 
     describe '#complete_request' do
-      let(:batch) { double(:batch) }
       let(:status) { 204 }
 
       before do
-        allow(statsd_client).to receive(:batch).and_yield(batch)
         allow(statsd_client).to receive(:gauge)
-        allow(batch).to receive(:increment)
-        allow(batch).to receive(:decrement)
+        allow(statsd_client).to receive(:increment)
         allow(updater).to receive(:store).and_return(store)
         allow(store).to receive(:decrement_request_outstanding_gauge).and_return(5)
       end
@@ -283,20 +263,20 @@ module VCAP::CloudController::Metrics
 
         expect(store).to have_received(:decrement_request_outstanding_gauge)
         expect(statsd_client).to have_received(:gauge).with('cc.requests.outstanding.gauge', 5)
-        expect(batch).to have_received(:decrement).with('cc.requests.outstanding')
-        expect(batch).to have_received(:increment).with('cc.requests.completed')
-        expect(batch).to have_received(:increment).with('cc.http_status.2XX')
+        expect(statsd_client).to have_received(:increment).with('cc.requests.outstanding', -1)
+        expect(statsd_client).to have_received(:increment).with('cc.requests.completed')
+        expect(statsd_client).to have_received(:increment).with('cc.http_status.2XX')
       end
 
       it 'normalizes http status codes in statsd' do
         updater.complete_request(200)
-        expect(batch).to have_received(:increment).with('cc.http_status.2XX')
+        expect(statsd_client).to have_received(:increment).with('cc.http_status.2XX')
 
         updater.complete_request(300)
-        expect(batch).to have_received(:increment).with('cc.http_status.3XX')
+        expect(statsd_client).to have_received(:increment).with('cc.http_status.3XX')
 
         updater.complete_request(400)
-        expect(batch).to have_received(:increment).with('cc.http_status.4XX')
+        expect(statsd_client).to have_received(:increment).with('cc.http_status.4XX')
       end
     end
 
