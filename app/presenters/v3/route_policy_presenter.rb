@@ -7,6 +7,12 @@ module VCAP::CloudController
       class RoutePolicyPresenter < BasePresenter
         include VCAP::CloudController::Presenters::Mixins::MetadataPresentationHelpers
 
+        class << self
+          def associated_resources
+            super + [:route]
+          end
+        end
+
         def to_hash
           hash = {
             guid: route_policy.guid,
@@ -30,29 +36,16 @@ module VCAP::CloudController
         end
 
         def build_relationships
-          relationships = {
-            route: {
-              data: {
-                guid: route_policy.route.guid
-              }
-            }
+          {
+            route: { data: { guid: route_policy.route.guid } },
+            app: { data: route_policy.source_type == 'app' ? { guid: route_policy.source_guid } : nil },
+            space: { data: route_policy.source_type == 'space' ? { guid: route_policy.source_guid } : nil },
+            organization: { data: route_policy.source_type == 'org' ? { guid: route_policy.source_guid } : nil }
           }
-
-          if route_policy.source_type == 'any'
-            relationships[:app]          = { data: nil }
-            relationships[:space]        = { data: nil }
-            relationships[:organization] = { data: nil }
-          else
-            relationships[:app]          = { data: route_policy.source_type == 'app'   ? { guid: route_policy.source_guid } : nil }
-            relationships[:space]        = { data: route_policy.source_type == 'space' ? { guid: route_policy.source_guid } : nil }
-            relationships[:organization] = { data: route_policy.source_type == 'org'   ? { guid: route_policy.source_guid } : nil }
-          end
-
-          relationships
         end
 
         def build_links
-          {
+          links = {
             self: {
               href: url_builder.build_url(path: "/v3/route_policies/#{route_policy.guid}")
             },
@@ -60,6 +53,17 @@ module VCAP::CloudController
               href: url_builder.build_url(path: "/v3/routes/#{route_policy.route.guid}")
             }
           }
+
+          case route_policy.source_type
+          when 'app'
+            links[:app] = { href: url_builder.build_url(path: "/v3/apps/#{route_policy.source_guid}") }
+          when 'space'
+            links[:space] = { href: url_builder.build_url(path: "/v3/spaces/#{route_policy.source_guid}") }
+          when 'org'
+            links[:organization] = { href: url_builder.build_url(path: "/v3/organizations/#{route_policy.source_guid}") }
+          end
+
+          links
         end
       end
     end

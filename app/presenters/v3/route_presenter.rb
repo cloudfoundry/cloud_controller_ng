@@ -34,6 +34,7 @@ module VCAP::CloudController::Presenters::V3
         port: route.port,
         url: build_url,
         destinations: RouteDestinationsPresenter.new(route.route_mappings, route:).presented_destinations,
+        options: route.options,
         metadata: {
           labels: hashified_labels(route.labels),
           annotations: hashified_annotations(route.annotations)
@@ -48,15 +49,10 @@ module VCAP::CloudController::Presenters::V3
         },
         links: build_links
       }
-      unless route.options.nil?
-        public_options = route.options.reject { |k, _| INTERNAL_ROUTE_OPTIONS.include?(k.to_s) }
-        hash.merge!(options: public_options) if route.options.empty? || public_options.present?
-      end
+      hash.delete(:options) if route.options.nil?
 
       @decorators.reduce(hash) { |memo, d| d.decorate(memo, [route]) }
     end
-
-    INTERNAL_ROUTE_OPTIONS = %w[route_policy_scope route_policy_sources].freeze
 
     private
 

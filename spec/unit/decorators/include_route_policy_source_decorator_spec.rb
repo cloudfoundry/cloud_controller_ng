@@ -23,7 +23,7 @@ module VCAP::CloudController
       end
 
       it 'does not match nil' do
-        expect(decorator.match?(nil)).to be false
+        expect(decorator.match?(nil)).not_to be(true)
       end
     end
 
@@ -31,10 +31,10 @@ module VCAP::CloudController
       let(:app1) { create(:app_model, space:) }
       let(:space1) { create(:space) }
       let(:org1) { space1.organization }
-      let(:policy_app) { RoutePolicy.create(source: "cf:app:#{app1.guid}", route_id: route.id) }
-      let(:policy_space) { RoutePolicy.create(source: "cf:space:#{space1.guid}", route_id: route.id) }
-      let(:policy_org) { RoutePolicy.create(source: "cf:org:#{org1.guid}", route_id: route.id) }
-      let(:policy_any) { RoutePolicy.create(source: 'cf:any', route_id: route.id) }
+      let(:policy_app) { create(:route_policy, source: "cf:app:#{app1.guid}", route_id: route.id) }
+      let(:policy_space) { create(:route_policy, source: "cf:space:#{space1.guid}", route_id: route.id) }
+      let(:policy_org) { create(:route_policy, source: "cf:org:#{org1.guid}", route_id: route.id) }
+      let(:policy_any) { create(:route_policy, source: 'cf:any', route_id: route.id) }
 
       it 'includes apps, spaces, and orgs from policy sources' do
         hash = decorator.decorate({}, [policy_app, policy_space, policy_org])
@@ -60,12 +60,12 @@ module VCAP::CloudController
         let(:other_org) { other_space.organization }
         let(:other_app) { create(:app_model, space: other_space) }
 
-        let(:policy_readable_app) { RoutePolicy.create(source: "cf:app:#{app1.guid}", route_id: route.id) }
-        let(:policy_unreadable_app) { RoutePolicy.create(source: "cf:app:#{other_app.guid}", route_id: route.id) }
-        let(:policy_readable_space) { RoutePolicy.create(source: "cf:space:#{space1.guid}", route_id: route.id) }
-        let(:policy_unreadable_space) { RoutePolicy.create(source: "cf:space:#{other_space.guid}", route_id: route.id) }
-        let(:policy_readable_org) { RoutePolicy.create(source: "cf:org:#{org1.guid}", route_id: route.id) }
-        let(:policy_unreadable_org) { RoutePolicy.create(source: "cf:org:#{other_org.guid}", route_id: route.id) }
+        let(:policy_readable_app) { create(:route_policy, source: "cf:app:#{app1.guid}", route_id: route.id) }
+        let(:policy_unreadable_app) { create(:route_policy, source: "cf:app:#{other_app.guid}", route_id: route.id) }
+        let(:policy_readable_space) { create(:route_policy, source: "cf:space:#{space1.guid}", route_id: route.id) }
+        let(:policy_unreadable_space) { create(:route_policy, source: "cf:space:#{other_space.guid}", route_id: route.id) }
+        let(:policy_readable_org) { create(:route_policy, source: "cf:org:#{org1.guid}", route_id: route.id) }
+        let(:policy_unreadable_org) { create(:route_policy, source: "cf:org:#{other_org.guid}", route_id: route.id) }
 
         let(:permission_queryer) do
           instance_double(

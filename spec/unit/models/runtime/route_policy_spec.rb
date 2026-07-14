@@ -93,101 +93,105 @@ module VCAP::CloudController
 
     describe 'validations' do
       it 'requires a selector' do
-        rule = RoutePolicy.new(route:)
-        expect(rule.valid?).to be false
-        expect(rule.errors[:source_type]).to include(:presence)
+        policy = RoutePolicy.new(route:)
+        expect(policy.valid?).to be false
+        expect(policy.errors[:source_type]).to include(:presence)
       end
 
       it 'requires a route_id' do
-        rule = RoutePolicy.new(source: 'cf:app:123')
-        expect(rule.valid?).to be false
-        expect(rule.errors[:route_id]).to include(:presence)
+        policy = RoutePolicy.new(source: 'cf:app:123')
+        expect(policy.valid?).to be false
+        expect(policy.errors[:route_id]).to include(:presence)
+      end
+
+      describe 'cf:any exclusivity' do
+        it 'rejects cf:any when another policy already exists on the route' do
+          create(:route_policy, source: "cf:app:#{app_guid}", route: route)
+          policy = RoutePolicy.new(source: 'cf:any', route: route)
+
+          expect(policy.valid?).to be false
+          expect(policy.errors[:source]).to include("'cf:any' cannot coexist with other route policies on the same route")
+        end
+
+        it 'rejects a non-cf:any policy when a cf:any policy already exists on the route' do
+          create(:route_policy, source: 'cf:any', route: route)
+          policy = RoutePolicy.new(source: "cf:app:#{app_guid}", route: route)
+
+          expect(policy.valid?).to be false
+          expect(policy.errors[:source]).to include("cannot coexist with the existing 'cf:any' policy on this route")
+        end
+
+        it 'raises Sequel::ValidationFailed when saving a conflicting cf:any policy' do
+          create(:route_policy, source: "cf:app:#{app_guid}", route: route)
+
+          expect do
+            create(:route_policy, source: 'cf:any', route: route)
+          end.to raise_error(Sequel::ValidationFailed)
+        end
+
+        it 'allows multiple non-cf:any policies on the same route' do
+          create(:route_policy, source: "cf:app:#{app_guid}", route: route)
+
+          expect do
+            create(:route_policy, source: "cf:app:#{SecureRandom.uuid}", route: route)
+          end.not_to raise_error
+        end
+
+        it 'allows cf:any when the route has no other policies' do
+          expect do
+            create(:route_policy, source: 'cf:any', route: route)
+          end.not_to raise_error
+        end
       end
     end
 
     describe 'associations' do
       it 'belongs to a route' do
-        rule = RoutePolicy.create(
-          source: 'cf:app:123',
-          route: route
-        )
-        expect(rule.route).to eq(route)
+        policy = create(:route_policy, source: 'cf:app:123', route: route)
+        expect(policy.route).to eq(route)
       end
     end
 
     describe 'columns' do
       it 'persists source_type for a typed source' do
-        policy = RoutePolicy.create(source: "cf:app:#{app_guid}", route: route)
+        policy = create(:route_policy, source: "cf:app:#{app_guid}", route: route)
         expect(policy.source_type).to eq('app')
         expect(policy.source_guid).to eq(app_guid)
       end
 
       it 'persists source_type and empty source_guid for cf:any' do
-        policy = RoutePolicy.create(source: 'cf:any', route: route)
+        policy = create(:route_policy, source: 'cf:any', route: route)
         expect(policy.source_type).to eq('any')
         expect(policy.source_guid).to eq('')
       end
     end
 
-    describe 'callbacks' do
-      describe 'after_create' do
-        it 'calls notify_processes_of_route_update' do
-          expect_any_instance_of(RoutePolicy).to receive(:notify_processes_of_route_update).and_call_original
+    describe '#notify_diego' do
+      let(:policy) { create(:route_policy, source: "cf:app:#{app_guid}", route: route) }
 
-          RoutePolicy.create(
-            source: "cf:app:#{app_guid}",
-            route: route
-          )
-        end
+      it 'notifies the backend for each associated process' do
+        process # force creation
 
-        it 'updates associated processes' do
-          process # force creation
+        expect_any_instance_of(ProcessRouteHandler).to receive(:notify_backend_of_route_update).once
 
-          # Record the SQL update queries to verify the process row is updated
-          RoutePolicy.create(
-            source: "cf:app:#{app_guid}",
-            route: route
-          )
-
-          # Verify the route has linked processes
-          expect(route.apps).to include(process)
-        end
-
-        it 'does not fail if route has no associated processes' do
-          route_without_processes = create(:route, space:, domain:)
-
-          expect do
-            RoutePolicy.create(
-              source: "cf:app:#{app_guid}",
-              route: route_without_processes
-            )
-          end.not_to raise_error
-        end
+        policy.notify_diego
       end
 
-      describe 'after_destroy' do
-        it 'calls notify_processes_of_route_update' do
-          rule = RoutePolicy.create(
-            source: "cf:app:#{app_guid}",
-            route: route
-          )
+      it 'does nothing when the route has no associated processes' do
+        route_without_processes = create(:route, space:, domain:)
+        policy_without_processes = create(:route_policy, source: "cf:app:#{app_guid}", route: route_without_processes)
 
-          expect_any_instance_of(RoutePolicy).to receive(:notify_processes_of_route_update).and_call_original
+        expect do
+          policy_without_processes.notify_diego
+        end.not_to raise_error
+      end
 
-          rule.destroy
-        end
+      it 'does nothing when the route is nil' do
+        policy_without_route = RoutePolicy.new(source: "cf:app:#{app_guid}")
 
-        it 'does not fail if route has no associated processes' do
-          route_without_processes = create(:route, space:, domain:)
-          rule = RoutePolicy.create(
-            source: "cf:app:#{app_guid}",
-            route: route_without_processes
-          )
-
-          expect do
-            rule.destroy
-          end.not_to raise_error
-        end
+        expect do
+          policy_without_route.notify_diego
+        end.not_to raise_error
       end
     end
   end
