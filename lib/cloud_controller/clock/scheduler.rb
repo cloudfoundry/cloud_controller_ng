@@ -30,6 +30,10 @@ module VCAP::CloudController
       { name: 'lifecycle_type_backfill', class: Jobs::Runtime::LifecycleTypeBackfill }
     ].freeze
 
+    def self.queue_names
+      (CLEANUPS + FREQUENTS).pluck(:name)
+    end
+
     def initialize(config)
       @clock = Clock.new
       @config = config

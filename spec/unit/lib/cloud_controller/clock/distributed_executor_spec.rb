@@ -232,6 +232,40 @@ module VCAP::CloudController
           end
         end
       end
+
+      context 'when an untouched job is already queued and the job timeout has expired' do
+        before do
+          DistributedExecutor.new.execute_job(name: job_name, interval: 1.minute, fudge: 1.second, timeout: 5.minutes) do
+            Delayed::Job.create!(queue: job_name, failed_at: nil, locked_at: nil)
+          end
+          Timecop.travel(Time.now.utc + 6.minutes)
+        end
+
+        it 'does not enqueue another job' do
+          executed = false
+          DistributedExecutor.new.execute_job name: job_name, interval: 1.minute, fudge: 1.second, timeout: 5.minutes do
+            executed = true
+          end
+          expect(executed).to be(false)
+        end
+      end
+
+      context 'when multiple untouched jobs are already queued and the job timeout has expired' do
+        let!(:newer_job) { Delayed::Job.create!(queue: job_name, failed_at: nil, locked_at: nil, created_at: Time.now.utc) }
+        let!(:older_job) { Delayed::Job.create!(queue: job_name, failed_at: nil, locked_at: nil, created_at: Time.now.utc - 1.hour) }
+        let!(:locked_job) { Delayed::Job.create!(queue: job_name, failed_at: nil, locked_at: Time.now) }
+        let!(:failed_job) { Delayed::Job.create!(queue: job_name, failed_at: Time.now, locked_at: nil) }
+
+        before do
+          DistributedExecutor.new.execute_job(name: job_name, interval: 1.minute, fudge: 1.second, timeout: 5.minutes) {}
+          Timecop.travel(Time.now.utc + 6.minutes)
+        end
+
+        it 'purges all but the newest untouched job, it keeps locked and failed jobs' do
+          DistributedExecutor.new.execute_job(name: job_name, interval: 1.minute, fudge: 1.second, timeout: 5.minutes) {}
+          expect(Delayed::Job.where(queue: job_name).all).to contain_exactly(newer_job, locked_job, failed_job)
+        end
+      end
     end
   end
 end

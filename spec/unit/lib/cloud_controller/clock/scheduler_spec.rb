@@ -236,5 +236,12 @@ module VCAP::CloudController
         end
       end
     end
+
+    describe '.queue_names' do
+      it 'returns the queue name of every scheduled job' do
+        expected = (Scheduler::CLEANUPS + Scheduler::FREQUENTS).pluck(:name)
+        expect(Scheduler.queue_names).to match_array(expected)
+      end
+    end
   end
 end
