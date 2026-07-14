@@ -15,7 +15,6 @@ module VCAP::CloudController
           optional(:webdav_config) => Hash,
           optional(:cdn) => Hash,
 
-
           optional(:resource_directory_key) => String,
           optional(:buildpack_directory_key) => String,
           optional(:app_package_directory_key) => String,

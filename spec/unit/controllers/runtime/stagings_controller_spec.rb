@@ -197,21 +197,18 @@ module VCAP::CloudController
         nginx: { use_nginx: true },
         resource_pool: {
           resource_directory_key: 'cc-resources',
-          fog_connection: {
-            provider: 'local'
-          }
+          blobstore_type: 'local',
+          local_blobstore_path: Dir.mktmpdir('resource_pool', workspace)
         },
         packages: {
-          fog_connection: {
-            provider: 'local'
-          },
+          blobstore_type: 'local',
+          local_blobstore_path: Dir.mktmpdir('packages', workspace),
           app_package_directory_key: 'cc-packages'
         },
         droplets: {
           droplet_directory_key: 'cc-droplets',
-          fog_connection: {
-            provider: 'local'
-          }
+          blobstore_type: 'local',
+          local_blobstore_path: Dir.mktmpdir('droplets', workspace)
         },
         directories: {
           tmpdir: Dir.mktmpdir('tmpdir', workspace)
@@ -238,7 +235,6 @@ module VCAP::CloudController
     end
 
     after do
-      Fog::Mock.reset
       FileUtils.rm_rf(workspace)
     end
 

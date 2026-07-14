@@ -7,19 +7,10 @@ module VCAP::CloudController
 
       let(:package_bits_path) { File.expand_path('../../../fixtures/good.zip', File.dirname(__FILE__)) }
       let(:package_blobstore) do
-        CloudController::Blobstore::FogClient.new(connection_config: { provider: 'local' },
-                                                  directory_key: 'package')
+        CloudController::Blobstore::LocalClient.new(directory_key: 'package', base_path: Dir.mktmpdir)
       end
       let(:source_package) { create(:package_model, type: 'bits', package_hash: 'something', sha256_checksum: 'sha256') }
       let(:destination_package) { create(:package_model, type: 'bits') }
-
-      before do
-        package_blobstore.ensure_bucket_exists
-      end
-
-      after do
-        Fog::Mock.reset
-      end
 
       it { is_expected.to be_a_valid_job }
 

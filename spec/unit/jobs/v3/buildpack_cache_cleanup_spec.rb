@@ -17,9 +17,8 @@ module VCAP::CloudController
           tls_port: cc_port,
           droplets: {
             droplet_directory_key: 'cc-droplets',
-            fog_connection: {
-              provider: 'local'
-            }
+            blobstore_type: 'local',
+            local_blobstore_path: Dir.mktmpdir('droplets', workspace)
           },
           directories: {
             tmpdir: Dir.mktmpdir('tmpdir', workspace)
@@ -49,7 +48,6 @@ module VCAP::CloudController
 
       after do
         FileUtils.rm_rf(workspace)
-        Fog::Mock.reset
       end
 
       it 'deletes everything from the buildpack_cache directory' do

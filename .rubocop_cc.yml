@@ -795,3 +795,34 @@ Rails/RedundantActiveRecordAllMethod: # As we use Sequel this breaks code as it 
   Enabled: false
 Sequel/SaveChanges: # Breaks Code
   Enabled: false
+
+
+# New cops in RuboCop 1.85 / rubocop-rspec 3.10
+Lint/DataDefineOverride:
+  Enabled: true
+Lint/UnreachablePatternBranch:
+  Enabled: true
+Style/FileOpen:
+  Enabled: true
+Style/MapJoin:
+  Enabled: true
+Style/OneClassPerFile:
+  Enabled: false
+Style/PartitionInsteadOfDoubleSelect:
+  Enabled: true
+Style/PredicateWithKind:
+  Enabled: true
+Style/ReduceToHash:
+  Enabled: true
+Style/RedundantMinMaxBy:
+  Enabled: true
+Style/SelectByKind:
+  Enabled: true
+Style/SelectByRange:
+  Enabled: true
+Style/TallyMethod:
+  Enabled: true
+RSpec/DiscardedMatcher:
+  Enabled: true
+RSpec/MatchWithSimpleRegex:
+  Enabled: true

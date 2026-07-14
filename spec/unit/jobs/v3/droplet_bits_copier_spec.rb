@@ -7,19 +7,10 @@ module VCAP::CloudController
 
       let(:droplet_bits_path) { File.expand_path('../../../fixtures/good.zip', File.dirname(__FILE__)) }
       let(:droplet_blobstore) do
-        CloudController::Blobstore::FogClient.new(connection_config: { provider: 'local' },
-                                                  directory_key: 'droplet')
+        CloudController::Blobstore::LocalClient.new(directory_key: 'droplet', base_path: Dir.mktmpdir)
       end
       let(:source_droplet) { create(:droplet_model, droplet_hash: 'abcdef1234', sha256_checksum: '4321fedcba', state: DropletModel::STAGED_STATE, set_as_current_droplet: false) }
       let(:destination_droplet) { create(:droplet_model, droplet_hash: nil, sha256_checksum: nil, state: DropletModel::STAGING_STATE, set_as_current_droplet: false) }
-
-      before do
-        droplet_blobstore.ensure_bucket_exists
-      end
-
-      after do
-        Fog::Mock.reset
-      end
 
       it { is_expected.to be_a_valid_job }
 

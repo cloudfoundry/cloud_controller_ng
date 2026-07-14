@@ -16,9 +16,8 @@ RSpec.resource 'Blobstores', type: :api do
       external_port: cc_port,
       droplets: {
         droplet_directory_key: 'cc-droplets',
-        fog_connection: {
-          provider: 'local'
-        }
+        blobstore_type: 'local',
+        local_blobstore_path: Dir.mktmpdir('droplets', workspace)
       },
       directories: {
         tmpdir: Dir.mktmpdir('tmpdir', workspace)
@@ -30,11 +29,9 @@ RSpec.resource 'Blobstores', type: :api do
 
   before do
     TestConfig.override(**blobstore_config)
-    CloudController::DependencyLocator.instance.buildpack_cache_blobstore.ensure_bucket_exists
   end
 
   after do
-    Fog::Mock.reset
     FileUtils.rm_rf(workspace)
   end
 
