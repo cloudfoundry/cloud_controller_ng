@@ -9,9 +9,11 @@ module CloudController
     class FakeStorage
       FakeFile = Struct.new(:key, :body, :content_type, :public, :content_length, :bucket, keyword_init: true) do
         def public_url = public ? "http://fake/#{key}" : nil
-        def copy(dest_bucket, dest_key, _opts = {})
+
+        def copy(dest_bucket, dest_key, _opts={})
           storage.store_file(dest_bucket, dest_key, body, content_type)
         end
+
         def destroy = storage.delete_file(bucket, key)
 
         attr_accessor :storage
@@ -108,7 +110,7 @@ module CloudController
           @storage.store_file(@bucket, key, body, content_type)
         end
 
-        def each(&block) = all.each(&block)
+        def each(&) = all.each(&)
         def all = @storage.list_files(@bucket)
 
         def select(prefix: nil)
