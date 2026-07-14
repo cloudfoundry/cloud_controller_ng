@@ -46,20 +46,20 @@ module TestConfig
         nginx: { use_nginx: true },
         resource_pool: {
           resource_directory_key: 'spec-cc-resources',
-          fog_connection: {}
+          blobstore_type: 'local-temp-storage'
         },
         packages: {
           app_package_directory_key: 'cc-packages',
-          fog_connection: {},
+          blobstore_type: 'local-temp-storage',
           max_valid_packages_stored: 42
         },
         buildpacks: {
           buildpack_directory_key: 'cc-buildpacks',
-          fog_connection: {}
+          blobstore_type: 'local-temp-storage'
         },
         droplets: {
           droplet_directory_key: 'cc-droplets',
-          fog_connection: {},
+          blobstore_type: 'local-temp-storage',
           max_staged_droplets_stored: 42
         },
         db: DbConfig.new.config

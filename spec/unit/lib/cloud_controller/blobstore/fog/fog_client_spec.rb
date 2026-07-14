@@ -9,6 +9,7 @@ module CloudController
     class FakeStorage
       FakeFile = Struct.new(:key, :body, :content_type, :public, :content_length, :bucket, keyword_init: true) do
         def public_url = public ? "http://fake/#{key}" : nil
+        def url(_expires) = "http://fake/#{key}"
 
         def copy(dest_bucket, dest_key, _opts={})
           storage.store_file(dest_bucket, dest_key, body, content_type)
@@ -61,10 +62,10 @@ module CloudController
       class DirectoryProxy
         def initialize(storage) = @storage = storage
 
-        def get(key, **)
+        def get(key, _options=nil, prefix: nil, **_kwargs)
           return nil unless @storage.bucket_exists?(key)
 
-          BucketProxy.new(@storage, key)
+          BucketProxy.new(@storage, key, prefix:)
         end
 
         def create(key:, **) = BucketProxy.new(@storage, @storage.create_bucket(key) && key)
@@ -74,22 +75,26 @@ module CloudController
       class BucketProxy
         attr_reader :key
 
-        def initialize(storage, key)
+        def initialize(storage, key, prefix: nil)
           @storage = storage
           @key = key
+          @prefix = prefix
           @storage.create_bucket(key)
         end
 
-        def files = FilesProxy.new(@storage, @key)
+        def files = FilesProxy.new(@storage, @key, prefix: @prefix)
       end
 
       class FilesProxy
         include Enumerable
 
-        def initialize(storage, bucket)
+        def initialize(storage, bucket, prefix: nil)
           @storage = storage
           @bucket = bucket
+          @prefix = prefix
         end
+
+        delegate :length, to: :all
 
         def head(key) = @storage.get_file(@bucket, key)
 
@@ -105,12 +110,17 @@ module CloudController
           file
         end
 
-        def create(key:, body:, content_type: 'application/zip', **)
+        def create(options_or_key=nil, key: nil, body: nil, content_type: 'application/zip', **)
+          if options_or_key.is_a?(Hash)
+            key           = options_or_key[:key]
+            body          = options_or_key[:body]
+            content_type  = options_or_key[:content_type] || 'application/zip'
+          end
           @storage.store_file(@bucket, key, body, content_type)
         end
 
         def each(&) = all.each(&)
-        def all = @storage.list_files(@bucket)
+        def all = @all ||= @storage.list_files(@bucket, prefix: @prefix)
 
         def select(prefix: nil)
           @storage.list_files(@bucket, prefix:)
@@ -635,7 +645,7 @@ module CloudController
 
         describe '#ensure_bucket_exists' do
           it 'gets the bucket' do
-            expect(fake_storage.directories).to receive(:get).with(directory_key, max_keys: 1).and_call_original
+            expect(fake_storage.directories).to receive(:get).with(directory_key, { max_keys: 1 }).and_call_original
             subject.ensure_bucket_exists
           end
 
@@ -649,7 +659,7 @@ module CloudController
 
           context 'the bucket does not exist' do
             it 'creates the bucket' do
-              allow(fake_storage.directories).to receive(:get).with(directory_key, max_keys: 1).and_return(nil)
+              allow(fake_storage.directories).to receive(:get).with(directory_key, { max_keys: 1 }).and_return(nil)
               expect(fake_storage.directories).to receive(:create).with(key: directory_key, public: false).and_call_original
               subject.ensure_bucket_exists
             end
