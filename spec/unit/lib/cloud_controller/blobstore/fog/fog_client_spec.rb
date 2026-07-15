@@ -94,7 +94,7 @@ module CloudController
           @prefix = prefix
         end
 
-        delegate :length, to: :all
+        def length = all.length # rubocop:disable Rails/Delegate
 
         def head(key) = @storage.get_file(@bucket, key)
 
