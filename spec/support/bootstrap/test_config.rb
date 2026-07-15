@@ -4,8 +4,6 @@ require 'cloud_controller/config'
 require 'cloud_controller/dependency_locator'
 
 module TestConfig
-  BLOBSTORE_PATH = Dir.mktmpdir('cc-test-blobstore')
-
   class << self
     def context
       @context || :api
@@ -47,24 +45,20 @@ module TestConfig
         nginx: { use_nginx: true },
         resource_pool: {
           resource_directory_key: 'spec-cc-resources',
-          blobstore_type: 'local',
-          local_blobstore_path: BLOBSTORE_PATH
+          blobstore_type: 'local-temp-storage'
         },
         packages: {
           app_package_directory_key: 'cc-packages',
-          blobstore_type: 'local',
-          local_blobstore_path: BLOBSTORE_PATH,
+          blobstore_type: 'local-temp-storage',
           max_valid_packages_stored: 42
         },
         buildpacks: {
           buildpack_directory_key: 'cc-buildpacks',
-          blobstore_type: 'local',
-          local_blobstore_path: BLOBSTORE_PATH
+          blobstore_type: 'local-temp-storage'
         },
         droplets: {
           droplet_directory_key: 'cc-droplets',
-          blobstore_type: 'local',
-          local_blobstore_path: BLOBSTORE_PATH,
+          blobstore_type: 'local-temp-storage',
           max_staged_droplets_stored: 42
         },
         db: DbConfig.new.config
