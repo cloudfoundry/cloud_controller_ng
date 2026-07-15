@@ -347,7 +347,7 @@ module CloudController::Packager
 
         context 'when the package is successfully uploaded and processed' do
           it 'removes the temporary directory created for packaging' do
-            allow_any_instance_of(CloudController::Blobstore::LocalClient).to receive(:cp_to_blobstore)
+            allow(package_blobstore).to receive(:cp_to_blobstore)
             allow(Digester).to receive(:new).and_return(instance_double(Digester, digest_path: 'fake-digest'))
             expect(FileUtils).to receive(:remove_dir).with(local_bits_packer_path).and_call_original
             packer.send_package_to_blobstore(blobstore_key, uploaded_files_path, cached_files_fingerprints)
@@ -362,7 +362,7 @@ module CloudController::Packager
 
             expect(FileUtils).to receive(:remove_dir).with(local_bits_packer_path)
             expect do
-              allow_any_instance_of(CloudController::Blobstore::LocalClient).to receive(:cp_to_blobstore).and_raise(StandardError)
+              allow(package_blobstore).to receive(:cp_to_blobstore).and_raise(StandardError)
               packer.send_package_to_blobstore(blobstore_key, uploaded_files_path, cached_files_fingerprints)
             end.to raise_error(StandardError)
           end
