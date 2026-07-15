@@ -5,21 +5,17 @@ module VCAP::CloudController
     let(:test_config_hash) do
       {
         packages: {
-          fog_connection: {},
           app_package_directory_key: 'app_key'
         },
         droplets: {
-          fog_connection: {},
           droplet_directory_key: 'droplet_key'
         },
         buildpacks: {
-          fog_connection: {},
           buildpack_directory_key: 'bp_key'
         },
         resource_pool: {
           minimum_size: 9001,
           maximum_size: 0,
-          fog_connection: {},
           resource_directory_key: 'resource_key'
         },
         external_domain: 'host',
@@ -381,21 +377,17 @@ module VCAP::CloudController
       let(:test_config_hash) do
         {
           packages: {
-            fog_connection: {},
             app_package_directory_key: 'app_key'
           },
           droplets: {
-            fog_connection: {},
             droplet_directory_key: 'droplet_key'
           },
           buildpacks: {
-            fog_connection: {},
             buildpack_directory_key: 'bp_key'
           },
           resource_pool: {
             minimum_size: 9001,
             maximum_size: 0,
-            fog_connection: {},
             resource_directory_key: 'resource_key'
           },
           external_host: 'host',
@@ -540,7 +532,6 @@ module VCAP::CloudController
 
       it 'returns a hash for nested properties' do
         expect(config_instance.get(:packages)).to eq({
-                                                       fog_connection: {},
                                                        app_package_directory_key: 'app_key'
                                                      })
       end

@@ -20,7 +20,7 @@ module VCAP::CloudController
         end
 
         context 'when the package is valid' do
-          let(:blob) { instance_double(CloudController::Blobstore::FogBlob) }
+          let(:blob) { instance_double(CloudController::Blobstore::Blob) }
 
           before do
             allow(blob).to receive(:public_download_url).and_return('http://example.com/somewhere/else')

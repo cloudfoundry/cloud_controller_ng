@@ -6,7 +6,6 @@
 
 require 'httpclient'
 require 'steno/steno'
-require 'cloud_controller/blobstore/fog/providers'
 require 'cloud_controller/resource_match'
 
 class VCAP::CloudController::ResourcePool

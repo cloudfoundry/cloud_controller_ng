@@ -1,6 +1,5 @@
 require 'cloud_controller/blobstore/client'
 require 'cloud_controller/blobstore/retryable_client'
-require 'cloud_controller/blobstore/fog/fog_client'
 require 'cloud_controller/blobstore/error_handling_client'
 require 'cloud_controller/blobstore/webdav/dav_client'
 require 'cloud_controller/blobstore/local/local_client'
@@ -18,8 +17,6 @@ module CloudController
           provide_local(options, directory_key, root_dir, use_temp_storage: true)
         when 'storage-cli'
           provide_storage_cli(options, directory_key, root_dir, resource_type)
-        when 'fog', nil, ''
-          provide_fog(options, directory_key, root_dir)
         else
           provide_webdav(options, directory_key, root_dir)
         end
@@ -27,31 +24,6 @@ module CloudController
 
       class << self
         private
-
-        def provide_fog(options, directory_key, root_dir)
-          cdn_uri        = HashUtils.dig(options[:cdn], :uri)
-          cdn            = CloudController::Blobstore::Cdn.make(cdn_uri)
-
-          client = FogClient.new(
-            connection_config: options.fetch(:fog_connection),
-            directory_key: directory_key,
-            cdn: cdn,
-            root_dir: root_dir,
-            min_size: options[:minimum_size],
-            max_size: options[:maximum_size]
-          )
-
-          logger = Steno.logger('cc.blobstore')
-
-          # work around https://github.com/fog/fog/issues/3137
-          # and Fog raising an EOFError SocketError intermittently
-          # and intermittent blobstore download errors
-          errors = [Excon::Errors::BadRequest, Excon::Errors::SocketError, SystemCallError,
-                    Excon::Errors::InternalServerError, Excon::Errors::ServiceUnavailable, OpenSSL::OpenSSLError]
-          retryable_client = RetryableClient.new(client:, errors:, logger:)
-
-          Client.new(ErrorHandlingClient.new(SafeDeleteClient.new(retryable_client, root_dir)))
-        end
 
         def provide_local(options, directory_key, root_dir, use_temp_storage:)
           client = LocalClient.new(

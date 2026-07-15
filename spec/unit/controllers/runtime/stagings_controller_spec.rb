@@ -265,11 +265,7 @@ module VCAP::CloudController
       before { authorize(staging_user, staging_password) }
 
       def create_test_blob
-        tmpdir = Dir.mktmpdir
-        file   = File.new(File.join(tmpdir, 'afile.txt'), 'w')
-        file.print('test blob contents')
-        file.close
-        CloudController::Blobstore::FogBlob.new(file, nil)
+        instance_double(CloudController::Blobstore::Blob, internal_download_url: '/cc-packages/test/blob')
       end
 
       context 'when using with nginx' do

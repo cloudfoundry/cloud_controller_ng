@@ -182,25 +182,21 @@ resource_pool:
   minimum_size: 1
   resource_directory_key: "spec-cc-resources"
   blobstore_type: local-temp-storage
-  fog_connection: {}
 
 packages:
   app_package_directory_key: "cc-packages"
   max_package_size: 42
   max_valid_packages_stored: 42
   blobstore_type: local-temp-storage
-  fog_connection: {}
 
 droplets:
   droplet_directory_key: cc-droplets
   max_staged_droplets_stored: 42
   blobstore_type: local-temp-storage
-  fog_connection: {}
 
 buildpacks:
   buildpack_directory_key: cc-buildpacks
   blobstore_type: local-temp-storage
-  fog_connection: {}
 
 db_encryption_key: "asdfasdfasdf"
 database_encryption:

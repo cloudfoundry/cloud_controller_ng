@@ -136,7 +136,6 @@ resource_pool:
     uri: 
     key_pair_id: 
     private_key: ""
-  fog_connection: {}
 
 packages:
   blobstore_type: webdav
@@ -153,7 +152,6 @@ packages:
     uri: 
     key_pair_id: 
     private_key: ""
-  fog_connection: {}
 
 droplets:
   blobstore_type: webdav
@@ -168,7 +166,6 @@ droplets:
     uri: 
     key_pair_id: 
     private_key: ""
-  fog_connection: {}
   max_staged_droplets_stored: 5
 
 buildpacks:
@@ -184,7 +181,6 @@ buildpacks:
     uri: 
     key_pair_id: 
     private_key: ""
-  fog_connection: {}
 
 db_encryption_key: db-encryption-key
 

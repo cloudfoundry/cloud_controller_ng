@@ -84,27 +84,19 @@ shared_isolation_segment_name: 'shared'
 
 resource_pool:
   resource_directory_key: "cc-resources"
-  fog_connection:
-    provider: Local
-    local_root: /tmp
+  blobstore_type: local-temp-storage
 
 packages:
   app_package_directory_key: "cc-packages"
-  fog_connection:
-    provider: Local
-    local_root: /tmp
+  blobstore_type: local-temp-storage
 
 droplets:
   droplet_directory_key: "cc-droplets"
-  fog_connection:
-    provider: Local
-    local_root: /tmp
+  blobstore_type: local-temp-storage
 
 buildpacks:
   buildpack_directory_key: "cc-buildpacks"
-  fog_connection:
-    provider: Local
-    local_root: /tmp
+  blobstore_type: local-temp-storage
 
 db_encryption_key: some-key
 
@@ -171,22 +163,22 @@ resource_pool:
   resource_directory_key: ''
   maximum_size: 42
   minimum_size: 1
-  fog_connection: {}
+  blobstore_type: local-temp-storage
 
 buildpacks:
   buildpack_directory_key: ''
-  fog_connection: {}
+  blobstore_type: local-temp-storage
 
 packages:
   app_package_directory_key: ''
   max_package_size: 42
   max_valid_packages_stored: 42
-  fog_connection: {}
+  blobstore_type: local-temp-storage
 
 droplets:
   droplet_directory_key: ''
   max_staged_droplets_stored: 42
-  fog_connection: {}
+  blobstore_type: local-temp-storage
 
 
 

@@ -138,15 +138,6 @@ module SpecHelperHelper
         TestConfig.context = example.metadata[:job_context] || :api
         TestConfig.reset
 
-        Fog::Mock.reset
-
-        if Fog.mock?
-          CloudController::DependencyLocator.instance.droplet_blobstore.ensure_bucket_exists
-          CloudController::DependencyLocator.instance.package_blobstore.ensure_bucket_exists
-          CloudController::DependencyLocator.instance.global_app_bits_cache.ensure_bucket_exists
-          CloudController::DependencyLocator.instance.buildpack_blobstore.ensure_bucket_exists
-        end
-
         VCAP::CloudController::SecurityContext.clear
         VCAP::Request.current_id = nil
         allow_any_instance_of(VCAP::CloudController::UaaTokenDecoder).to receive(:uaa_issuer).and_return(UAAIssuer::ISSUER)

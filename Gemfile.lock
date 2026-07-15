@@ -90,11 +90,6 @@ GEM
     fluent-logger (0.10.0)
       logger (~> 1.6)
       msgpack (>= 1.0.0, < 2)
-    fog-core (2.6.0)
-      builder
-      excon (~> 1.0)
-      formatador (>= 0.2, < 2.0)
-      mime-types
     formatador (1.2.3)
       reline
     google-protobuf (4.35.1)
@@ -470,7 +465,6 @@ DEPENDENCIES
   digest-xxhash
   factory_bot (~> 6.5)
   fluent-logger
-  fog-core (~> 2.6.0)
   googleapis-common-protos (>= 1.8.0)
   hashdiff
   httpclient

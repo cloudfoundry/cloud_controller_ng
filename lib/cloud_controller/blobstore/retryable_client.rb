@@ -70,7 +70,7 @@ module CloudController
         end
       end
 
-      def delete_all(page_size=FogClient::DEFAULT_BATCH_SIZE)
+      def delete_all(page_size=1000)
         with_retries(__method__.to_s, {
                        args: {
                          page_size:

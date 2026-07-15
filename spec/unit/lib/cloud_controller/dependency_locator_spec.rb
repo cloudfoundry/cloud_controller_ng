@@ -13,7 +13,6 @@ RSpec.describe CloudController::DependencyLocator do
     let(:config) do
       VCAP::CloudController::Config.new({
                                           droplets: {
-                                            fog_connection: 'fog_connection',
                                             droplet_directory_key: 'key'
                                           }
                                         })
@@ -30,7 +29,6 @@ RSpec.describe CloudController::DependencyLocator do
     let(:config) do
       VCAP::CloudController::Config.new({
                                           droplets: {
-                                            fog_connection: 'fog_connection',
                                             droplet_directory_key: 'key'
                                           }
                                         })
@@ -51,7 +49,6 @@ RSpec.describe CloudController::DependencyLocator do
     let(:config) do
       VCAP::CloudController::Config.new({
                                           packages: {
-                                            fog_connection: 'fog_connection',
                                             app_package_directory_key: 'key'
                                           }
                                         })
@@ -68,7 +65,6 @@ RSpec.describe CloudController::DependencyLocator do
     let(:config) do
       VCAP::CloudController::Config.new({
                                           resource_pool: {
-                                            fog_connection: 'fog_connection',
                                             resource_directory_key: 'key'
                                           }
                                         })
@@ -88,7 +84,6 @@ RSpec.describe CloudController::DependencyLocator do
     let(:config) do
       VCAP::CloudController::Config.new({
                                           resource_pool: {
-                                            fog_connection: 'fog_connection',
                                             resource_directory_key: 'key'
                                           }
                                         })

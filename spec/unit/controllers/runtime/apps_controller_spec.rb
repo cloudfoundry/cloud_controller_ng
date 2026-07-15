@@ -1806,7 +1806,7 @@ module VCAP::CloudController
 
     describe 'downloading the droplet' do
       let(:process) { ProcessModelFactory.make }
-      let(:blob) { instance_double(CloudController::Blobstore::FogBlob) }
+      let(:blob) { instance_double(CloudController::Blobstore::Blob) }
       let(:developer) { make_developer_for_space(process.space) }
 
       before do
