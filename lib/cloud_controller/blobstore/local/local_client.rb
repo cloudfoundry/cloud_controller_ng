@@ -151,10 +151,9 @@ module CloudController
       def cleanup_temp_storage
         return unless use_temp_storage? && @base_path && File.directory?(@base_path)
 
-        logger.info('temp-storage-cleanup', directory_key: @directory_key, path: @base_path)
         FileUtils.rm_rf(@base_path)
-      rescue StandardError => e
-        logger.error('temp-storage-cleanup-failed', error: e.message, path: @base_path)
+      rescue StandardError
+        # at_exit: swallow errors silently, logger may be unavailable
       end
 
       def logger
