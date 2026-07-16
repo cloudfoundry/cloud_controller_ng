@@ -265,7 +265,12 @@ module VCAP::CloudController
       before { authorize(staging_user, staging_password) }
 
       def create_test_blob
-        instance_double(CloudController::Blobstore::Blob, internal_download_url: '/cc-packages/test/blob')
+        tmpfile = Tempfile.new('staging-test-blob')
+        tmpfile.write('test blob contents')
+        tmpfile.flush
+        instance_double(CloudController::Blobstore::Blob,
+                        internal_download_url: '/cc-packages/test/blob',
+                        local_path: tmpfile.path)
       end
 
       context 'when using with nginx' do
@@ -304,6 +309,8 @@ module VCAP::CloudController
       end
 
       it 'fails if blobstore is not local' do
+        non_local_blobstore = instance_double(CloudController::Blobstore::Client, local?: false)
+        allow(CloudController::DependencyLocator.instance).to receive(:package_blobstore).and_return(non_local_blobstore)
         get '/staging/packages/some-guid'
         expect(last_response.status).to eq(400)
       end
@@ -457,6 +464,8 @@ module VCAP::CloudController
       before { authorize(staging_user, staging_password) }
 
       it 'fails if blobstore is not local' do
+        non_local_blobstore = instance_double(CloudController::Blobstore::Client, local?: false)
+        allow(CloudController::DependencyLocator.instance).to receive(:droplet_blobstore).and_return(non_local_blobstore)
         get '/staging/v3/droplets/some-guid/download'
         expect(last_response.status).to eq(400)
       end

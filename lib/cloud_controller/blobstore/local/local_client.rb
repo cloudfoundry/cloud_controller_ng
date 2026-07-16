@@ -92,8 +92,9 @@ module CloudController
       end
 
       def delete_all(_=nil)
-        FileUtils.rm_rf(@base_path)
-        FileUtils.mkdir_p(@base_path)
+        target = @root_dir ? File.join(@base_path, @root_dir) : @base_path
+        FileUtils.rm_rf(target)
+        FileUtils.mkdir_p(target)
       end
 
       def delete_all_in_path(path)

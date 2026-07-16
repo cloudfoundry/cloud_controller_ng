@@ -35,14 +35,9 @@ module VCAP::CloudController
 
     context 'when the blob exists' do
       it 'creates a job with attributes' do
-        attrs = blobstore.blob(key).attributes
-        job_attrs = {
-          last_modified: attrs[:last_modified],
-          etag: attrs[:etag],
-          content_length: 0
-        }
+        attrs = blobstore.blob(key).attributes(*CloudController::Blobstore::Blob::CACHE_ATTRIBUTES)
 
-        expect(Jobs::Runtime::BlobstoreDelete).to receive(:new).with(key, :buildpack_blobstore, job_attrs).and_call_original
+        expect(Jobs::Runtime::BlobstoreDelete).to receive(:new).with(key, :buildpack_blobstore, attrs).and_call_original
         BuildpackBitsDelete.delete_when_safe(key, staging_timeout)
       end
     end

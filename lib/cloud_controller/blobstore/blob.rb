@@ -10,6 +10,10 @@ module CloudController
       def public_download_url
         raise NotImplementedError
       end
+
+      def local_path
+        raise NotImplementedError
+      end
     end
   end
 end

@@ -45,6 +45,11 @@ RSpec.resource 'Apps', type: %i[api legacy_api] do
       directories: { tmpdir: File.dirname(valid_zip.path) },
       kubernetes: {}
     )
+    empty_file = Tempfile.new('empty')
+    CloudController::DependencyLocator.instance.global_app_bits_cache.cp_to_blobstore(
+      empty_file.path, 'da39a3ee5e6b4b0d3255bfef95601890afd80709'
+    )
+    empty_file.close
   end
 
   put '/v2/apps/:guid/bits' do
@@ -123,8 +128,10 @@ RSpec.resource 'Apps', type: %i[api legacy_api] do
       EOS
 
       no_doc { client.put "/v2/apps/#{process.guid}/bits", app_bits_put_params, headers }
+      allow_any_instance_of(CloudController::Blobstore::LocalClient).to receive(:local?).and_return(false)
+      allow_any_instance_of(CloudController::Blobstore::LocalBlob).to receive(:public_download_url).and_return('http://blobstore.example.com/download')
       client.get "/v2/apps/#{process.guid}/download", {}, headers
-      expect(response_headers['Location']).to include('cc-packages.s3.amazonaws.com')
+      expect(response_headers['Location']).to eq('http://blobstore.example.com/download')
       expect(status).to eq(302)
     end
   end
@@ -150,9 +157,11 @@ RSpec.resource 'Apps', type: %i[api legacy_api] do
         Some blobstores may reject the request in that case. Clients may need to follow the redirect without including the OAuth token.
       EOS
 
+      allow_any_instance_of(CloudController::Blobstore::LocalClient).to receive(:local?).and_return(false)
+      allow_any_instance_of(CloudController::Blobstore::LocalBlob).to receive(:public_download_url).and_return('http://blobstore.example.com/droplet-download')
       client.get "/v2/apps/#{process.guid}/droplet/download", {}, headers
       expect(status).to eq(302)
-      expect(response_headers['Location']).to include('cc-droplets.s3.amazonaws.com')
+      expect(response_headers['Location']).to eq('http://blobstore.example.com/droplet-download')
     end
   end
 

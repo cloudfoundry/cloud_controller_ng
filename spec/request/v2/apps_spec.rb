@@ -1882,6 +1882,11 @@ RSpec.describe 'Apps' do
 
     before do
       TestConfig.config[:directories][:tmpdir] = File.dirname(valid_zip.path)
+      empty_file = Tempfile.new('empty')
+      CloudController::DependencyLocator.instance.global_app_bits_cache.cp_to_blobstore(
+        empty_file.path, 'da39a3ee5e6b4b0d3255bfef95601890afd80709'
+      )
+      empty_file.close
       upload_params = {
         application: valid_zip,
         resources: [{ fn: 'a/b/c', size: 1, sha1: 'da39a3ee5e6b4b0d3255bfef95601890afd80709' }].to_json
@@ -1890,9 +1895,12 @@ RSpec.describe 'Apps' do
     end
 
     it 'redirects to a blobstore url' do
+      allow_any_instance_of(CloudController::Blobstore::LocalClient).to receive(:local?).and_return(false)
+      allow_any_instance_of(CloudController::Blobstore::LocalBlob).to receive(:public_download_url).and_return('http://blobstore.example.com/download')
+
       get "/v2/apps/#{process.guid}/download", nil, headers_for(user)
 
-      expect(last_response.headers['Location']).to include('cc-packages.s3.amazonaws.com')
+      expect(last_response.headers['Location']).to eq('http://blobstore.example.com/download')
       expect(last_response.status).to eq(302)
     end
   end
@@ -1909,9 +1917,12 @@ RSpec.describe 'Apps' do
     end
 
     it 'redirects to a blobstore to download the droplet' do
+      allow_any_instance_of(CloudController::Blobstore::LocalClient).to receive(:local?).and_return(false)
+      allow_any_instance_of(CloudController::Blobstore::LocalBlob).to receive(:public_download_url).and_return('http://blobstore.example.com/droplet-download')
+
       get "/v2/apps/#{process.guid}/droplet/download", nil, headers_for(user)
       expect(last_response.status).to eq(302)
-      expect(last_response.headers['Location']).to include('cc-droplets.s3.amazonaws.com')
+      expect(last_response.headers['Location']).to eq('http://blobstore.example.com/droplet-download')
     end
   end
 

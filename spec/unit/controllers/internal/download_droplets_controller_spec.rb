@@ -135,6 +135,7 @@ module VCAP::CloudController
         it 'redirects to the correct droplet when revision droplet differs from desired droplet' do
           upload_droplet
           upload_droplet(new_droplet)
+          allow_any_instance_of(CloudController::Blobstore::LocalClient).to receive(:local?).and_return(false)
           allow_any_instance_of(CloudController::Blobstore::UrlGenerator).to receive(:droplet_download_url).with(droplet).and_return('http://example.com/wrong/droplet')
           allow_any_instance_of(CloudController::Blobstore::UrlGenerator).to receive(:droplet_download_url).with(new_droplet).and_return('http://example.com/correct/droplet')
 
@@ -153,6 +154,7 @@ module VCAP::CloudController
 
       it 'redirects to the url provided by the blobstore_url_generator' do
         upload_droplet
+        allow_any_instance_of(CloudController::Blobstore::LocalClient).to receive(:local?).and_return(false)
         allow_any_instance_of(CloudController::Blobstore::UrlGenerator).to receive(:droplet_download_url).and_return('http://example.com/somewhere/else')
 
         get "/internal/v4/droplets/#{process.guid}/#{process.droplet_checksum}/download"
