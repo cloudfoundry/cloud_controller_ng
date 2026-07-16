@@ -142,65 +142,71 @@ module CloudController
     end
 
     def droplet_blobstore
-      options = config.get(:droplets)
-
-      Blobstore::ClientProvider.provide(
-        options: options,
-        directory_key: options.fetch(:droplet_directory_key),
-        resource_type: :droplets
-      )
+      @dependencies[:droplet_blobstore] ||= begin
+        options = config.get(:droplets)
+        Blobstore::ClientProvider.provide(
+          options: options,
+          directory_key: options.fetch(:droplet_directory_key),
+          resource_type: :droplets
+        )
+      end
     end
 
     def buildpack_cache_blobstore
-      options = config.get(:droplets)
-
-      Blobstore::ClientProvider.provide(
-        options: options,
-        directory_key: options.fetch(:droplet_directory_key),
-        root_dir: BUILDPACK_CACHE_DIR,
-        resource_type: :buildpack_cache
-      )
+      @dependencies[:buildpack_cache_blobstore] ||= begin
+        options = config.get(:droplets)
+        Blobstore::ClientProvider.provide(
+          options: options,
+          directory_key: options.fetch(:droplet_directory_key),
+          root_dir: BUILDPACK_CACHE_DIR,
+          resource_type: :buildpack_cache
+        )
+      end
     end
 
     def package_blobstore
-      options = config.get(:packages)
-
-      Blobstore::ClientProvider.provide(
-        options: options,
-        directory_key: options.fetch(:app_package_directory_key),
-        resource_type: :packages
-      )
+      @dependencies[:package_blobstore] ||= begin
+        options = config.get(:packages)
+        Blobstore::ClientProvider.provide(
+          options: options,
+          directory_key: options.fetch(:app_package_directory_key),
+          resource_type: :packages
+        )
+      end
     end
 
     def legacy_global_app_bits_cache
-      options = config.get(:resource_pool)
-
-      Blobstore::ClientProvider.provide(
-        options: options,
-        directory_key: options.fetch(:resource_directory_key),
-        resource_type: :resource_pool
-      )
+      @dependencies[:legacy_global_app_bits_cache] ||= begin
+        options = config.get(:resource_pool)
+        Blobstore::ClientProvider.provide(
+          options: options,
+          directory_key: options.fetch(:resource_directory_key),
+          resource_type: :resource_pool
+        )
+      end
     end
 
     def global_app_bits_cache
-      options = config.get(:resource_pool)
-
-      Blobstore::ClientProvider.provide(
-        options: options,
-        directory_key: options.fetch(:resource_directory_key),
-        root_dir: RESOURCE_POOL_DIR,
-        resource_type: :resource_pool
-      )
+      @dependencies[:global_app_bits_cache] ||= begin
+        options = config.get(:resource_pool)
+        Blobstore::ClientProvider.provide(
+          options: options,
+          directory_key: options.fetch(:resource_directory_key),
+          root_dir: RESOURCE_POOL_DIR,
+          resource_type: :resource_pool
+        )
+      end
     end
 
     def buildpack_blobstore
-      options = config.get(:buildpacks)
-
-      Blobstore::ClientProvider.provide(
-        options: options,
-        directory_key: options.fetch(:buildpack_directory_key, 'cc-buildpacks'),
-        resource_type: :buildpacks
-      )
+      @dependencies[:buildpack_blobstore] ||= begin
+        options = config.get(:buildpacks)
+        Blobstore::ClientProvider.provide(
+          options: options,
+          directory_key: options.fetch(:buildpack_directory_key, 'cc-buildpacks'),
+          resource_type: :buildpacks
+        )
+      end
     end
 
     def blobstore_url_generator

@@ -1017,7 +1017,6 @@ RSpec.describe 'Packages' do
       create(:app_model, guid: 'woof-guid', space: space, name: 'meow')
     end
     let(:space) { create(:space) }
-    let(:bits_download_url) { CloudController::DependencyLocator.instance.blobstore_url_generator.package_download_url(package_model) }
     let(:guid) { package_model.guid }
     let(:temp_file) do
       file = File.join(Dir.mktmpdir, 'application.zip')
@@ -1043,8 +1042,7 @@ RSpec.describe 'Packages' do
       Timecop.freeze do
         get "/v3/packages/#{guid}/download", {}, user_header
 
-        expect(last_response.status).to eq(302)
-        expect(last_response.headers['Location']).to eq(bits_download_url)
+        expect(last_response.status).to eq(200)
 
         expected_metadata = { package_guid: package_model.guid }.to_json
 
@@ -1076,7 +1074,7 @@ RSpec.describe 'Packages' do
       let(:org) { space.organization }
       let(:user) { create(:user) }
       let(:expected_codes_and_responses) do
-        h = Hash.new({ code: 302 }.freeze)
+        h = Hash.new({ code: 200 }.freeze)
         h['global_auditor'] = { code: 403 }
         h['org_auditor'] = { code: 404 }
         h['org_billing_manager'] = { code: 404 }
