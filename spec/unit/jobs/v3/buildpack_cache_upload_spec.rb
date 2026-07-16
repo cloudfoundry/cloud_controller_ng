@@ -84,11 +84,8 @@ module VCAP::CloudController
           before { app.destroy }
 
           it 'does not try to upload the droplet' do
+            expect(blobstore).not_to receive(:cp_to_blobstore)
             job.perform
-
-            downloaded_file = Tempfile.new('downloaded_file')
-            blobstore.download_from_blobstore(blobstore_key, downloaded_file.path)
-            expect(downloaded_file.read).to eql('')
           end
 
           it 'deletes the local file' do
