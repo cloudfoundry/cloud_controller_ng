@@ -388,7 +388,9 @@ module VCAP::CloudController
           resource_pool: {
             minimum_size: 9001,
             maximum_size: 0,
-            resource_directory_key: 'resource_key'
+            resource_directory_key: 'resource_key',
+            blobstore_type: 'local',
+            local_blobstore_path: Dir.mktmpdir
           },
           external_host: 'host',
           tls_port: 1234,

@@ -29,7 +29,7 @@ module CloudController
           {
             etag: OpenSSL::Digest::MD5.file(@file_path).hexdigest,
             last_modified: stat.mtime.httpdate,
-            content_length: stat.size.to_s,
+            content_length: stat.size,
             created_at: stat.ctime
           }
         end

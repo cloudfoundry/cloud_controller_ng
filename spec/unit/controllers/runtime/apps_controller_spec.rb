@@ -1813,6 +1813,7 @@ module VCAP::CloudController
         set_current_user(developer)
         allow(blob).to receive(:public_download_url).and_return('http://example.com/somewhere/else')
         allow_any_instance_of(CloudController::Blobstore::Client).to receive(:blob).and_return(blob)
+        allow_any_instance_of(CloudController::Blobstore::LocalClient).to receive(:local?).and_return(false)
       end
 
       it 'lets the user download the droplet' do

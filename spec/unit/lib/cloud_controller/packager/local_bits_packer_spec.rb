@@ -277,7 +277,7 @@ module CloudController::Packager
             `zip -r --symlinks "#{uploaded_files_path}" "#{symlink_path}"`
 
             packer.send_package_to_blobstore(blobstore_key, uploaded_files_path, [])
-            expect(global_app_bits_cache.files_for('').size).to be 2
+            expect(global_app_bits_cache.files_for('').count).to be 2
 
             sha_of_cli_js = 'da39a3ee5e6b4b0d3255bfef95601890afd80709'
             sha_of_target1_txt = 'f572d396fae9206628714fb2ce00f72e94f2258f'
