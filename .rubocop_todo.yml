@@ -581,7 +581,6 @@ Style/HashSlice:
     - 'app/controllers/services/service_instances_controller.rb'
     - 'app/controllers/services/service_plans_controller.rb'
     - 'app/presenters/system_environment/service_binding_presenter.rb'
-    - 'lib/cloud_controller/blobstore/fog/fog_blob.rb'
     - 'lib/cloud_controller/blobstore/storage_cli/storage_cli_blob.rb'
     - 'lib/cloud_controller/blobstore/webdav/dav_blob.rb'
     - 'lib/cloud_controller/telemetry_logger.rb'
