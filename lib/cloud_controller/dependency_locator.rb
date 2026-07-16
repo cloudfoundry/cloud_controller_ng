@@ -35,8 +35,6 @@ module CloudController
     BUILDPACK_CACHE_DIR = 'buildpack_cache'.freeze
     RESOURCE_POOL_DIR = 'app_bits_cache'.freeze
 
-    attr_writer :config
-
     def initialize
       @config = VCAP::CloudController::Config.config
       @dependencies = {}
@@ -44,6 +42,10 @@ module CloudController
 
     def config
       @config || raise('config not set')
+    end
+
+    def config=(config)
+      reset(config)
     end
 
     def reset(config)
