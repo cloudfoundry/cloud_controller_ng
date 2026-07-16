@@ -45,7 +45,7 @@ namespace :spec do
   def run_specs_parallel(path, env_vars='')
     command = <<~CMD
       #{env_vars} bundle exec parallel_rspec \
-      --test-options '--order rand #{rspec_profile_option} --format ParallelTests::RSpec::RuntimeLogger --out tmp/parallel_runtime_rspec_main.log' \
+      --test-options '--order rand #{rspec_profile_option} --format progress --format ParallelTests::RSpec::RuntimeLogger --out tmp/parallel_runtime_rspec_main.log' \
       --runtime-log tmp/parallel_runtime_rspec_main.log \
       --single spec/integration/ \
       --single spec/acceptance/ \
