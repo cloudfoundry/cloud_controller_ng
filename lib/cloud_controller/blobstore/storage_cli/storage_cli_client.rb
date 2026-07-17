@@ -20,7 +20,7 @@ module CloudController
       # Native storage-cli type names supported by CC
       STORAGE_CLI_TYPES = %w[azurebs alioss s3 gcs dav].freeze
 
-      # DEPRECATED: Legacy fog provider names (remove completely after migration window)
+      # Legacy alias: 'webdav' maps to the native 'dav' type
       LEGACY_PROVIDER_TO_STORAGE_CLI_TYPE = {
         'webdav' => 'dav'
       }.freeze
@@ -38,14 +38,13 @@ module CloudController
           if STORAGE_CLI_TYPES.include?(provider)
             provider
           else
-            # START LEGACY FOG SUPPORT (delete this whole else-branch after migration)
+            # Legacy alias support (delete after migration window)
             LEGACY_PROVIDER_TO_STORAGE_CLI_TYPE[provider]
-            # END LEGACY FOG SUPPORT
           end
 
         unless @storage_type
           raise "Unknown provider: #{provider}. Supported storage-cli types: #{STORAGE_CLI_TYPES.join(', ')} " \
-                "(legacy fog names accepted temporarily: #{LEGACY_PROVIDER_TO_STORAGE_CLI_TYPE.keys.join(', ')})"
+                "(legacy aliases accepted: #{LEGACY_PROVIDER_TO_STORAGE_CLI_TYPE.keys.join(', ')})"
         end
 
         @cli_path = cli_path

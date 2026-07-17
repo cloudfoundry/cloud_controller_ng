@@ -120,6 +120,11 @@ RSpec.resource 'Apps', type: %i[api legacy_api] do
   get '/v2/apps/:guid/download' do
     let(:async) { false }
 
+    before do
+      allow_any_instance_of(CloudController::Blobstore::LocalClient).to receive(:local?).and_return(false)
+      allow_any_instance_of(CloudController::Blobstore::LocalBlob).to receive(:public_download_url).and_return('http://blobstore.example.com/download')
+    end
+
     example 'Downloads the bits for an App' do
       explanation <<-EOS
         When using a remote blobstore, such as AWS, the response is a redirect to the actual location of the bits.
@@ -128,8 +133,6 @@ RSpec.resource 'Apps', type: %i[api legacy_api] do
       EOS
 
       no_doc { client.put "/v2/apps/#{process.guid}/bits", app_bits_put_params, headers }
-      allow_any_instance_of(CloudController::Blobstore::LocalClient).to receive(:local?).and_return(false)
-      allow_any_instance_of(CloudController::Blobstore::LocalBlob).to receive(:public_download_url).and_return('http://blobstore.example.com/download')
       client.get "/v2/apps/#{process.guid}/download", {}, headers
       expect(response_headers['Location']).to eq('http://blobstore.example.com/download')
       expect(status).to eq(302)
@@ -148,6 +151,8 @@ RSpec.resource 'Apps', type: %i[api legacy_api] do
       droplet_file.close
 
       VCAP::CloudController::Jobs::V3::DropletUpload.new(droplet_file.path, process.desired_droplet.guid, skip_state_transition: false).perform
+      allow_any_instance_of(CloudController::Blobstore::LocalClient).to receive(:local?).and_return(false)
+      allow_any_instance_of(CloudController::Blobstore::LocalBlob).to receive(:public_download_url).and_return('http://blobstore.example.com/droplet-download')
     end
 
     example 'Downloads the staged droplet for an App' do
@@ -157,8 +162,6 @@ RSpec.resource 'Apps', type: %i[api legacy_api] do
         Some blobstores may reject the request in that case. Clients may need to follow the redirect without including the OAuth token.
       EOS
 
-      allow_any_instance_of(CloudController::Blobstore::LocalClient).to receive(:local?).and_return(false)
-      allow_any_instance_of(CloudController::Blobstore::LocalBlob).to receive(:public_download_url).and_return('http://blobstore.example.com/droplet-download')
       client.get "/v2/apps/#{process.guid}/droplet/download", {}, headers
       expect(status).to eq(302)
       expect(response_headers['Location']).to eq('http://blobstore.example.com/droplet-download')
