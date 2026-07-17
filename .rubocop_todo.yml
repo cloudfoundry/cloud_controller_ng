@@ -62,7 +62,6 @@ Lint/SuppressedException:
     - 'lib/cloud_controller/database_uri_generator.rb'
     - 'lib/vcap/pid_file.rb'
     - 'spec/unit/actions/v2/route_create_spec.rb'
-    - 'spec/unit/lib/cloud_controller/blobstore/fog/fog_client_spec.rb'
     - 'spec/unit/lib/services/service_brokers/service_broker_registration_spec.rb'
     - 'spec/unit/models/services/service_broker_spec.rb'
 
