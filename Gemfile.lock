@@ -78,7 +78,7 @@ GEM
     digest-xxhash (0.2.9)
     docile (1.1.5)
     drb (2.2.3)
-    erb (6.0.4)
+    erb (6.0.5)
     erubi (1.13.1)
     excon (1.6.0)
       logger
