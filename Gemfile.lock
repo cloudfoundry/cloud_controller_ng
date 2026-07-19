@@ -80,7 +80,7 @@ GEM
     drb (2.2.3)
     erb (6.0.4)
     erubi (1.13.1)
-    excon (1.5.0)
+    excon (1.6.0)
       logger
     factory_bot (6.6.0)
       activesupport (>= 6.1.0)
