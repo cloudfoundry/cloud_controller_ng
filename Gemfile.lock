@@ -195,7 +195,7 @@ GEM
     nokogiri (1.19.4-x86_64-linux-gnu)
       racc (~> 1.4)
     observer (0.1.2)
-    oj (3.17.3)
+    oj (3.17.4)
       bigdecimal (>= 3.0)
       ostruct (>= 0.2)
     open3 (0.2.1)
