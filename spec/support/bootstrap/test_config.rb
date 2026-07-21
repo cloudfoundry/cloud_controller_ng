@@ -69,7 +69,9 @@ module TestConfig
           fog_connection: fog_connection,
           max_staged_droplets_stored: 42
         },
-        db: DbConfig.new.config
+        db: DbConfig.new.config,
+        # Avoid real StatsD UDP sends in tests; specs needing the real client override this.
+        enable_statsd_metrics: false
       )
 
       config_hash.deep_merge!(uaa: { internal_url: 'https://uaa.service.cf.internal' })
