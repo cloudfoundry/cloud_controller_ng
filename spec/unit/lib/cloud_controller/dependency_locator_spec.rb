@@ -476,7 +476,8 @@ RSpec.describe CloudController::DependencyLocator do
 
       TestConfig.override(
         statsd_host: host,
-        statsd_port: port
+        statsd_port: port,
+        enable_statsd_metrics: true
       )
 
       sink = instance_double(StatsD::Instrument::Sink)
