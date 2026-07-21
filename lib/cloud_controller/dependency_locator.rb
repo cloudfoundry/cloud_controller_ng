@@ -35,6 +35,8 @@ module CloudController
     BUILDPACK_CACHE_DIR = 'buildpack_cache'.freeze
     RESOURCE_POOL_DIR = 'app_bits_cache'.freeze
 
+    attr_writer :config
+
     def initialize
       @config = VCAP::CloudController::Config.config
       @dependencies = {}
@@ -42,10 +44,6 @@ module CloudController
 
     def config
       @config || raise('config not set')
-    end
-
-    def config=(config)
-      reset(config)
     end
 
     def reset(config)
@@ -144,71 +142,65 @@ module CloudController
     end
 
     def droplet_blobstore
-      @dependencies[:droplet_blobstore] ||= begin
-        options = config.get(:droplets)
-        Blobstore::ClientProvider.provide(
-          options: options,
-          directory_key: options.fetch(:droplet_directory_key),
-          resource_type: :droplets
-        )
-      end
+      options = config.get(:droplets)
+
+      Blobstore::ClientProvider.provide(
+        options: options,
+        directory_key: options.fetch(:droplet_directory_key),
+        resource_type: :droplets
+      )
     end
 
     def buildpack_cache_blobstore
-      @dependencies[:buildpack_cache_blobstore] ||= begin
-        options = config.get(:droplets)
-        Blobstore::ClientProvider.provide(
-          options: options,
-          directory_key: options.fetch(:droplet_directory_key),
-          root_dir: BUILDPACK_CACHE_DIR,
-          resource_type: :buildpack_cache
-        )
-      end
+      options = config.get(:droplets)
+
+      Blobstore::ClientProvider.provide(
+        options: options,
+        directory_key: options.fetch(:droplet_directory_key),
+        root_dir: BUILDPACK_CACHE_DIR,
+        resource_type: :buildpack_cache
+      )
     end
 
     def package_blobstore
-      @dependencies[:package_blobstore] ||= begin
-        options = config.get(:packages)
-        Blobstore::ClientProvider.provide(
-          options: options,
-          directory_key: options.fetch(:app_package_directory_key),
-          resource_type: :packages
-        )
-      end
+      options = config.get(:packages)
+
+      Blobstore::ClientProvider.provide(
+        options: options,
+        directory_key: options.fetch(:app_package_directory_key),
+        resource_type: :packages
+      )
     end
 
     def legacy_global_app_bits_cache
-      @dependencies[:legacy_global_app_bits_cache] ||= begin
-        options = config.get(:resource_pool)
-        Blobstore::ClientProvider.provide(
-          options: options,
-          directory_key: options.fetch(:resource_directory_key),
-          resource_type: :resource_pool
-        )
-      end
+      options = config.get(:resource_pool)
+
+      Blobstore::ClientProvider.provide(
+        options: options,
+        directory_key: options.fetch(:resource_directory_key),
+        resource_type: :resource_pool
+      )
     end
 
     def global_app_bits_cache
-      @dependencies[:global_app_bits_cache] ||= begin
-        options = config.get(:resource_pool)
-        Blobstore::ClientProvider.provide(
-          options: options,
-          directory_key: options.fetch(:resource_directory_key),
-          root_dir: RESOURCE_POOL_DIR,
-          resource_type: :resource_pool
-        )
-      end
+      options = config.get(:resource_pool)
+
+      Blobstore::ClientProvider.provide(
+        options: options,
+        directory_key: options.fetch(:resource_directory_key),
+        root_dir: RESOURCE_POOL_DIR,
+        resource_type: :resource_pool
+      )
     end
 
     def buildpack_blobstore
-      @dependencies[:buildpack_blobstore] ||= begin
-        options = config.get(:buildpacks)
-        Blobstore::ClientProvider.provide(
-          options: options,
-          directory_key: options.fetch(:buildpack_directory_key, 'cc-buildpacks'),
-          resource_type: :buildpacks
-        )
-      end
+      options = config.get(:buildpacks)
+
+      Blobstore::ClientProvider.provide(
+        options: options,
+        directory_key: options.fetch(:buildpack_directory_key, 'cc-buildpacks'),
+        resource_type: :buildpacks
+      )
     end
 
     def blobstore_url_generator

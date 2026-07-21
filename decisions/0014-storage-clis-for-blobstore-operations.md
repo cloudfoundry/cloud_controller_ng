@@ -12,14 +12,29 @@
 | Alibaba Cloud| ✅ Implemented            | Uses [`storage-cli`](https://github.com/cloudfoundry/storage-cli/tree/main/alioss) with native type `alioss`                                                  |
 
 **Configuration Migration Status:**
-- The `blobstore_provider` field accepts native storage-cli type names (azurebs, s3, gcs, alioss)
-- **Legacy fog names** (AzureRM, AWS, Google, aliyun) are no longer supported — fog gems have been fully removed
+- The `blobstore_provider` field accepts both native storage-cli type names AND legacy fog names
+- **Recommended:** Use native storage-cli type names (azurebs, s3, gcs, alioss)
+- **Legacy fog names** (AzureRM, AWS, Google, aliyun) still supported for backwards compatibility
 - **WebDAV/dav intentionally excluded** until fully supported
+- **Timeline:** Legacy fog name support to be removed May 2026
+
+
+## Update — July 2026: All Fog Gems Removed
+
+Cloud Controller previously used the fog gem family to interface with blobstores like Azure, AWS, GCP, and Alibaba Cloud.
+
+> ✅ **All fog gems have been fully removed** (fog-aws, fog-core, fog-azure-rm, fog-google, fog-aliyun).
+
+The migration described in this ADR is complete. As a result:
+
+- The `blobstore_provider` field accepts both native storage-cli type names AND the legacy WebDAV alias (`webdav` → `dav`)
+- **Legacy fog provider names** (AzureRM, AWS, Google, aliyun) are **no longer supported** — use native storage-cli type names (azurebs, s3, gcs, alioss)
+- ✅ Enabled the removal of all fog related gems — fog-aws, fog-core, fog-azure-rm, fog-google, and fog-aliyun have all been removed
 
 
 ## Context
 
-Cloud Controller previously used the fog gem family to interface with blobstores like Azure, AWS, GCP, and Alibaba Cloud.
+Cloud Controller uses the fog gem family to interface with blobstores like Azure, AWS, GCP, and Alibaba Cloud.
 These Ruby gems are largely unmaintained, introducing risks such as:
 * Dependency on deprecated SDKs (e.g., Azure SDK for Ruby)
 * Blocking Ruby version upgrades
@@ -77,13 +92,11 @@ The `bosh-azure-storage-cli` needs to be extended with the following commands:
 
 Other providers (AWS, GCP, Alibaba Cloud) will follow. Each will require equivalent blobstore clients and support for the above commands.
 This will eventually allow us to remove all fog related gems from Cloud Controller.
-> ✅ **All fog gems have been fully removed** (fog-aws, fog-core, fog-azure-rm, fog-google, fog-aliyun).
-> ✅ **fog-aws and fog-core have been fully removed** as of this change.
 
 
 ## Consequences
 
-* ✅ Enabled the removal of all fog related gems — fog-aws, fog-core, fog-azure-rm, fog-google, and fog-aliyun have all been removed
+* Enables the removal of `fog-azure-rm` and all other fog related gems
 * Reduces long-term maintenance burden and potential security issues
 * Allows providers to be migrated independently
 * Increases initial complexity during migration phase
