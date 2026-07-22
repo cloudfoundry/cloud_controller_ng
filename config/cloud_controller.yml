@@ -285,6 +285,11 @@ rate_limiter_v2_api:
 
 temporary_enable_v2: true
 
+# Rollout gate: when enabled, DELETE of apps/service_instances uses the recursive root-job pipeline.
+temporary_enable_async_recursive_delete:
+  apps: false
+  service_instances: false
+
 max_concurrent_service_broker_requests: 0
 
 diego:

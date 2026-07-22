@@ -20,10 +20,21 @@ module VCAP::CloudController
       it 'creates an audit event' do
         expect_any_instance_of(Repositories::AppEventRepository).to receive(:record_app_stop).with(
           app,
-          user_audit_info
+          user_audit_info,
+          delete_triggered: false
         )
 
         AppStop.stop(app:, user_audit_info:)
+      end
+
+      it 'passes delete_triggered through to the audit event when set' do
+        expect_any_instance_of(Repositories::AppEventRepository).to receive(:record_app_stop).with(
+          app,
+          user_audit_info,
+          delete_triggered: true
+        )
+
+        AppStop.stop(app: app, user_audit_info: user_audit_info, delete_triggered: true)
       end
 
       it 'prepares the sub-processes of the app' do

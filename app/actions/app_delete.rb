@@ -13,22 +13,11 @@ require 'actions/sidecar_delete'
 require 'actions/route_mapping_delete'
 require 'actions/staging_cancel'
 require 'actions/mixins/bindings_delete'
+require 'errors/sub_resource_error'
 
 module VCAP::CloudController
   class AppDelete
     include V3::BindingsDeleteMixin
-
-    class AsyncBindingDeletionsTriggered < StandardError; end
-
-    class SubResourceError < StandardError
-      def initialize(errors)
-        @errors = errors
-      end
-
-      def underlying_errors
-        @errors
-      end
-    end
 
     def initialize(user_audit_info)
       @user_audit_info = user_audit_info
@@ -86,7 +75,7 @@ module VCAP::CloudController
 
     def delete_non_transactional_subresources(app)
       errors = delete_bindings(app.service_bindings, user_audit_info: @user_audit_info)
-      raise SubResourceError.new(errors) if errors.any?
+      SubResourceError.raise_from(errors)
     end
 
     def stagers
@@ -106,10 +95,8 @@ module VCAP::CloudController
       @logger ||= Steno.logger('cc.action.app_delete')
     end
 
-    def unbinding_operation_in_progress!(binding)
-      raise AsyncBindingDeletionsTriggered.new(
-        "An operation for the service binding between app #{binding.app.name} and service instance #{binding.service_instance.name} is in progress."
-      )
+    def unbinding_in_progress_message(binding)
+      "An operation for the service binding between app #{binding.app.name} and service instance #{binding.service_instance.name} is in progress."
     end
   end
 end

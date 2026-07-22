@@ -4,6 +4,7 @@ require 'jobs/enqueuer'
 require 'jobs/delete_action_job'
 require 'jobs/runtime/model_deletion'
 require 'jobs/error_translator_job'
+require 'jobs/v3/recursive_delete_app_job'
 
 module VCAP::CloudController::Jobs
   RSpec.describe Enqueuer, job_context: :api do
@@ -287,6 +288,75 @@ module VCAP::CloudController::Jobs
           end
           opts[:priority] = 1901
           Enqueuer.new(opts).enqueue_pollable(wrapped_job, preserve_priority: true, priority_increment: 4)
+        end
+      end
+    end
+
+    describe '#enqueue_or_find_active_pollable' do
+      let(:app_model) { create(:app_model) }
+      let(:user_audit_info) { VCAP::CloudController::UserAuditInfo.new(user_guid: create(:user).guid, user_email: 'test@example.com') }
+      let(:job_factory) { ->(_resource) { VCAP::CloudController::V3::RecursiveDeleteAppJob.new(app_model.guid, user_audit_info) } }
+
+      def enqueue
+        Enqueuer.new(queue: Queues.generic).enqueue_or_find_active_pollable(
+          resource_model: VCAP::CloudController::AppModel, resource_guid: app_model.guid, operation: 'app.delete', &job_factory
+        )
+      end
+
+      context 'when no active delete job exists for the resource' do
+        it 'creates a new pollable job and returns it' do
+          job = nil
+          expect { job = enqueue }.to change(VCAP::CloudController::PollableJobModel, :count).by(1)
+
+          expect(job).to be_a(VCAP::CloudController::PollableJobModel)
+          expect(job.state).to eq(VCAP::CloudController::PollableJobModel::PROCESSING_STATE)
+          expect(job.operation).to eq('app.delete')
+          expect(job.resource_guid).to eq(app_model.guid)
+        end
+      end
+
+      context 'when an active delete job already exists for the resource' do
+        let!(:existing) do
+          create(:pollable_job_model,
+                 state: VCAP::CloudController::PollableJobModel::PROCESSING_STATE,
+                 resource_guid: app_model.guid,
+                 operation: 'app.delete')
+        end
+
+        it 'returns the existing pollable job without enqueueing a new one' do
+          result = nil
+          expect { result = enqueue }.not_to change(VCAP::CloudController::PollableJobModel, :count)
+
+          expect(result.guid).to eq(existing.guid)
+        end
+
+        it 'does not invoke the job factory block' do
+          invoked = false
+          Enqueuer.new(queue: Queues.generic).enqueue_or_find_active_pollable(
+            resource_model: VCAP::CloudController::AppModel, resource_guid: app_model.guid, operation: 'app.delete'
+          ) do |_resource|
+            invoked = true
+            VCAP::CloudController::V3::RecursiveDeleteAppJob.new(app_model.guid, user_audit_info)
+          end
+
+          expect(invoked).to be(false)
+        end
+      end
+
+      context 'when the resource no longer exists' do
+        before { app_model.destroy }
+
+        it 'returns nil and does not enqueue a job' do
+          result = nil
+          expect { result = enqueue }.not_to change(VCAP::CloudController::PollableJobModel, :count)
+          expect(result).to be_nil
+        end
+      end
+
+      context 'row lock' do
+        it 'builds a SELECT ... FOR UPDATE query on the resource row' do
+          sql = VCAP::CloudController::AppModel.where(guid: app_model.guid).for_update.sql
+          expect(sql).to match(/FOR UPDATE/i)
         end
       end
     end

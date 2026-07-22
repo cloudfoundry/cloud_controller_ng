@@ -9,6 +9,8 @@ require 'securerandom'
 module VCAP::CloudController
   module Jobs
     class Enqueuer
+      attr_accessor :root_job_guid
+
       def initialize(opts={})
         @opts = opts
         @timeout_calculator = JobTimeoutCalculator.new(VCAP::CloudController::Config.config)
@@ -21,12 +23,24 @@ module VCAP::CloudController
       end
 
       def enqueue_pollable(job, existing_guid: nil, run_at: nil, priority_increment: nil, preserve_priority: false)
-        wrapped_job = PollableJobWrapper.new(job, existing_guid:)
+        wrapped_job = PollableJobWrapper.new(job, existing_guid:, root_job_guid:)
 
         wrapped_job = yield wrapped_job if block_given?
 
         delayed_job = enqueue_job(wrapped_job, run_at:, priority_increment:, preserve_priority:)
         PollableJobModel.find_by_delayed_job(delayed_job)
+      end
+
+      def enqueue_or_find_active_pollable(resource_model:, resource_guid:, operation:)
+        resource_model.db.transaction do
+          resource = resource_model.where(guid: resource_guid).for_update.first
+          return nil unless resource
+
+          existing = PollableJobModel.find_active_delete(resource_guid:, operation:)
+          return existing if existing
+
+          enqueue_pollable(yield(resource))
+        end
       end
 
       def self.unwrap_job(job)

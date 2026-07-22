@@ -436,9 +436,9 @@ module VCAP::CloudController
                 expect(delete_service_key_action).to have_received(:delete).with(service_key_3)
 
                 expect(ServiceInstanceUnshare).to have_received(:new)
-                expect(unshare_action).to have_received(:unshare).with(service_instance, shared_space_1, event_repository.user_audit_info)
-                expect(unshare_action).to have_received(:unshare).with(service_instance, shared_space_2, event_repository.user_audit_info)
-                expect(unshare_action).to have_received(:unshare).with(service_instance, shared_space_3, event_repository.user_audit_info)
+                expect(unshare_action).to have_received(:unshare).with(service_instance, shared_space_1, event_repository.user_audit_info, fail_if_in_progress: true)
+                expect(unshare_action).to have_received(:unshare).with(service_instance, shared_space_2, event_repository.user_audit_info, fail_if_in_progress: true)
+                expect(unshare_action).to have_received(:unshare).with(service_instance, shared_space_3, event_repository.user_audit_info, fail_if_in_progress: true)
               end
 
               context 'when deleting bindings or unsharing spaces raises' do
@@ -504,12 +504,7 @@ module VCAP::CloudController
                 end
 
                 it 'fails and schedules a polling job' do
-                  expect do
-                    action.delete
-                  end.to raise_error(
-                    ServiceInstanceDelete::UnbindingOperatationInProgress,
-                    "An operation for a service binding of service instance #{service_instance.name} is in progress."
-                  )
+                  expect { action.delete }.to raise_error(VCAP::CloudController::AsyncOperationInProgress)
 
                   expect(Delayed::Job.all).to have(1).job
                 end
@@ -528,12 +523,7 @@ module VCAP::CloudController
                 end
 
                 it 'fails and schedules a polling job' do
-                  expect do
-                    action.delete
-                  end.to raise_error(
-                    ServiceInstanceDelete::UnbindingOperatationInProgress,
-                    "An operation for the service binding between app #{service_binding.app.name} and service instance #{service_instance.name} is in progress."
-                  )
+                  expect { action.delete }.to raise_error(VCAP::CloudController::AsyncOperationInProgress)
 
                   expect(Delayed::Job.all).to have(1).job
                 end
@@ -552,12 +542,7 @@ module VCAP::CloudController
                 end
 
                 it 'fails and schedules a polling job' do
-                  expect do
-                    action.delete
-                  end.to raise_error(
-                    ServiceInstanceDelete::UnbindingOperatationInProgress,
-                    "An operation for a service binding of service instance #{service_instance.name} is in progress."
-                  )
+                  expect { action.delete }.to raise_error(VCAP::CloudController::AsyncOperationInProgress)
 
                   expect(Delayed::Job.all).to have(1).job
                 end

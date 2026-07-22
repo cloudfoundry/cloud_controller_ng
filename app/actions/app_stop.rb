@@ -3,7 +3,7 @@ module VCAP::CloudController
     class InvalidApp < StandardError; end
 
     class << self
-      def stop(app:, user_audit_info:, record_event: true)
+      def stop(app:, user_audit_info:, record_event: true, delete_triggered: false)
         app.db.transaction do
           app.lock!
 
@@ -13,7 +13,7 @@ module VCAP::CloudController
             process.update(state: ProcessModel::STOPPED)
           end
 
-          record_audit_event(app, user_audit_info) if record_event
+          record_audit_event(app, user_audit_info, delete_triggered:) if record_event
         end
       rescue Sequel::ValidationFailed => e
         raise InvalidApp.new(e.message)
@@ -25,10 +25,11 @@ module VCAP::CloudController
 
       private
 
-      def record_audit_event(app, user_audit_info)
+      def record_audit_event(app, user_audit_info, delete_triggered: false)
         Repositories::AppEventRepository.new.record_app_stop(
           app,
-          user_audit_info
+          user_audit_info,
+          delete_triggered:
         )
       end
     end

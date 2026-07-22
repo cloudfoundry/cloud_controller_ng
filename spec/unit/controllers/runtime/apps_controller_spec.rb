@@ -1309,7 +1309,7 @@ module VCAP::CloudController
           context 'when the error is a SubResource error' do
             before do
               errs = [StandardError.new('oops-1'), StandardError.new('oops-2')]
-              allow_any_instance_of(AppDelete).to receive(:delete_without_event).and_raise(VCAP::CloudController::AppDelete::SubResourceError.new(errs))
+              allow_any_instance_of(AppDelete).to receive(:delete_without_event).and_raise(VCAP::CloudController::SubResourceError.new(errs))
             end
 
             it 'returns all errors contained within it from the action' do

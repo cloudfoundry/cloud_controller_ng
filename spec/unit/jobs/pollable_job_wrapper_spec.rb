@@ -169,6 +169,30 @@ module VCAP::CloudController::Jobs
         end
       end
 
+      context 'when a root_job_guid is provided' do
+        let(:root_pollable_job) { create(:pollable_job_model) }
+        let(:pollable_job) { PollableJobWrapper.new(job, root_job_guid: root_pollable_job.guid) }
+
+        it 'persists the root_job_guid on the new PollableJobModel row' do
+          enqueued_job = VCAP::CloudController::Jobs::Enqueuer.new.enqueue(pollable_job)
+          job_record = VCAP::CloudController::PollableJobModel.find(delayed_job_guid: enqueued_job.guid)
+          expect(job_record.root_job_guid).to eq(root_pollable_job.guid)
+        end
+
+        it 'makes the new row queryable as a sub-job of the root' do
+          VCAP::CloudController::Jobs::Enqueuer.new.enqueue(pollable_job)
+          expect(root_pollable_job.sub_jobs.length).to eq(1)
+        end
+      end
+
+      context 'when no root_job_guid is provided (default)' do
+        it 'creates a row with root_job_guid nil' do
+          enqueued_job = VCAP::CloudController::Jobs::Enqueuer.new.enqueue(pollable_job)
+          job_record = VCAP::CloudController::PollableJobModel.find(delayed_job_guid: enqueued_job.guid)
+          expect(job_record.root_job_guid).to be_nil
+        end
+      end
+
       context 'when the job fails' do
         before do
           allow_any_instance_of(VCAP::CloudController::Jobs::DeleteActionJob).

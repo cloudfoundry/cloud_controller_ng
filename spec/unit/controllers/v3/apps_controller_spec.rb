@@ -1033,15 +1033,13 @@ RSpec.describe AppsV3Controller, type: :controller do
     let(:space) { app_model.space }
     let(:org) { space.organization }
     let(:user) { set_current_user(create(:user)) }
-    let(:app_delete_stub) { instance_double(VCAP::CloudController::AppDelete) }
 
     before do
       allow_user_read_access_for(user, spaces: [space])
       allow_user_write_access(user, space:)
       create(:buildpack_lifecycle_data_model, app: app_model, buildpacks: nil, stack: VCAP::CloudController::Stack.default.name)
-      allow(VCAP::CloudController::Jobs::DeleteActionJob).to receive(:new).and_call_original
-      allow(VCAP::CloudController::AppDelete).to receive(:new).and_return(app_delete_stub)
-      allow(AppsV3Controller::DeleteAppErrorTranslatorJob).to receive(:new).and_call_original
+      allow(VCAP::CloudController::V3::RecursiveDeleteAppJob).to receive(:new).and_call_original
+      TestConfig.override(temporary_enable_async_recursive_delete: { apps: true, service_instances: true })
     end
 
     context 'when the app does not exist' do
@@ -1053,23 +1051,17 @@ RSpec.describe AppsV3Controller, type: :controller do
       end
     end
 
-    it 'successfully deletes the app in a background job' do
+    it 'enqueues a RecursiveDeleteAppJob for the app' do
       delete :destroy, params: { guid: app_model.guid }
 
-      app_delete_jobs = Delayed::Job.where(Sequel.lit("handler like '%AppDelete%'"))
-      expect(app_delete_jobs.count).to eq 1
-      app_delete_jobs.first
-
-      expect(VCAP::CloudController::AppModel.find(guid: app_model.guid)).not_to be_nil
-      expect(VCAP::CloudController::Jobs::DeleteActionJob).to have_received(:new).with(
-        VCAP::CloudController::AppModel,
-        app_model.guid,
-        app_delete_stub
+      expect(VCAP::CloudController::V3::RecursiveDeleteAppJob).to have_received(:new).with(
+        app_model.guid, instance_of(VCAP::CloudController::UserAuditInfo)
       )
-      expect(AppsV3Controller::DeleteAppErrorTranslatorJob).to have_received(:new)
+      expect(VCAP::CloudController::AppModel.find(guid: app_model.guid)).not_to be_nil
+      expect(Delayed::Job.count).to eq 1
     end
 
-    it 'creates a job to track the deletion and returns it in the location header' do
+    it 'creates a pollable job to track the deletion and returns it in the location header' do
       expect do
         delete :destroy, params: { guid: app_model.guid }
       end.to change(VCAP::CloudController::PollableJobModel, :count).by(1)
@@ -1084,6 +1076,52 @@ RSpec.describe AppsV3Controller, type: :controller do
 
       expect(response).to have_http_status(:accepted)
       expect(response.headers['Location']).to include "#{link_prefix}/v3/jobs/#{job.guid}"
+    end
+
+    context 'when a delete is already in flight for the app' do
+      let!(:existing_job) do
+        create(:pollable_job_model,
+               state: VCAP::CloudController::PollableJobModel::PROCESSING_STATE,
+               resource_guid: app_model.guid,
+               operation: 'app.delete')
+      end
+
+      it 'returns 202 pointing at the existing job and does not enqueue a second one' do
+        expect do
+          delete :destroy, params: { guid: app_model.guid }
+        end.not_to(change(VCAP::CloudController::PollableJobModel, :count))
+
+        expect(VCAP::CloudController::V3::RecursiveDeleteAppJob).not_to have_received(:new)
+        expect(response).to have_http_status(:accepted)
+        expect(response.headers['Location']).to include "#{link_prefix}/v3/jobs/#{existing_job.guid}"
+      end
+    end
+
+    context 'when temporary_enable_async_recursive_delete.apps is disabled (legacy path)' do
+      before { TestConfig.override(temporary_enable_async_recursive_delete: { apps: false, service_instances: false }) }
+
+      it 'enqueues a DeleteActionJob (main behaviour) rather than a RecursiveDeleteAppJob' do
+        delete :destroy, params: { guid: app_model.guid }
+
+        expect(response).to have_http_status(:accepted)
+        expect(VCAP::CloudController::V3::RecursiveDeleteAppJob).not_to have_received(:new)
+        expect(Delayed::Job.count).to eq(1)
+
+        job = VCAP::CloudController::PollableJobModel.last
+        expect(job.resource_guid).to eq(app_model.guid)
+        expect(response.headers['Location']).to include "#{link_prefix}/v3/jobs/#{job.guid}"
+      end
+
+      it 'does not consult the row-lock idempotency guard when a stale active pollable exists' do
+        create(:pollable_job_model,
+               state: VCAP::CloudController::PollableJobModel::PROCESSING_STATE,
+               resource_guid: app_model.guid,
+               operation: 'app.delete')
+
+        expect do
+          delete :destroy, params: { guid: app_model.guid }
+        end.to change(VCAP::CloudController::PollableJobModel, :count).by(1)
+      end
     end
   end
 
@@ -2313,34 +2351,6 @@ RSpec.describe AppsV3Controller, type: :controller do
 
         expect(response).to have_http_status(:not_found)
         expect(response.body).to include('ResourceNotFound')
-      end
-    end
-  end
-
-  describe 'DeleteAppErrorTranslatorJob' do
-    let(:error_translator) { AppsV3Controller::DeleteAppErrorTranslatorJob.new(job) }
-    let(:job) {}
-
-    context 'when the error is a SubResourceError' do
-      it 'translates it to CompoundError with underlying API errors' do
-        translated_error = error_translator.translate_error(VCAP::CloudController::AppDelete::SubResourceError.new([
-          StandardError.new('oops-1'),
-          StandardError.new('oops-2')
-        ]))
-
-        expect(translated_error).to be_a(CloudController::Errors::CompoundError)
-        expect(translated_error.underlying_errors).to contain_exactly(CloudController::Errors::ApiError.new_from_details('UnprocessableEntity', 'oops-1'),
-                                                                      CloudController::Errors::ApiError.new_from_details('UnprocessableEntity', 'oops-2'))
-      end
-    end
-
-    context 'when the error is not a SubResourceError' do
-      it 'justs return it' do
-        err = StandardError.new('oops')
-
-        translated_error = error_translator.translate_error(err)
-
-        expect(translated_error).to eq(err)
       end
     end
   end

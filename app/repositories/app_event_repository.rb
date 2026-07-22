@@ -75,11 +75,12 @@ module VCAP::CloudController
         create_app_audit_event(EventTypes::APP_RESTART, app, app.space, actor, nil)
       end
 
-      def record_app_stop(app, user_audit_info)
+      def record_app_stop(app, user_audit_info, delete_triggered: false)
         VCAP::AppLogEmitter.emit(app.guid, "Stopping app with guid #{app.guid}")
 
         actor = { name: user_audit_info.user_email, guid: user_audit_info.user_guid, user_name: user_audit_info.user_name, type: 'user' }
-        create_app_audit_event(EventTypes::APP_STOP, app, app.space, actor, nil)
+        metadata = delete_triggered ? { delete_triggered: true } : nil
+        create_app_audit_event(EventTypes::APP_STOP, app, app.space, actor, metadata)
       end
 
       def record_app_delete_request(app, space, user_audit_info, recursive=nil)
