@@ -20,11 +20,6 @@ module CloudController
       # Native storage-cli type names supported by CC
       STORAGE_CLI_TYPES = %w[azurebs alioss s3 gcs dav].freeze
 
-      # Legacy alias: 'webdav' maps to the native 'dav' type
-      LEGACY_PROVIDER_TO_STORAGE_CLI_TYPE = {
-        'webdav' => 'dav'
-      }.freeze
-
       def initialize(directory_key:, resource_type:, root_dir:, min_size: nil, max_size: nil)
         raise 'Missing resource_type' if resource_type.nil?
 
@@ -34,17 +29,10 @@ module CloudController
         provider = cfg['provider']&.to_s
         raise BlobstoreError.new("No provider specified in config file: #{File.basename(config_file_path)}") if provider.nil? || provider.empty?
 
-        @storage_type =
-          if STORAGE_CLI_TYPES.include?(provider)
-            provider
-          else
-            # Legacy alias support (delete after migration window)
-            LEGACY_PROVIDER_TO_STORAGE_CLI_TYPE[provider]
-          end
+        @storage_type = provider if STORAGE_CLI_TYPES.include?(provider)
 
         unless @storage_type
-          raise "Unknown provider: #{provider}. Supported storage-cli types: #{STORAGE_CLI_TYPES.join(', ')} " \
-                "(legacy aliases accepted: #{LEGACY_PROVIDER_TO_STORAGE_CLI_TYPE.keys.join(', ')})"
+          raise "Unknown provider: #{provider}. Supported storage-cli types: #{STORAGE_CLI_TYPES.join(', ')}"
         end
 
         @cli_path = cli_path
