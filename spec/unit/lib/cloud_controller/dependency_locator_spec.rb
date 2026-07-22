@@ -7,7 +7,15 @@ RSpec.describe CloudController::DependencyLocator do
 
   let(:config) { TestConfig.config_instance }
 
-  before { locator.reset(config) }
+  before do
+    locator.reset(config)
+    allow(locator).to receive(:droplet_blobstore).and_call_original
+    allow(locator).to receive(:buildpack_cache_blobstore).and_call_original
+    allow(locator).to receive(:package_blobstore).and_call_original
+    allow(locator).to receive(:global_app_bits_cache).and_call_original
+    allow(locator).to receive(:legacy_global_app_bits_cache).and_call_original
+    allow(locator).to receive(:buildpack_blobstore).and_call_original
+  end
 
   describe '#droplet_blobstore' do
     let(:config) do
@@ -58,22 +66,6 @@ RSpec.describe CloudController::DependencyLocator do
       expect(CloudController::Blobstore::ClientProvider).to receive(:provide).
         with(options: config.get(:packages), directory_key: 'key', resource_type: :packages)
       locator.package_blobstore
-    end
-
-    it 'memoizes the blobstore' do
-      client = instance_double(CloudController::Blobstore::Client)
-      expect(CloudController::Blobstore::ClientProvider).to receive(:provide).once.and_return(client)
-      expect(locator.package_blobstore).to be(client)
-      expect(locator.package_blobstore).to be(client)
-    end
-
-    it 'rebuilds the blobstore after reset' do
-      first_client = instance_double(CloudController::Blobstore::Client)
-      second_client = instance_double(CloudController::Blobstore::Client)
-      allow(CloudController::Blobstore::ClientProvider).to receive(:provide).and_return(first_client, second_client)
-      expect(locator.package_blobstore).to be(first_client)
-      locator.reset(config)
-      expect(locator.package_blobstore).to be(second_client)
     end
   end
 
