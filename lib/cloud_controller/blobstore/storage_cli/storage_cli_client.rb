@@ -31,9 +31,7 @@ module CloudController
 
         @storage_type = provider if STORAGE_CLI_TYPES.include?(provider)
 
-        unless @storage_type
-          raise "Unknown provider: #{provider}. Supported storage-cli types: #{STORAGE_CLI_TYPES.join(', ')}"
-        end
+        raise "Unknown provider: #{provider}. Supported storage-cli types: #{STORAGE_CLI_TYPES.join(', ')}" unless @storage_type
 
         @cli_path = cli_path
         @config_file = config_file_path

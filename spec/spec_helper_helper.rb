@@ -165,12 +165,14 @@ module SpecHelperHelper
         )
 
         locator = CloudController::DependencyLocator.instance
-        allow(locator).to receive(:droplet_blobstore).and_return(fake_blobstore)
-        allow(locator).to receive(:buildpack_cache_blobstore).and_return(fake_blobstore)
-        allow(locator).to receive(:package_blobstore).and_return(fake_blobstore)
-        allow(locator).to receive(:global_app_bits_cache).and_return(fake_blobstore)
-        allow(locator).to receive(:legacy_global_app_bits_cache).and_return(fake_blobstore)
-        allow(locator).to receive(:buildpack_blobstore).and_return(fake_blobstore)
+        allow(locator).to receive_messages(
+          droplet_blobstore: fake_blobstore,
+          buildpack_cache_blobstore: fake_blobstore,
+          package_blobstore: fake_blobstore,
+          global_app_bits_cache: fake_blobstore,
+          legacy_global_app_bits_cache: fake_blobstore,
+          buildpack_blobstore: fake_blobstore
+        )
       end
 
       rspec_config.around do |example|
