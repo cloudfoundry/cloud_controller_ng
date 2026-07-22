@@ -68,7 +68,15 @@ module VCAP::CloudController
         local_opts[:priority] = final_priority if final_priority > 0
         local_opts[:run_at] = run_at if run_at
 
-        Delayed::Job.enqueue(logging_context_job, @opts.merge(local_opts))
+        delayed_job = Delayed::Job.enqueue(logging_context_job, @opts.merge(local_opts))
+
+        # TEMP recursive-delete debug (remove before PR ready): log every enqueue with its run_at.
+        Steno.logger('cc.temp.recursive_delete').info(
+          "ENQUEUE job=#{self.class.unwrap_job(job).class.name} dj_id=#{delayed_job.id} dj_guid=#{delayed_job.guid} " \
+          "run_at=#{delayed_job.run_at.utc.iso8601} priority=#{delayed_job.priority} root_job_guid=#{root_job_guid || '-'}"
+        )
+
+        delayed_job
       end
 
       def load_delayed_job_plugins
