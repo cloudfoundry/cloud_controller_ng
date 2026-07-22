@@ -146,6 +146,33 @@ module SpecHelperHelper
         allow(Redis).to receive(:new).and_return(mock_redis)
       end
 
+      rspec_config.before do |_example|
+        fake_blobstore = instance_double(
+          CloudController::Blobstore::Client,
+          local?: true,
+          exists?: false,
+          ensure_bucket_exists: nil,
+          cp_to_blobstore: nil,
+          cp_file_between_keys: nil,
+          download_from_blobstore: nil,
+          delete: nil,
+          delete_all: nil,
+          delete_all_in_path: nil,
+          delete_blob: nil,
+          blob: nil,
+          files_for: [],
+          root_dir: nil
+        )
+
+        locator = CloudController::DependencyLocator.instance
+        allow(locator).to receive(:droplet_blobstore).and_return(fake_blobstore)
+        allow(locator).to receive(:buildpack_cache_blobstore).and_return(fake_blobstore)
+        allow(locator).to receive(:package_blobstore).and_return(fake_blobstore)
+        allow(locator).to receive(:global_app_bits_cache).and_return(fake_blobstore)
+        allow(locator).to receive(:legacy_global_app_bits_cache).and_return(fake_blobstore)
+        allow(locator).to receive(:buildpack_blobstore).and_return(fake_blobstore)
+      end
+
       rspec_config.around do |example|
         isolation = DatabaseIsolation.choose(example.metadata[:isolation], DbConfig.new.connection)
         isolation.cleanly { example.run }
