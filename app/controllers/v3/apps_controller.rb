@@ -5,11 +5,13 @@ require 'actions/app_create'
 require 'actions/app_update'
 require 'actions/app_patch_environment_variables'
 require 'actions/app_delete'
+require 'errors/sub_resource_error'
 require 'actions/app_restart'
 require 'actions/app_apply_manifest'
 require 'actions/app_start'
 require 'actions/app_stop'
 require 'actions/app_assign_droplet'
+require 'jobs/v3/recursive_delete_app_job'
 require 'decorators/include_space_decorator'
 require 'decorators/include_organization_decorator'
 require 'decorators/include_space_organization_decorator'
@@ -154,12 +156,23 @@ class AppsV3Controller < ApplicationController
     unauthorized! unless permission_queryer.can_write_to_active_space?(space.id)
     require_writable_space!(space)
 
-    delete_action = AppDelete.new(user_audit_info)
-    deletion_job  = VCAP::CloudController::Jobs::DeleteActionJob.new(AppModel, app.guid, delete_action)
+    if async_recursive_delete_enabled?
+      job = Jobs::Enqueuer.new(queue: Jobs::Queues.generic).enqueue_or_find_active_pollable(
+        resource_model: AppModel,
+        resource_guid: app.guid,
+        operation: 'app.delete'
+      ) { VCAP::CloudController::V3::RecursiveDeleteAppJob.new(app.guid, user_audit_info) }
 
-    job = Jobs::Enqueuer.new(queue: Jobs::Queues.generic).enqueue_pollable(deletion_job) do |pollable_job|
-      DeleteAppErrorTranslatorJob.new(pollable_job)
+      app_not_found! unless job
+    else
+      delete_action = AppDelete.new(user_audit_info)
+      deletion_job  = VCAP::CloudController::Jobs::DeleteActionJob.new(AppModel, app.guid, delete_action)
+
+      job = Jobs::Enqueuer.new(queue: Jobs::Queues.generic).enqueue_pollable(deletion_job) do |pollable_job|
+        DeleteAppErrorTranslatorJob.new(pollable_job)
+      end
     end
+
     VCAP::AppLogEmitter.emit(app.guid, "Enqueued job to delete app with guid #{app.guid}")
     head HTTP::ACCEPTED, 'Location' => url_builder.build_url(path: "/v3/jobs/#{job.guid}")
   end
@@ -372,7 +385,7 @@ class AppsV3Controller < ApplicationController
     include V3ErrorsHelper
 
     def translate_error(e)
-      if e.instance_of?(VCAP::CloudController::AppDelete::SubResourceError)
+      if e.instance_of?(VCAP::CloudController::SubResourceError)
         underlying_errors = e.underlying_errors.map { |err| unprocessable(err.message) }
         e = CloudController::Errors::CompoundError.new(underlying_errors)
       end
@@ -381,6 +394,10 @@ class AppsV3Controller < ApplicationController
   end
 
   private
+
+  def async_recursive_delete_enabled?
+    !!VCAP::CloudController::Config.config.get(:temporary_enable_async_recursive_delete, :apps)
+  end
 
   def handle_order_by_presented_value(page_results)
     return unless page_results.try(:pagination_options).try(:order_by) == 'desired_state'

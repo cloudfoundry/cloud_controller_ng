@@ -11,6 +11,15 @@ module VCAP::CloudController
         @request_id = request_id
       end
 
+      def before(job)
+        # TEMP recursive-delete debug (remove before PR ready): log every delayed job as it starts executing.
+        Steno.logger('cc.temp.recursive_delete').info(
+          "EXECUTE job=#{wrapped_handler.class.name} dj_id=#{job.id} dj_guid=#{job.guid} " \
+          "run_at=#{job.run_at&.utc&.iso8601} attempts=#{job.attempts} queue=#{job.queue}"
+        )
+        super
+      end
+
       def perform
         with_request_id_set do
           logger.info("about to run job #{wrapped_handler.class.name}")

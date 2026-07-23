@@ -596,6 +596,24 @@ module VCAP::CloudController
             expect(event.space).to eq(app.space)
             expect(event.space_guid).to eq(app.space.guid)
           end
+
+          context 'when delete_triggered is true' do
+            it 'tags the audit event metadata so it is clear the stop was caused by an app delete' do
+              event = app_event_repository.record_app_stop(app, user_audit_info, delete_triggered: true)
+
+              expect(event.metadata.fetch(:delete_triggered)).to be(true)
+              # 'reason' surfaces in `cf events` so operators see why the app was stopped.
+              expect(event.metadata.fetch(:reason)).to eq('stopped as part of app deletion')
+            end
+          end
+
+          context 'when delete_triggered is false (default)' do
+            it 'leaves the audit event metadata untouched' do
+              event = app_event_repository.record_app_stop(app, user_audit_info)
+
+              expect(event.metadata).to be_nil.or(be_empty)
+            end
+          end
         end
 
         describe '#record_app_restart' do

@@ -49,6 +49,7 @@ module VCAP::CloudController
             handler: !ruby/object:VCAP::CloudController::Jobs::TimeoutJob
               handler: !ruby/object:VCAP::CloudController::Jobs::PollableJobWrapper
                 existing_guid: null
+                root_job_guid: null
                 handler: !ruby/object:VCAP::CloudController::V3::CreateServiceInstanceJob
                   start_time: #{job.start_time}
                   finished: false

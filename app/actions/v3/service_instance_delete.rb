@@ -4,6 +4,7 @@ require 'actions/service_credential_binding_delete'
 require 'actions/service_instance_unshare'
 require 'cloud_controller/errors/api_error'
 require 'actions/mixins/bindings_delete'
+require 'errors/sub_resource_error'
 
 module VCAP::CloudController
   module V3
@@ -11,9 +12,6 @@ module VCAP::CloudController
       include BindingsDeleteMixin
 
       class DeleteFailed < StandardError
-      end
-
-      class UnbindingOperatationInProgress < StandardError
       end
 
       DeleteStatus = Struct.new(:finished, :operation).freeze
@@ -24,9 +22,10 @@ module VCAP::CloudController
       PollingFinished = PollingStatus.new(true, nil).freeze
       ContinuePolling = ->(retry_after) { PollingStatus.new(false, retry_after) }
 
-      def initialize(service_instance, event_repo)
+      def initialize(service_instance, event_repo, fail_if_in_progress: true)
         @service_instance = service_instance
         @service_event_repository = event_repo
+        @fail_if_in_progress = fail_if_in_progress
       end
 
       def blocking_operation_in_progress?
@@ -38,7 +37,11 @@ module VCAP::CloudController
         operation_in_progress! if blocking_operation_in_progress?
 
         errors = remove_associations
-        raise errors.first if errors.any?
+        if errors.any?
+          raise errors.first if @fail_if_in_progress # Single-shot callers fail on the first error
+
+          SubResourceError.raise_from(errors)
+        end
 
         result = send_deprovison_to_broker
         if result[:finished]
@@ -49,6 +52,11 @@ module VCAP::CloudController
         end
 
         result
+      rescue SubResourceError => e
+        raise if !@fail_if_in_progress && e.any_in_progress? # re-raise SubResourceError so that root job continues to run
+
+        update_last_operation_with_failure(e.message) unless service_instance.operation_in_progress?
+        raise e
       rescue StandardError => e
         update_last_operation_with_failure(e.message) unless service_instance.operation_in_progress?
         raise e
@@ -154,7 +162,9 @@ module VCAP::CloudController
 
         unshare_action = ServiceInstanceUnshare.new
         space_guids.each_with_object([]) do |space_guid, errors|
-          unshare_action.unshare(service_instance, Space.first(guid: space_guid), service_event_repository.user_audit_info)
+          unshare_action.unshare(service_instance, Space.first(guid: space_guid), service_event_repository.user_audit_info, fail_if_in_progress: @fail_if_in_progress)
+        rescue SubResourceError => e
+          errors.concat(e.underlying_errors)
         rescue StandardError => e
           errors << e
         end
@@ -182,14 +192,12 @@ module VCAP::CloudController
         raise CloudController::Errors::ApiError.new_from_details('AsyncServiceInstanceOperationInProgress', service_instance.name)
       end
 
-      def unbinding_operation_in_progress!(binding)
-        raise UnbindingOperatationInProgress.new(
-          if binding.is_a?(VCAP::CloudController::ServiceBinding)
-            "An operation for the service binding between app #{binding.app.name} and service instance #{service_instance.name} is in progress."
-          else
-            "An operation for a service binding of service instance #{service_instance.name} is in progress."
-          end
-        )
+      def unbinding_in_progress_message(binding)
+        if binding.is_a?(VCAP::CloudController::ServiceBinding)
+          "An operation for the service binding between app #{binding.app.name} and service instance #{service_instance.name} is in progress."
+        else
+          "An operation for a service binding of service instance #{service_instance.name} is in progress."
+        end
       end
 
       def delete_failed!(message)
