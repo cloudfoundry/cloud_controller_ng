@@ -28,8 +28,10 @@ module VCAP::CloudController
       attr_reader :root_job, :sub_jobs
 
       # One shared tag for the whole recursive-delete subsystem so ops can grep it by a single logger name.
+      # NOT memoized: this job YAML-serialises itself on reschedule, and a cached Steno::Logger would drag
+      # its file-sink IO into the dump, reviving as an "uninitialized stream" that raises on the next write.
       def logger
-        @logger ||= Steno.logger('cc.jobs.v3.recursive_delete')
+        Steno.logger('cc.jobs.v3.recursive_delete')
       end
 
       # Resolves in any state (unlike root_job), so log lines stay searchable by this guid after the job settles.

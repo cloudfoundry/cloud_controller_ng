@@ -1,6 +1,7 @@
 require 'spec_helper'
 require 'jobs/mixins/root_job_mixin'
 require 'jobs/reoccurring_job'
+require 'jobs/v3/recursive_delete_app_job'
 
 module VCAP::CloudController
   module Jobs
@@ -469,6 +470,17 @@ module VCAP::CloudController
             expect(err.name).to eq('UnableToPerform')
             expect(err.message).to include('uncategorised')
           end
+        end
+      end
+
+      # Regression: the job YAML-serialises itself on reschedule. A memoized Steno::Logger dragged its
+      # file-sink IO into the dump, reviving as an "uninitialized stream" that raised on the next log write.
+      describe 'serialisation safety across reschedule' do
+        it 'does not carry the logger into its YAML dump' do
+          job = VCAP::CloudController::V3::RecursiveDeleteAppJob.new('app-guid', nil)
+          job.send(:logger).info('warm up the logger so a memoised one would be cached before dumping')
+
+          expect(YAML.dump(job)).not_to include('Steno::Logger')
         end
       end
     end
