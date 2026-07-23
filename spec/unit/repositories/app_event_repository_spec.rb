@@ -602,6 +602,8 @@ module VCAP::CloudController
               event = app_event_repository.record_app_stop(app, user_audit_info, delete_triggered: true)
 
               expect(event.metadata.fetch(:delete_triggered)).to be(true)
+              # 'reason' surfaces in `cf events` so operators see why the app was stopped.
+              expect(event.metadata.fetch(:reason)).to eq('stopped as part of app deletion')
             end
           end
 
