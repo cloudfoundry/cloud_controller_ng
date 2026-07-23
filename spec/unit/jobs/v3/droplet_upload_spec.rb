@@ -12,6 +12,7 @@ module VCAP::CloudController
         end
       end
       let!(:blobstore) do
+        allow(CloudController::DependencyLocator.instance).to receive(:droplet_blobstore).and_call_original
         blobstore = CloudController::DependencyLocator.instance.droplet_blobstore
         allow(CloudController::DependencyLocator.instance).to receive(:droplet_blobstore).and_return(blobstore)
         blobstore
@@ -75,12 +76,8 @@ module VCAP::CloudController
           end
 
           it 'does not try to upload the droplet' do
-            digest = Digester.new.digest_file(local_file)
+            expect(blobstore).not_to receive(:cp_to_blobstore)
             job.perform
-
-            downloaded_file = Tempfile.new('downloaded_file')
-            blobstore.download_from_blobstore(File.join('bad-guid', digest), downloaded_file.path)
-            expect(downloaded_file.read).to eql('')
           end
 
           it 'deletes the local file' do

@@ -138,21 +138,42 @@ module SpecHelperHelper
         TestConfig.context = example.metadata[:job_context] || :api
         TestConfig.reset
 
-        Fog::Mock.reset
-
-        if Fog.mock?
-          CloudController::DependencyLocator.instance.droplet_blobstore.ensure_bucket_exists
-          CloudController::DependencyLocator.instance.package_blobstore.ensure_bucket_exists
-          CloudController::DependencyLocator.instance.global_app_bits_cache.ensure_bucket_exists
-          CloudController::DependencyLocator.instance.buildpack_blobstore.ensure_bucket_exists
-        end
-
         VCAP::CloudController::SecurityContext.clear
         VCAP::Request.current_id = nil
         allow_any_instance_of(VCAP::CloudController::UaaTokenDecoder).to receive(:uaa_issuer).and_return(UAAIssuer::ISSUER)
 
         mock_redis = MockRedis.new
         allow(Redis).to receive(:new).and_return(mock_redis)
+      end
+
+      rspec_config.before do |_example|
+        fake_blobstore = instance_double(
+          CloudController::Blobstore::Client,
+          local?: true,
+          exists?: false,
+          ensure_bucket_exists: nil,
+          cp_to_blobstore: nil,
+          cp_r_to_blobstore: nil,
+          cp_file_between_keys: nil,
+          download_from_blobstore: nil,
+          delete: nil,
+          delete_all: nil,
+          delete_all_in_path: nil,
+          delete_blob: nil,
+          blob: nil,
+          files_for: [],
+          root_dir: nil
+        )
+
+        locator = CloudController::DependencyLocator.instance
+        allow(locator).to receive_messages(
+          droplet_blobstore: fake_blobstore,
+          buildpack_cache_blobstore: fake_blobstore,
+          package_blobstore: fake_blobstore,
+          global_app_bits_cache: fake_blobstore,
+          legacy_global_app_bits_cache: fake_blobstore,
+          buildpack_blobstore: fake_blobstore
+        )
       end
 
       rspec_config.around do |example|

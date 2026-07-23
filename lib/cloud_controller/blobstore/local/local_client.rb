@@ -92,8 +92,9 @@ module CloudController
       end
 
       def delete_all(_=nil)
-        FileUtils.rm_rf(@base_path)
-        FileUtils.mkdir_p(@base_path)
+        target = @root_dir ? File.join(@base_path, @root_dir) : @base_path
+        FileUtils.rm_rf(target)
+        FileUtils.mkdir_p(target)
       end
 
       def delete_all_in_path(path)
@@ -151,7 +152,6 @@ module CloudController
       def cleanup_temp_storage
         return unless use_temp_storage? && @base_path && File.directory?(@base_path)
 
-        logger.info('temp-storage-cleanup', directory_key: @directory_key, path: @base_path)
         FileUtils.rm_rf(@base_path)
       rescue StandardError => e
         logger.error('temp-storage-cleanup-failed', error: e.message, path: @base_path)

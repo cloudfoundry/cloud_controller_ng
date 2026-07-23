@@ -20,11 +20,11 @@ module VCAP::CloudController
         end
 
         context 'when the package is valid' do
-          let(:blob) { instance_double(CloudController::Blobstore::FogBlob) }
+          let(:blob) { double('blob', public_download_url: 'http://example.com/somewhere/else') }
 
           before do
-            allow(blob).to receive(:public_download_url).and_return('http://example.com/somewhere/else')
-            allow_any_instance_of(CloudController::Blobstore::Client).to receive(:blob).and_return(blob)
+            package_blobstore = instance_double(CloudController::Blobstore::Client, blob: blob, local?: false)
+            allow(CloudController::DependencyLocator.instance).to receive(:package_blobstore).and_return(package_blobstore)
           end
 
           it 'returns 302' do

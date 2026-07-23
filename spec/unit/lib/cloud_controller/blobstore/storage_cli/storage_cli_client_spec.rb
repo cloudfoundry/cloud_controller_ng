@@ -20,52 +20,7 @@ module CloudController
       end
 
       describe 'client init' do
-        # DEPRECATED: Legacy fog provider tests - remove after migration window
-        # START LEGACY FOG SUPPORT TESTS
-        it 'maps AWS legacy provider to s3 storage-cli type' do
-          droplets_cfg = write_config_file(
-            provider: 'AWS',
-            bucket_name: 'test-bucket',
-            access_key_id: 'key',
-            secret_access_key: 'secret'
-          )
-          begin
-            stub_config_for_droplets(droplets_cfg.path)
-
-            client = StorageCliClient.new(
-              directory_key: 'dummy-key',
-              root_dir: 'dummy-root',
-              resource_type: 'droplets'
-            )
-            expect(client.instance_variable_get(:@storage_type)).to eq('s3')
-          ensure
-            droplets_cfg.close!
-          end
-        end
-
-        it 'maps webdav legacy provider to dav storage-cli type' do
-          droplets_cfg = write_config_file(
-            provider: 'webdav',
-            endpoint: 'https://webdav.example.com',
-            user: 'testuser',
-            password: 'testpass'
-          )
-          begin
-            stub_config_for_droplets(droplets_cfg.path)
-
-            client = StorageCliClient.new(
-              directory_key: 'dummy-key',
-              root_dir: 'dummy-root',
-              resource_type: 'droplets'
-            )
-            expect(client.instance_variable_get(:@storage_type)).to eq('dav')
-          ensure
-            droplets_cfg.close!
-          end
-        end
-        # END LEGACY FOG SUPPORT TESTS
-
-        it 'raises an error for an unknown legacy provider' do
+        it 'raises an error for an unknown provider' do
           droplets_cfg = write_config_file(
             provider: 'UnknownProvider',
             account_key: 'bommelkey',

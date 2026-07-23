@@ -11,17 +11,17 @@ module CloudController::Packager
     let(:min_size) { 4 }
     let(:max_size) { 8 }
     let(:global_app_bits_cache) do
-      CloudController::Blobstore::FogClient.new(
-        connection_config: { provider: 'AWS', aws_access_key_id: 'fake', aws_secret_access_key: 'fake' },
+      CloudController::Blobstore::LocalClient.new(
         directory_key: 'global_app_bits_cache',
+        base_path: Dir.mktmpdir,
         min_size: min_size,
         max_size: max_size
       )
     end
     let(:package_blobstore) do
-      CloudController::Blobstore::FogClient.new(
-        connection_config: { provider: 'AWS', aws_access_key_id: 'fake', aws_secret_access_key: 'fake' },
-        directory_key: 'package'
+      CloudController::Blobstore::LocalClient.new(
+        directory_key: 'package',
+        base_path: Dir.mktmpdir
       )
     end
 
@@ -55,13 +55,9 @@ module CloudController::Packager
       rescue StandardError
         nil
       end
-
-      global_app_bits_cache.ensure_bucket_exists
-      package_blobstore.ensure_bucket_exists
     end
 
     after do
-      Fog::Mock.reset
       FileUtils.remove_entry_secure local_tmp_dir
     end
 
@@ -281,7 +277,7 @@ module CloudController::Packager
             `zip -r --symlinks "#{uploaded_files_path}" "#{symlink_path}"`
 
             packer.send_package_to_blobstore(blobstore_key, uploaded_files_path, [])
-            expect(global_app_bits_cache.files_for('').size).to be 2
+            expect(global_app_bits_cache.files_for('').count).to be 2
 
             sha_of_cli_js = 'da39a3ee5e6b4b0d3255bfef95601890afd80709'
             sha_of_target1_txt = 'f572d396fae9206628714fb2ce00f72e94f2258f'
@@ -351,7 +347,7 @@ module CloudController::Packager
 
         context 'when the package is successfully uploaded and processed' do
           it 'removes the temporary directory created for packaging' do
-            allow_any_instance_of(CloudController::Blobstore::FogClient).to receive(:cp_to_blobstore)
+            allow(package_blobstore).to receive(:cp_to_blobstore)
             allow(Digester).to receive(:new).and_return(instance_double(Digester, digest_path: 'fake-digest'))
             expect(FileUtils).to receive(:remove_dir).with(local_bits_packer_path).and_call_original
             packer.send_package_to_blobstore(blobstore_key, uploaded_files_path, cached_files_fingerprints)
@@ -366,7 +362,7 @@ module CloudController::Packager
 
             expect(FileUtils).to receive(:remove_dir).with(local_bits_packer_path)
             expect do
-              allow_any_instance_of(CloudController::Blobstore::FogClient).to receive(:cp_to_blobstore).and_raise(StandardError)
+              allow(package_blobstore).to receive(:cp_to_blobstore).and_raise(StandardError)
               packer.send_package_to_blobstore(blobstore_key, uploaded_files_path, cached_files_fingerprints)
             end.to raise_error(StandardError)
           end

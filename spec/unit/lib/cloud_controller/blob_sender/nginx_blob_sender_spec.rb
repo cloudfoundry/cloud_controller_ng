@@ -7,7 +7,7 @@ module CloudController
         NginxLocalBlobSender.new
       end
 
-      let(:blob) { instance_double(Blobstore::FogBlob, internal_download_url: 'http://url/to/blob') }
+      let(:blob) { instance_double(Blobstore::NullBlob, internal_download_url: 'http://url/to/blob') }
 
       describe '#send_blob' do
         context 'when the controller is a v2 controller' do

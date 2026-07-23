@@ -122,6 +122,12 @@ module VCAP::CloudController
             before do
               # rack_test overrides 'CONTENT_TYPE' header with 'boundary' which causes errors when the request does not contain an application
               headers[:multipart] = false
+              allow(CloudController::DependencyLocator.instance).to receive(:global_app_bits_cache).and_call_original
+              cache = CloudController::DependencyLocator.instance.global_app_bits_cache
+              allow(CloudController::DependencyLocator.instance).to receive(:global_app_bits_cache).and_return(cache)
+              empty_file = Tempfile.new('empty')
+              cache.cp_to_blobstore(empty_file.path, 'da39a3ee5e6b4b0d3255bfef95601890afd80709')
+              empty_file.close
             end
 
             it 'succeeds to upload' do
@@ -133,6 +139,15 @@ module VCAP::CloudController
 
           context 'with at least one resource and an application' do
             let(:req_body) { { resources: Oj.dump([{ 'fn' => 'lol', 'sha1' => 'da39a3ee5e6b4b0d3255bfef95601890afd80709', 'size' => 2048 }]), application: valid_zip } }
+
+            before do
+              allow(CloudController::DependencyLocator.instance).to receive(:global_app_bits_cache).and_call_original
+              cache = CloudController::DependencyLocator.instance.global_app_bits_cache
+              allow(CloudController::DependencyLocator.instance).to receive(:global_app_bits_cache).and_return(cache)
+              empty_file = Tempfile.new('empty')
+              cache.cp_to_blobstore(empty_file.path, 'da39a3ee5e6b4b0d3255bfef95601890afd80709')
+              empty_file.close
+            end
 
             it 'succeeds to upload' do
               make_request

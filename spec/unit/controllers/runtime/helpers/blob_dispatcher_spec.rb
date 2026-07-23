@@ -16,7 +16,7 @@ module VCAP::CloudController
     end
 
     describe '#send_or_redirect' do
-      let(:blob) { instance_double(CloudController::Blobstore::FogBlob) }
+      let(:blob) { instance_double(CloudController::Blobstore::Blob) }
       let(:package_guid) { 'package-guid' }
 
       before do

@@ -40,7 +40,6 @@ When deployed via capi-release only:
 | Provider | `blobstore_type` | Backends                                      | Notes |
 |----------|------------------|-----------------------------------------------|-------|
 | Storage CLI | `storage-cli` | S3, S3-compatible, GCS, Azure, Alibaba Cloud  | |
-| Fog | `fog` | AWS, GCS, Alibaba Cloud, OpenStack, Local/NFS | **Default.** Local/NFS not recommended for production |
 | WebDAV | `webdav` | WebDAV servers                                | |
 | Local | `local`, `local-temp-storage` | Filesystem, NFS                               | Development and testing only |
 

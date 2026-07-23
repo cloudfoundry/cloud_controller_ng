@@ -245,7 +245,7 @@ RSpec.describe PackagesController, type: :controller do
     let(:user) { set_current_user(create(:user), email: 'utako') }
 
     before do
-      blob = instance_double(CloudController::Blobstore::FogBlob, public_download_url: 'http://package.example.com')
+      blob = instance_double(CloudController::Blobstore::Blob, public_download_url: 'http://package.example.com')
       allow_any_instance_of(CloudController::Blobstore::Client).to receive(:blob).and_return(blob)
       allow_any_instance_of(CloudController::Blobstore::Client).to receive(:local?).and_return(false)
       allow_user_read_access_for(user, spaces: [space])

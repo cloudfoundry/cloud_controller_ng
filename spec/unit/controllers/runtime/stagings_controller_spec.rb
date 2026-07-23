@@ -197,27 +197,18 @@ module VCAP::CloudController
         nginx: { use_nginx: true },
         resource_pool: {
           resource_directory_key: 'cc-resources',
-          fog_connection: {
-            provider: 'AWS',
-            aws_access_key_id: 'fake',
-            aws_secret_access_key: 'fake'
-          }
+          blobstore_type: 'local',
+          local_blobstore_path: Dir.mktmpdir('resource_pool', workspace)
         },
         packages: {
-          fog_connection: {
-            provider: 'AWS',
-            aws_access_key_id: 'fake',
-            aws_secret_access_key: 'fake'
-          },
+          blobstore_type: 'local',
+          local_blobstore_path: Dir.mktmpdir('packages', workspace),
           app_package_directory_key: 'cc-packages'
         },
         droplets: {
           droplet_directory_key: 'cc-droplets',
-          fog_connection: {
-            provider: 'AWS',
-            aws_access_key_id: 'fake',
-            aws_secret_access_key: 'fake'
-          }
+          blobstore_type: 'local',
+          local_blobstore_path: Dir.mktmpdir('droplets', workspace)
         },
         directories: {
           tmpdir: Dir.mktmpdir('tmpdir', workspace)
@@ -244,7 +235,6 @@ module VCAP::CloudController
     end
 
     after do
-      Fog::Mock.reset
       FileUtils.rm_rf(workspace)
     end
 
@@ -275,11 +265,12 @@ module VCAP::CloudController
       before { authorize(staging_user, staging_password) }
 
       def create_test_blob
-        tmpdir = Dir.mktmpdir
-        file   = File.new(File.join(tmpdir, 'afile.txt'), 'w')
-        file.print('test blob contents')
-        file.close
-        CloudController::Blobstore::FogBlob.new(file, nil)
+        tmpfile = Tempfile.new('staging-test-blob')
+        tmpfile.write('test blob contents')
+        tmpfile.flush
+        double('blob',
+               internal_download_url: '/cc-packages/test/blob',
+               local_path: tmpfile.path)
       end
 
       context 'when using with nginx' do
@@ -318,6 +309,8 @@ module VCAP::CloudController
       end
 
       it 'fails if blobstore is not local' do
+        non_local_blobstore = instance_double(CloudController::Blobstore::Client, local?: false)
+        allow(CloudController::DependencyLocator.instance).to receive(:package_blobstore).and_return(non_local_blobstore)
         get '/staging/packages/some-guid'
         expect(last_response.status).to eq(400)
       end
@@ -471,6 +464,8 @@ module VCAP::CloudController
       before { authorize(staging_user, staging_password) }
 
       it 'fails if blobstore is not local' do
+        non_local_blobstore = instance_double(CloudController::Blobstore::Client, local?: false)
+        allow(CloudController::DependencyLocator.instance).to receive(:droplet_blobstore).and_return(non_local_blobstore)
         get '/staging/v3/droplets/some-guid/download'
         expect(last_response.status).to eq(400)
       end

@@ -6,7 +6,7 @@ module CloudController
   module Blobstore
     RSpec.describe NullClient do
       subject(:client) { NullClient.new }
-      let(:deletable_blob) { instance_double(Blob) }
+      let(:deletable_blob) { instance_double(NullBlob) }
 
       it_behaves_like 'a blobstore client'
     end

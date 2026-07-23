@@ -28,7 +28,7 @@ module CloudController
       let(:droplet_blobstore) { instance_double(Blobstore::Client, blob:) }
 
       let(:internal_url) { 'http://s3.internal.example.com/signed' }
-      let(:blob) { instance_double(Blobstore::FogBlob, internal_download_url: internal_url) }
+      let(:blob) { instance_double(Blobstore::NullBlob, internal_download_url: internal_url) }
 
       subject(:url_generator) do
         InternalUrlGenerator.new(connection_options,

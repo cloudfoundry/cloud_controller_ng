@@ -5,23 +5,18 @@ require 'spec_helper'
 module VCAP::CloudController
   RSpec.describe DownloadDropletsController do
     describe 'GET /internal/v2/droplets/:guid/:droplet_hash/download' do
+      let(:workspace) { Dir.mktmpdir }
       let(:original_staging_config) do
         {
           packages: {
-            fog_connection: {
-              provider: 'AWS',
-              aws_access_key_id: 'fake',
-              aws_secret_access_key: 'fake'
-            },
+            blobstore_type: 'local',
+            local_blobstore_path: Dir.mktmpdir('packages', workspace),
             app_package_directory_key: 'cc-packages'
           },
           droplets: {
             droplet_directory_key: 'cc-droplets',
-            fog_connection: {
-              provider: 'AWS',
-              aws_access_key_id: 'fake',
-              aws_secret_access_key: 'fake'
-            }
+            blobstore_type: 'local',
+            local_blobstore_path: Dir.mktmpdir('droplets', workspace)
           }
         }
       end
@@ -36,10 +31,9 @@ module VCAP::CloudController
 
       before do
         TestConfig.override(**staging_config)
-        blobstore.ensure_bucket_exists
       end
 
-      after { Fog::Mock.reset }
+      after { FileUtils.rm_rf(workspace) }
 
       def get_and_redirect(url)
         get url
@@ -97,23 +91,18 @@ module VCAP::CloudController
     end
 
     describe 'GET /internal/v4/droplets/:guid/:droplet_hash/download' do
+      let(:workspace) { Dir.mktmpdir }
       let(:original_staging_config) do
         {
           packages: {
-            fog_connection: {
-              provider: 'AWS',
-              aws_access_key_id: 'fake',
-              aws_secret_access_key: 'fake'
-            },
+            blobstore_type: 'local',
+            local_blobstore_path: Dir.mktmpdir('packages', workspace),
             app_package_directory_key: 'cc-packages'
           },
           droplets: {
             droplet_directory_key: 'cc-droplets',
-            fog_connection: {
-              provider: 'AWS',
-              aws_access_key_id: 'fake',
-              aws_secret_access_key: 'fake'
-            }
+            blobstore_type: 'local',
+            local_blobstore_path: Dir.mktmpdir('droplets', workspace)
           }
         }
       end
@@ -128,10 +117,9 @@ module VCAP::CloudController
 
       before do
         TestConfig.override(**staging_config)
-        blobstore.ensure_bucket_exists
       end
 
-      after { Fog::Mock.reset }
+      after { FileUtils.rm_rf(workspace) }
 
       def upload_droplet(target_droplet=droplet)
         droplet_file = Tempfile.new(v3_app.guid)
@@ -147,6 +135,7 @@ module VCAP::CloudController
         it 'redirects to the correct droplet when revision droplet differs from desired droplet' do
           upload_droplet
           upload_droplet(new_droplet)
+          allow_any_instance_of(CloudController::Blobstore::LocalClient).to receive(:local?).and_return(false)
           allow_any_instance_of(CloudController::Blobstore::UrlGenerator).to receive(:droplet_download_url).with(droplet).and_return('http://example.com/wrong/droplet')
           allow_any_instance_of(CloudController::Blobstore::UrlGenerator).to receive(:droplet_download_url).with(new_droplet).and_return('http://example.com/correct/droplet')
 
@@ -165,6 +154,7 @@ module VCAP::CloudController
 
       it 'redirects to the url provided by the blobstore_url_generator' do
         upload_droplet
+        allow_any_instance_of(CloudController::Blobstore::LocalClient).to receive(:local?).and_return(false)
         allow_any_instance_of(CloudController::Blobstore::UrlGenerator).to receive(:droplet_download_url).and_return('http://example.com/somewhere/else')
 
         get "/internal/v4/droplets/#{process.guid}/#{process.droplet_checksum}/download"

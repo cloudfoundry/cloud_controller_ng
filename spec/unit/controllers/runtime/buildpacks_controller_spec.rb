@@ -175,7 +175,9 @@ module VCAP::CloudController
 
       context 'with async false' do
         before do
+          allow(CloudController::DependencyLocator.instance).to receive(:buildpack_blobstore).and_call_original
           buildpack_blobstore = CloudController::DependencyLocator.instance.buildpack_blobstore
+          allow(CloudController::DependencyLocator.instance).to receive(:buildpack_blobstore).and_return(buildpack_blobstore)
           buildpack_blobstore.cp_to_blobstore(Tempfile.new(['FAKE_BUILDPACK', '.zip']).path, buildpack1.key)
         end
 

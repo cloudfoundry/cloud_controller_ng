@@ -20,12 +20,6 @@ module CloudController
       # Native storage-cli type names supported by CC
       STORAGE_CLI_TYPES = %w[azurebs alioss s3 gcs dav].freeze
 
-      # DEPRECATED: Legacy fog provider names (remove after migration window)
-      LEGACY_PROVIDER_TO_STORAGE_CLI_TYPE = {
-        'AWS' => 's3',
-        'webdav' => 'dav'
-      }.freeze
-
       def initialize(directory_key:, resource_type:, root_dir:, min_size: nil, max_size: nil)
         raise 'Missing resource_type' if resource_type.nil?
 
@@ -35,19 +29,9 @@ module CloudController
         provider = cfg['provider']&.to_s
         raise BlobstoreError.new("No provider specified in config file: #{File.basename(config_file_path)}") if provider.nil? || provider.empty?
 
-        @storage_type =
-          if STORAGE_CLI_TYPES.include?(provider)
-            provider
-          else
-            # START LEGACY FOG SUPPORT (delete this whole else-branch after migration)
-            LEGACY_PROVIDER_TO_STORAGE_CLI_TYPE[provider]
-            # END LEGACY FOG SUPPORT
-          end
+        @storage_type = provider if STORAGE_CLI_TYPES.include?(provider)
 
-        unless @storage_type
-          raise "Unknown provider: #{provider}. Supported storage-cli types: #{STORAGE_CLI_TYPES.join(', ')} " \
-                "(legacy fog names accepted temporarily: #{LEGACY_PROVIDER_TO_STORAGE_CLI_TYPE.keys.join(', ')})"
-        end
+        raise "Unknown provider: #{provider}. Supported storage-cli types: #{STORAGE_CLI_TYPES.join(', ')}" unless @storage_type
 
         @cli_path = cli_path
         @config_file = config_file_path

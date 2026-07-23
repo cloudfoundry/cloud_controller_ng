@@ -368,7 +368,7 @@ RSpec.describe 'Droplets' do
         bits_path: droplet_file
       }
     end
-    let(:bits_download_url) { CloudController::DependencyLocator.instance.blobstore_url_generator.droplet_download_url(droplet_model) }
+    let(:bits_download_url) { 'http://blobstore.example.com/droplet-download' }
 
     context 'when the droplet is uploaded' do
       let(:api_call) { ->(user_headers) { get "/v3/droplets/#{guid}/download", nil, user_headers } }
@@ -398,6 +398,8 @@ RSpec.describe 'Droplets' do
         successes, failures = Delayed::Worker.new.work_off
         expect(successes).to eq(1)
         expect(failures).to eq(0)
+        allow_any_instance_of(CloudController::Blobstore::LocalClient).to receive(:local?).and_return(false)
+        allow_any_instance_of(CloudController::Blobstore::LocalBlob).to receive(:public_download_url).and_return(bits_download_url)
       end
 
       it_behaves_like 'permissions for single object endpoint', ALL_PERMISSIONS
