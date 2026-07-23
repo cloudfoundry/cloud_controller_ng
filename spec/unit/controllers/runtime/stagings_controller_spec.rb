@@ -268,9 +268,9 @@ module VCAP::CloudController
         tmpfile = Tempfile.new('staging-test-blob')
         tmpfile.write('test blob contents')
         tmpfile.flush
-        instance_double(CloudController::Blobstore::Blob,
-                        internal_download_url: '/cc-packages/test/blob',
-                        local_path: tmpfile.path)
+        double('blob',
+               internal_download_url: '/cc-packages/test/blob',
+               local_path: tmpfile.path)
       end
 
       context 'when using with nginx' do

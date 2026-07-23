@@ -4,13 +4,11 @@ module VCAP::CloudController
   RSpec.describe BuildpackBitsDelete do
     let(:staging_timeout) { 144 }
     let(:key) { 'key' }
-    let!(:blobstore) do
-      CloudController::DependencyLocator.instance.buildpack_blobstore
-    end
-
     let(:tmpfile) { Tempfile.new('') }
+    let(:blobstore) { CloudController::DependencyLocator.instance.buildpack_blobstore }
 
     before do
+      allow(CloudController::DependencyLocator.instance).to receive(:buildpack_blobstore).and_call_original
       blobstore.cp_to_blobstore(tmpfile.path, key)
     end
 

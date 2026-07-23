@@ -12,6 +12,7 @@ module VCAP::CloudController
         end
       end
       let!(:blobstore) do
+        allow(CloudController::DependencyLocator.instance).to receive(:droplet_blobstore).and_call_original
         blobstore = CloudController::DependencyLocator.instance.droplet_blobstore
         allow(CloudController::DependencyLocator.instance).to receive(:droplet_blobstore).and_return(blobstore)
         blobstore
