@@ -153,6 +153,7 @@ module SpecHelperHelper
           exists?: false,
           ensure_bucket_exists: nil,
           cp_to_blobstore: nil,
+          cp_r_to_blobstore: nil,
           cp_file_between_keys: nil,
           download_from_blobstore: nil,
           delete: nil,

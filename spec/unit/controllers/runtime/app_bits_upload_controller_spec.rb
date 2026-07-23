@@ -122,9 +122,11 @@ module VCAP::CloudController
             before do
               # rack_test overrides 'CONTENT_TYPE' header with 'boundary' which causes errors when the request does not contain an application
               headers[:multipart] = false
-              # Seed the resource pool with the empty-file SHA so the packer can match it
+              allow(CloudController::DependencyLocator.instance).to receive(:global_app_bits_cache).and_call_original
+              cache = CloudController::DependencyLocator.instance.global_app_bits_cache
+              allow(CloudController::DependencyLocator.instance).to receive(:global_app_bits_cache).and_return(cache)
               empty_file = Tempfile.new('empty')
-              CloudController::DependencyLocator.instance.global_app_bits_cache.cp_to_blobstore(empty_file.path, 'da39a3ee5e6b4b0d3255bfef95601890afd80709')
+              cache.cp_to_blobstore(empty_file.path, 'da39a3ee5e6b4b0d3255bfef95601890afd80709')
               empty_file.close
             end
 
@@ -139,9 +141,11 @@ module VCAP::CloudController
             let(:req_body) { { resources: Oj.dump([{ 'fn' => 'lol', 'sha1' => 'da39a3ee5e6b4b0d3255bfef95601890afd80709', 'size' => 2048 }]), application: valid_zip } }
 
             before do
-              # Seed the resource pool with the empty-file SHA so the packer can match it
+              allow(CloudController::DependencyLocator.instance).to receive(:global_app_bits_cache).and_call_original
+              cache = CloudController::DependencyLocator.instance.global_app_bits_cache
+              allow(CloudController::DependencyLocator.instance).to receive(:global_app_bits_cache).and_return(cache)
               empty_file = Tempfile.new('empty')
-              CloudController::DependencyLocator.instance.global_app_bits_cache.cp_to_blobstore(empty_file.path, 'da39a3ee5e6b4b0d3255bfef95601890afd80709')
+              cache.cp_to_blobstore(empty_file.path, 'da39a3ee5e6b4b0d3255bfef95601890afd80709')
               empty_file.close
             end
 
