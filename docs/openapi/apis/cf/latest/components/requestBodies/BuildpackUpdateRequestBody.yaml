@@ -1,0 +1,34 @@
+description: Buildpack object that needs to be updated
+required: true
+content:
+  application/json:
+    schema:
+      type: object
+      properties:
+        name:
+          type: string
+          description: The name of the buildpack
+        position:
+          type: integer
+          description: The order in which the buildpacks are checked during buildpack auto-detection
+        enabled:
+          type: boolean
+          description: Whether or not the buildpack will be used for staging
+        locked:
+          type: boolean
+          description: Whether or not the buildpack is locked to prevent updating the bits
+        stack:
+          type: string
+          description: The name of the stack that the buildpack will use
+        metadata:
+          $ref: ../schemas/Metadata.yaml
+      description: Request schema for updating a buildpack
+    examples:
+      default:
+        summary: default
+        value:
+          name: ruby_buildpack
+          position: 42
+          enabled: true
+          locked: false
+          stack: windows64

@@ -1,0 +1,22 @@
+type: object
+properties:
+  type:
+    type: string
+    enum: ["port", "process", "http"]
+    description: The type of health check to perform; valid values are http, port, and process; default is port
+  data:
+    type: object
+    properties:
+      timeout:
+        type: [integer, 'null']
+        description: The duration in seconds that health checks can fail before the process is restarted
+      invocation_timeout:
+        type: [integer, 'null']
+        description: The timeout in seconds for individual health check requests for http and port health checks
+      interval:
+        type: [integer, 'null']
+        description: The interval in seconds between health check requests
+      endpoint:
+        type: string
+        description: The endpoint called to determine if the app is healthy; this key is only present for http health checks
+description: 'Health check configuration for a process'

@@ -1,0 +1,25 @@
+type: object
+properties:
+  type:
+    type: string
+    description: Type of visibility
+    enum:
+      - public
+      - admin
+      - organization
+      - space
+  organizations:
+    type: array
+    items:
+      type: object
+      properties:
+        guid:
+          type: string
+          format: uuid
+          description: Organization GUID
+        name:
+          type: string
+          description: Organization name
+    description: Organizations that have visibility to this service plan
+required:
+  - type

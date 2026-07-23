@@ -1,0 +1,35 @@
+type: object
+allOf:
+  - $ref: './BaseSchema.yaml'
+  - properties:
+      name:
+        type: string
+        description: Name of the organization
+      suspended:
+        type: boolean
+        description: Whether an organization is suspended or not; non-admins will be blocked from creating, updating, or deleting resources in a suspended organization
+      relationships:
+        type: object
+        properties:
+          quota:
+            $ref: './RelationshipToOne.yaml'
+        description: The quota applied to the organization
+      metadata:
+        $ref: './Metadata.yaml'
+      links:
+        type: object
+        properties:
+          self:
+            $ref: './Link.yaml'
+            description: The URL to get this organization
+          domains:
+            $ref: './Link.yaml'
+            description: The URL to get the domains for this organization
+          quota:
+            $ref: './Link.yaml'
+            description: The URL to get the quota for this organization
+          default_domain:
+            $ref: './Link.yaml'
+            description: The URL to get the default domain for this organization
+description: >
+  An org is a development account that an individual or multiple collaborators can own and use. All collaborators access an org with user accounts. Collaborators in an org share a resource quota plan, applications, services availability, and custom domains.

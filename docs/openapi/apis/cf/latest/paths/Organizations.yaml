@@ -1,0 +1,539 @@
+/v3/organizations:
+  get:
+    summary: List organizations
+    description: Retrieve all organizations the user has access to.
+    operationId: listOrganizations
+    tags:
+      - Organizations
+    parameters:
+      - $ref: ../components/parameters/Page.yaml
+      - $ref: ../components/parameters/PerPage.yaml
+      - $ref: ../components/parameters/OrderBy.yaml
+      - $ref: ../components/parameters/CreatedAts.yaml
+      - $ref: ../components/parameters/UpdatedAts.yaml
+      - $ref: ../components/parameters/LabelSelector.yaml
+      - name: names
+        in: query
+        schema:
+          type: array
+          items:
+            type: string
+        description: Comma-delimited list of organization names to filter by
+      - name: guids
+        in: query
+        schema:
+          type: array
+          items:
+            type: string
+        description: Comma-delimited list of organization guids to filter by
+    responses:
+      '200':
+        description: OK
+        content:
+          application/json:
+            schema:
+              $ref: ../components/schemas/OrganizationList.yaml
+            examples:
+              default:
+                summary: default
+                value:
+                  pagination:
+                    total_results: 2
+                    total_pages: 1
+                    first:
+                      href: https://api.example.org/v3/organizations?page=1&per_page=50
+                    last:
+                      href: https://api.example.org/v3/organizations?page=1&per_page=50
+                    next: null
+                    previous: null
+                  resources:
+                    - guid: 123e4567-e89b-12d3-a456-426614174000
+                      created_at: '2017-02-01T01:33:58Z'
+                      updated_at: '2017-02-01T01:33:58Z'
+                      name: org1
+                      suspended: false
+                      relationships:
+                        quota:
+                          data:
+                            guid: 123e4567-e89b-12d3-a456-426614174000
+                      links:
+                        self:
+                          href: https://api.example.org/v3/organizations/885735b5-aea4-4cf5-8e44-961af0e41920
+                        domains:
+                          href: https://api.example.org/v3/organizations/885735b5-aea4-4cf5-8e44-961af0e41920/domains
+                        default_domain:
+                          href: https://api.example.org/v3/organizations/885735b5-aea4-4cf5-8e44-961af0e41920/domains/default
+                        quota:
+                          href: https://api.example.org/v3/organization_quotas/b7887f5c-34bb-40c5-9778-577572e4fb2d
+                      metadata:
+                        labels: {}
+                        annotations: {}
+                    - guid: 123e4567-e89b-12d3-a456-426614174000
+                      created_at: '2017-02-02T00:14:30Z'
+                      updated_at: '2017-02-02T00:14:30Z'
+                      name: org2
+                      suspended: false
+                      relationships:
+                        quota:
+                          data:
+                            guid: 123e4567-e89b-12d3-a456-426614174000
+                      links:
+                        self:
+                          href: https://api.example.org/v3/organizations/d4c91047-7b29-4fda-b7f9-04033e5c9c9f
+                        domains:
+                          href: https://api.example.org/v3/organizations/d4c91047-7b29-4fda-b7f9-04033e5c9c9f/domains
+                        default_domain:
+                          href: https://api.example.org/v3/organizations/d4c91047-7b29-4fda-b7f9-04033e5c9c9f/domains/default
+                        quota:
+                          href: https://api.example.org/v3/organization_quotas/b7887f5c-34bb-40c5-9778-577572e4fb2d
+                      metadata:
+                        labels: {}
+                        annotations: {}
+      '400':
+        $ref: ../components/responses/BadRequest.yaml
+      '401':
+        $ref: ../components/responses/Unauthorized.yaml
+      '403':
+        $ref: ../components/responses/Forbidden.yaml
+      '409':
+        $ref: ../components/responses/Conflict.yaml
+      '422':
+        $ref: ../components/responses/UnprocessableEntity.yaml
+      '500':
+        $ref: ../components/responses/500.yaml
+      '502':
+        $ref: ../components/responses/BadGateway.yaml
+      '503':
+        $ref: ../components/responses/ServiceUnavailable.yaml
+  post:
+    summary: Create an organization
+    description: Create an organization.
+    operationId: createOrganization
+    tags:
+      - Organizations
+    requestBody:
+      $ref: ../components/requestBodies/OrganizationCreateRequestBody.yaml
+    responses:
+      '201':
+        description: Created
+        content:
+          application/json:
+            schema:
+              $ref: ../components/schemas/Organization.yaml
+            examples:
+              default:
+                summary: default
+                value:
+                  guid: 123e4567-e89b-12d3-a456-426614174000
+                  created_at: '2017-02-01T01:33:58Z'
+                  updated_at: '2017-02-01T01:33:58Z'
+                  name: my-organization
+                  suspended: false
+                  relationships:
+                    quota:
+                      data:
+                        guid: 123e4567-e89b-12d3-a456-426614174000
+                  links:
+                    self:
+                      href: https://api.example.org/v3/organizations/24637893-3b77-489d-bb79-8466f0d88b52
+                    domains:
+                      href: https://api.example.org/v3/organizations/24637893-3b77-489d-bb79-8466f0d88b52/domains
+                    default_domain:
+                      href: https://api.example.org/v3/organizations/24637893-3b77-489d-bb79-8466f0d88b52/domains/default
+                    quota:
+                      href: https://api.example.org/v3/organization_quotas/b7887f5c-34bb-40c5-9778-577572e4fb2d
+                  metadata:
+                    labels: {}
+                    annotations: {}
+        links:
+          quota:
+            operationId: getOrganizationQuota
+            parameters:
+              guid: $response.body#/relationships/quota/data/guid
+            description: Retrieve the quota associated with this organization
+      '400':
+        $ref: ../components/responses/BadRequest.yaml
+      '401':
+        $ref: ../components/responses/Unauthorized.yaml
+      '403':
+        $ref: ../components/responses/Forbidden.yaml
+      '409':
+        $ref: ../components/responses/Conflict.yaml
+      '422':
+        $ref: ../components/responses/UnprocessableEntity.yaml
+      '500':
+        $ref: ../components/responses/500.yaml
+      '503':
+        $ref: ../components/responses/ServiceUnavailable.yaml
+/v3/organizations/{guid}:
+  get:
+    summary: Get an organization
+    description: This endpoint retrieves the specified organization object.
+    operationId: getOrganization
+    tags:
+      - Organizations
+    parameters:
+      - $ref: ../components/parameters/Guid.yaml
+    responses:
+      '200':
+        description: OK
+        content:
+          application/json:
+            schema:
+              $ref: ../components/schemas/Organization.yaml
+            examples:
+              default:
+                summary: default
+                value:
+                  guid: 123e4567-e89b-12d3-a456-426614174000
+                  created_at: '2017-02-01T01:33:58Z'
+                  updated_at: '2017-02-01T01:33:58Z'
+                  name: my-organization
+                  suspended: false
+                  relationships:
+                    quota:
+                      data:
+                        guid: 123e4567-e89b-12d3-a456-426614174000
+                  links:
+                    self:
+                      href: https://api.example.org/v3/organizations/24637893-3b77-489d-bb79-8466f0d88b52
+                    domains:
+                      href: https://api.example.org/v3/organizations/24637893-3b77-489d-bb79-8466f0d88b52/domains
+                    default_domain:
+                      href: https://api.example.org/v3/organizations/24637893-3b77-489d-bb79-8466f0d88b52/domains/default
+                    quota:
+                      href: https://api.example.org/v3/organization_quotas/b7887f5c-34bb-40c5-9778-577572e4fb2d
+                  metadata:
+                    labels: {}
+                    annotations: {}
+        links:
+          quota:
+            operationId: getOrganizationQuota
+            parameters:
+              guid: $response.body#/relationships/quota/data/guid
+              description: Retrieve the quota associated with this organization
+      '401':
+        $ref: ../components/responses/Unauthorized.yaml
+      '403':
+        $ref: ../components/responses/Forbidden.yaml
+      '404':
+        $ref: ../components/responses/NotFound.yaml
+  patch:
+    summary: Update an organization
+    description: Update an organization.
+    operationId: updateOrganization
+    tags:
+      - Organizations
+    parameters:
+      - $ref: ../components/parameters/Guid.yaml
+    requestBody:
+      $ref: ../components/requestBodies/OrganizationUpdateRequestBody.yaml
+    responses:
+      '200':
+        description: OK
+        content:
+          application/json:
+            schema:
+              $ref: ../components/schemas/Organization.yaml
+            examples:
+              default:
+                summary: default
+                value:
+                  guid: 123e4567-e89b-12d3-a456-426614174000
+                  created_at: '2017-02-01T01:33:58Z'
+                  updated_at: '2017-02-01T01:33:58Z'
+                  name: my-organization
+                  suspended: false
+                  relationships:
+                    quota:
+                      data:
+                        guid: 123e4567-e89b-12d3-a456-426614174000
+                  links:
+                    self:
+                      href: https://api.example.org/v3/organizations/24637893-3b77-489d-bb79-8466f0d88b52
+                    domains:
+                      href: https://api.example.org/v3/organizations/24637893-3b77-489d-bb79-8466f0d88b52/domains
+                    default_domain:
+                      href: https://api.example.org/v3/organizations/24637893-3b77-489d-bb79-8466f0d88b52/domains/default
+                    quota:
+                      href: https://api.example.org/v3/organization_quotas/b7887f5c-34bb-40c5-9778-577572e4fb2d
+                  metadata:
+                    labels: {}
+                    annotations: {}
+        links:
+          quota:
+            operationId: getOrganizationQuota
+            parameters:
+              guid: $response.body#/relationships/quota/data/guid
+            description: Retrieve the quota associated with this organization
+      '400':
+        $ref: ../components/responses/BadRequest.yaml
+      '401':
+        $ref: ../components/responses/Unauthorized.yaml
+      '403':
+        $ref: ../components/responses/Forbidden.yaml
+      '404':
+        $ref: ../components/responses/NotFound.yaml
+      '409':
+        $ref: ../components/responses/Conflict.yaml
+      '422':
+        $ref: ../components/responses/UnprocessableEntity.yaml
+      '500':
+        $ref: ../components/responses/500.yaml
+      '503':
+        $ref: ../components/responses/ServiceUnavailable.yaml
+  delete:
+    summary: Delete an organization
+    description: When an organization is deleted, user roles associated with the organization will also be deleted.
+    operationId: deleteOrganization
+    tags:
+      - Organizations
+    parameters:
+      - $ref: ../components/parameters/Guid.yaml
+    responses:
+      '202':
+        description: Accepted
+        headers:
+          location:
+            description: URL of the job to query the asynchronous operation
+            schema:
+              type: string
+              format: uri
+      '401':
+        $ref: ../components/responses/Unauthorized.yaml
+      '403':
+        $ref: ../components/responses/Forbidden.yaml
+      '404':
+        $ref: ../components/responses/NotFound.yaml
+      '422':
+        $ref: ../components/responses/UnprocessableEntity.yaml
+      '500':
+        $ref: ../components/responses/500.yaml
+/v3/organizations/{guid}/domains/default:
+  get:
+    summary: Get default domain
+    description: Retrieve the default domain for a given organization.
+    operationId: getDefaultDomainForOrganization
+    tags:
+      - Organizations
+    parameters:
+      - $ref: ../components/parameters/Guid.yaml
+    responses:
+      '200':
+        description: OK
+        content:
+          application/json:
+            schema:
+              $ref: ../components/schemas/Domain.yaml
+      '401':
+        $ref: ../components/responses/Unauthorized.yaml
+      '403':
+        $ref: ../components/responses/Forbidden.yaml
+      '404':
+        $ref: ../components/responses/NotFound.yaml
+/v3/organizations/{guid}/usage_summary:
+  get:
+    summary: Get usage summary
+    description: This endpoint retrieves the specified organization object's memory and app instance usage summary.
+    operationId: getUsageSummaryForOrganization
+    tags:
+      - Organizations
+    parameters:
+      - $ref: ../components/parameters/Guid.yaml
+    responses:
+      '200':
+        description: OK
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                usage_summary:
+                  type: object
+                  properties:
+                    started_instances:
+                      type: integer
+                    memory_in_mb:
+                      type: integer
+                    routes:
+                      type: integer
+                    service_instances:
+                      type: integer
+                    reserved_ports:
+                      type: integer
+                    domains:
+                      type: integer
+                    per_app_tasks:
+                      type: integer
+                    service_keys:
+                      type: integer
+                links:
+                  type: object
+                  properties:
+                    self:
+                      $ref: ../components/schemas/Link.yaml
+                      description: The URL to get this usage summary
+                    organization:
+                      $ref: ../components/schemas/Link.yaml
+                      description: The URL to get the organization for this usage summary
+            examples:
+              default:
+                summary: default
+                value:
+                  usage_summary:
+                    started_instances: 3
+                    memory_in_mb: 50
+                    routes: 4
+                    service_instances: 2
+                    reserved_ports: 1
+                    domains: 4
+                    per_app_tasks: 2
+                    service_keys: 1
+                  links:
+                    self:
+                      href: https://api.example.org/v3/organizations/d4c91047-7b29-4fda-b7f9-04033e5c9c9f/usage_summary
+                    organization:
+                      href: https://api.example.org/v3/organizations/d4c91047-7b29-4fda-b7f9-04033e5c9c9f
+      '401':
+        $ref: ../components/responses/Unauthorized.yaml
+      '403':
+        $ref: ../components/responses/Forbidden.yaml
+      '404':
+        $ref: ../components/responses/NotFound.yaml
+/v3/organizations/{guid}/users:
+  get:
+    summary: List users for an organization
+    description: Retrieve all users with a role in the specified organization.
+    operationId: listUsersForOrganization
+    tags:
+      - Organizations
+    parameters:
+      - $ref: ../components/parameters/Guid.yaml
+      - $ref: ../components/parameters/Page.yaml
+      - $ref: ../components/parameters/PerPage.yaml
+      - $ref: ../components/parameters/OrderBy.yaml
+      - name: guids
+        in: query
+        schema:
+          type: array
+          items:
+            type: string
+        description: Comma-delimited list of user guids to filter by
+      - name: usernames
+        in: query
+        schema:
+          type: array
+          items:
+            type: string
+        description: Comma-delimited list of usernames to filter by
+      - name: origins
+        in: query
+        schema:
+          type: array
+          items:
+            type: string
+        description: Comma-delimited list of user origins to filter by
+      - name: partial_usernames
+        in: query
+        schema:
+          type: array
+          items:
+            type: string
+        description: Comma-delimited list of partial usernames to filter by
+      - $ref: ../components/parameters/LabelSelector.yaml
+      - $ref: ../components/parameters/CreatedAts.yaml
+      - $ref: ../components/parameters/UpdatedAts.yaml
+    responses:
+      '200':
+        description: OK
+        content:
+          application/json:
+            schema:
+              $ref: ../components/schemas/UserList.yaml
+      '401':
+        $ref: ../components/responses/Unauthorized.yaml
+      '403':
+        $ref: ../components/responses/Forbidden.yaml
+      '404':
+        $ref: ../components/responses/NotFound.yaml
+/v3/organizations/{guid}/relationships/default_isolation_segment:
+  get:
+    summary: Get default isolation segment
+    description: Retrieve the default isolation segment for a given organization.
+    operationId: getDefaultIsolationSegmentForOrganization
+    tags:
+      - Organizations
+    parameters:
+      - $ref: ../components/parameters/Guid.yaml
+    responses:
+      '200':
+        description: OK
+        content:
+          application/json:
+            schema:
+              $ref: ../components/schemas/RelationshipToOne.yaml
+            examples:
+              default:
+                summary: default
+                value:
+                  data:
+                    guid: 123e4567-e89b-12d3-a456-426614174000
+                  links:
+                    self:
+                      href: https://api.example.org/v3/organizations/d4c91047-7b29-4fda-b7f9-04033e5c9c9f/relationships/default_isolation_segment
+                    related:
+                      href: https://api.example.org/v3/isolation_segments/9d8e007c-ce52-4ea7-8a57-f2825d2c6b39
+      '401':
+        $ref: ../components/responses/Unauthorized.yaml
+      '403':
+        $ref: ../components/responses/Forbidden.yaml
+      '404':
+        $ref: ../components/responses/NotFound.yaml
+  patch:
+    summary: Assign default isolation segment
+    description: |-
+      Set the default isolation segment for a given organization. Only isolation segments that are entitled to the organization are eligible to be the default isolation segment.
+
+      Apps will not run in the new default isolation segment until they are restarted.
+    operationId: assignDefaultIsolationSegmentForOrganization
+    tags:
+      - Organizations
+    parameters:
+      - $ref: ../components/parameters/Guid.yaml
+    requestBody:
+      content:
+        application/json:
+          schema:
+            $ref: ../components/schemas/RelationshipToOne.yaml
+          examples:
+            default:
+              summary: default
+              value:
+                data:
+                  guid: 123e4567-e89b-12d3-a456-426614174000
+    responses:
+      '200':
+        description: OK
+        content:
+          application/json:
+            schema:
+              $ref: ../components/schemas/RelationshipToOne.yaml
+            examples:
+              default:
+                summary: default
+                value:
+                  data:
+                    guid: 123e4567-e89b-12d3-a456-426614174000
+                  links:
+                    self:
+                      href: https://api.example.org/v3/organizations/d4c91047-7b29-4fda-b7f9-04033e5c9c9f/relationships/default_isolation_segment
+                    related:
+                      href: https://api.example.org/v3/isolation_segments/9d8e007c-ce52-4ea7-8a57-f2825d2c6b39
+      '401':
+        $ref: ../components/responses/Unauthorized.yaml
+      '403':
+        $ref: ../components/responses/Forbidden.yaml
+      '404':
+        $ref: ../components/responses/NotFound.yaml
+      '422':
+        $ref: ../components/responses/UnprocessableEntity.yaml

@@ -1,0 +1,5 @@
+description: Role created
+content:
+  application/json:
+    schema:
+      $ref: '../schemas/Role.yaml'

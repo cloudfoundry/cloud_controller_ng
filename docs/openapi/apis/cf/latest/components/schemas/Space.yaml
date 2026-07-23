@@ -1,0 +1,35 @@
+type: object
+allOf:
+  - $ref: './BaseSchema.yaml'
+  - properties:
+      name:
+        type: string
+        description: Name of the space
+      relationships:
+        type: object
+        properties:
+          organization:
+            $ref: './RelationshipToOne.yaml'
+          quota:
+            $ref: './RelationshipToOne.yaml'
+        description: Relationships for the space
+      links:
+        type: object
+        properties:
+          self:
+            $ref: './Link.yaml'
+          organization:
+            $ref: './Link.yaml'
+          features:
+            $ref: './Link.yaml'
+          apply_manifest:
+            $ref: './Link.yaml'
+      metadata:
+        $ref: './Metadata.yaml'
+      included:
+        $ref: './IncludedResources.yaml'
+        description: Additional related resources included in the response when using the include parameter
+    required:
+    - name
+    - relationships
+    - links

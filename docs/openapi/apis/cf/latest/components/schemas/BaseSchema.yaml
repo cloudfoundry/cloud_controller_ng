@@ -1,0 +1,18 @@
+type: object
+properties:
+  guid:
+    type: string
+    format: uuid
+    description: The unique identifier for the resource
+  created_at:
+    type: string
+    format: date-time
+    description: The ISO8601 compatible date and time when resource was created
+  updated_at:
+    type: string
+    format: date-time
+    description: The ISO8601 compatible date and time when resource was last updated
+description: |
+  A resource represents an individual object within the system, such as an app or a service. It is represented as a JSON object.
+  A resource consists of several required resource fields and other attributes specific to the resource.
+  See Resources and Experimental Resources for specific resources.

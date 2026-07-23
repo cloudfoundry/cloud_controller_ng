@@ -1,0 +1,25 @@
+type: object
+allOf:
+  - $ref: './BaseSchema.yaml'
+  - properties:
+      service_offering_guid:
+        type: string
+      service_offering_name:
+        type: string
+      metadata:
+        $ref: './Metadata.yaml'
+      links:
+        type: object
+        properties:
+          self:
+            $ref: './Link.yaml'
+            description: The URL to get this service plan
+          service_offering:
+            $ref: './Link.yaml'
+            description: The URL to get the service offering for this plan
+          visibility:
+            $ref: './Link.yaml'
+            description: The URL to get the visibility for this plan
+      included:
+        $ref: './IncludedResources.yaml'
+        description: Additional related resources included in the response when using the include parameter

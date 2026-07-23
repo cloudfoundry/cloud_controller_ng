@@ -1,0 +1,40 @@
+type: object
+properties:
+  guid:
+    type: string
+  app:
+    type: object
+    properties:
+      guid:
+        type: string
+      process:
+        type: object
+        properties:
+          type:
+            type: string
+  weight:
+    type:
+      - integer
+      - 'null'
+  port:
+    type: integer
+  protocol:
+    type: [string, "null"]
+  created_at:
+    type: string
+    format: date-time
+  updated_at:
+    type: [string, "null"]
+    format: date-time
+  metadata:
+    $ref: './Metadata.yaml'
+  links:
+    type: object
+    properties:
+      self:
+        $ref: './Link.yaml'
+        description: The URL to get this route destination
+      route:
+        $ref: './Link.yaml'
+        description: The URL to get the route for this destination
+description: A route destination is a specification for where traffic on a route should be directed.

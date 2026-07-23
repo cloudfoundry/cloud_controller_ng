@@ -1,0 +1,11 @@
+type: object
+properties:
+  enabled:
+    type: boolean
+    description: Whether SSH is enabled for the app
+  reason:
+    type: string
+    description: If SSH is disabled, describes whether it is disabled globally, at the space level, or at the app level
+required:
+  - enabled
+description: 'SSH enabled status for an app'

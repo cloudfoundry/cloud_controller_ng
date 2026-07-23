@@ -1,0 +1,321 @@
+/v3/sidecars/{guid}:
+  get:
+    summary: Get a sidecar
+    description: Get a sidecar.
+    operationId: getSidecar
+    tags:
+      - Sidecars
+    parameters:
+      - $ref: ../components/parameters/Guid.yaml
+    responses:
+      '200':
+        description: OK
+        content:
+          application/json:
+            schema:
+              $ref: ../components/schemas/Sidecar.yaml
+            examples:
+              default:
+                summary: default
+                value:
+                  guid: 123e4567-e89b-12d3-a456-426614174000
+                  name: auth-sidecar
+                  command: bundle exec rackup
+                  process_types:
+                    - web
+                    - worker
+                  memory_in_mb: 300
+                  origin: user
+                  relationships:
+                    app:
+                      data:
+                        guid: 123e4567-e89b-12d3-a456-426614174000
+                  created_at: '2017-02-01T01:33:58Z'
+                  updated_at: '2017-02-01T01:33:58Z'
+        links:
+          app:
+            operationId: getApp
+            parameters:
+              guid: $response.body#/relationships/app/data/guid
+            description: Retrieve the app for this sidecar
+      '400':
+        $ref: ../components/responses/BadRequest.yaml
+      '401':
+        $ref: ../components/responses/Unauthorized.yaml
+      '403':
+        $ref: ../components/responses/Forbidden.yaml
+      '404':
+        $ref: ../components/responses/NotFound.yaml
+      '409':
+        $ref: ../components/responses/Conflict.yaml
+      '422':
+        $ref: ../components/responses/UnprocessableEntity.yaml
+      '500':
+        $ref: ../components/responses/500.yaml
+      '502':
+        $ref: ../components/responses/BadGateway.yaml
+      '503':
+        $ref: ../components/responses/ServiceUnavailable.yaml
+  patch:
+    summary: Update a sidecar
+    description: Update a sidecar.
+    operationId: updateSidecar
+    tags:
+      - Sidecars
+    parameters:
+      - $ref: ../components/parameters/Guid.yaml
+    requestBody:
+      $ref: ../components/requestBodies/SidecarUpdateRequestBody.yaml
+    responses:
+      '200':
+        description: OK
+        content:
+          application/json:
+            schema:
+              $ref: ../components/schemas/Sidecar.yaml
+            examples:
+              default:
+                summary: default
+                value:
+                  guid: 123e4567-e89b-12d3-a456-426614174000
+                  name: auth-sidecar
+                  command: bundle exec rackup
+                  process_types:
+                    - web
+                    - worker
+                  memory_in_mb: 300
+                  origin: user
+                  relationships:
+                    app:
+                      data:
+                        guid: 123e4567-e89b-12d3-a456-426614174000
+                  created_at: '2017-02-01T01:33:58Z'
+                  updated_at: '2017-02-01T01:33:58Z'
+        links:
+          app:
+            operationId: getApp
+            parameters:
+              guid: $response.body#/relationships/app/data/guid
+            description: Retrieve the app for this sidecar
+      '400':
+        $ref: ../components/responses/BadRequest.yaml
+      '401':
+        $ref: ../components/responses/Unauthorized.yaml
+      '403':
+        $ref: ../components/responses/Forbidden.yaml
+      '404':
+        $ref: ../components/responses/NotFound.yaml
+      '409':
+        $ref: ../components/responses/Conflict.yaml
+      '422':
+        $ref: ../components/responses/UnprocessableEntity.yaml
+      '500':
+        $ref: ../components/responses/500.yaml
+      '503':
+        $ref: ../components/responses/ServiceUnavailable.yaml
+  delete:
+    summary: Delete a sidecar
+    description: Delete a sidecar.
+    operationId: deleteSidecar
+    tags:
+      - Sidecars
+    parameters:
+      - $ref: ../components/parameters/Guid.yaml
+    responses:
+      '204':
+        description: No Content
+      '401':
+        $ref: ../components/responses/Unauthorized.yaml
+      '403':
+        $ref: ../components/responses/Forbidden.yaml
+      '404':
+        $ref: ../components/responses/NotFound.yaml
+      '422':
+        $ref: ../components/responses/UnprocessableEntity.yaml
+      '500':
+        $ref: ../components/responses/500.yaml
+/v3/apps/{guid}/sidecars:
+  get:
+    summary: List sidecars for app
+    description: Retrieves all sidecars associated with a app.
+    operationId: listAppSidecars
+    tags:
+      - Sidecars
+    parameters:
+      - $ref: ../components/parameters/Guid.yaml
+    responses:
+      '200':
+        description: OK
+        content:
+          application/json:
+            schema:
+              $ref: ../components/schemas/SidecarList.yaml
+            examples:
+              default:
+                summary: default
+                value:
+                  pagination:
+                    total_results: 3
+                    total_pages: 2
+                    first:
+                      href: https://api.example.org?page=1&per_page=2
+                    last:
+                      href: https://api.example.org?page=2&per_page=2
+                    next:
+                      href: https://api.example.org?page=2&per_page=2
+                    previous: null
+                  resources:
+                    - guid: 123e4567-e89b-12d3-a456-426614174000
+                      name: auth-sidecar
+                      command: bundle exec rackup
+                      process_types:
+                        - web
+                        - worker
+                      memory_in_mb: 300
+                      origin: user
+                      relationships:
+                        app:
+                          data:
+                            guid: 123e4567-e89b-12d3-a456-426614174000
+                      created_at: '2017-02-01T01:33:58Z'
+                      updated_at: '2017-02-01T01:33:58Z'
+                    - guid: 123e4567-e89b-12d3-a456-426614174000
+                      name: echo-sidecar
+                      command: start-echo-server
+                      process_types:
+                        - web
+                      memory_in_mb: 300
+                      origin: user
+                      relationships:
+                        app:
+                          data:
+                            guid: 123e4567-e89b-12d3-a456-426614174000
+                      created_at: '2017-02-01T01:33:59Z'
+                      updated_at: '2017-02-01T01:33:59Z'
+      '401':
+        $ref: ../components/responses/Unauthorized.yaml
+      '403':
+        $ref: ../components/responses/Forbidden.yaml
+      '404':
+        $ref: ../components/responses/NotFound.yaml
+  post:
+    summary: Create a sidecar associated with an app
+    description: Create a sidecar associated with an app.
+    operationId: createSidecar
+    tags:
+      - Sidecars
+    parameters:
+      - $ref: ../components/parameters/Guid.yaml
+    requestBody:
+      $ref: ../components/requestBodies/SidecarCreate.yaml
+    responses:
+      '201':
+        description: Created
+        content:
+          application/json:
+            schema:
+              $ref: ../components/schemas/Sidecar.yaml
+            examples:
+              default:
+                summary: default
+                value:
+                  guid: 123e4567-e89b-12d3-a456-426614174000
+                  name: auth-sidecar
+                  command: bundle exec rackup
+                  process_types:
+                    - web
+                    - worker
+                  memory_in_mb: 300
+                  origin: user
+                  relationships:
+                    app:
+                      data:
+                        guid: 123e4567-e89b-12d3-a456-426614174000
+                  created_at: '2017-02-01T01:33:58Z'
+                  updated_at: '2017-02-01T01:33:58Z'
+        links:
+          app:
+            operationId: getApp
+            parameters:
+              guid: $response.body#/relationships/app/data/guid
+            description: Retrieve the app for this sidecar
+      '400':
+        $ref: ../components/responses/BadRequest.yaml
+      '401':
+        $ref: ../components/responses/Unauthorized.yaml
+      '403':
+        $ref: ../components/responses/Forbidden.yaml
+      '404':
+        $ref: ../components/responses/NotFound.yaml
+      '409':
+        $ref: ../components/responses/Conflict.yaml
+      '422':
+        $ref: ../components/responses/UnprocessableEntity.yaml
+      '500':
+        $ref: ../components/responses/500.yaml
+      '503':
+        $ref: ../components/responses/ServiceUnavailable.yaml
+/v3/processes/{guid}/sidecars:
+  get:
+    summary: List sidecars for process
+    description: Retrieves all sidecars associated with a process.
+    operationId: listProcessSidecars
+    tags:
+      - Sidecars
+    parameters:
+      - $ref: ../components/parameters/Guid.yaml
+    responses:
+      '200':
+        description: OK
+        content:
+          application/json:
+            schema:
+              $ref: ../components/schemas/SidecarList.yaml
+            examples:
+              default:
+                summary: default
+                value:
+                  pagination:
+                    total_results: 3
+                    total_pages: 2
+                    first:
+                      href: https://api.example.org?page=1&per_page=2
+                    last:
+                      href: https://api.example.org?page=2&per_page=2
+                    next:
+                      href: https://api.example.org?page=2&per_page=2
+                    previous: null
+                  resources:
+                    - guid: 123e4567-e89b-12d3-a456-426614174000
+                      name: auth-sidecar
+                      command: bundle exec rackup
+                      process_types:
+                        - web
+                        - worker
+                      memory_in_mb: 300
+                      origin: user
+                      relationships:
+                        app:
+                          data:
+                            guid: 123e4567-e89b-12d3-a456-426614174000
+                      created_at: '2017-02-01T01:33:58Z'
+                      updated_at: '2017-02-01T01:33:58Z'
+                    - guid: 123e4567-e89b-12d3-a456-426614174000
+                      name: echo-sidecar
+                      command: start-echo-server
+                      process_types:
+                        - web
+                      memory_in_mb: 300
+                      origin: user
+                      relationships:
+                        app:
+                          data:
+                            guid: 123e4567-e89b-12d3-a456-426614174000
+                      created_at: '2017-02-01T01:33:59Z'
+                      updated_at: '2017-02-01T01:33:59Z'
+      '401':
+        $ref: ../components/responses/Unauthorized.yaml
+      '403':
+        $ref: ../components/responses/Forbidden.yaml
+      '404':
+        $ref: ../components/responses/NotFound.yaml

@@ -1,0 +1,8 @@
+name: order_by
+in: query
+required: false
+schema:
+  type: string
+description: |
+  Value to sort by. Defaults to ascending; prepend with `-` to sort descending.
+example: "created_at"

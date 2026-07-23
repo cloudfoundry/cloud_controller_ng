@@ -1,0 +1,7 @@
+name: page
+in: query
+required: false
+schema:
+  type: integer
+description: Page to display; valid values are integers >= 1
+example: 1

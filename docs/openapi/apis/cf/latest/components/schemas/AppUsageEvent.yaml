@@ -1,0 +1,86 @@
+type: object
+allOf:
+  - $ref: './BaseSchema.yaml'
+properties:
+  state:
+    type: object
+    properties:
+      current:
+        type: string
+        description: Current state of the app that this event pertains to, if applicable
+      previous:
+        type: [string, "null"]
+        description: Previous state of the app that this event pertains to, if applicable
+  app:
+    type: object
+    properties:
+      guid:
+        type: string
+        description: Unique identifier of the app that this event pertains to, if applicable
+      name:
+        type: [string, "null"]
+        description: Name of the app that this event pertains to, if applicable
+  process:
+    type: object
+    properties:
+      guid:
+        type: string
+        description: Unique identifier of the process that this event pertains to, if applicable
+      type:
+        type: string
+        description: Type of the process that this event pertains to, if applicable
+  space:
+    type: object
+    properties:
+      guid:
+        type: string
+        description: Unique identifier of the space that this event pertains to, if applicable
+      name:
+        type: [string, "null"]
+        description: Name of the space that this event pertains to, if applicable
+  organization:
+    type: object
+    properties:
+      guid:
+        type: string
+        description: Unique identifier of the org that this event pertains to, if applicable
+  buildpack:
+    type: object
+    properties:
+      guid:
+        type: string
+        description: Unique identifier of the buildpack that this event pertains to, if applicable
+      name:
+        type: [string, "null"]
+        description: Name of the buildpack that this event pertains to, if applicable
+  task:
+    type: object
+    properties:
+      guid:
+        type: string
+        description: Unique identifier of the task that this event pertains to, if applicable
+      name:
+        type: [string, "null"]
+        description: Name of the task that this event pertains to, if applicable
+  memory_in_mb_per_instance:
+    type: object
+    properties:
+      current:
+        type: integer
+        description: Current memory in MB of the app that this event pertains to, if applicable
+      previous:
+        type: [integer, "null"]
+        description: Previous memory in MB of the app that this event pertains to, if applicable
+  instance_count:
+    type: object
+    properties:
+      current:
+        type: integer
+        description: Current instance count of the app that this event pertains to, if applicable
+      previous:
+        type: [integer, "null"]
+        description: Previous instance count of the app that this event pertains to, if applicable
+description: >-
+  App usage events are a record of changes in the usage of apps and tasks. Examples include starting an application, scaling an application (from, say, one to three instances), and stopping an application.
+
+  Usage events are typically used by billing and chargeback applications.

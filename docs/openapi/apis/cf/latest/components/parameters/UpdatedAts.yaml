@@ -1,0 +1,8 @@
+name: updated_ats
+in: query
+required: false
+schema:
+  type: string
+description: |
+  Timestamp to filter by. When filtering on equality, several comma-delimited timestamps may be passed. Also supports filtering with [relational operators](#relational-operators).
+example: "2021-01-01T00:00:00Z"

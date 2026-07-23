@@ -1,0 +1,15 @@
+type: object
+properties:
+  pagination:
+    $ref: './Pagination.yaml'
+  resources:
+    type: array
+    items:
+      oneOf:
+        - $ref: './ManagedServiceInstance.yaml'
+        - $ref: './UserProvidedServiceInstance.yaml'
+      discriminator:
+        propertyName: type
+        mapping:
+          managed: './ManagedServiceInstance.yaml'
+          user-provided: './UserProvidedServiceInstance.yaml'

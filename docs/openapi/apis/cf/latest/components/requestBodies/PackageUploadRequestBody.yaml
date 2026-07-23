@@ -1,0 +1,14 @@
+description: Package bits to be uploaded
+required: true
+content:
+  multipart/form-data:
+    schema:
+      type: object
+      properties:
+        bits:
+          type: string
+          format: binary
+        resources:
+          type: array
+          items:
+            $ref: '../schemas/ResourceMatch.yaml'

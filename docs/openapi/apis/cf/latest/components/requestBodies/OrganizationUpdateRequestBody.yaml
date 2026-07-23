@@ -1,0 +1,21 @@
+description: Organization object that needs to be updated
+required: true
+content:
+  application/json:
+    schema:
+      type: object
+      properties:
+        name:
+          type: string
+          description: Organization name
+        suspended:
+          type: boolean
+          description: Whether an organization is suspended or not
+        metadata:
+          $ref: ../schemas/Metadata.yaml
+      description: Request schema for updating an organization
+    examples:
+      default:
+        summary: default
+        value:
+          name: my-organization

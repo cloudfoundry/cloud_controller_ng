@@ -1,0 +1,11 @@
+type: object
+properties:
+  code:
+    type: integer
+    description: A numeric code for this error
+  detail:
+    type: string
+    description: Detailed description of the error
+  title:
+    type: string
+    description: Name of the error

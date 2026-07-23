@@ -1,0 +1,5 @@
+type: object
+properties:
+  detail:
+    type: string
+    description: Description of the warning

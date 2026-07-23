@@ -1,0 +1,8 @@
+type: object
+properties:
+  pagination:
+    $ref: './Pagination.yaml'
+  resources:
+    type: array
+    items:
+      $ref: './Droplet.yaml'

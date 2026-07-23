@@ -1,0 +1,60 @@
+description: Package object that needs to be created or copied. When copying (source_guid query parameter is provided), only relationships.app is required. When creating a new package, type and relationships.app are required.
+required: true
+content:
+  application/json:
+    schema:
+      type: object
+      properties:
+        type:
+          type: string
+          description: Type of the package; valid values are bits or docker. Required when creating a new package (when source_guid is not provided). Not required when copying a package (when source_guid is provided).
+          enum:
+            - bits
+            - docker
+        data:
+          type: object
+          description: Data for package type
+          properties:
+            image:
+              type: string
+              description: The registry address of the image (for docker packages)
+            username:
+              type: string
+              description: The username for the image's registry (for docker packages)
+            password:
+              type: string
+              description: The password for the image's registry (for docker packages)
+        relationships:
+          type: object
+          properties:
+            app:
+              $ref: ../schemas/RelationshipToOne.yaml
+              description: A relationship to an app
+          required:
+            - app
+        metadata:
+          $ref: ../schemas/Metadata.yaml
+      required:
+        - relationships
+      description: Request schema for creating a package
+    examples:
+      buildpack_app:
+        summary: buildpack app
+        value:
+          type: bits
+          relationships:
+            app:
+              data:
+                guid: 123e4567-e89b-12d3-a456-426614174000
+      docker_app:
+        summary: Docker app
+        value:
+          type: docker
+          relationships:
+            app:
+              data:
+                guid: 123e4567-e89b-12d3-a456-426614174000
+          data:
+            image: registry/image:latest
+            username: username
+            password: password

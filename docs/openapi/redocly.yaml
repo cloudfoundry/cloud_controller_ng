@@ -1,0 +1,8 @@
+apis:
+  cf@latest:
+    root: apis/cf/latest/openapi.yaml
+extends:
+  - recommended
+ignore:
+  - scripts
+  - bin

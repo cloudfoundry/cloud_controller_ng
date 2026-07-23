@@ -1,0 +1,11 @@
+type: object
+properties:
+  pagination:
+    $ref: './Pagination.yaml'
+  resources:
+    type: array
+    items:
+      $ref: './ServiceRouteBinding.yaml'
+  included:
+    $ref: './IncludedResources.yaml'
+    description: Additional related resources included in the response when using the include parameter

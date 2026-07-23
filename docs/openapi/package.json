@@ -1,0 +1,26 @@
+{
+  "name": "capi-openapi-spec",
+  "version": "1.0.0",
+  "description": "Cloud Foundry CAPI OpenAPI specification generation and validation",
+  "scripts": {
+    "lint": "redocly lint",
+    "build": "node bin/build.js",
+    "preview": "node bin/build.js && http-server dist",
+    "create-version": "node bin/create-version.js",
+    "test:compliance": "node bin/build.js && node bin/test-compliance.js dist/latest/openapi.yaml",
+    "test:mockserver": "node bin/test-mockserver.js"
+  },
+  "author": "Cloud Foundry Community",
+  "license": "Apache-2.0",
+  "dependencies": {
+    "@redocly/cli": "^2.0.2",
+    "fs-extra": "^11.3.1",
+    "js-yaml": "^4.1.0"
+  },
+  "devDependencies": {
+    "@pb33f/wiretap": "^0.4.5",
+    "http-proxy": "^1.18.1",
+    "http-server": "^14.1.1",
+    "wait-on": "^7.0.1"
+  }
+}

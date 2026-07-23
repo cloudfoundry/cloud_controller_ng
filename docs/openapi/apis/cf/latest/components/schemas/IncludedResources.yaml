@@ -1,0 +1,51 @@
+type: object
+description: Additional related resources included in the response when using the include parameter
+properties:
+  spaces:
+    type: array
+    items:
+      $ref: './Space.yaml'
+    description: Array of included space resources
+  organizations:
+    type: array
+    items:
+      $ref: './Organization.yaml'
+    description: Array of included organization resources
+  domains:
+    type: array
+    items:
+      $ref: './Domain.yaml'
+    description: Array of included domain resources
+  service_offerings:
+    type: array
+    items:
+      $ref: './ServiceOffering.yaml'
+    description: Array of included service offering resources
+  service_instances:
+    type: array
+    items:
+      oneOf:
+        - $ref: './ManagedServiceInstance.yaml'
+        - $ref: './UserProvidedServiceInstance.yaml'
+      discriminator:
+        propertyName: type
+        mapping:
+          managed: ./ManagedServiceInstance.yaml
+          user-provided: ./UserProvidedServiceInstance.yaml
+    description: Array of included service instance resources
+  apps:
+    type: array
+    items:
+      $ref: './App.yaml'
+    description: Array of included app resources
+  routes:
+    type: array
+    items:
+      $ref: './Route.yaml'
+    description: Array of included route resources
+  users:
+    type: array
+    items:
+      $ref: './User.yaml'
+    description: Array of included user resources
+additionalProperties: false

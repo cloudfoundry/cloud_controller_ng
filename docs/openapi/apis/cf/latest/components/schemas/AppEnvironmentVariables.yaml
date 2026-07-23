@@ -1,0 +1,17 @@
+type: object
+properties:
+  var:
+    type: object
+    description: Environment variables
+    additionalProperties:
+      type: [string, "null"]
+  links:
+    type: object
+    properties:
+      self:
+        $ref: './Link.yaml'
+        description: The URL to get the environment variables for this app
+      app:
+        $ref: './Link.yaml'
+        description: The URL to get the app for these environment variables
+description: 'App environment variables with links'

@@ -1,0 +1,55 @@
+name: Deploy CF API V3 OpenAPI Documentation
+
+on:
+  push:
+    branches:
+      - main
+    paths:
+      - 'docs/openapi/**'
+      - '.github/workflows/openapi_deploy.yml'
+  workflow_dispatch:
+
+jobs:
+  deploy:
+    name: Build and publish to gh-pages
+    runs-on: ubuntu-latest
+    container:
+      image: node:24-alpine
+    permissions:
+      contents: write
+    steps:
+      - name: Checkout main
+        uses: actions/checkout@v4
+        with:
+          path: main
+
+      - name: Setup
+        working-directory: main/docs/openapi
+        run: |
+          apk add python3 make g++ git tar
+          yarn install
+
+      - name: Build
+        working-directory: main/docs/openapi
+        run: yarn build
+
+      - name: Checkout gh-pages
+        uses: actions/checkout@v4
+        with:
+          ref: gh-pages
+          path: gh-pages
+
+      - name: Sync built docs into gh-pages/openapi
+        run: |
+          rm -rf gh-pages/openapi
+          mkdir -p gh-pages/openapi
+          cp -r main/docs/openapi/dist/. gh-pages/openapi/
+
+      - name: Commit and push
+        working-directory: gh-pages
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "github-actions[bot]@users.noreply.github.com"
+          git add openapi
+          git diff --cached --quiet && echo "No changes to publish" || \
+            (git commit -m "Update openapi docs from ${GITHUB_SHA}" && git push)

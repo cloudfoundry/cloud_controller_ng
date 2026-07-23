@@ -1,0 +1,32 @@
+type: object
+allOf:
+  - $ref: './BaseSchema.yaml'
+  - properties:
+      name:
+        type: string
+        description: Name of the service broker
+      url:
+        type: string
+        format: uri
+        description: URL of the service broker
+      relationships:
+        type: object
+        properties:
+          space:
+            $ref: './RelationshipToOne.yaml'
+        description: Relationships for the service broker
+      links:
+        type: object
+        properties:
+          self:
+            $ref: './Link.yaml'
+          space:
+            $ref: './Link.yaml'
+          service_offerings:
+            $ref: './Link.yaml'
+      metadata:
+        $ref: './Metadata.yaml'
+    required:
+    - name
+    - url
+    - links

@@ -1,0 +1,85 @@
+/v3/resource_matches:
+  post:
+    summary: Create a resource match
+    description: |-
+      This endpoint returns a list of **cached** resources from the input list.
+
+      This endpoint matches given resource SHA-1/file size pairs against the Cloud Controller cache and reports the subset that describes already cached files. This is usually used to avoid uploading duplicate files when pushing an app which has only been partially changed. The `path` and `mode` fields are not used when matching.
+
+      When [uploading package bits](#upload-package-bits), the response from this endpoint should be used as the `resources` form field. As such, it is useful to include the `path` and `mode` fields for each resource even though they are not used when determining a resource match.
+
+      Cloud Foundry operators may set minimum/maximum file sizes to match against. If the file size provided is outside this range, it will not be matched against.
+
+      If the `resource_matching` [feature flag](#the-feature-flag-object) is disabled, resource matching will always return an empty array.
+    operationId: postResourceMatches
+    tags:
+      - Resource Matches
+    requestBody:
+      content:
+        application/json:
+          schema:
+            type: object
+            properties:
+              resources:
+                type: array
+                items:
+                  type: object
+                  properties:
+                    checksum:
+                      type: object
+                      properties:
+                        value:
+                          type: string
+                    size_in_bytes:
+                      type: integer
+                    path:
+                      type: string
+                description: List of resources to check for in the resource cache
+            required:
+              - resources
+          examples:
+            default:
+              summary: default
+              value:
+                resources:
+                  - checksum:
+                      value: 002d760bea1be268e27077412e11a320d0f164d3
+                    size_in_bytes: 36
+                    path: C:\path\to\file
+                    mode: '645'
+                  - checksum:
+                      value: a9993e364706816aba3e25717850c26c9cd0d89d
+                    size_in_bytes: 1
+                    path: path/to/file
+                    mode: '644'
+    responses:
+      '201':
+        description: Created
+        content:
+          application/json:
+            schema:
+              $ref: ../components/schemas/ResourceMatch.yaml
+            examples:
+              default:
+                summary: default
+                value:
+                  resources:
+                    - checksum:
+                        value: a9993e364706816aba3e25717850c26c9cd0d89d
+                      size_in_bytes: 1
+                      path: path/to/file
+                      mode: '644'
+      '400':
+        $ref: ../components/responses/BadRequest.yaml
+      '401':
+        $ref: ../components/responses/Unauthorized.yaml
+      '403':
+        $ref: ../components/responses/Forbidden.yaml
+      '409':
+        $ref: ../components/responses/Conflict.yaml
+      '422':
+        $ref: ../components/responses/UnprocessableEntity.yaml
+      '500':
+        $ref: ../components/responses/500.yaml
+      '503':
+        $ref: ../components/responses/ServiceUnavailable.yaml

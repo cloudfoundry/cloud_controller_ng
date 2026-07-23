@@ -1,0 +1,22 @@
+type: object
+properties:
+  updated_at:
+    type: string
+    format: date-time
+    description: The time the environment variable group was last updated
+  name:
+    type: [string, "null"]
+    description: The name of the group; can only be "running" or "staging"
+  var:
+    type: object
+    additionalProperties:
+      type: [string, "null"]
+    description: Environment variables to inject; keys and values must be strings
+  links:
+    type: object
+    properties:
+      self:
+        $ref: './Link.yaml'
+        description: The URL to get this environment variable group
+description: >
+  Environment variable groups allow platform operators/admins to manage environment variables across all apps in a Cloud Foundry foundation. Variables in the running environment variable group will be injected into all running app containers. Variables in the staging environment variable group will be injected into the staging container for all apps while they are being staged.
