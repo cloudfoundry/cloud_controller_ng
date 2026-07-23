@@ -66,6 +66,7 @@ group :test do
   gem 'rspec-instafail'
   gem 'rspec-its'
   gem 'rspec-rails', '~> 8.0.4'
+  gem 'rspec-openapi'
   gem 'rspec-wait'
   gem 'rubocop', '~> 1.88.1'
   gem 'rubocop-capybara'
