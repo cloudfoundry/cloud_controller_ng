@@ -1,5 +1,6 @@
-require 'spec_helper'
+require 'lightweight_spec_helper'
 require 'cors'
+require 'vcap/request'
 
 module CloudFoundry
   module Middleware

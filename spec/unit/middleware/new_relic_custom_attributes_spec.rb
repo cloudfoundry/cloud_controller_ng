@@ -1,5 +1,6 @@
-require 'spec_helper'
+require 'lightweight_spec_helper'
 require 'newrelic_rpm'
+require 'new_relic_custom_attributes'
 
 module CloudFoundry
   module Middleware

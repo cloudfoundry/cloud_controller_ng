@@ -1,4 +1,6 @@
-require 'spec_helper'
+require 'lightweight_spec_helper'
+require 'steno/steno'
+require 'vcap/request'
 require 'zipkin'
 require 'securerandom'
 

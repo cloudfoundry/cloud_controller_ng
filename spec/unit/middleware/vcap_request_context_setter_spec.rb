@@ -1,5 +1,7 @@
-require 'spec_helper'
+require 'lightweight_spec_helper'
 require 'vcap_request_context_setter'
+require 'steno/steno'
+require 'vcap/request'
 
 module CloudFoundry
   module Middleware

@@ -1,4 +1,4 @@
-require 'spec_helper'
+require 'db_spec_helper'
 require 'messages/builds_list_message'
 require 'fetchers/build_list_fetcher'
 

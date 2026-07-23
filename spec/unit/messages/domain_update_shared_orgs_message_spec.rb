@@ -1,4 +1,4 @@
-require 'spec_helper'
+require 'lightweight_spec_helper'
 require 'messages/domain_update_shared_orgs_message'
 
 module VCAP::CloudController

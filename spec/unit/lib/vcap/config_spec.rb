@@ -1,4 +1,4 @@
-require 'spec_helper'
+require 'lightweight_spec_helper'
 require 'vcap/config'
 
 RSpec.describe VCAP::Config do

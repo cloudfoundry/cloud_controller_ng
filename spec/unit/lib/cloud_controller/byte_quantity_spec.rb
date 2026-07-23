@@ -1,10 +1,10 @@
 # Derived from the palm_civet library
 # Copyright (c) 2013 Anand Gaitonde
+require 'cloud_controller/byte_quantity'
 # Licensed under the MIT License
 # https://github.com/goodmustache/palm_civet
 
-require 'spec_helper'
-require 'cloud_controller/byte_quantity'
+require 'lightweight_spec_helper'
 
 module VCAP::CloudController
   RSpec.describe ByteQuantity do
