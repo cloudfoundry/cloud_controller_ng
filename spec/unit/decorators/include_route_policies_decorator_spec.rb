@@ -11,8 +11,8 @@ module VCAP::CloudController
     let(:route2) { create(:route, space: space, domain: domain) }
 
     it 'decorates the given hash with route_policies from routes' do
-      route_policy1 = RoutePolicy.create(route: route1, source_type: 'app', source_guid: 'app-guid-1')
-      route_policy2 = RoutePolicy.create(route: route2, source_type: 'app', source_guid: 'app-guid-2')
+      route_policy1 = create(:route_policy, route: route1, source_type: 'app', source_guid: 'app-guid-1')
+      route_policy2 = create(:route_policy, route: route2, source_type: 'app', source_guid: 'app-guid-2')
       undecorated_hash = { i_am: 'tim' }
       hash = subject.decorate(undecorated_hash, [route1, route2])
       expect(hash[:i_am]).to eq('tim')
@@ -23,7 +23,7 @@ module VCAP::CloudController
     end
 
     it 'does not overwrite other included fields' do
-      route_policy1 = RoutePolicy.create(route: route1, source_type: 'app', source_guid: 'app-guid-1')
+      route_policy1 = create(:route_policy, route: route1, source_type: 'app', source_guid: 'app-guid-1')
       undecorated_hash = { foo: 'bar', included: { favorite_fruits: %w[tomato cucumber] } }
       hash = subject.decorate(undecorated_hash, [route1])
       expect(hash[:foo]).to eq('bar')
@@ -37,8 +37,8 @@ module VCAP::CloudController
     end
 
     it 'includes multiple policies for the same route' do
-      policy_a = RoutePolicy.create(route: route1, source_type: 'app', source_guid: 'app-guid-a')
-      policy_b = RoutePolicy.create(route: route1, source_type: 'app', source_guid: 'app-guid-b')
+      policy_a = create(:route_policy, route: route1, source_type: 'app', source_guid: 'app-guid-a')
+      policy_b = create(:route_policy, route: route1, source_type: 'app', source_guid: 'app-guid-b')
       hash = subject.decorate({}, [route1])
       expect(hash[:included][:route_policies]).to contain_exactly(
         Presenters::V3::RoutePolicyPresenter.new(policy_a).to_hash,

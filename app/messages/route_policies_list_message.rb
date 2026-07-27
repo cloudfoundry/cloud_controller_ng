@@ -14,6 +14,7 @@ module VCAP::CloudController
     validates_with NoAdditionalParamsValidator
     validates_with IncludeParamValidator, valid_values: %w[source route]
 
+    validates :route_guids, array: true, allow_nil: true
     validates :space_guids, array: true, allow_nil: true
     validates :source_guids, array: true, allow_nil: true
     validates :sources, array: true, allow_nil: true

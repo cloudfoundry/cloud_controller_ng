@@ -14,10 +14,10 @@ Example Route Policy object
 | **created_at**            | _[timestamp](#timestamps)_                       | The time with zone when the object was created
 | **updated_at**            | _[timestamp](#timestamps)_                       | The time with zone when the object was last updated
 | **source**                | _string_                                         | The policy selector specifying who can access the route. Must be one of:<br>- `cf:app:<uuid>` (specific app)<br>- `cf:space:<uuid>` (all apps in a space)<br>- `cf:org:<uuid>` (all apps in an organization)<br>- `cf:any` (any caller - cannot be combined with other sources)
-| **relationships.route**   | [_to-one relationship_](#to-one-relationships)   | The route this policy applies to
-| **relationships.app**     | [_to-one relationship_](#to-one-relationships)   | Read-only. The app referenced in the source (populated only when source is `cf:app:<uuid>`)
-| **relationships.space**   | [_to-one relationship_](#to-one-relationships)   | Read-only. The space referenced in the source (populated only when source is `cf:space:<uuid>`)
-| **relationships.organization** | [_to-one relationship_](#to-one-relationships) | Read-only. The organization referenced in the source (populated only when source is `cf:org:<uuid>`)
 | **metadata.labels**       | [_label object_](#labels)                        | Labels applied to the route policy
 | **metadata.annotations**  | [_annotation object_](#annotations)              | Annotations applied to the route policy
-| **links**                 | [_links object_](#links)                         | Links to related resources
+| **relationships.route**   | [_to-one relationship_](#to-one-relationships)   | The route this policy applies to
+| **relationships.app**     | [_to-one relationship_](#to-one-relationships)   | Read-only. Always present; `data` is `null` unless the source is `cf:app:<uuid>`
+| **relationships.space**   | [_to-one relationship_](#to-one-relationships)   | Read-only. Always present; `data` is `null` unless the source is `cf:space:<uuid>`
+| **relationships.organization** | [_to-one relationship_](#to-one-relationships) | Read-only. Always present; `data` is `null` unless the source is `cf:org:<uuid>`
+| **links**                 | [_links object_](#links)                         | Links to related resources. Always includes `self` and `route`; includes `app`, `space`, or `organization` when the source references that resource

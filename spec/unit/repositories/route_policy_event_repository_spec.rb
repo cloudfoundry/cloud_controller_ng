@@ -8,7 +8,7 @@ module VCAP::CloudController
       let(:space)            { create(:space) }
       let(:domain)           { create(:shared_domain, name: 'apps.identity', enforce_route_policies: true) }
       let(:route)            { create(:route, space:, domain:) }
-      let(:route_policy)     { RoutePolicy.create(source: 'cf:any', route: route) }
+      let(:route_policy)     { create(:route_policy, source: 'cf:any', route: route) }
       let(:user_email)       { 'user@example.com' }
       let(:user_name)        { 'some-user' }
       let(:actor_audit_info) { UserAuditInfo.new(user_guid: user.guid, user_name: user_name, user_email: user_email) }

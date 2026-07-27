@@ -260,26 +260,18 @@ module VCAP::CloudController
                        route_policies_scope: 'space')
               end
               let(:mtls_route) { create(:route, host: 'myapp', domain: enforce_domain, space: space) }
-              let!(:access_rule1) do
-                RoutePolicy.create(
-                  guid: SecureRandom.uuid,
-                  source: "cf:app:#{valid_uuid}",
-                  route_id: mtls_route.id
-                )
+              let!(:app_policy) do
+                create(:route_policy, source: "cf:app:#{valid_uuid}", route_id: mtls_route.id)
               end
-              let!(:access_rule2) do
-                RoutePolicy.create(
-                  guid: SecureRandom.uuid,
-                  source: "cf:space:#{valid_uuid}",
-                  route_id: mtls_route.id
-                )
+              let!(:space_policy) do
+                create(:route_policy, source: "cf:space:#{valid_uuid}", route_id: mtls_route.id)
               end
 
               before do
                 create(:route_mapping_model, app: process.app, route: mtls_route, process_type: process.type)
               end
 
-              it 'injects access_scope and access_rules into route options' do
+              it 'injects route_policy_scope and route_policy_sources into route options' do
                 http_routes = ri['http_routes']
                 mtls_entry = http_routes.find { |r| r['hostname'] == 'myapp.mtls.example.com' }
 
@@ -289,13 +281,13 @@ module VCAP::CloudController
                 expect(mtls_entry['options']['route_policy_sources']).to include("cf:space:#{valid_uuid}")
               end
 
-              context 'when the route has no access rules' do
+              context 'when the route has no route policies' do
                 before do
-                  access_rule1.destroy
-                  access_rule2.destroy
+                  app_policy.destroy
+                  space_policy.destroy
                 end
 
-                it 'injects access_scope but omits access_rules key' do
+                it 'injects route_policy_scope but omits route_policy_sources key' do
                   http_routes = ri['http_routes']
                   mtls_entry = http_routes.find { |r| r['hostname'] == 'myapp.mtls.example.com' }
 

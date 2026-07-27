@@ -389,7 +389,7 @@ RSpec.describe 'Routes Request' do
       end
 
       context 'when including route_policies' do
-        let!(:route_policy) { VCAP::CloudController::RoutePolicy.create(route: route_in_org, source_type: 'app', source_guid: 'some-app-guid') }
+        let!(:route_policy) { create(:route_policy, route: route_in_org, source_type: 'app', source_guid: 'some-app-guid') }
 
         it 'includes the route_policies for the routes' do
           get '/v3/routes?include=route_policies', nil, admin_header
@@ -1134,7 +1134,7 @@ RSpec.describe 'Routes Request' do
       end
 
       context 'when including route_policies' do
-        let!(:route_policy) { VCAP::CloudController::RoutePolicy.create(route: route, source_type: 'app', source_guid: 'some-app-guid') }
+        let!(:route_policy) { create(:route_policy, route: route, source_type: 'app', source_guid: 'some-app-guid') }
 
         it 'includes the route_policies for the route' do
           get "/v3/routes/#{route.guid}?include=route_policies", nil, admin_header

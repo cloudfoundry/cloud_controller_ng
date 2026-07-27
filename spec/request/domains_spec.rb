@@ -2326,5 +2326,24 @@ RSpec.describe 'Domains Request' do
 
       it_behaves_like 'permissions for single object endpoint', ALL_PERMISSIONS
     end
+
+    context 'when the request includes a create-only route-policy field' do
+      let(:domain) { create(:shared_domain) }
+      let(:user_header) { admin_headers_for(user) }
+
+      it 'rejects updates to enforce_route_policies' do
+        patch "/v3/domains/#{domain.guid}", { enforce_route_policies: false }.to_json, user_header
+
+        expect(last_response.status).to eq(422)
+        expect(parsed_response['errors'][0]['detail']).to include("Unknown field(s): 'enforce_route_policies'")
+      end
+
+      it 'rejects updates to route_policies_scope' do
+        patch "/v3/domains/#{domain.guid}", { route_policies_scope: 'org' }.to_json, user_header
+
+        expect(last_response.status).to eq(422)
+        expect(parsed_response['errors'][0]['detail']).to include("Unknown field(s): 'route_policies_scope'")
+      end
+    end
   end
 end

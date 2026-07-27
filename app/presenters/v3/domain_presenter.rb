@@ -28,6 +28,8 @@ module VCAP::CloudController::Presenters::V3
         internal: domain.internal,
         router_group: hashified_router_group(domain.router_group_guid),
         supported_protocols: domain.protocols,
+        enforce_route_policies: true, # positioned here for field ordering; both keys are deleted below unless enforcement is on
+        route_policies_scope: domain.route_policies_scope,
         relationships: {
           organization: {
             data: owning_org_guid
@@ -43,9 +45,9 @@ module VCAP::CloudController::Presenters::V3
         links: build_links
       }
 
-      if domain.enforce_route_policies
-        hash[:enforce_route_policies] = true
-        hash[:route_policies_scope] = domain.route_policies_scope
+      unless domain.enforce_route_policies
+        hash.delete(:enforce_route_policies)
+        hash.delete(:route_policies_scope)
       end
 
       hash

@@ -127,7 +127,7 @@ module VCAP::CloudController
       end
 
       return unless requested?(:enforce_route_policies) && enforce_route_policies == true
-      return unless !requested?(:route_policies_scope) || route_policies_scope.nil?
+      return if route_policies_scope.present?
 
       errors.add(:route_policies_scope, 'is required when enforce_route_policies is true')
     end

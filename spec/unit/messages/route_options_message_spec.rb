@@ -35,6 +35,18 @@ module VCAP::CloudController
         expect(message).not_to be_valid
         expect(message.errors_on(:base)).to include("Unknown field(s): 'cookies'")
       end
+
+      it 'rejects route_policy_scope, which is computed for routing_info and never persisted' do
+        message = RouteOptionsMessage.new({ route_policy_scope: 'org' })
+        expect(message).not_to be_valid
+        expect(message.errors_on(:base)).to include("Unknown field(s): 'route_policy_scope'")
+      end
+
+      it 'rejects route_policy_sources, which is computed for routing_info and never persisted' do
+        message = RouteOptionsMessage.new({ route_policy_sources: 'cf:any' })
+        expect(message).not_to be_valid
+        expect(message.errors_on(:base)).to include("Unknown field(s): 'route_policy_sources'")
+      end
     end
 
     describe 'hash-based routing validations' do

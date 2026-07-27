@@ -105,7 +105,8 @@ curl "https://api.example.org/v3/route_policies" \
 - The `source` must be unique per route (duplicate sources are rejected)
 - If the route already has a `cf:any` policy, no other sources can be added
 - If adding `cf:any`, the route must not have any existing policies
-- The source GUID is not validated at creation time (allows cross-org sharing)
+- The source GUID is not checked for existence at creation time; stale references are tolerated, and sources referencing resources the caller cannot see are accepted but do not appear under `?include=source`
+- The `app`, `space`, and `organization` relationships are derived from `source` and cannot be set directly
 
 #### Permitted roles
 

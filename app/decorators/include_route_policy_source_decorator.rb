@@ -4,68 +4,68 @@ module VCAP::CloudController
     # Stale/missing resources (source GUIDs that no longer exist) are silently absent.
     # Resources the current user cannot read are also silently absent.
 
-    def self.match?(include_params)
-      return false unless include_params
-
-      include_params.include?('source')
-    end
-
-    def self.decorate(hash, route_policies)
-      hash[:included] ||= {}
-
-      # Collect all GUIDs by type
-      app_guids   = []
-      space_guids = []
-      org_guids   = []
-
-      route_policies.each do |policy|
-        next if policy.source_type == 'any'
-
-        case policy.source_type
-        when 'app'   then app_guids   << policy.source_guid
-        when 'space' then space_guids << policy.source_guid
-        when 'org'   then org_guids   << policy.source_guid
-        end
+    class << self
+      def match?(include_params)
+        include_params&.include?('source')
       end
 
-      permission_queryer = Permissions.new(SecurityContext.current_user)
+      def decorate(hash, route_policies)
+        hash[:included] ||= {}
 
-      # Fetch and present resources, filtering by what the current user can read
-      hash[:included][:apps] = fetch_and_present_apps(app_guids.uniq, permission_queryer)
-      hash[:included][:spaces] = fetch_and_present_spaces(space_guids.uniq, permission_queryer)
-      hash[:included][:organizations] = fetch_and_present_organizations(org_guids.uniq, permission_queryer)
+        app_guids   = []
+        space_guids = []
+        org_guids   = []
 
-      hash
-    end
+        route_policies.each do |policy|
+          next if policy.source_type == 'any'
 
-    private_class_method def self.fetch_and_present_apps(guids, permission_queryer)
-      return [] if guids.empty?
+          case policy.source_type
+          when 'app'   then app_guids   << policy.source_guid
+          when 'space' then space_guids << policy.source_guid
+          when 'org'   then org_guids   << policy.source_guid
+          end
+        end
 
-      apps = AppModel.where(guid: guids)
-      apps = apps.where(space_guid: permission_queryer.readable_space_guids_query) unless permission_queryer.can_read_globally?
-      apps.order(:created_at, :guid).
-        eager(Presenters::V3::AppPresenter.associated_resources).all.
-        map { |app| Presenters::V3::AppPresenter.new(app).to_hash }
-    end
+        permission_queryer = Permissions.new(SecurityContext.current_user)
 
-    private_class_method def self.fetch_and_present_spaces(guids, permission_queryer)
-      return [] if guids.empty?
+        hash[:included][:apps] = fetch_and_present_apps(app_guids.uniq, permission_queryer)
+        hash[:included][:spaces] = fetch_and_present_spaces(space_guids.uniq, permission_queryer)
+        hash[:included][:organizations] = fetch_and_present_organizations(org_guids.uniq, permission_queryer)
 
-      spaces = Space.where(guid: guids)
-      spaces = spaces.where(guid: permission_queryer.readable_space_guids_query) unless permission_queryer.can_read_globally?
-      spaces.order(:created_at, :guid).
-        eager(Presenters::V3::SpacePresenter.associated_resources).all.
-        map { |space| Presenters::V3::SpacePresenter.new(space).to_hash }
-    end
+        hash
+      end
 
-    private_class_method def self.fetch_and_present_organizations(guids, permission_queryer)
-      return [] if guids.empty?
+      private
 
-      orgs = Organization.where(guid: guids)
-      orgs = orgs.where(guid: permission_queryer.readable_org_guids_query) unless permission_queryer.can_read_globally?
-      orgs.order(:created_at, :guid).
-        eager(Presenters::V3::OrganizationPresenter.associated_resources).all.
-        map { |org| Presenters::V3::OrganizationPresenter.new(org).to_hash }
+      def fetch_and_present_apps(guids, permission_queryer)
+        return [] if guids.empty?
+
+        apps = AppModel.where(guid: guids)
+        apps = apps.where(space_guid: permission_queryer.readable_space_guids_query) unless permission_queryer.can_read_globally?
+        apps.order(:created_at, :guid).
+          eager(Presenters::V3::AppPresenter.associated_resources).all.
+          map { |app| Presenters::V3::AppPresenter.new(app).to_hash }
+      end
+
+      def fetch_and_present_spaces(guids, permission_queryer)
+        return [] if guids.empty?
+
+        spaces = Space.where(guid: guids)
+        spaces = spaces.where(guid: permission_queryer.readable_space_guids_query) unless permission_queryer.can_read_globally?
+        spaces.order(:created_at, :guid).
+          eager(Presenters::V3::SpacePresenter.associated_resources).all.
+          map { |space| Presenters::V3::SpacePresenter.new(space).to_hash }
+      end
+
+      def fetch_and_present_organizations(guids, permission_queryer)
+        return [] if guids.empty?
+
+        orgs = Organization.where(guid: guids)
+        orgs = orgs.where(guid: permission_queryer.readable_org_guids_query) unless permission_queryer.can_read_globally?
+        orgs.order(:created_at, :guid).
+          eager(Presenters::V3::OrganizationPresenter.associated_resources).all.
+          map { |org| Presenters::V3::OrganizationPresenter.new(org).to_hash }
+      end
     end
   end
 end
