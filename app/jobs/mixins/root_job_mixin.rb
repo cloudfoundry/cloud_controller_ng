@@ -8,15 +8,24 @@ module VCAP::CloudController
       # Buffer added on top of the sub-jobs' next run_at so the root wakes just after them, never before.
       ROOT_JOB_BUFFER_SECONDS = 5
 
+      def root_job_guid
+        @root_job_guid ||= PollableJobModel.first(resource_guid: resource_guid, operation: display_name)&.guid
+      end
+
       private
 
       def perform_with_root_job_handling
         activate_root_job_context
         yield
       rescue SubResourceError => e
-        return if e.any_in_progress?
+        if e.any_in_progress?
+          on_recursive_delete_in_progress
+          return
+        end
 
-        raise compound_error_for(e.failures)
+        error = compound_error_for(e.failures)
+        on_recursive_delete_failure(error)
+        raise error
       rescue CloudController::Errors::ApiError, CloudController::Errors::CompoundError
         raise
       rescue StandardError => e
@@ -27,16 +36,8 @@ module VCAP::CloudController
 
       attr_reader :root_job, :sub_jobs
 
-      # One shared tag for the whole recursive-delete subsystem so ops can grep it by a single logger name.
-      # NOT memoized: this job YAML-serialises itself on reschedule, and a cached Steno::Logger would drag
-      # its file-sink IO into the dump, reviving as an "uninitialized stream" that raises on the next write.
       def logger
         Steno.logger('cc.jobs.v3.recursive_delete')
-      end
-
-      # Resolves in any state (unlike root_job), so log lines stay searchable by this guid after the job settles.
-      def pollable_job_guid
-        @pollable_job_guid ||= PollableJobModel.first(resource_guid: resource_guid, operation: display_name)&.guid
       end
 
       def activate_root_job_context
@@ -45,7 +46,6 @@ module VCAP::CloudController
       end
 
       def deactivate_root_job_context
-        # Must clear in perform's ensure: the job YAML-serialises itself on reschedule, reviving a stale cache otherwise.
         @root_job = nil
         @sub_jobs = nil
         Jobs::GenericEnqueuer.shared.deactivate_root_context
@@ -84,14 +84,21 @@ module VCAP::CloudController
         return false if active_sub_jobs.empty?
 
         add_in_progress_warning(root_job)
+        on_recursive_delete_in_progress
         true
       end
 
       def raise_if_sub_jobs_failed
         return if sub_job_errors.empty?
 
-        raise CloudController::Errors::CompoundError.new(all_failure_errors)
+        error = CloudController::Errors::CompoundError.new(all_failure_errors)
+        on_recursive_delete_failure(error)
+        raise error
       end
+
+      def on_recursive_delete_failure(error); end
+
+      def on_recursive_delete_in_progress; end
 
       def add_in_progress_warning(job)
         return if job.warnings_dataset.any?
@@ -129,14 +136,14 @@ module VCAP::CloudController
       end
 
       def sub_job_error_detail(sub_job)
-        fallback = "#{sub_job.resource_type} #{sub_job.resource_guid}"
-        return fallback if sub_job.cf_api_error.nil?
+        identity = "#{sub_job.resource_type} #{sub_job.resource_guid}"
+        return identity if sub_job.cf_api_error.nil?
 
         parsed = Psych.safe_load(sub_job.cf_api_error, strict_integer: true)
         detail = parsed && parsed['errors']&.first&.fetch('detail', nil)
-        detail.presence || fallback
+        detail.present? ? "#{identity}: #{detail}" : identity
       rescue Psych::Exception
-        fallback
+        identity
       end
     end
   end

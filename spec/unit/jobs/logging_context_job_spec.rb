@@ -17,6 +17,7 @@ module VCAP::CloudController
 
       after do
         ::VCAP::Request.current_id = nil
+        ::VCAP::Request.current_root_job_guid = nil
       end
 
       describe '#perform' do
@@ -67,6 +68,67 @@ module VCAP::CloudController
               logging_context_job.perform
             end.to raise_error(CloudController::Errors::ApiError, /three retries/)
           end
+        end
+      end
+
+      describe 'root_job_guid log field' do
+        it 'stamps the root job guid as a structured field while a sub-job runs' do
+          VCAP::CloudController::PollableJobModel.create(delayed_job_guid: 'gregid', root_job_guid: 'root-guid-123', state: 'PROCESSING')
+
+          seen = nil
+          allow(handler).to receive(:perform) { seen = ::VCAP::Request.current_root_job_guid }
+
+          logging_context_job.before(job)
+          logging_context_job.perform
+
+          expect(seen).to eq('root-guid-123')
+        end
+
+        it 'clears the field after the sub-job finishes' do
+          VCAP::CloudController::PollableJobModel.create(delayed_job_guid: 'gregid', root_job_guid: 'root-guid-123', state: 'PROCESSING')
+
+          logging_context_job.before(job)
+          logging_context_job.perform
+
+          expect(::VCAP::Request.current_root_job_guid).to be_nil
+        end
+
+        it 'leaves the field unset for jobs that are not recursive-delete sub-jobs' do
+          VCAP::CloudController::PollableJobModel.create(delayed_job_guid: 'gregid', root_job_guid: nil, state: 'PROCESSING')
+
+          seen = :unset
+          allow(handler).to receive(:perform) { seen = ::VCAP::Request.current_root_job_guid }
+
+          logging_context_job.before(job)
+          logging_context_job.perform
+
+          expect(seen).to be_nil
+        end
+
+        it 'stamps the root job with its own guid, reported by the RootJobMixin handler' do
+          allow(handler).to receive(:root_job_guid).and_return('root-guid-abc')
+
+          seen = nil
+          allow(handler).to receive(:perform) { seen = ::VCAP::Request.current_root_job_guid }
+
+          logging_context_job.before(job)
+          logging_context_job.perform
+
+          expect(seen).to eq('root-guid-abc')
+        end
+
+        it 'prefers the handler-reported root guid over the pollable row lookup' do
+          # A root job's own row has no root_job_guid, so the row lookup would return nil; the handler wins.
+          VCAP::CloudController::PollableJobModel.create(delayed_job_guid: 'gregid', root_job_guid: nil, state: 'PROCESSING')
+          allow(handler).to receive(:root_job_guid).and_return('root-guid-abc')
+
+          seen = nil
+          allow(handler).to receive(:perform) { seen = ::VCAP::Request.current_root_job_guid }
+
+          logging_context_job.before(job)
+          logging_context_job.perform
+
+          expect(seen).to eq('root-guid-abc')
         end
       end
 

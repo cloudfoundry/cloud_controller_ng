@@ -22,6 +22,19 @@ module VCAP
         Thread.current[:vcap_request_id]
       end
 
+      def current_root_job_guid=(root_job_guid)
+        Thread.current[:vcap_root_job_guid] = root_job_guid
+        if root_job_guid.nil?
+          Steno.config.context.data.delete('root_job_guid')
+        else
+          Steno.config.context.data['root_job_guid'] = root_job_guid
+        end
+      end
+
+      def current_root_job_guid
+        Thread.current[:vcap_root_job_guid]
+      end
+
       def user_guid=(user_guid)
         if user_guid.nil?
           Steno.config.context.data.delete('user_guid')

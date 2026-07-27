@@ -18,7 +18,7 @@ module VCAP::CloudController
       def perform
         perform_with_root_job_handling do
           if sub_jobs_in_flight?
-            logger.info("service instance delete #{resource_guid} (job #{pollable_job_guid}) waiting on in-progress binding deletions")
+            logger.info("service instance delete #{resource_guid} (job #{root_job_guid}) waiting on in-progress binding deletions")
             return
           end
 
@@ -74,9 +74,29 @@ module VCAP::CloudController
         ManagedServiceInstance.first(guid: resource_guid)
       end
 
+      def on_recursive_delete_failure(error)
+        return unless service_instance
+        return if service_instance.last_operation&.state == 'failed'
+
+        action.update_last_operation_with_failure(error.underlying_errors.map(&:message).join("\n"))
+      end
+
+      def on_recursive_delete_in_progress
+        return unless service_instance
+        return if delete_marked?
+
+        action.update_last_operation_in_progress('Waiting for bindings of the service instance to be deleted.')
+      end
+
       def delete_in_progress?
         service_instance.last_operation&.type == 'delete' &&
-          service_instance.last_operation&.state == 'in progress'
+          service_instance.last_operation&.state == 'in progress' &&
+          service_instance.last_operation&.broker_provided_operation.present?
+      end
+
+      def delete_marked?
+        service_instance.last_operation&.type == 'delete' &&
+          ['in progress', 'failed'].include?(service_instance.last_operation&.state)
       end
 
       def action
@@ -85,7 +105,7 @@ module VCAP::CloudController
 
       def log_failed_children
         sub_resource_errors.each do |guid, error|
-          logger.warn("service instance delete #{resource_guid} (job #{pollable_job_guid}): binding #{guid} deletion failed: #{error.message}")
+          logger.warn("service instance delete #{resource_guid} (job #{root_job_guid}): binding #{guid} deletion failed: #{error.message}")
         end
       end
 
@@ -95,7 +115,8 @@ module VCAP::CloudController
 
         children = si.service_bindings + si.service_keys + RouteBinding.where(service_instance: si).all
         children.select(&:delete_failed?).map do |child|
-          [child.guid, CloudController::Errors::ApiError.new_from_details('UnprocessableEntity', child.last_operation.description)]
+          identity = "#{child.class.name.demodulize.underscore} #{child.guid}"
+          [child.guid, CloudController::Errors::ApiError.new_from_details('UnprocessableEntity', "#{identity}: #{child.last_operation.description}")]
         end
       end
     end

@@ -3606,7 +3606,9 @@ RSpec.describe 'V3 service instances' do
 
               instance.reload
               expect(VCAP::CloudController::ServiceInstance.first(guid: instance.guid)).not_to be_nil
-              expect(instance.last_operation&.state).not_to eq('failed')
+              expect(instance.last_operation&.type).to eq('delete')
+              expect(instance.last_operation&.state).to eq('in progress')
+              expect(instance.last_operation&.broker_provided_operation).to be_blank
 
               lo = VCAP::CloudController::RouteBinding.first.last_operation
               expect(lo.type).to eq('delete')
@@ -3644,6 +3646,60 @@ RSpec.describe 'V3 service instances' do
               expect(VCAP::CloudController::RouteBinding.all).to be_empty
               expect(VCAP::CloudController::ServiceBinding.all).to be_empty
               expect(VCAP::CloudController::ServiceKey.all).to be_empty
+            end
+          end
+
+          context 'and an async unbind eventually fails' do
+            before do
+              [route_binding, service_binding, service_key].each do |binding|
+                stub_request(:delete, "#{instance.service_broker.broker_url}/v2/service_instances/#{instance.guid}/service_bindings/#{binding.guid}").
+                  with(query: {
+                         'accepts_incomplete' => true,
+                         'service_id' => instance.service.broker_provided_id,
+                         'plan_id' => instance.service_plan.broker_provided_id
+                       }).
+                  to_return(status: 202, body: '{}', headers: {})
+
+                stub_request(:get, "#{instance.service_broker.broker_url}/v2/service_instances/#{instance.guid}/service_bindings/#{binding.guid}/last_operation").
+                  with(query: {
+                         'service_id' => instance.service.broker_provided_id,
+                         'plan_id' => instance.service_plan.broker_provided_id
+                       }).
+                  to_return(status: 200, body: '{"state":"failed","description":"broker refused to unbind"}', headers: {})
+              end
+            end
+
+            it 'marks the service instance last_operation as delete failed so `cf service` reflects it' do
+              api_call.call(admin_headers)
+              # Root enqueues 3 unbind sub-jobs and defers (1 success); the sub-jobs poll and fail (3 failures).
+              execute_all_jobs(expected_successes: 1, expected_failures: 3)
+              # Deferred root then observes the failed sub-jobs and surfaces the failure.
+              Timecop.freeze(Time.now + 1.hour) do
+                execute_all_jobs(expected_successes: 0, expected_failures: 1, jobs_to_execute: 1)
+              end
+
+              instance.reload
+              expect(instance.last_operation).not_to be_nil
+              expect(instance.last_operation.type).to eq('delete')
+              expect(instance.last_operation.state).to eq('failed')
+            end
+
+            it 'ends the delete job FAILED with a populated errors[].detail so `cf delete-service` shows the reason' do
+              api_call.call(admin_headers)
+              execute_all_jobs(expected_successes: 1, expected_failures: 3)
+              Timecop.freeze(Time.now + 1.hour) do
+                execute_all_jobs(expected_successes: 0, expected_failures: 1, jobs_to_execute: 1)
+              end
+
+              root_job = VCAP::CloudController::PollableJobModel.find(resource_guid: instance.guid, operation: 'service_instance.delete')
+              expect(root_job.state).to eq(VCAP::CloudController::PollableJobModel::FAILED_STATE)
+
+              # aliases: true is test-only — the stored payload carries test_mode_info backtraces Psych anchors; prod payloads don't.
+              expect(root_job.cf_api_error).to be_present
+              parsed = Psych.safe_load(root_job.cf_api_error, strict_integer: true, aliases: true)
+              details = parsed['errors'].pluck('detail')
+              expect(details).to all(be_present)
+              expect(details).to include(a_string_including('broker refused to unbind'))
             end
           end
         end

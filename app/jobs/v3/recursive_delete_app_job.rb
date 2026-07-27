@@ -19,7 +19,7 @@ module VCAP::CloudController
       def perform
         perform_with_root_job_handling do
           if sub_jobs_in_flight?
-            logger.info("app delete #{app_guid} (job #{pollable_job_guid}) waiting on in-progress service binding deletions")
+            logger.info("app delete #{app_guid} (job #{root_job_guid}) waiting on in-progress service binding deletions")
             return
           end
 
@@ -59,7 +59,7 @@ module VCAP::CloudController
 
       def log_failed_bindings
         sub_resource_errors.each do |guid, error|
-          logger.warn("app delete #{app_guid} (job #{pollable_job_guid}): service binding #{guid} deletion failed: #{error.message}")
+          logger.warn("app delete #{app_guid} (job #{root_job_guid}): service binding #{guid} deletion failed: #{error.message}")
         end
       end
 
@@ -73,7 +73,7 @@ module VCAP::CloudController
         return [] unless app
 
         app.service_bindings.select(&:delete_failed?).map do |binding|
-          [binding.guid, CloudController::Errors::ApiError.new_from_details('UnprocessableEntity', binding.last_operation.description)]
+          [binding.guid, CloudController::Errors::ApiError.new_from_details('UnprocessableEntity', "service_binding #{binding.guid}: #{binding.last_operation.description}")]
         end
       end
     end

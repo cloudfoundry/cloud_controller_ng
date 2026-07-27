@@ -12,18 +12,18 @@ module VCAP::CloudController
       end
 
       def before(job)
-        # TEMP recursive-delete debug (remove before PR ready): log every delayed job as it starts executing.
-        Steno.logger('cc.temp.recursive_delete').info(
-          "EXECUTE job=#{wrapped_handler.class.name} dj_id=#{job.id} dj_guid=#{job.guid} " \
-          "run_at=#{job.run_at&.utc&.iso8601} attempts=#{job.attempts} queue=#{job.queue}"
-        )
+        # Get guid via root job mixin (as root job) or via `root_job_guid` column (sub-job)
+        @root_job_guid = wrapped_handler.try(:root_job_guid) ||
+                         PollableJobModel.where(delayed_job_guid: job.guid).get(:root_job_guid)
         super
       end
 
       def perform
         with_request_id_set do
-          logger.info("about to run job #{wrapped_handler.class.name}")
-          super
+          with_root_job_guid_set do
+            logger.info("about to run job #{wrapped_handler.class.name}")
+            super
+          end
         end
       rescue CloudController::Blobstore::BlobstoreError => e
         raise CloudController::Errors::ApiError.new_from_details('BlobstoreError', e.message)
@@ -84,6 +84,16 @@ module VCAP::CloudController
         yield
       ensure
         ::VCAP::Request.current_id = current_request_id
+      end
+
+      def with_root_job_guid_set
+        return yield if @root_job_guid.nil?
+
+        previous = ::VCAP::Request.current_root_job_guid
+        ::VCAP::Request.current_root_job_guid = @root_job_guid
+        yield
+      ensure
+        ::VCAP::Request.current_root_job_guid = previous unless @root_job_guid.nil?
       end
     end
   end

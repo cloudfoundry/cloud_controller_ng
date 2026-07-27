@@ -67,6 +67,39 @@ module VCAP
       end
     end
 
+    describe '.current_root_job_guid' do
+      after do
+        Request.current_root_job_guid = nil
+      end
+
+      let(:root_job_guid) { SecureRandom.uuid }
+      let(:data) { {} }
+
+      before do
+        allow(Steno.config.context).to receive(:data).and_return(data)
+      end
+
+      it 'sets the new current_root_job_guid value and stamps the Steno context' do
+        Request.current_root_job_guid = root_job_guid
+
+        expect(Request.current_root_job_guid).to eq root_job_guid
+        expect(Steno.config.context.data.fetch('root_job_guid')).to eq root_job_guid
+      end
+
+      it 'deletes from the Steno context when set to nil' do
+        Request.current_root_job_guid = nil
+
+        expect(Request.current_root_job_guid).to be_nil
+        expect(Steno.config.context.data.key?('root_job_guid')).to be false
+      end
+
+      it 'uses the :vcap_root_job_guid thread local' do
+        Request.current_root_job_guid = root_job_guid
+
+        expect(Thread.current[:vcap_root_job_guid]).to eq(root_job_guid)
+      end
+    end
+
     describe '.b3_trace_id' do
       after do
         Request.b3_trace_id = nil

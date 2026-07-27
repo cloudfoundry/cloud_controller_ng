@@ -752,6 +752,19 @@ module VCAP::CloudController
           expect(service_instance.last_operation.broker_provided_operation).to be_nil
         end
       end
+
+      describe '#update_last_operation_in_progress' do
+        let!(:service_instance) { create(:managed_service_instance) }
+
+        it 'stamps last operation as delete/in progress with the given description and no broker operation' do
+          action.update_last_operation_in_progress('waiting on bindings')
+
+          expect(service_instance.last_operation.type).to eq('delete')
+          expect(service_instance.last_operation.state).to eq('in progress')
+          expect(service_instance.last_operation.description).to eq('waiting on bindings')
+          expect(service_instance.last_operation.broker_provided_operation).to be_nil
+        end
+      end
     end
   end
 end

@@ -104,6 +104,17 @@ module VCAP::CloudController
         )
       end
 
+      def update_last_operation_in_progress(description)
+        service_instance.save_with_new_operation(
+          {},
+          {
+            type: 'delete',
+            state: 'in progress',
+            description: description
+          }
+        )
+      end
+
       private
 
       def perform_delete_actions

@@ -40,6 +40,7 @@ module VCAP::CloudController
       let(:job) { test_job_class.new('resource-guid-1') }
 
       before { Jobs::GenericEnqueuer.reset! }
+
       after { Jobs::GenericEnqueuer.reset! }
 
       def make_root(state: PollableJobModel::PROCESSING_STATE)
@@ -154,6 +155,24 @@ module VCAP::CloudController
           job.send(:fetch_root_context)
           expect(job.send(:root_job)).to be_nil
           expect(job.send(:sub_jobs)).to eq([])
+        end
+      end
+
+      describe '#root_job_guid' do
+        it 'returns the guid of its own pollable job (resolvable in any state) for log correlation' do
+          pollable_job = make_root
+
+          expect(job.root_job_guid).to eq(pollable_job.guid)
+        end
+
+        it 'still resolves once the root job has settled (e.g. failed)' do
+          pollable_job = make_root(state: PollableJobModel::FAILED_STATE)
+
+          expect(job.root_job_guid).to eq(pollable_job.guid)
+        end
+
+        it 'is nil when no pollable job exists for this resource yet' do
+          expect(job.root_job_guid).to be_nil
         end
       end
 
