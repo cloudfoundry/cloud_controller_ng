@@ -7462,12 +7462,12 @@ to specify how many instances are rolled out simultaneously.</p></li>
 <tr>
 <td><strong>enforce_route_policies</strong></td>
 <td><em>boolean</em></td>
-<td>When <code class="prettyprint">true</code>, GoRouter enforces route policies for routes on this domain. This field only appears in the response when set to <code class="prettyprint">true</code>. <strong>Immutable</strong> after domain creation</td>
+<td>When <code class="prettyprint">true</code>, GoRouter enforces route policies for routes on this domain. This field only appears in the response when set to <code class="prettyprint">true</code>. Set at creation only; cannot be changed on update</td>
 </tr>
 <tr>
 <td><strong>route_policies_scope</strong></td>
 <td><em>string</em></td>
-<td>Operator-defined boundary for allowed callers: <code class="prettyprint">any</code>, <code class="prettyprint">org</code>, or <code class="prettyprint">space</code>. Required when <code class="prettyprint">enforce_route_policies</code> is <code class="prettyprint">true</code>. This field only appears when <code class="prettyprint">enforce_route_policies</code> is <code class="prettyprint">true</code>. <strong>Immutable</strong> after domain creation</td>
+<td>Operator-defined boundary for allowed callers: <code class="prettyprint">any</code>, <code class="prettyprint">org</code>, or <code class="prettyprint">space</code>. Required when <code class="prettyprint">enforce_route_policies</code> is <code class="prettyprint">true</code>. This field only appears when <code class="prettyprint">enforce_route_policies</code> is <code class="prettyprint">true</code>. Set at creation only; cannot be changed on update</td>
 </tr>
 <tr>
 <td><strong>relationships.organization</strong></td>
@@ -7605,13 +7605,13 @@ to specify how many instances are rolled out simultaneously.</p></li>
 <tr>
 <td><strong>enforce_route_policies</strong></td>
 <td><em>boolean</em></td>
-<td>When <code class="prettyprint">true</code>, GoRouter enforces route policies for routes on this domain using mutual TLS (mTLS). <strong>Immutable</strong> after creation. Cannot be used with internal domains</td>
+<td>When <code class="prettyprint">true</code>, GoRouter enforces route policies for routes on this domain using mutual TLS (mTLS). Set at creation only; cannot be changed on update. Cannot be used with internal domains</td>
 <td>false</td>
 </tr>
 <tr>
 <td><strong>route_policies_scope</strong></td>
 <td><em>string</em></td>
-<td>Operator-defined boundary for allowed callers: <code class="prettyprint">any</code>, <code class="prettyprint">org</code>, or <code class="prettyprint">space</code>. Required when <code class="prettyprint">enforce_route_policies</code> is <code class="prettyprint">true</code>. <strong>Immutable</strong> after creation</td>
+<td>Operator-defined boundary for allowed callers: <code class="prettyprint">any</code>, <code class="prettyprint">org</code>, or <code class="prettyprint">space</code>. Required when <code class="prettyprint">enforce_route_policies</code> is <code class="prettyprint">true</code>. Set at creation only; cannot be changed on update</td>
 <td></td>
 </tr>
 <tr>
@@ -18451,6 +18451,9 @@ The origin must be different from <code class="prettyprint">uaa</code> in this c
     </span><span class="p">},</span><span class="w">
     </span><span class="nl">"route"</span><span class="p">:</span><span class="w"> </span><span class="p">{</span><span class="w">
       </span><span class="nl">"href"</span><span class="p">:</span><span class="w"> </span><span class="s2">"https://api.example.org/v3/routes/89b32bd6-688f-4424-b94f-2e2c86495a5f"</span><span class="w">
+    </span><span class="p">},</span><span class="w">
+    </span><span class="nl">"app"</span><span class="p">:</span><span class="w"> </span><span class="p">{</span><span class="w">
+      </span><span class="nl">"href"</span><span class="p">:</span><span class="w"> </span><span class="s2">"https://api.example.org/v3/apps/d76446a1-f429-4444-8797-be2f78b75b08"</span><span class="w">
     </span><span class="p">}</span><span class="w">
   </span><span class="p">}</span><span class="w">
 </span><span class="p">}</span><span class="w">
@@ -18484,26 +18487,6 @@ The origin must be different from <code class="prettyprint">uaa</code> in this c
 <td>The policy selector specifying who can access the route. Must be one of:<br>- <code class="prettyprint">cf:app:&lt;uuid&gt;</code> (specific app)<br>- <code class="prettyprint">cf:space:&lt;uuid&gt;</code> (all apps in a space)<br>- <code class="prettyprint">cf:org:&lt;uuid&gt;</code> (all apps in an organization)<br>- <code class="prettyprint">cf:any</code> (any caller - cannot be combined with other sources)</td>
 </tr>
 <tr>
-<td><strong>relationships.route</strong></td>
-<td><a href="#to-one-relationships"><em>to-one relationship</em></a></td>
-<td>The route this policy applies to</td>
-</tr>
-<tr>
-<td><strong>relationships.app</strong></td>
-<td><a href="#to-one-relationships"><em>to-one relationship</em></a></td>
-<td>Read-only. The app referenced in the source (populated only when source is <code class="prettyprint">cf:app:&lt;uuid&gt;</code>)</td>
-</tr>
-<tr>
-<td><strong>relationships.space</strong></td>
-<td><a href="#to-one-relationships"><em>to-one relationship</em></a></td>
-<td>Read-only. The space referenced in the source (populated only when source is <code class="prettyprint">cf:space:&lt;uuid&gt;</code>)</td>
-</tr>
-<tr>
-<td><strong>relationships.organization</strong></td>
-<td><a href="#to-one-relationships"><em>to-one relationship</em></a></td>
-<td>Read-only. The organization referenced in the source (populated only when source is <code class="prettyprint">cf:org:&lt;uuid&gt;</code>)</td>
-</tr>
-<tr>
 <td><strong>metadata.labels</strong></td>
 <td><a href="#labels"><em>label object</em></a></td>
 <td>Labels applied to the route policy</td>
@@ -18514,9 +18497,29 @@ The origin must be different from <code class="prettyprint">uaa</code> in this c
 <td>Annotations applied to the route policy</td>
 </tr>
 <tr>
+<td><strong>relationships.route</strong></td>
+<td><a href="#to-one-relationships"><em>to-one relationship</em></a></td>
+<td>The route this policy applies to</td>
+</tr>
+<tr>
+<td><strong>relationships.app</strong></td>
+<td><a href="#to-one-relationships"><em>to-one relationship</em></a></td>
+<td>Read-only. Always present; <code class="prettyprint">data</code> is <code class="prettyprint">null</code> unless the source is <code class="prettyprint">cf:app:&lt;uuid&gt;</code></td>
+</tr>
+<tr>
+<td><strong>relationships.space</strong></td>
+<td><a href="#to-one-relationships"><em>to-one relationship</em></a></td>
+<td>Read-only. Always present; <code class="prettyprint">data</code> is <code class="prettyprint">null</code> unless the source is <code class="prettyprint">cf:space:&lt;uuid&gt;</code></td>
+</tr>
+<tr>
+<td><strong>relationships.organization</strong></td>
+<td><a href="#to-one-relationships"><em>to-one relationship</em></a></td>
+<td>Read-only. Always present; <code class="prettyprint">data</code> is <code class="prettyprint">null</code> unless the source is <code class="prettyprint">cf:org:&lt;uuid&gt;</code></td>
+</tr>
+<tr>
 <td><strong>links</strong></td>
 <td><a href="#links"><em>links object</em></a></td>
-<td>Links to related resources</td>
+<td>Links to related resources. Always includes <code class="prettyprint">self</code> and <code class="prettyprint">route</code>; includes <code class="prettyprint">app</code>, <code class="prettyprint">space</code>, or <code class="prettyprint">organization</code> when the source references that resource</td>
 </tr>
 </tbody></table>
 <h3 id="create-a-route-policy">Create a route policy</h3>
@@ -18576,6 +18579,9 @@ The origin must be different from <code class="prettyprint">uaa</code> in this c
     </span><span class="p">},</span><span class="w">
     </span><span class="nl">"route"</span><span class="p">:</span><span class="w"> </span><span class="p">{</span><span class="w">
       </span><span class="nl">"href"</span><span class="p">:</span><span class="w"> </span><span class="s2">"https://api.example.org/v3/routes/89b32bd6-688f-4424-b94f-2e2c86495a5f"</span><span class="w">
+    </span><span class="p">},</span><span class="w">
+    </span><span class="nl">"app"</span><span class="p">:</span><span class="w"> </span><span class="p">{</span><span class="w">
+      </span><span class="nl">"href"</span><span class="p">:</span><span class="w"> </span><span class="s2">"https://api.example.org/v3/apps/d76446a1-f429-4444-8797-be2f78b75b08"</span><span class="w">
     </span><span class="p">}</span><span class="w">
   </span><span class="p">}</span><span class="w">
 </span><span class="p">}</span><span class="w">
@@ -18665,7 +18671,8 @@ The origin must be different from <code class="prettyprint">uaa</code> in this c
 <li>The <code class="prettyprint">source</code> must be unique per route (duplicate sources are rejected)</li>
 <li>If the route already has a <code class="prettyprint">cf:any</code> policy, no other sources can be added</li>
 <li>If adding <code class="prettyprint">cf:any</code>, the route must not have any existing policies</li>
-<li>The source GUID is not validated at creation time (allows cross-org sharing)</li>
+<li>The source GUID is not checked for existence at creation time; stale references are tolerated, and sources referencing resources the caller cannot see are accepted but do not appear under <code class="prettyprint">?include=source</code></li>
+<li>The <code class="prettyprint">app</code>, <code class="prettyprint">space</code>, and <code class="prettyprint">organization</code> relationships are derived from <code class="prettyprint">source</code> and cannot be set directly</li>
 </ul>
 
 <h4 id="permitted-roles">Permitted roles</h4>
@@ -18727,6 +18734,9 @@ The origin must be different from <code class="prettyprint">uaa</code> in this c
     </span><span class="p">},</span><span class="w">
     </span><span class="nl">"route"</span><span class="p">:</span><span class="w"> </span><span class="p">{</span><span class="w">
       </span><span class="nl">"href"</span><span class="p">:</span><span class="w"> </span><span class="s2">"https://api.example.org/v3/routes/89b32bd6-688f-4424-b94f-2e2c86495a5f"</span><span class="w">
+    </span><span class="p">},</span><span class="w">
+    </span><span class="nl">"app"</span><span class="p">:</span><span class="w"> </span><span class="p">{</span><span class="w">
+      </span><span class="nl">"href"</span><span class="p">:</span><span class="w"> </span><span class="s2">"https://api.example.org/v3/apps/d76446a1-f429-4444-8797-be2f78b75b08"</span><span class="w">
     </span><span class="p">}</span><span class="w">
   </span><span class="p">}</span><span class="w">
 </span><span class="p">}</span><span class="w">
@@ -18859,6 +18869,9 @@ The origin must be different from <code class="prettyprint">uaa</code> in this c
         </span><span class="p">},</span><span class="w">
         </span><span class="nl">"route"</span><span class="p">:</span><span class="w"> </span><span class="p">{</span><span class="w">
           </span><span class="nl">"href"</span><span class="p">:</span><span class="w"> </span><span class="s2">"https://api.example.org/v3/routes/89b32bd6-688f-4424-b94f-2e2c86495a5f"</span><span class="w">
+        </span><span class="p">},</span><span class="w">
+        </span><span class="nl">"app"</span><span class="p">:</span><span class="w"> </span><span class="p">{</span><span class="w">
+          </span><span class="nl">"href"</span><span class="p">:</span><span class="w"> </span><span class="s2">"https://api.example.org/v3/apps/d76446a1-f429-4444-8797-be2f78b75b08"</span><span class="w">
         </span><span class="p">}</span><span class="w">
       </span><span class="p">}</span><span class="w">
     </span><span class="p">},</span><span class="w">
@@ -18895,6 +18908,9 @@ The origin must be different from <code class="prettyprint">uaa</code> in this c
         </span><span class="p">},</span><span class="w">
         </span><span class="nl">"route"</span><span class="p">:</span><span class="w"> </span><span class="p">{</span><span class="w">
           </span><span class="nl">"href"</span><span class="p">:</span><span class="w"> </span><span class="s2">"https://api.example.org/v3/routes/89b32bd6-688f-4424-b94f-2e2c86495a5f"</span><span class="w">
+        </span><span class="p">},</span><span class="w">
+        </span><span class="nl">"space"</span><span class="p">:</span><span class="w"> </span><span class="p">{</span><span class="w">
+          </span><span class="nl">"href"</span><span class="p">:</span><span class="w"> </span><span class="s2">"https://api.example.org/v3/spaces/3fa85f64-5717-4562-b3fc-2c963f66afa6"</span><span class="w">
         </span><span class="p">}</span><span class="w">
       </span><span class="p">}</span><span class="w">
     </span><span class="p">}</span><span class="w">
@@ -18970,7 +18986,7 @@ The origin must be different from <code class="prettyprint">uaa</code> in this c
 </tr>
 <tr>
 <td><strong>include</strong></td>
-<td><em>string</em></td>
+<td><em>list of strings</em></td>
 <td>Optionally include related resources in the response; valid values are <code class="prettyprint">route</code> and <code class="prettyprint">source</code> (source includes the app, space, or organization based on the source type)</td>
 </tr>
 <tr>
@@ -19055,7 +19071,7 @@ curl &quot;https://api.example.org/v3/route_policies?space_guids=my-space-guid&q
 
 <p><strong>Find stale policies referencing a deleted app:</strong>
 <code class="prettyprint">shell
-curl &quot;https://api.example.org/v3/route_policies?source_guids=deleted-app-guid&amp;include=source&quot; \
+curl &quot;https://api.example.org/v3/route_policies?source_guids=d76446a1-f429-4444-8797-be2f78b75b08&amp;include=source&quot; \
   -X GET \
   -H &quot;Authorization: bearer [token]&quot;
 </code></p>
@@ -19158,6 +19174,9 @@ curl &quot;https://api.example.org/v3/route_policies?source_guids=deleted-app-gu
     </span><span class="p">},</span><span class="w">
     </span><span class="nl">"route"</span><span class="p">:</span><span class="w"> </span><span class="p">{</span><span class="w">
       </span><span class="nl">"href"</span><span class="p">:</span><span class="w"> </span><span class="s2">"https://api.example.org/v3/routes/89b32bd6-688f-4424-b94f-2e2c86495a5f"</span><span class="w">
+    </span><span class="p">},</span><span class="w">
+    </span><span class="nl">"app"</span><span class="p">:</span><span class="w"> </span><span class="p">{</span><span class="w">
+      </span><span class="nl">"href"</span><span class="p">:</span><span class="w"> </span><span class="s2">"https://api.example.org/v3/apps/d76446a1-f429-4444-8797-be2f78b75b08"</span><span class="w">
     </span><span class="p">}</span><span class="w">
   </span><span class="p">}</span><span class="w">
 </span><span class="p">}</span><span class="w">
