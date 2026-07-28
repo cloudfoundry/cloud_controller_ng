@@ -127,29 +127,91 @@ module VCAP::CloudController
         expect(hash['links']['network_policy_v1']['href']).to eq(expected_uri)
       end
 
-      it 'returns a link to the logging API' do
-        expected_uri = 'wss://doppler.my-super-cool-cf.com:1234'
-        TestConfig.override(doppler: { url: expected_uri })
+      describe 'logging link' do
+        context 'doppler url is configured' do
+          it 'returns a link to the logging API' do
+            expected_uri = 'wss://doppler.my-super-cool-cf.com:1234'
+            TestConfig.override(doppler: { url: expected_uri })
 
-        get '/'
-        hash = Oj.load(last_response.body)
-        expect(hash['links']['logging']['href']).to eq(expected_uri)
+            get '/'
+            hash = Oj.load(last_response.body)
+            expect(hash['links']['logging']['href']).to eq(expected_uri)
+          end
+        end
+
+        context 'doppler url is blank' do
+          before do
+            TestConfig.override(doppler: { url: '' })
+          end
+
+          it 'does not return a link' do
+            get '/'
+            hash = Oj.load(last_response.body)
+            expect(hash['links']['logging']).to be_nil
+          end
+        end
       end
 
-      it 'returns a link to the log cache API' do
-        expected_uri = 'https://log-cache.example.com'
+      describe 'log_cache link' do
+        context 'log_cache url is configured' do
+          it 'returns a link to the log cache API' do
+            expected_uri = 'https://log-cache.example.com'
 
-        get '/'
-        hash = Oj.load(last_response.body)
-        expect(hash['links']['log_cache']['href']).to eq(expected_uri)
+            get '/'
+            hash = Oj.load(last_response.body)
+            expect(hash['links']['log_cache']['href']).to eq(expected_uri)
+          end
+        end
+
+        context 'log_cache url is blank' do
+          before do
+            TestConfig.override(log_cache: { url: '' })
+          end
+
+          it 'does not return a link' do
+            get '/'
+            hash = Oj.load(last_response.body)
+            expect(hash['links']['log_cache']).to be_nil
+          end
+        end
       end
 
-      it 'returns a link to the v2 logging API' do
-        expected_uri = 'https://log-stream.example.com'
+      describe 'log_stream link' do
+        context 'log_stream url is configured' do
+          it 'returns a link to the v2 logging API' do
+            expected_uri = 'https://log-stream.example.com'
 
-        get '/'
-        hash = Oj.load(last_response.body)
-        expect(hash['links']['log_stream']['href']).to eq(expected_uri)
+            get '/'
+            hash = Oj.load(last_response.body)
+            expect(hash['links']['log_stream']['href']).to eq(expected_uri)
+          end
+        end
+
+        context 'log_stream url is blank' do
+          before do
+            TestConfig.override(log_stream: { url: '' })
+          end
+
+          it 'does not return a link' do
+            get '/'
+            hash = Oj.load(last_response.body)
+            expect(hash['links']['log_stream']).to be_nil
+          end
+        end
+      end
+
+      context 'all loggregator urls are blank' do
+        before do
+          TestConfig.override(doppler: { url: '' }, log_cache: { url: '' }, log_stream: { url: '' })
+        end
+
+        it 'returns nil for all three loggregator links' do
+          get '/'
+          hash = Oj.load(last_response.body)
+          expect(hash['links']['logging']).to be_nil
+          expect(hash['links']['log_cache']).to be_nil
+          expect(hash['links']['log_stream']).to be_nil
+        end
       end
 
       it 'returns a link for app_ssh with metadata' do

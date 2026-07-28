@@ -41,17 +41,11 @@ module VCAP::CloudController
           credhub: credhub_link,
           routing: routing_link,
 
-          logging: {
-            href: config.get(:doppler, :url)
-          },
+          logging: logging_link,
 
-          log_cache: {
-            href: config.get(:log_cache, :url)
-          },
+          log_cache: log_cache_link,
 
-          log_stream: {
-            href: config.get(:log_stream, :url)
-          },
+          log_stream: log_stream_link,
 
           app_ssh: {
             href: config.get(:info, :app_ssh_endpoint),
@@ -86,6 +80,24 @@ module VCAP::CloudController
       return if config.get(:routing_api).blank?
 
       { href: config.get(:routing_api, :url) }
+    end
+
+    def logging_link
+      return if config.get(:doppler, :url).blank?
+
+      { href: config.get(:doppler, :url) }
+    end
+
+    def log_cache_link
+      return if config.get(:log_cache, :url).blank?
+
+      { href: config.get(:log_cache, :url) }
+    end
+
+    def log_stream_link
+      return if config.get(:log_stream, :url).blank?
+
+      { href: config.get(:log_stream, :url) }
     end
 
     def cloud_controller_v2(api_url_builder)
