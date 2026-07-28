@@ -53,7 +53,6 @@ namespace :spec do
       --exclude-pattern '(spec/isolated_specs/|spec/migrations/)' \
       -- #{path}
     CMD
-
     sh command
   end
 
@@ -64,7 +63,6 @@ namespace :spec do
       --runtime-log tmp/parallel_runtime_rspec_migrations.log \
       -- spec/migrations
     CMD
-
     sh command
   end
 

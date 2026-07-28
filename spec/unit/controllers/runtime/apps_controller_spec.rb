@@ -1806,13 +1806,14 @@ module VCAP::CloudController
 
     describe 'downloading the droplet' do
       let(:process) { ProcessModelFactory.make }
-      let(:blob) { instance_double(CloudController::Blobstore::FogBlob) }
+      let(:blob) { instance_double(CloudController::Blobstore::LocalBlob) }
       let(:developer) { make_developer_for_space(process.space) }
 
       before do
         set_current_user(developer)
         allow(blob).to receive(:public_download_url).and_return('http://example.com/somewhere/else')
         allow_any_instance_of(CloudController::Blobstore::Client).to receive(:blob).and_return(blob)
+        allow_any_instance_of(CloudController::Blobstore::Client).to receive(:local?).and_return(false)
       end
 
       it 'lets the user download the droplet' do

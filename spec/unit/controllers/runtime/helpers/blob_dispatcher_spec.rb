@@ -1,4 +1,5 @@
 require 'spec_helper'
+require 'cloud_controller/blobstore/null_blob'
 
 ## NOTICE: Prefer request specs over controller specs as per ADR #0003 ##
 
@@ -16,7 +17,7 @@ module VCAP::CloudController
     end
 
     describe '#send_or_redirect' do
-      let(:blob) { instance_double(CloudController::Blobstore::FogBlob) }
+      let(:blob) { instance_double(CloudController::Blobstore::NullBlob) }
       let(:package_guid) { 'package-guid' }
 
       before do

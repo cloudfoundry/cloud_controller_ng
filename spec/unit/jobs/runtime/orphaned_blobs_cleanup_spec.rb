@@ -50,10 +50,10 @@ module VCAP::CloudController
         let(:package_blobstore) { instance_double(CloudController::Blobstore::DavClient, files_for: package_files, root_dir: package_root_dir) }
         let(:package_files) { [] }
         let(:package_root_dir) { nil }
-        let(:buildpack_blobstore) { instance_double(CloudController::Blobstore::FogClient, files_for: buildpack_files, root_dir: buildpack_root_dir) }
+        let(:buildpack_blobstore) { instance_double(CloudController::Blobstore::Client, files_for: buildpack_files, root_dir: buildpack_root_dir) }
         let(:buildpack_files) { [] }
         let(:buildpack_root_dir) { nil }
-        let(:legacy_resources_blobstore) { instance_double(CloudController::Blobstore::FogClient, files_for: legacy_resource_files, root_dir: legacy_resource_root_dir) }
+        let(:legacy_resources_blobstore) { instance_double(CloudController::Blobstore::Client, files_for: legacy_resource_files, root_dir: legacy_resource_root_dir) }
         let(:legacy_resource_files) { [] }
         let(:legacy_resource_root_dir) { nil }
 

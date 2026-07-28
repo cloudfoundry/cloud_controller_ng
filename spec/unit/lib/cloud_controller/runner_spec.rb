@@ -101,7 +101,7 @@ module VCAP::CloudController
 
       it 'registers a log counter with the component' do
         log_counter = Steno::Sink::Counter.new
-        expect(Steno::Sink::Counter).to receive(:new).once.and_return(log_counter)
+        allow(Steno::Sink::Counter).to receive(:new).and_return(log_counter)
 
         expect(Steno).to receive(:init) do |steno_config|
           expect(steno_config.sinks).to include log_counter

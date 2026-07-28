@@ -5,16 +5,15 @@ module VCAP::CloudController
   module Jobs::V3
     RSpec.describe BuildpackCacheDelete, job_context: :worker do
       let(:app_guid) { 'some-guid' }
+      let(:blobstore_path) { Dir.mktmpdir }
       let!(:blobstore) do
-        CloudController::Blobstore::FogClient.new(connection_config: { provider: 'AWS', aws_access_key_id: 'fake', aws_secret_access_key: 'fake' },
-                                                  directory_key: 'directory_key')
+        CloudController::Blobstore::LocalClient.new(directory_key: 'directory_key', base_path: blobstore_path)
       end
       let(:path_1) { Presenters::V3::CacheKeyPresenter.cache_key(guid: app_guid, stack_name: 'stack1') }
       let(:path_2) { Presenters::V3::CacheKeyPresenter.cache_key(guid: app_guid, stack_name: 'stack2') }
       let(:path_3) { Presenters::V3::CacheKeyPresenter.cache_key(guid: 'other-guid', stack_name: 'stack3') }
 
       before do
-        blobstore.ensure_bucket_exists
         Tempfile.create('cache_file') do |f|
           allow(CloudController::DependencyLocator.instance).to receive(:buildpack_cache_blobstore).and_return(blobstore)
           blobstore.cp_to_blobstore(f.path, path_1)
@@ -23,11 +22,11 @@ module VCAP::CloudController
         end
       end
 
-      after do
-        Fog::Mock.reset
-      end
-
       subject(:job) { BuildpackCacheDelete.new(app_guid) }
+
+      after do
+        FileUtils.rm_rf(blobstore_path)
+      end
 
       it { is_expected.to be_a_valid_job }
 

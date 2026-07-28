@@ -52,8 +52,8 @@ module CloudController
           expect(blob.attributes[:etag]).to eq(expected_etag)
         end
 
-        it 'returns the content length as string' do
-          expect(blob.attributes[:content_length]).to eq(file_content.length.to_s)
+        it 'returns the content length as integer' do
+          expect(blob.attributes[:content_length]).to eq(file_content.length)
         end
 
         it 'returns last_modified in httpdate format' do

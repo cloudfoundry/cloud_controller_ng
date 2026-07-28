@@ -7,13 +7,20 @@ RSpec.describe CloudController::DependencyLocator do
 
   let(:config) { TestConfig.config_instance }
 
-  before { locator.config = config }
+  before do
+    locator.reset(config)
+    allow(locator).to receive(:droplet_blobstore).and_call_original
+    allow(locator).to receive(:buildpack_cache_blobstore).and_call_original
+    allow(locator).to receive(:package_blobstore).and_call_original
+    allow(locator).to receive(:global_app_bits_cache).and_call_original
+    allow(locator).to receive(:legacy_global_app_bits_cache).and_call_original
+    allow(locator).to receive(:buildpack_blobstore).and_call_original
+  end
 
   describe '#droplet_blobstore' do
     let(:config) do
       VCAP::CloudController::Config.new({
                                           droplets: {
-                                            fog_connection: 'fog_connection',
                                             droplet_directory_key: 'key'
                                           }
                                         })
@@ -30,7 +37,6 @@ RSpec.describe CloudController::DependencyLocator do
     let(:config) do
       VCAP::CloudController::Config.new({
                                           droplets: {
-                                            fog_connection: 'fog_connection',
                                             droplet_directory_key: 'key'
                                           }
                                         })
@@ -51,7 +57,6 @@ RSpec.describe CloudController::DependencyLocator do
     let(:config) do
       VCAP::CloudController::Config.new({
                                           packages: {
-                                            fog_connection: 'fog_connection',
                                             app_package_directory_key: 'key'
                                           }
                                         })
@@ -68,7 +73,6 @@ RSpec.describe CloudController::DependencyLocator do
     let(:config) do
       VCAP::CloudController::Config.new({
                                           resource_pool: {
-                                            fog_connection: 'fog_connection',
                                             resource_directory_key: 'key'
                                           }
                                         })
@@ -88,7 +92,6 @@ RSpec.describe CloudController::DependencyLocator do
     let(:config) do
       VCAP::CloudController::Config.new({
                                           resource_pool: {
-                                            fog_connection: 'fog_connection',
                                             resource_directory_key: 'key'
                                           }
                                         })

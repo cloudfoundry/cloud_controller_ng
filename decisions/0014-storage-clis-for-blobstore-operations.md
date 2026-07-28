@@ -19,6 +19,19 @@
 - **Timeline:** Legacy fog name support to be removed May 2026
 
 
+## Update — July 2026: All Fog Gems Removed
+
+Cloud Controller previously used the fog gem family to interface with blobstores like Azure, AWS, GCP, and Alibaba Cloud.
+
+> ✅ **All fog gems have been fully removed** (fog-aws, fog-core, fog-azure-rm, fog-google, fog-aliyun).
+
+The migration described in this ADR is complete. As a result:
+
+- The `blobstore_provider` field accepts both native storage-cli type names AND the legacy WebDAV alias (`webdav` → `dav`)
+- **Legacy fog provider names** (AzureRM, AWS, Google, aliyun) are **no longer supported** — use native storage-cli type names (azurebs, s3, gcs, alioss)
+- ✅ Enabled the removal of all fog related gems — fog-aws, fog-core, fog-azure-rm, fog-google, and fog-aliyun have all been removed
+
+
 ## Context
 
 Cloud Controller uses the fog gem family to interface with blobstores like Azure, AWS, GCP, and Alibaba Cloud.

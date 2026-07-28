@@ -138,21 +138,24 @@ module SpecHelperHelper
         TestConfig.context = example.metadata[:job_context] || :api
         TestConfig.reset
 
-        Fog::Mock.reset
-
-        if Fog.mock?
-          CloudController::DependencyLocator.instance.droplet_blobstore.ensure_bucket_exists
-          CloudController::DependencyLocator.instance.package_blobstore.ensure_bucket_exists
-          CloudController::DependencyLocator.instance.global_app_bits_cache.ensure_bucket_exists
-          CloudController::DependencyLocator.instance.buildpack_blobstore.ensure_bucket_exists
-        end
-
         VCAP::CloudController::SecurityContext.clear
         VCAP::Request.current_id = nil
         allow_any_instance_of(VCAP::CloudController::UaaTokenDecoder).to receive(:uaa_issuer).and_return(UAAIssuer::ISSUER)
 
         mock_redis = MockRedis.new
         allow(Redis).to receive(:new).and_return(mock_redis)
+      end
+
+      rspec_config.before do |_example|
+        locator = CloudController::DependencyLocator.instance
+        allow(locator).to receive_messages(
+          droplet_blobstore: locator.droplet_blobstore,
+          buildpack_cache_blobstore: locator.buildpack_cache_blobstore,
+          package_blobstore: locator.package_blobstore,
+          global_app_bits_cache: locator.global_app_bits_cache,
+          legacy_global_app_bits_cache: locator.legacy_global_app_bits_cache,
+          buildpack_blobstore: locator.buildpack_blobstore
+        )
       end
 
       rspec_config.around do |example|
