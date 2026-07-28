@@ -1,5 +1,5 @@
 # Build image
-FROM sapmachine:21-jdk-headless-ubuntu-jammy AS builder
+FROM sapmachine:25-jdk-headless-ubuntu-jammy AS builder
 
 WORKDIR /uaa
 
@@ -22,7 +22,7 @@ RUN yq e '.oauth.clients.admin.authorities += ",password.write"' -i /uaa.yml \
   && yq e '.uaa.url = .issuer.uri' -i /uaa.yml
 
 # Runtime image - lightweight JRE instead of Tomcat
-FROM sapmachine:21-jre-headless-ubuntu-jammy
+FROM sapmachine:25-jre-headless-ubuntu-jammy
 
 # Copy config file from yq image
 COPY --from=yq /uaa.yml /uaa.yml
