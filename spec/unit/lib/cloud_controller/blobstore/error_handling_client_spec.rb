@@ -22,131 +22,131 @@ module CloudController
 
       describe '#delete_all' do
         before do
-          allow(wrapped_client).to receive(:delete_all).and_raise(Excon::Errors::Error.new('error message'))
+          allow(wrapped_client).to receive(:delete_all).and_raise(StandardError.new('error message'))
         end
 
         it 'handles errors and delegates to wrapped client' do
           expect do
             client.delete_all
           end.to raise_error(BlobstoreError, 'error message')
-          expect(logger).to have_received(:error).with('Error with blobstore: Excon::Error - error message')
+          expect(logger).to have_received(:error).with('Error with blobstore: StandardError - error message')
         end
       end
 
       describe '#delete_all_in_path' do
         before do
-          allow(wrapped_client).to receive(:delete_all_in_path).and_raise(Excon::Errors::Error.new('error message'))
+          allow(wrapped_client).to receive(:delete_all_in_path).and_raise(StandardError.new('error message'))
         end
 
         it 'handles errors and delegates to wrapped client' do
           expect do
             client.delete_all_in_path('sallow\\dossy\\path')
           end.to raise_error(BlobstoreError, 'error message')
-          expect(logger).to have_received(:error).with('Error with blobstore: Excon::Error - error message')
+          expect(logger).to have_received(:error).with('Error with blobstore: StandardError - error message')
         end
       end
 
       describe '#exists?' do
         before do
-          allow(wrapped_client).to receive(:exists?).and_raise(Excon::Errors::Error.new('error message'))
+          allow(wrapped_client).to receive(:exists?).and_raise(StandardError.new('error message'))
         end
 
         it 'handles errors and delegates to wrapped client' do
           expect do
             client.exists?('off')
           end.to raise_error(BlobstoreError, 'error message')
-          expect(logger).to have_received(:error).with('Error with blobstore: Excon::Error - error message')
+          expect(logger).to have_received(:error).with('Error with blobstore: StandardError - error message')
         end
       end
 
       describe '#blob' do
         before do
-          allow(wrapped_client).to receive(:blob).and_raise(Excon::Errors::Error.new('error message'))
+          allow(wrapped_client).to receive(:blob).and_raise(StandardError.new('error message'))
         end
 
         it 'handles errors and delegates to wrapped client' do
           expect do
             client.blob('a minor')
           end.to raise_error(BlobstoreError, 'error message')
-          expect(logger).to have_received(:error).with('Error with blobstore: Excon::Error - error message')
+          expect(logger).to have_received(:error).with('Error with blobstore: StandardError - error message')
         end
       end
 
       describe '#delete_blob' do
         before do
-          allow(wrapped_client).to receive(:delete_blob).and_raise(Excon::Errors::Error.new('error message'))
+          allow(wrapped_client).to receive(:delete_blob).and_raise(StandardError.new('error message'))
         end
 
         it 'handles errors and delegates to wrapped client' do
           expect do
             client.delete_blob('herbie')
           end.to raise_error(BlobstoreError, 'error message')
-          expect(logger).to have_received(:error).with('Error with blobstore: Excon::Error - error message')
+          expect(logger).to have_received(:error).with('Error with blobstore: StandardError - error message')
         end
       end
 
       describe '#cp_file_between_keys' do
         before do
-          allow(wrapped_client).to receive(:cp_file_between_keys).and_raise(Excon::Errors::Error.new('error message'))
+          allow(wrapped_client).to receive(:cp_file_between_keys).and_raise(StandardError.new('error message'))
         end
 
         it 'handles errors and delegates to wrapped client' do
           expect do
             client.cp_file_between_keys('source_key', 'destination_key')
           end.to raise_error(BlobstoreError, 'error message')
-          expect(logger).to have_received(:error).with('Error with blobstore: Excon::Error - error message')
+          expect(logger).to have_received(:error).with('Error with blobstore: StandardError - error message')
         end
       end
 
       describe '#cp_r_to_blobstore' do
         before do
-          allow(wrapped_client).to receive(:cp_r_to_blobstore).and_raise(Excon::Errors::Error.new('error message'))
+          allow(wrapped_client).to receive(:cp_r_to_blobstore).and_raise(StandardError.new('error message'))
         end
 
         it 'handles errors and delegates to wrapped client' do
           expect do
             client.cp_r_to_blobstore('dont/forget/a/source_dir')
           end.to raise_error(BlobstoreError, 'error message')
-          expect(logger).to have_received(:error).with('Error with blobstore: Excon::Error - error message')
+          expect(logger).to have_received(:error).with('Error with blobstore: StandardError - error message')
         end
       end
 
       describe '#download_from_blobstore' do
         before do
-          allow(wrapped_client).to receive(:download_from_blobstore).and_raise(Excon::Errors::Error.new('error message'))
+          allow(wrapped_client).to receive(:download_from_blobstore).and_raise(StandardError.new('error message'))
         end
 
         it 'handles errors and delegates to wrapped client' do
           expect do
             client.download_from_blobstore('some source_key', 'some:destination_path')
           end.to raise_error(BlobstoreError, 'error message')
-          expect(logger).to have_received(:error).with('Error with blobstore: Excon::Error - error message')
+          expect(logger).to have_received(:error).with('Error with blobstore: StandardError - error message')
         end
       end
 
       describe '#delete' do
         before do
-          allow(wrapped_client).to receive(:delete).and_raise(Excon::Errors::Error.new('error message'))
+          allow(wrapped_client).to receive(:delete).and_raise(StandardError.new('error message'))
         end
 
         it 'handles errors and delegates to wrapped client' do
           expect do
             client.delete('a key')
           end.to raise_error(BlobstoreError, 'error message')
-          expect(logger).to have_received(:error).with('Error with blobstore: Excon::Error - error message')
+          expect(logger).to have_received(:error).with('Error with blobstore: StandardError - error message')
         end
       end
 
       describe '#cp_to_blobstore' do
         before do
-          allow(wrapped_client).to receive(:cp_to_blobstore).and_raise(Excon::Errors::Error.new('error message'))
+          allow(wrapped_client).to receive(:cp_to_blobstore).and_raise(StandardError.new('error message'))
         end
 
         it 'handles errors and delegates to wrapped client' do
           expect do
             client.cp_to_blobstore('source_path', 'destination_key')
           end.to raise_error(BlobstoreError, 'error message')
-          expect(logger).to have_received(:error).with('Error with blobstore: Excon::Error - error message')
+          expect(logger).to have_received(:error).with('Error with blobstore: StandardError - error message')
         end
       end
 
@@ -154,14 +154,14 @@ module CloudController
         let(:args) { 'some-args' }
 
         before do
-          allow(wrapped_client).to receive(:files_for).with(args).and_raise(Excon::Errors::Error.new('error message'))
+          allow(wrapped_client).to receive(:files_for).with(args).and_raise(StandardError.new('error message'))
         end
 
         it 'handles errors and delegates to wrapped client' do
           expect do
             client.files_for(args)
           end.to raise_error(BlobstoreError, 'error message')
-          expect(logger).to have_received(:error).with('Error with blobstore: Excon::Error - error message')
+          expect(logger).to have_received(:error).with('Error with blobstore: StandardError - error message')
         end
       end
     end

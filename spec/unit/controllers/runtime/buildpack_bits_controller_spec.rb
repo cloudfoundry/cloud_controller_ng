@@ -314,6 +314,8 @@ module VCAP::CloudController
         it 'lets users with correct basic auth retrieve the bits for a specific buildpack' do
           put "/v2/buildpacks/#{test_buildpack.guid}/bits", { buildpack: valid_zip }
           authorize(staging_user, staging_password)
+          allow_any_instance_of(CloudController::Blobstore::LocalClient).to receive(:local?).and_return(false)
+          allow_any_instance_of(CloudController::Blobstore::LocalBlob).to receive(:public_download_url).and_return('http://blobstore.example.com/cc-buildpacks/download')
           get "/v2/buildpacks/#{test_buildpack.guid}/download"
           expect(last_response.status).to eq(302)
           expect(last_response.headers['Location']).to match(/cc-buildpacks/)

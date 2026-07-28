@@ -117,6 +117,8 @@ module VCAP::CloudController
           end
 
           context 'with at least one resource and no application' do
+            include_context 'a seeded empty-file resource'
+
             let(:req_body) { { resources: Oj.dump([{ 'fn' => 'lol', 'sha1' => 'da39a3ee5e6b4b0d3255bfef95601890afd80709', 'size' => 2048 }]) } }
 
             before do
@@ -132,6 +134,8 @@ module VCAP::CloudController
           end
 
           context 'with at least one resource and an application' do
+            include_context 'a seeded empty-file resource'
+
             let(:req_body) { { resources: Oj.dump([{ 'fn' => 'lol', 'sha1' => 'da39a3ee5e6b4b0d3255bfef95601890afd80709', 'size' => 2048 }]), application: valid_zip } }
 
             it 'succeeds to upload' do

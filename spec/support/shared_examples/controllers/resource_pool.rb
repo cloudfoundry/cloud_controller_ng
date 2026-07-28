@@ -10,6 +10,7 @@ RSpec.shared_context 'resource pool' do
 
     @nonexisting_descriptor = { 'sha1' => Digester.new.digest('abc'), 'size' => 1, 'mode' => '666' }
     @tmpdir = Dir.mktmpdir
+    @resource_pool_blobstore_path = Dir.mktmpdir
 
     @descriptors = []
     num_dirs.times do
@@ -34,8 +35,6 @@ RSpec.shared_context 'resource pool' do
         File.write("#{path}-not-allowed", 'A' * @max_file_size)
       end
     end
-
-    Fog.mock!
   end
 
   let(:resource_pool_config) do
@@ -43,11 +42,8 @@ RSpec.shared_context 'resource pool' do
       maximum_size: maximum_file_size,
       minimum_size: minimum_file_size,
       resource_directory_key: 'spec-cc-resources',
-      fog_connection: {
-        provider: 'AWS',
-        aws_access_key_id: 'fake_aws_key_id',
-        aws_secret_access_key: 'fake_secret_access_key'
-      }
+      blobstore_type: 'local',
+      local_blobstore_path: @resource_pool_blobstore_path
     }
   end
 
@@ -63,5 +59,6 @@ RSpec.shared_context 'resource pool' do
 
   after(:all) do
     FileUtils.rm_rf(@tmpdir)
+    FileUtils.rm_rf(@resource_pool_blobstore_path)
   end
 end

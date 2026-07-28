@@ -2,6 +2,8 @@ require 'spec_helper'
 require 'rspec_api_documentation/dsl'
 
 RSpec.resource 'Apps', type: %i[api legacy_api] do
+  include_context 'a seeded empty-file resource'
+
   let(:admin_auth_header) { admin_headers['HTTP_AUTHORIZATION'] }
   let(:tmpdir) { Dir.mktmpdir }
   let(:valid_zip) do
@@ -113,6 +115,8 @@ RSpec.resource 'Apps', type: %i[api legacy_api] do
   end
 
   get '/v2/apps/:guid/download' do
+    include_context 'a remote blobstore'
+
     let(:async) { false }
 
     example 'Downloads the bits for an App' do
@@ -124,12 +128,14 @@ RSpec.resource 'Apps', type: %i[api legacy_api] do
 
       no_doc { client.put "/v2/apps/#{process.guid}/bits", app_bits_put_params, headers }
       client.get "/v2/apps/#{process.guid}/download", {}, headers
-      expect(response_headers['Location']).to include('cc-packages.s3.amazonaws.com')
+      expect(response_headers['Location']).to eq('http://blobstore.example.com/download')
       expect(status).to eq(302)
     end
   end
 
   get '/v2/apps/:guid/droplet/download' do
+    include_context 'a remote blobstore', download_url: 'http://blobstore.example.com/droplet-download'
+
     let(:async) { false }
     let(:blobstore) do
       CloudController::DependencyLocator.instance.droplet_blobstore
@@ -152,7 +158,7 @@ RSpec.resource 'Apps', type: %i[api legacy_api] do
 
       client.get "/v2/apps/#{process.guid}/droplet/download", {}, headers
       expect(status).to eq(302)
-      expect(response_headers['Location']).to include('cc-droplets.s3.amazonaws.com')
+      expect(response_headers['Location']).to eq('http://blobstore.example.com/droplet-download')
     end
   end
 

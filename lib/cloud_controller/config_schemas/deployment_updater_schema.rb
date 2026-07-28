@@ -123,9 +123,7 @@ module VCAP::CloudController
             resource_directory_key: String,
             optional(:blobstore_type) => String,
             optional(:local_blobstore_path) => String,
-            fog_connection: Hash,
             optional(:connection_config) => Hash,
-            fog_aws_storage_options: Hash,
             optional(:webdav_config) => Hash,
             optional(:cdn) => Hash
           },
@@ -134,9 +132,7 @@ module VCAP::CloudController
             buildpack_directory_key: String,
             optional(:blobstore_type) => String,
             optional(:local_blobstore_path) => String,
-            fog_connection: Hash,
             optional(:connection_config) => Hash,
-            fog_aws_storage_options: Hash,
             optional(:webdav_config) => Hash,
             optional(:cdn) => Hash
           },
@@ -146,9 +142,7 @@ module VCAP::CloudController
             app_package_directory_key: String,
             optional(:blobstore_type) => String,
             optional(:local_blobstore_path) => String,
-            fog_connection: Hash,
             optional(:connection_config) => Hash,
-            fog_aws_storage_options: Hash,
             optional(:webdav_config) => Hash,
             optional(:cdn) => Hash
           },
@@ -157,9 +151,7 @@ module VCAP::CloudController
             droplet_directory_key: String,
             optional(:blobstore_type) => String,
             optional(:local_blobstore_path) => String,
-            fog_connection: Hash,
             optional(:connection_config) => Hash,
-            fog_aws_storage_options: Hash,
             optional(:webdav_config) => Hash,
             optional(:cdn) => Hash
           },

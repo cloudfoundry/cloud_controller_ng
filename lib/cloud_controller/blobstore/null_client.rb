@@ -1,4 +1,5 @@
 require 'cloud_controller/blobstore/base_client'
+require 'cloud_controller/blobstore/null_blob'
 
 module CloudController
   module Blobstore

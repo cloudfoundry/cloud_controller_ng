@@ -391,6 +391,8 @@ RSpec.describe 'Droplets' do
         h
       end
 
+      include_context 'a remote blobstore', download_url: 'http://blobstore.example.com/droplet-download'
+
       before do
         File.write(droplet_file, worlds_smallest_tgz_file)
         post "/v3/droplets/#{guid}/upload", upload_body.to_json, developer_headers

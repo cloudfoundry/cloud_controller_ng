@@ -1871,6 +1871,9 @@ RSpec.describe 'Apps' do
   end
 
   describe 'GET /v2/apps/:guid/download' do
+    include_context 'a remote blobstore'
+    include_context 'a seeded empty-file resource'
+
     let(:process) { VCAP::CloudController::ProcessModelFactory.make(space:) }
     let(:tmpdir) { Dir.mktmpdir }
     let(:valid_zip) do
@@ -1892,12 +1895,14 @@ RSpec.describe 'Apps' do
     it 'redirects to a blobstore url' do
       get "/v2/apps/#{process.guid}/download", nil, headers_for(user)
 
-      expect(last_response.headers['Location']).to include('cc-packages.s3.amazonaws.com')
+      expect(last_response.headers['Location']).to eq('http://blobstore.example.com/download')
       expect(last_response.status).to eq(302)
     end
   end
 
   describe 'GET /v2/apps/:guid/droplet/download' do
+    include_context 'a remote blobstore', download_url: 'http://blobstore.example.com/droplet-download'
+
     let(:process) { VCAP::CloudController::ProcessModelFactory.make(space:) }
 
     before do
@@ -1911,7 +1916,7 @@ RSpec.describe 'Apps' do
     it 'redirects to a blobstore to download the droplet' do
       get "/v2/apps/#{process.guid}/droplet/download", nil, headers_for(user)
       expect(last_response.status).to eq(302)
-      expect(last_response.headers['Location']).to include('cc-droplets.s3.amazonaws.com')
+      expect(last_response.headers['Location']).to eq('http://blobstore.example.com/droplet-download')
     end
   end
 
