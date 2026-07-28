@@ -1,0 +1,105 @@
+### Service binding files
+
+By default, service binding details are exposed to an app through the `VCAP_SERVICES` environment variable. Two mutually exclusive app features instead expose them as files on the container's file system. Only one of the two features may be enabled for an app at a time.
+
+- **file-based-vcap-services** writes the full contents of `VCAP_SERVICES` verbatim to a single file named `vcap_services`.
+- **service-binding-k8s** translates each service binding into its own directory of files, as described below.
+
+#### Translation of VCAP_SERVICES to service binding files
+
+When **service-binding-k8s** is enabled, the service binding details in `VCAP_SERVICES` are converted into a tree of files, following the [servicebinding.io](https://servicebinding.io/spec/core/1.1.0/#workload-projection) workload-projection specification. The binding's name becomes a directory name, and each of the binding's properties becomes a file within that directory whose contents are the property's value.
+
+The translation follows these rules:
+
+- Each binding name must be unique and valid; duplicate or invalid names cause an error. A name must match `[a-z0-9\-.]{1,253}` (per the Kubernetes/servicebinding.io spec).
+- The binding's name is used as the directory name; its properties become the file names.
+- The `credentials` attribute is a JSON object: each top-level key becomes a file whose content is that key's value. Nested objects and lists are serialized as JSON.
+- Reserved attributes may overwrite credential keys of the same name without error. The reserved attributes are: `binding_guid`, `binding_name`, `instance_guid`, `instance_name`, `name`, `label`, `tags`, `plan`, `syslog_drain_url`, `volume_mounts`, `type`, and `provider`.
+- All file names must match `[a-z0-9\-._]{1,253}`; an invalid name causes an error. The underscore follows a post-1.1.0 update to the servicebinding.io spec ([commit `b5d6755`](https://github.com/servicebinding/spec/commit/b5d67551d13c8801f6b8a084c70b7167e3fbbe7e)), which is not yet part of a published spec release.
+- List values (for example `tags` or `volume_mounts`) are stored as JSON arrays.
+- Empty lists and `null` values are omitted - no file is created.
+- Cloud Controller always writes a `type` file and a `provider` file, both set to the service label.
+- If the total byte size (file paths plus contents) exceeds **1,000,000 bytes**, an error is raised.
+
+##### Examples
+
+The following examples illustrate individual translation rules, showing only the properties relevant to each rule.
+
+Nested and list credentials are serialized as JSON.
+
+Input (`VCAP_SERVICES`):
+
+```json
+{
+  "foo": [
+    {
+      "name": "foo",
+      "credentials": {
+        "simple": "value",
+        "deeply": {
+          "nested": "value"
+        },
+        "list": ["v", "a", "l", "u", "e"]
+      }
+    }
+  ]
+}
+```
+
+Output (service binding files):
+
+```
+foo/name: foo
+foo/simple: value
+foo/deeply: {"nested":"value"}
+foo/list: ["v","a","l","u","e"]
+```
+
+A reserved attribute overwrites a credential key (the `name` credential is dropped in favor of the binding's `name`).
+
+Input (`VCAP_SERVICES`):
+
+```json
+{
+  "foo": [
+    {
+      "name": "foo",
+      "credentials": {
+        "name": "user",
+        "secret": "password"
+      }
+    }
+  ]
+}
+```
+
+Output (service binding files):
+
+```
+foo/name: foo
+foo/secret: password
+```
+
+`null` and empty values are omitted.
+
+Input (`VCAP_SERVICES`):
+
+```json
+{
+  "foo": [
+    {
+      "name": "foo",
+      "binding_guid": "45436ca8-0a7c-45e3-9439-ca1b44db7a2b",
+      "syslog_drain_url": null,
+      "volume_mounts": []
+    }
+  ]
+}
+```
+
+Output (service binding files):
+
+```
+foo/name: foo
+foo/binding_guid: 45436ca8-0a7c-45e3-9439-ca1b44db7a2b
+```

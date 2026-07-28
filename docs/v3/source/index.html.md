@@ -88,6 +88,7 @@ includes:
   - resources/app_features/header
   - resources/app_features/object
   - resources/app_features/supported_features
+  - resources/app_features/service_binding_files
   - resources/app_features/get
   - resources/app_features/list
   - resources/app_features/update
