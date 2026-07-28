@@ -1,4 +1,4 @@
-require 'spec_helper'
+require 'lightweight_spec_helper'
 require 'messages/process_update_message'
 require 'messages/metadata_base_message'
 

@@ -1,4 +1,6 @@
-require 'spec_helper'
+require 'lightweight_spec_helper'
+require 'cloud_controller/errors/api_error'
+require 'cloud_controller/file_path_checker'
 require 'cloud_controller/blobstore/fingerprints_collection'
 
 module CloudController

@@ -1,5 +1,6 @@
-require 'spec_helper'
+require 'lightweight_spec_helper'
 require 'messages/process_scale_message'
+require 'messages/manifest_process_scale_message'
 
 module VCAP::CloudController
   RSpec.describe ManifestProcessScaleMessage do

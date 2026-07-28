@@ -1,3 +1,4 @@
+require 'oj'
 require 'openssl'
 
 module VCAP::CloudController

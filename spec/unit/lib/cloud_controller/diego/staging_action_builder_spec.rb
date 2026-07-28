@@ -1,4 +1,4 @@
-require 'spec_helper'
+require 'lightweight_spec_helper'
 require 'cloud_controller/diego/staging_action_builder'
 
 module VCAP::CloudController
@@ -6,7 +6,11 @@ module VCAP::CloudController
     RSpec.describe StagingActionBuilder do
       subject(:builder) { described_class.new(config, nil, nil, nil, nil, nil, nil) }
 
-      let(:config) { Config.new({ staging: { legacy_md5_buildpack_paths_enabled: } }) }
+      let(:config) { instance_double(VCAP::CloudController::Config) }
+
+      before do
+        allow(config).to receive(:get).with(:staging, :legacy_md5_buildpack_paths_enabled).and_return(legacy_md5_buildpack_paths_enabled)
+      end
 
       describe '#buildpack_path' do
         context 'when legacy_md5_buildpack_paths_enabled is false' do

@@ -1,4 +1,13 @@
-require 'spec_helper'
+require 'lightweight_spec_helper'
+require 'presenters/error_presenter'
+
+unless defined?(Rails)
+  module Rails
+    def self.env
+      ActiveSupport::StringInquirer.new('test')
+    end
+  end
+end
 
 RSpec.describe ErrorPresenter do
   subject(:presenter) { ErrorPresenter.new(error, test_mode, error_hasher) }

@@ -1,4 +1,4 @@
-require 'spec_helper'
+require 'lightweight_spec_helper'
 require 'messages/role_create_message'
 require 'models/helpers/role_types'
 

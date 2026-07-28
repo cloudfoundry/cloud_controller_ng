@@ -1,4 +1,9 @@
-require 'spec_helper'
+require 'lightweight_spec_helper'
+
+module VCAP::Services; end
+module VCAP::Services::SSO; end
+
+require 'services/sso/commands/unclaim_client_command'
 
 module VCAP::Services::SSO::Commands
   RSpec.describe UnclaimClientCommand do
@@ -8,6 +13,10 @@ module VCAP::Services::SSO::Commands
 
     describe '#db_command' do
       before do
+        fake_client_class = Class.new do
+          def self.release_client(client_id); end
+        end
+        stub_const('VCAP::CloudController::ServiceDashboardClient', fake_client_class)
         allow(VCAP::CloudController::ServiceDashboardClient).to receive(:release_client)
       end
 

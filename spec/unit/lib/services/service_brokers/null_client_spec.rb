@@ -1,4 +1,6 @@
-require 'spec_helper'
+require 'lightweight_spec_helper'
+require 'services/validation_errors'
+require 'services/service_brokers/null_client'
 
 module VCAP::Services::ServiceBrokers
   RSpec.describe NullClient do

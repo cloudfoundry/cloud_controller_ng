@@ -1,4 +1,6 @@
-require 'spec_helper'
+require 'lightweight_spec_helper'
+require 'services/service_brokers/null_client'
+require 'services/service_brokers/v2/http_response'
 
 module VCAP::Services::ServiceBrokers::V2
   RSpec.describe HttpResponse do

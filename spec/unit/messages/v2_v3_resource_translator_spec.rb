@@ -1,4 +1,4 @@
-require 'spec_helper'
+require 'lightweight_spec_helper'
 require 'messages/v2_v3_resource_translator'
 
 RSpec.describe VCAP::CloudController::V2V3ResourceTranslator do

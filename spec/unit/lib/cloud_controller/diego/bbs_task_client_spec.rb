@@ -1,14 +1,21 @@
-require 'spec_helper'
-require 'cloud_controller/diego/task_recipe_builder'
+require 'lightweight_spec_helper'
+require 'steno/steno'
+require 'cloud_controller/errors/api_error'
 require 'cloud_controller/diego/bbs_task_client'
+
+module VCAP::CloudController
+  module Diego
+    TaskRecipeBuilder = Class.new unless defined?(TaskRecipeBuilder)
+  end
+end
 
 module VCAP::CloudController::Diego
   RSpec.describe BbsTaskClient do
-    let(:task) { instance_double(VCAP::CloudController::TaskModel, guid: 'task-guid') }
-    let(:config) { instance_double(VCAP::CloudController::Config) }
+    let(:task) { double(:task_model, guid: 'task-guid') }
+    let(:config) { double(:config) }
     let(:domain) { 'foobar-domain' }
-    let(:bbs_client) { instance_double(::Diego::Client) }
-    let(:recipe_builder) { instance_double(TaskRecipeBuilder) }
+    let(:bbs_client) { double(:bbs_client) }
+    let(:recipe_builder) { double(:task_recipe_builder) }
 
     subject(:client) { BbsTaskClient.new(config, bbs_client) }
 

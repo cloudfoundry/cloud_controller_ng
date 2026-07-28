@@ -1,4 +1,4 @@
-require 'spec_helper'
+require 'lightweight_spec_helper'
 require 'cloud_controller/db_connection/options_factory'
 require 'cloud_controller/db_connection/mysql_options_factory'
 

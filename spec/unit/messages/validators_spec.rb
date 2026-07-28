@@ -1,11 +1,4 @@
-require 'lightweight_spec_helper'
-require 'messages/validators'
-require 'messages/base_message'
-require 'messages/empty_lifecycle_data_message'
-require 'messages/buildpack_lifecycle_data_message'
-require 'cloud_controller/diego/lifecycles/app_docker_lifecycle'
-require 'cloud_controller/diego/lifecycles/app_buildpack_lifecycle'
-require 'cloud_controller/diego/lifecycles/lifecycles'
+require 'spec_helper'
 require 'rspec/collection_matchers'
 require 'pry'
 

@@ -1,4 +1,4 @@
-require 'spec_helper'
+require 'lightweight_spec_helper'
 require 'messages/space_quota_apply_message'
 
 module VCAP::CloudController

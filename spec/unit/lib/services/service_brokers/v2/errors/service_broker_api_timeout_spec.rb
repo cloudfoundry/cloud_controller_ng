@@ -1,4 +1,7 @@
-require 'spec_helper'
+require 'lightweight_spec_helper'
+require 'cloud_controller/structured_error'
+require 'cloud_controller/http_request_error'
+require 'services/service_brokers/v2/errors/service_broker_api_timeout'
 
 module VCAP::Services
   module ServiceBrokers

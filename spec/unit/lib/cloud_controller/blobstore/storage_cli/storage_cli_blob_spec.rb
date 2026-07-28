@@ -1,4 +1,7 @@
-require 'spec_helper'
+require 'lightweight_spec_helper'
+require 'cloud_controller/blobstore/blob'
+require 'cloud_controller/blobstore/storage_cli/storage_cli_blob'
+require 'cloud_controller/blobstore/errors'
 require_relative '../blob_shared'
 
 module CloudController

@@ -43,3 +43,6 @@ runs:
       with:
         bundler-cache: true
         working-directory: ${{ inputs.WORKING_DIRECTORY }}
+    - name: Enable YJIT
+      run: echo "RUBY_YJIT_ENABLE=1" >> "$GITHUB_ENV"
+      shell: bash

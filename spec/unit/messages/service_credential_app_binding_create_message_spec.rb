@@ -1,4 +1,5 @@
-require 'spec_helper'
+require 'lightweight_spec_helper'
+require 'messages/service_credential_binding_create_message'
 require 'messages/service_credential_app_binding_create_message'
 
 module VCAP::CloudController

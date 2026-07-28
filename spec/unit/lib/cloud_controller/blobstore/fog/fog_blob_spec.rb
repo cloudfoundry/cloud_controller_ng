@@ -1,4 +1,7 @@
-require 'spec_helper'
+require 'lightweight_spec_helper'
+require 'timecop'
+require 'cloud_controller/blobstore/blob'
+require 'cloud_controller/blobstore/fog/fog_blob'
 require_relative '../blob_shared'
 
 module CloudController

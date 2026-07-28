@@ -1,4 +1,5 @@
-require 'spec_helper'
+require 'lightweight_spec_helper'
+require 'messages/space_show_message'
 
 module VCAP::CloudController
   RSpec.describe SpaceShowMessage do

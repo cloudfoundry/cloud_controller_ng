@@ -1,4 +1,7 @@
-require 'spec_helper'
+require 'lightweight_spec_helper'
+require 'messages/quotas_apps_message'
+require 'messages/quotas_routes_message'
+require 'messages/quotas_services_message'
 require 'messages/space_quota_update_message'
 
 module VCAP::CloudController

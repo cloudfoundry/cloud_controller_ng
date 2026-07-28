@@ -1,4 +1,7 @@
-require 'spec_helper'
+require 'lightweight_spec_helper'
+require 'mixins/user_reset_interval'
+require 'timecop'
+require 'securerandom'
 
 module CloudFoundry
   module Middleware

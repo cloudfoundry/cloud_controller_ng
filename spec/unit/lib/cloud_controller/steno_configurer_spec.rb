@@ -1,5 +1,6 @@
-require 'spec_helper'
+require 'lightweight_spec_helper'
 
+require 'cloud_controller/steno_configurer'
 module VCAP::CloudController
   RSpec.describe StenoConfigurer do
     let(:config_hash) do

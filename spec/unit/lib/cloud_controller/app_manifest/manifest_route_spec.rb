@@ -1,4 +1,4 @@
-require 'spec_helper'
+require 'lightweight_spec_helper'
 require 'cloud_controller/app_manifest/manifest_route'
 
 module VCAP::CloudController

@@ -1,4 +1,4 @@
-require 'spec_helper'
+require 'db_spec_helper'
 require 'fetchers/space_quota_list_fetcher'
 require 'messages/space_quotas_list_message'
 

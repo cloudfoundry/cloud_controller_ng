@@ -1,4 +1,4 @@
-require 'spec_helper'
+require 'lightweight_spec_helper'
 require 'messages/buildpack_create_message'
 
 module VCAP::CloudController

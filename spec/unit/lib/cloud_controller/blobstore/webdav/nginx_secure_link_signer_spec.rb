@@ -1,4 +1,7 @@
-require 'spec_helper'
+require 'lightweight_spec_helper'
+require 'base64'
+require 'httpclient'
+require 'cloud_controller/blobstore/errors'
 require 'cloud_controller/blobstore/webdav/nginx_secure_link_signer'
 
 module CloudController

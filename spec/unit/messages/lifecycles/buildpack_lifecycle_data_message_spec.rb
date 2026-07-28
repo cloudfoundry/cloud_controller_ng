@@ -1,4 +1,5 @@
-require 'spec_helper'
+require 'lightweight_spec_helper'
+require 'messages/base_message'
 require 'messages/buildpack_lifecycle_data_message'
 
 module VCAP::CloudController

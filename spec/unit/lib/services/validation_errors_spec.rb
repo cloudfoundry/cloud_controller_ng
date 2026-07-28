@@ -1,4 +1,5 @@
-require 'spec_helper'
+require 'lightweight_spec_helper'
+require 'services/validation_errors'
 
 module VCAP::Services
   RSpec.describe ValidationErrors do

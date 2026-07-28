@@ -1,4 +1,9 @@
-require 'spec_helper'
+require 'lightweight_spec_helper'
+
+module VCAP::Services; end
+module VCAP::Services::SSO; end
+
+require 'services/sso/commands/delete_client_command'
 
 module VCAP::Services::SSO::Commands
   RSpec.describe DeleteClientCommand do

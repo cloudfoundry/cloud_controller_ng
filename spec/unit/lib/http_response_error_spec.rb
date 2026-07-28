@@ -1,4 +1,6 @@
-require 'spec_helper'
+require 'lightweight_spec_helper'
+require 'oj'
+require 'cloud_controller/http_response_error'
 
 RSpec.describe HttpResponseError do
   describe '#initialize' do

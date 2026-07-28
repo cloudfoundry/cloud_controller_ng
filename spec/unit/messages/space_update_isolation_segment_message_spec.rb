@@ -1,4 +1,5 @@
-require 'spec_helper'
+require 'lightweight_spec_helper'
+require 'utils/hash_utils'
 require 'messages/space_update_isolation_segment_message'
 
 module VCAP::CloudController

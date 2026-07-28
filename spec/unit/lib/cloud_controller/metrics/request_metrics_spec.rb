@@ -1,4 +1,4 @@
-require 'spec_helper'
+require 'lightweight_spec_helper'
 require 'cloud_controller/metrics/request_metrics'
 
 module VCAP::CloudController::Metrics

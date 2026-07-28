@@ -1,5 +1,7 @@
-require 'spec_helper'
+require 'lightweight_spec_helper'
 require 'active_model'
+require 'active_support/core_ext/hash/indifferent_access'
+require 'messages/base_message'
 require 'messages/mixins/authentication_message_mixin'
 
 module VCAP::CloudController

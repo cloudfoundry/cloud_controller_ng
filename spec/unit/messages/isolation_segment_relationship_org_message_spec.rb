@@ -1,4 +1,4 @@
-require 'spec_helper'
+require 'lightweight_spec_helper'
 require 'messages/isolation_segment_relationship_org_message'
 
 module VCAP::CloudController

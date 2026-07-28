@@ -1,5 +1,7 @@
-require 'spec_helper'
+require 'lightweight_spec_helper'
 require 'request_logs'
+require 'cloud_controller/logs/request_logs'
+require 'vcap/request'
 
 module CloudFoundry
   module Middleware
@@ -11,7 +13,7 @@ module CloudFoundry
 
       describe 'handling the request' do
         before do
-          VCAP::CloudController::Config.config.get(:db)[:log_db_queries] = true
+          StubConfig.prepare(self, db: { log_db_queries: true })
         end
 
         it 'calls start request on request logs before the request' do
@@ -31,7 +33,7 @@ module CloudFoundry
 
       describe 'when db query logging is disabled' do
         before do
-          VCAP::CloudController::Config.config.get(:db)[:log_db_queries] = false
+          StubConfig.prepare(self, db: { log_db_queries: false })
         end
 
         it 'calls complete request on request logs without db query metrics' do

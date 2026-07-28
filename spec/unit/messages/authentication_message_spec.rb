@@ -1,7 +1,4 @@
-require 'lightweight_spec_helper'
-require 'active_model'
-require 'rspec/collection_matchers'
-require 'messages/authentication_message'
+require 'spec_helper'
 
 module VCAP::CloudController
   RSpec.describe AuthenticationMessage do

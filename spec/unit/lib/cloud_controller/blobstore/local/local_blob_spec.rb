@@ -1,4 +1,8 @@
-require 'spec_helper'
+require 'lightweight_spec_helper'
+require 'tempfile'
+require 'openssl'
+require 'fileutils'
+require 'cloud_controller/blobstore/local/local_blob'
 
 module CloudController
   module Blobstore

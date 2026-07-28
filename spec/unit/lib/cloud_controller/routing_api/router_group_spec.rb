@@ -1,4 +1,4 @@
-require 'spec_helper'
+require 'lightweight_spec_helper'
 require 'cloud_controller/routing_api/router_group'
 
 module VCAP::CloudController::RoutingApi

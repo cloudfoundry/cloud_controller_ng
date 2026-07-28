@@ -1,4 +1,4 @@
-require 'spec_helper'
+require 'db_spec_helper'
 require 'presenters/v3/organization_quota_presenter'
 
 module VCAP::CloudController::Presenters::V3

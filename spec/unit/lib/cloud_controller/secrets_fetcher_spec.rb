@@ -1,4 +1,4 @@
-require 'spec_helper'
+require 'lightweight_spec_helper'
 require 'cloud_controller/secrets_fetcher'
 
 module VCAP::CloudController

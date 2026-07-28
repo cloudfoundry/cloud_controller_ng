@@ -1,6 +1,6 @@
-require 'spec_helper'
-require 'messages/process_scale_message'
-require 'messages/base_message'
+require 'lightweight_spec_helper'
+require 'utils/hash_utils'
+require 'messages/route_transfer_owner_message'
 
 module VCAP::CloudController
   RSpec.describe RouteTransferOwnerMessage do

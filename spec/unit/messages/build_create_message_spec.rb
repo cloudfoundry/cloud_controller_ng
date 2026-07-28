@@ -1,8 +1,15 @@
-require 'spec_helper'
+require 'lightweight_spec_helper'
+require 'cloud_controller/diego/lifecycles/lifecycles'
+require 'messages/empty_lifecycle_data_message'
 require 'messages/build_create_message'
 
 module VCAP::CloudController
   RSpec.describe BuildCreateMessage do
+    before do
+      config = instance_double(VCAP::CloudController::Config, get: 'buildpack')
+      allow(VCAP::CloudController::Config).to receive(:config).and_return(config)
+    end
+
     describe 'validations' do
       context 'when no params are given' do
         let(:params) {}

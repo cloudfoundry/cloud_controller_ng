@@ -1,4 +1,4 @@
-require 'spec_helper'
+require 'db_spec_helper'
 require 'decorators/field_service_offering_service_broker_decorator'
 require 'field_decorator_spec_shared_examples'
 

@@ -1,4 +1,6 @@
-require 'spec_helper'
+require 'lightweight_spec_helper'
+require 'models/helpers/app_features'
+require 'messages/manifest_features_update_message'
 
 module VCAP::CloudController
   RSpec.describe ManifestFeaturesUpdateMessage do

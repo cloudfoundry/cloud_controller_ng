@@ -1,4 +1,4 @@
-require 'spec_helper'
+require 'db_spec_helper'
 require 'fetchers/route_destinations_list_fetcher'
 require 'messages/route_destinations_list_message'
 

@@ -1,4 +1,4 @@
-require 'spec_helper'
+require 'lightweight_spec_helper'
 require 'messages/stack_create_message'
 
 RSpec.describe VCAP::CloudController::StackCreateMessage do

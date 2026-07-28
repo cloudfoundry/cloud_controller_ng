@@ -1,4 +1,6 @@
-require 'spec_helper'
+require 'lightweight_spec_helper'
+require 'oj'
+require 'presenters/v3/base_presenter'
 require 'presenters/v3/resource_match_presenter'
 
 module VCAP::CloudController::Presenters::V3

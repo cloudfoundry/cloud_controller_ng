@@ -1,4 +1,5 @@
-require 'spec_helper'
+require 'lightweight_spec_helper'
+require 'action_dispatch'
 require 'mixins/client_ip'
 
 module CloudFoundry

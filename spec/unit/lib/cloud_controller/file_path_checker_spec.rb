@@ -1,5 +1,6 @@
-require 'spec_helper'
+require 'lightweight_spec_helper'
 
+require 'cloud_controller/file_path_checker'
 module VCAP
   module CloudController
     RSpec.describe FilePathChecker do

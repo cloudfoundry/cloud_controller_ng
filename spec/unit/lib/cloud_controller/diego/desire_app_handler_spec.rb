@@ -1,14 +1,15 @@
-require 'spec_helper'
+require 'lightweight_spec_helper'
+require 'cloud_controller/diego/desire_app_handler'
 
 module VCAP::CloudController
   module Diego
     RSpec.describe DesireAppHandler do
       describe '.create_or_update_app' do
-        let(:client) { instance_double(BbsAppsClient) }
+        let(:client) { double(:bbs_apps_client) }
         let(:desired_lrp) { double(:desired_lrp) }
         let(:process_guid) { 'the-process-guid' }
         let(:get_app_response) { nil }
-        let(:process) { ProcessModel.new }
+        let(:process) { double(:process) }
 
         before do
           allow(client).to receive(:get_app).with(process).and_return(get_app_response)

@@ -1,4 +1,5 @@
-require 'spec_helper'
+require 'lightweight_spec_helper'
+require 'cloud_controller/blobstore/blob'
 require 'cloud_controller/blobstore/null_blob'
 require_relative 'blob_shared'
 

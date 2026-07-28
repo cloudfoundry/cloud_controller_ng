@@ -1,4 +1,4 @@
-require 'spec_helper'
+require 'db_spec_helper'
 require 'support/link_helpers'
 require 'presenters/v3/service_offering_presenter'
 

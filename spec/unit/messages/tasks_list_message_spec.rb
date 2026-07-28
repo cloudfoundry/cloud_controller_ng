@@ -1,5 +1,6 @@
-require 'spec_helper'
+require 'lightweight_spec_helper'
 require 'messages/tasks_list_message'
+require 'messages/packages_list_message'
 
 module VCAP::CloudController
   RSpec.describe TasksListMessage do

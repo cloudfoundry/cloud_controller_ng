@@ -1,8 +1,19 @@
-require 'spec_helper'
+require 'lightweight_spec_helper'
+require 'support/link_helpers'
 require 'presenters/v3/to_one_relationship_presenter'
 
 module VCAP::CloudController::Presenters::V3
   RSpec.describe ToOneRelationshipPresenter do
+    include LinkHelpers
+
+    before do
+      StubConfig.prepare(
+        self,
+        external_protocol: 'http',
+        external_domain: 'api.example.org'
+      )
+    end
+
     let(:book_class) do
       Class.new do
         def initialize(guid)

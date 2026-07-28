@@ -1,4 +1,6 @@
-require 'spec_helper'
+require 'lightweight_spec_helper'
+require 'cloud_controller/http_response_error'
+require 'services/service_brokers/v2/errors/service_broker_response_malformed'
 
 module VCAP::Services
   module ServiceBrokers

@@ -1,5 +1,6 @@
-require 'spec_helper'
+require 'lightweight_spec_helper'
 
+require 'cloud_controller/url_secret_obfuscator'
 module CloudController
   RSpec.describe UrlSecretObfuscator do
     describe '#obfuscate' do
