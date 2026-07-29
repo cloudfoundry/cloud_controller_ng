@@ -80,8 +80,6 @@ GEM
     drb (2.2.3)
     erb (6.0.6)
     erubi (1.13.1)
-    excon (1.6.0)
-      logger
     factory_bot (6.6.0)
       activesupport (>= 6.1.0)
     ffi (1.17.4)
@@ -90,8 +88,6 @@ GEM
     fluent-logger (0.10.0)
       logger (~> 1.6)
       msgpack (>= 1.0.0, < 2)
-    formatador (1.2.3)
-      reline
     google-protobuf (4.35.1)
       bigdecimal
       rake (~> 13.3)
@@ -404,7 +400,7 @@ GEM
       yard (~> 0.9, >= 0.9.24)
       yard-activesupport-concern (~> 0.0)
       yard-solargraph (~> 0.1)
-    sorbet-runtime (0.6.13359)
+    sorbet-runtime (0.6.13367)
     sord (7.1.0)
       commander (~> 5.0)
       parlour (~> 9.1)
