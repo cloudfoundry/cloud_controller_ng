@@ -18,14 +18,9 @@ module VCAP::CloudController
         activate_root_job_context
         yield
       rescue SubResourceError => e
-        if e.any_in_progress?
-          on_recursive_delete_in_progress
-          return
-        end
+        return if e.any_in_progress?
 
-        error = compound_error_for(e.failures)
-        on_recursive_delete_failure(error)
-        raise error
+        raise compound_error_for(e.failures)
       rescue CloudController::Errors::ApiError, CloudController::Errors::CompoundError
         raise
       rescue StandardError => e
@@ -84,21 +79,14 @@ module VCAP::CloudController
         return false if active_sub_jobs.empty?
 
         add_in_progress_warning(root_job)
-        on_recursive_delete_in_progress
         true
       end
 
       def raise_if_sub_jobs_failed
         return if sub_job_errors.empty?
 
-        error = CloudController::Errors::CompoundError.new(all_failure_errors)
-        on_recursive_delete_failure(error)
-        raise error
+        raise CloudController::Errors::CompoundError.new(all_failure_errors)
       end
-
-      def on_recursive_delete_failure(error); end
-
-      def on_recursive_delete_in_progress; end
 
       def add_in_progress_warning(job)
         return if job.warnings_dataset.any?

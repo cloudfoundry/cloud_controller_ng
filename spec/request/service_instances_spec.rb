@@ -3606,9 +3606,9 @@ RSpec.describe 'V3 service instances' do
 
               instance.reload
               expect(VCAP::CloudController::ServiceInstance.first(guid: instance.guid)).not_to be_nil
-              expect(instance.last_operation&.type).to eq('delete')
-              expect(instance.last_operation&.state).to eq('in progress')
-              expect(instance.last_operation&.broker_provided_operation).to be_blank
+              # The instance's own last_operation is untouched during binding cleanup (no broker deprovision has
+              # started yet); the in-flight state is reflected on the bindings' last_operation instead.
+              expect(instance.last_operation&.state).not_to eq('failed')
 
               lo = VCAP::CloudController::RouteBinding.first.last_operation
               expect(lo.type).to eq('delete')
@@ -3669,19 +3669,25 @@ RSpec.describe 'V3 service instances' do
               end
             end
 
-            it 'marks the service instance last_operation as delete failed so `cf service` reflects it' do
+            it 'records the failure on the binding last_operation, not the instance (which owns no broker deprovision here)' do
               api_call.call(admin_headers)
               # Root enqueues 3 unbind sub-jobs and defers (1 success); the sub-jobs poll and fail (3 failures).
               execute_all_jobs(expected_successes: 1, expected_failures: 3)
-              # Deferred root then observes the failed sub-jobs and surfaces the failure.
+              # Deferred root then observes the failed sub-jobs and surfaces the failure on the job resource.
               Timecop.freeze(Time.now + 1.hour) do
                 execute_all_jobs(expected_successes: 0, expected_failures: 1, jobs_to_execute: 1)
               end
 
+              # The unbind failure lives on the binding's own last_operation.
+              binding_lo = VCAP::CloudController::ServiceBinding.first.last_operation
+              expect(binding_lo.type).to eq('delete')
+              expect(binding_lo.state).to eq('failed')
+              expect(binding_lo.description).to include('broker refused to unbind')
+
+              # The instance's last_operation is NOT co-opted for a binding-phase failure: no broker
+              # deprovision of the instance was ever attempted, so it must not read delete/failed.
               instance.reload
-              expect(instance.last_operation).not_to be_nil
-              expect(instance.last_operation.type).to eq('delete')
-              expect(instance.last_operation.state).to eq('failed')
+              expect(instance.last_operation&.state).not_to eq('failed')
             end
 
             it 'ends the delete job FAILED with a populated errors[].detail so `cf delete-service` shows the reason' do

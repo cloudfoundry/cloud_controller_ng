@@ -66,37 +66,17 @@ module VCAP::CloudController
       attr_reader :user_audit_info
 
       def in_progress_warning_detail
-        'Deletion of the service instance is still in progress: one or more bindings are still being ' \
-          'deleted. It will complete once those operations finish.'
+        'Deletion of the service instance is still in progress: one or more dependent resources are being ' \
+          'deleted asynchronously. It will complete once those operations finish.'
       end
 
       def service_instance
         ManagedServiceInstance.first(guid: resource_guid)
       end
 
-      def on_recursive_delete_failure(error)
-        return unless service_instance
-        return if service_instance.last_operation&.state == 'failed'
-
-        action.update_last_operation_with_failure(error.underlying_errors.map(&:message).join("\n"))
-      end
-
-      def on_recursive_delete_in_progress
-        return unless service_instance
-        return if delete_marked?
-
-        action.update_last_operation_in_progress('Waiting for bindings of the service instance to be deleted.')
-      end
-
       def delete_in_progress?
         service_instance.last_operation&.type == 'delete' &&
-          service_instance.last_operation&.state == 'in progress' &&
-          service_instance.last_operation&.broker_provided_operation.present?
-      end
-
-      def delete_marked?
-        service_instance.last_operation&.type == 'delete' &&
-          ['in progress', 'failed'].include?(service_instance.last_operation&.state)
+          service_instance.last_operation&.state == 'in progress'
       end
 
       def action

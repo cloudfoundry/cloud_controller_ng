@@ -26,7 +26,7 @@ module VCAP::CloudController
         let(:poll_response) { { finished: false } }
         let(:action) do
           double(VCAP::CloudController::V3::ServiceInstanceDelete,
-                 { delete: delete_response, poll: poll_response, update_last_operation_with_failure: nil, update_last_operation_in_progress: nil })
+                 { delete: delete_response, poll: poll_response, update_last_operation_with_failure: nil })
         end
 
         before do
@@ -100,18 +100,19 @@ module VCAP::CloudController
                                         resource_type: 'service_credential_binding', resource_guid: 'in-flight-binding')
           end
 
-          it 'stamps the service instance last_operation as delete/in progress so `cf service` reflects it' do
+          it 'defers without attempting the delete or poll this cycle' do
+            expect(action).not_to receive(:delete)
+            expect(action).not_to receive(:poll)
+
             job.perform
 
-            expect(action).to have_received(:update_last_operation_in_progress).with(a_string_including('bindings'))
+            expect(job.finished).to be_falsey
           end
 
-          it 'does not overwrite an existing delete/failed state with in progress' do
-            service_instance.save_with_new_operation({}, { type: 'delete', state: 'failed', description: 'earlier failure' })
-
+          it 'adds an in-progress warning to the root job so `cf ... -w` and the job resource surface it' do
             job.perform
 
-            expect(action).not_to have_received(:update_last_operation_in_progress)
+            expect(root_pollable_job.reload.warnings_dataset.map(:detail)).to include(a_string_including('dependent resources'))
           end
         end
 
@@ -158,15 +159,18 @@ module VCAP::CloudController
             )
           end
 
-          it 'stamps the instance last_operation failed when a route-binding sub-job has settled failed' do
+          it 'raises the failure (surfaced on the job resource) without stamping the instance last_operation' do
             failed_route = make_failed_route_binding(desc: 'route unbind failed')
             create(:pollable_job_model, root_job_guid: root_pollable_job.guid, state: PollableJobModel::FAILED_STATE,
                                         resource_type: 'route_binding', resource_guid: failed_route.guid,
                                         cf_api_error: YAML.dump({ 'errors' => [{ 'detail' => 'route unbind failed' }] }))
 
-            suppress(CloudController::Errors::CompoundError) { job.perform }
+            expect { job.perform }.to raise_error(CloudController::Errors::CompoundError) do |err|
+              expect(err.underlying_errors.map(&:message)).to include(a_string_including('route unbind failed'))
+            end
 
-            expect(action).to have_received(:update_last_operation_with_failure).with(a_string_including('route unbind failed'))
+            # The binding-phase failure belongs to the binding's own last_operation, not the instance's.
+            expect(action).not_to have_received(:update_last_operation_with_failure)
           end
 
           it 'defers (does not raise or finish) when one child already failed but another is still in flight' do
