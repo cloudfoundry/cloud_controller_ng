@@ -132,10 +132,6 @@ resource_pool:
   minimum_size: 65536
   maximum_size: 536870912
   resource_directory_key: bosh-lite.com-cc-resources
-  cdn:
-    uri: 
-    key_pair_id: 
-    private_key: ""
 
 packages:
   blobstore_type: webdav
@@ -148,10 +144,6 @@ packages:
   app_package_directory_key: bosh-lite.com-cc-packages
   max_valid_packages_stored: 5
   max_package_size: 1073741824
-  cdn:
-    uri: 
-    key_pair_id: 
-    private_key: ""
 
 droplets:
   blobstore_type: webdav
@@ -162,10 +154,6 @@ droplets:
     username: blobstore-username
     password: blobstore-password
   droplet_directory_key: bosh-lite.com-cc-droplets
-  cdn:
-    uri: 
-    key_pair_id: 
-    private_key: ""
   max_staged_droplets_stored: 5
 
 buildpacks:
@@ -177,10 +165,6 @@ buildpacks:
     username: blobstore-username
     password: blobstore-password
   buildpack_directory_key: bosh-lite.com-cc-buildpacks
-  cdn:
-    uri: 
-    key_pair_id: 
-    private_key: ""
 
 db_encryption_key: db-encryption-key
 

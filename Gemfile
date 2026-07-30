@@ -3,7 +3,6 @@ source 'https://rubygems.org'
 gem 'addressable'
 gem 'bootsnap', require: false
 gem 'clockwork', require: false
-gem 'cloudfront-signer'
 gem 'concurrent-ruby'
 gem 'digest-xxhash'
 gem 'fluent-logger'

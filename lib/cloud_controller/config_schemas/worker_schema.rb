@@ -123,8 +123,7 @@ module VCAP::CloudController
             optional(:blobstore_type) => String,
             optional(:local_blobstore_path) => String,
             optional(:connection_config) => Hash,
-            optional(:webdav_config) => Hash,
-            optional(:cdn) => Hash
+            optional(:webdav_config) => Hash
           },
 
           buildpacks: {
@@ -132,8 +131,7 @@ module VCAP::CloudController
             optional(:blobstore_type) => String,
             optional(:local_blobstore_path) => String,
             optional(:connection_config) => Hash,
-            optional(:webdav_config) => Hash,
-            optional(:cdn) => Hash
+            optional(:webdav_config) => Hash
           },
 
           packages: {
@@ -143,8 +141,7 @@ module VCAP::CloudController
             optional(:blobstore_type) => String,
             optional(:local_blobstore_path) => String,
             optional(:connection_config) => Hash,
-            optional(:webdav_config) => Hash,
-            optional(:cdn) => Hash
+            optional(:webdav_config) => Hash
           },
 
           droplets: {
@@ -152,8 +149,7 @@ module VCAP::CloudController
             optional(:blobstore_type) => String,
             optional(:local_blobstore_path) => String,
             optional(:connection_config) => Hash,
-            optional(:webdav_config) => Hash,
-            optional(:cdn) => Hash
+            optional(:webdav_config) => Hash
           },
 
           db_encryption_key: enum(String, NilClass),
