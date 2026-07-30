@@ -78,7 +78,7 @@ class SidecarsController < ApplicationController
   end
 
   def update
-    sidecar = SidecarModel.find(guid: params[:guid])
+    sidecar = SidecarModel.find(guid: hashed_params[:guid])
 
     resource_not_found!(:sidecar) unless sidecar
     space = sidecar.app.space
