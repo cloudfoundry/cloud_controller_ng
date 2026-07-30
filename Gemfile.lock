@@ -54,7 +54,6 @@ GEM
     clockwork (4.0.1)
       activesupport
       tzinfo
-    cloudfront-signer (3.0.2)
     codeclimate-test-reporter (1.0.9)
       simplecov (<= 0.13)
     coderay (1.1.3)
@@ -80,8 +79,6 @@ GEM
     drb (2.2.3)
     erb (6.0.6)
     erubi (1.13.1)
-    excon (1.6.0)
-      logger
     factory_bot (6.6.0)
       activesupport (>= 6.1.0)
     ffi (1.17.4)
@@ -90,8 +87,6 @@ GEM
     fluent-logger (0.10.0)
       logger (~> 1.6)
       msgpack (>= 1.0.0, < 2)
-    formatador (1.2.3)
-      reline
     google-protobuf (4.35.1)
       bigdecimal
       rake (~> 13.3)
@@ -458,7 +453,6 @@ DEPENDENCIES
   byebug
   cf-uaa-lib (~> 4.0.10)
   clockwork
-  cloudfront-signer
   codeclimate-test-reporter (>= 1.0.8)
   concurrent-ruby
   debug (~> 1.11)
