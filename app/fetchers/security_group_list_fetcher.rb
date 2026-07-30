@@ -13,8 +13,8 @@ module VCAP::CloudController
         filter(message, dataset)
       end
 
-      def fetch(message, visible_security_group_guids)
-        dataset = SecurityGroup.where(guid: visible_security_group_guids)
+      def fetch(message, visible_security_group_ids)
+        dataset = SecurityGroup.where(id: visible_security_group_ids)
         dataset = SecurityGroupFetcher.eager_load_running_and_staging_space_guids(dataset)
         filter(message, dataset)
       end
