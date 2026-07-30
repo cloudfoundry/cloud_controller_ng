@@ -3,11 +3,11 @@ require 'fetchers/base_list_fetcher'
 module VCAP::CloudController
   class DomainFetcher < BaseListFetcher
     class << self
-      def fetch_all_for_orgs(readable_org_guids)
+      def fetch_all_for_orgs(readable_org_ids)
         # Q: The "Domain" in Domain.dataset is arbitrary -- just a way to get access to any database table.
         # If there's a way to use a more generic way to access the database, maybe this can be revised.
         #
-        readable_orgs_filter = Domain.dataset.db[:organizations].where(guid: readable_org_guids).select(:id)
+        readable_orgs_filter = Domain.dataset.db[:organizations].where(id: readable_org_ids).select(:id)
 
         readable_shared_private_domains_filter = Domain.dataset.db[:organizations_private_domains].where(
           organization_id: readable_orgs_filter
@@ -22,8 +22,8 @@ module VCAP::CloudController
         Domain.where(user_visible_domains).qualify
       end
 
-      def fetch(message, readable_org_guids)
-        dataset = fetch_all_for_orgs(readable_org_guids)
+      def fetch(message, readable_org_ids)
+        dataset = fetch_all_for_orgs(readable_org_ids)
         filter(message, dataset)
       end
 

@@ -21,7 +21,7 @@ module VCAP::CloudController
       let!(:private_domain2) { create(:private_domain, guid: 'private_domain2', owning_organization: org1) }
       let!(:private_domain3) { create(:private_domain, guid: 'private_domain3', owning_organization: org3) }
 
-      context 'when there are no readable org guids' do
+      context 'when there are no readable org ids' do
         it 'lists shared domains only' do
           domains = DomainFetcher.fetch_all_for_orgs([])
           expect(domains.map(&:guid)).to contain_exactly('shared_domain1', 'shared_domain2')
@@ -30,23 +30,23 @@ module VCAP::CloudController
 
       context 'when the user can see all shared private domains' do
         it 'gets org1' do
-          domains = DomainFetcher.fetch_all_for_orgs([org1.guid])
+          domains = DomainFetcher.fetch_all_for_orgs([org1.id])
           expect(domains.map(&:guid)).to contain_exactly('shared_domain1', 'shared_domain2', 'private_domain1', 'private_domain2')
         end
 
         it 'gets org2' do
-          domains = DomainFetcher.fetch_all_for_orgs([org2.guid])
+          domains = DomainFetcher.fetch_all_for_orgs([org2.id])
           expect(domains.map(&:guid)).to contain_exactly('shared_domain1', 'shared_domain2')
         end
 
         it 'gets org3' do
-          domains = DomainFetcher.fetch_all_for_orgs([org3.guid])
+          domains = DomainFetcher.fetch_all_for_orgs([org3.id])
           expect(domains.map(&:guid)).to contain_exactly('shared_domain1',
                                                          'shared_domain2', 'private_domain1', 'private_domain3')
         end
 
         it 'returns readable domains for multiple orgs' do
-          domains = DomainFetcher.fetch_all_for_orgs([org1.guid, org3.guid])
+          domains = DomainFetcher.fetch_all_for_orgs([org1.id, org3.id])
           expect(domains.map(&:guid)).to contain_exactly(
             'shared_domain1', 'shared_domain2',
             'private_domain1', 'private_domain2', 'private_domain3'
@@ -54,8 +54,8 @@ module VCAP::CloudController
         end
 
         it 'returns readable domains for multiple orgs filtered using sequel subquery' do
-          org_guids = Organization.where(guid: [org2.guid, org3.guid]).select(:guid)
-          domains = DomainFetcher.fetch_all_for_orgs(org_guids)
+          org_ids = Organization.where(guid: [org2.guid, org3.guid]).select(:id)
+          domains = DomainFetcher.fetch_all_for_orgs(org_ids)
           expect(domains.map(&:guid)).to contain_exactly(
             'shared_domain1', 'shared_domain2',
             'private_domain1', 'private_domain3'
@@ -80,7 +80,7 @@ module VCAP::CloudController
           let!(:domain_guid_filter) { shared_domain1.guid }
 
           it 'returns only the shared domain for the given guid' do
-            results = DomainFetcher.fetch(message, [org1.guid]).all
+            results = DomainFetcher.fetch(message, [org1.id]).all
             expect(results.length).to eq(1)
             expect(results[0].guid).to eq('shared_domain1')
           end
@@ -93,7 +93,7 @@ module VCAP::CloudController
             let!(:domain_guid_filter) { private_domain.guid }
 
             it 'returns only the private domain' do
-              results = DomainFetcher.fetch(message, [org1.guid]).all
+              results = DomainFetcher.fetch(message, [org1.id]).all
               expect(results.length).to eq(1)
               expect(results[0].guid).to eq('private_domain')
             end
@@ -109,7 +109,7 @@ module VCAP::CloudController
             end
 
             it 'returns the private domain' do
-              results = DomainFetcher.fetch(message, [org1.guid]).all
+              results = DomainFetcher.fetch(message, [org1.id]).all
               expect(results.length).to eq(1)
               expect(results[0].guid).to eq('private_domain')
             end
@@ -126,7 +126,7 @@ module VCAP::CloudController
             end
 
             it 'returns no domains' do
-              results = DomainFetcher.fetch(message, [org1.guid]).all
+              results = DomainFetcher.fetch(message, [org1.id]).all
               expect(results.length).to eq(0)
             end
           end
@@ -145,7 +145,7 @@ module VCAP::CloudController
           let!(:domain_name_filter) { shared_domain2.name }
 
           it 'only returns the matching domain' do
-            results = DomainFetcher.fetch(message, [org1.guid]).all
+            results = DomainFetcher.fetch(message, [org1.id]).all
             expect(results.length).to eq(1)
             expect(results[0].guid).to eq('named-domain-2')
           end
@@ -173,7 +173,7 @@ module VCAP::CloudController
           let!(:domain_guid_filter) { shared_domain2.guid }
 
           it 'only returns the matching domain' do
-            results = DomainFetcher.fetch(message, [org1.guid]).all
+            results = DomainFetcher.fetch(message, [org1.id]).all
             expect(results.length).to eq(1)
             expect(results[0].guid).to eq('guid-2')
           end
@@ -202,7 +202,7 @@ module VCAP::CloudController
           let!(:organization_guid_filter) { org1.guid }
 
           it 'returns only privates_domain1' do
-            results = DomainFetcher.fetch(message, [org1.guid, org2.guid]).all
+            results = DomainFetcher.fetch(message, [org1.id, org2.id]).all
             expect(results.length).to eq(1)
             expect(results[0].name).to eq('named-domain-1.com')
           end
@@ -230,7 +230,7 @@ module VCAP::CloudController
           create(:domain_label_model, resource_guid: shared_domain2.guid, key_name: 'dog', value: 'poodle')
         end
 
-        let(:results) { DomainFetcher.fetch(message, [org1.guid]).all }
+        let(:results) { DomainFetcher.fetch(message, [org1.id]).all }
 
         context 'only the label_selector is present' do
           let(:message) do
