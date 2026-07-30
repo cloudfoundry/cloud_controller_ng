@@ -28,13 +28,13 @@ module VCAP::CloudController
 
     describe '#fetch_for_organizations' do
       it 'fetches only organizations specified as readable' do
-        organizations = fetcher.fetch_for_organizations(org_guids_query: Organization.where(id: [org1.id, org2.id, org4.id]).select(:guid))
+        organizations = fetcher.fetch_for_organizations(org_ids_query: Organization.where(id: [org1.id, org2.id, org4.id]).select(:id))
 
         expect(organizations).to contain_exactly(org1, org2)
       end
 
-      it 'returns no isolation segments when the list of org guids is empty' do
-        organizations = fetcher.fetch_for_organizations(org_guids_query: Organization.where(id: -1).select(:guid))
+      it 'returns no isolation segments when the list of org ids is empty' do
+        organizations = fetcher.fetch_for_organizations(org_ids_query: Organization.where(id: -1).select(:id))
 
         expect(organizations).to be_empty
       end
