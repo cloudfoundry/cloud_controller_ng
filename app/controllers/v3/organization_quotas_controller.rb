@@ -17,7 +17,7 @@ class OrganizationQuotasController < ApplicationController
     dataset = if permission_queryer.can_read_globally?
                 OrganizationQuotaListFetcher.fetch_all(message:)
               else
-                OrganizationQuotaListFetcher.fetch(message: message, readable_org_guids_query: permission_queryer.readable_org_guids_query)
+                OrganizationQuotaListFetcher.fetch(message: message, readable_org_ids_query: permission_queryer.readable_org_ids_query)
               end
 
     render status: :ok, json: Presenters::V3::PaginatedListPresenter.new(
@@ -110,7 +110,7 @@ class OrganizationQuotasController < ApplicationController
     if permission_queryer.can_read_globally?
       { all_orgs_visible: true }
     else
-      { visible_org_guids_query: permission_queryer.readable_org_guids_query }
+      { visible_org_ids_query: permission_queryer.readable_org_ids_query }
     end
   end
 end

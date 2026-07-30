@@ -11,12 +11,12 @@ module VCAP::CloudController
 
     let(:org1) { create(:organization, name: 'org1', quota_definition: quota1) }
     let(:org2) { create(:organization, name: 'org2', quota_definition: quota3) }
-    let(:visible_org_guids_query) { Organization.where(id: visible_org_ids).select(:guid) }
+    let(:visible_org_ids_query) { Organization.where(id: visible_org_ids).select(:id) }
     let(:visible_org_ids) { [org1.id, org2.id] }
 
     let(:message) { OrganizationQuotasListMessage.from_params(filters) }
 
-    subject { OrganizationQuotaListFetcher.fetch(message: message, readable_org_guids_query: visible_org_guids_query).all }
+    subject { OrganizationQuotaListFetcher.fetch(message: message, readable_org_ids_query: visible_org_ids_query).all }
 
     describe '#fetch' do
       context 'when filters are not provided' do

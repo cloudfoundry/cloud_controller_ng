@@ -8,7 +8,7 @@ module VCAP::CloudController::Presenters::V3
     let(:organization_quota) { create(:quota_definition, guid: 'quota-guid') }
     let(:all_orgs_visible) { false }
     let(:visible_org_guids) { [org.guid] }
-    let(:visible_org_guids_query) { VCAP::CloudController::Organization.where(guid: visible_org_guids).select(:guid) }
+    let(:visible_org_ids_query) { VCAP::CloudController::Organization.where(guid: visible_org_guids).select(:id) }
 
     before do
       organization_quota.add_organization(org)
@@ -16,7 +16,7 @@ module VCAP::CloudController::Presenters::V3
     end
 
     describe '#to_hash' do
-      let(:result) { OrganizationQuotaPresenter.new(organization_quota, visible_org_guids_query:, all_orgs_visible:).to_hash }
+      let(:result) { OrganizationQuotaPresenter.new(organization_quota, visible_org_ids_query:, all_orgs_visible:).to_hash }
 
       it 'presents the org as json' do
         expect(result[:guid]).to eq(organization_quota.guid)
