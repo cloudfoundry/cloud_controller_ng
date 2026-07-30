@@ -199,6 +199,28 @@ module VCAP::CloudController
       end
     end
 
+    describe '#readable_org_ids_for_domains_query' do
+      context 'when user is not an admin' do
+        it 'returns the id subquery from membership for org- and space-scoped domain-reading roles' do
+          membership = instance_double(Membership)
+          subquery = instance_double(Sequel::Dataset)
+          expect(Membership).to receive(:new).with(user).and_return(membership)
+          expect(membership).to receive(:authorized_org_ids_subquery).
+            with(Permissions::ORG_ROLES_FOR_READING_DOMAINS_FROM_ORGS + Permissions::SPACE_ROLES).
+            and_return(subquery)
+          expect(permissions.readable_org_ids_for_domains_query).to be(subquery)
+        end
+      end
+
+      context 'when user can read globally' do
+        it 'returns all org ids' do
+          allow(permissions).to receive(:can_read_globally?).and_return(true)
+          expect(permissions.readable_org_ids_for_domains_query.sql).
+            to eq(VCAP::CloudController::Organization.select(:id).sql)
+        end
+      end
+    end
+
     describe '#can_read_from_org?' do
       context 'user has no membership' do
         context 'and user is an admin' do

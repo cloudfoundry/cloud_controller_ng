@@ -143,6 +143,14 @@ class VCAP::CloudController::Permissions
     end
   end
 
+  def readable_org_ids_for_domains_query
+    if can_read_globally?
+      VCAP::CloudController::Organization.select(:id)
+    else
+      membership.authorized_org_ids_subquery(ORG_ROLES_FOR_READING_DOMAINS_FROM_ORGS + SPACE_ROLES)
+    end
+  end
+
   def can_read_from_org?(org_id)
     can_read_globally? || membership.role_applies?(ROLES_FOR_ORG_READING, nil, org_id)
   end
@@ -355,8 +363,16 @@ class VCAP::CloudController::Permissions
   end
 
   def readable_security_group_guids_query
+    readable_security_groups_dataset.select(:guid)
+  end
+
+  def readable_security_group_ids_query
+    readable_security_groups_dataset.select(:id)
+  end
+
+  def readable_security_groups_dataset
     if can_read_globally?
-      VCAP::CloudController::SecurityGroup.dataset.select(:guid)
+      VCAP::CloudController::SecurityGroup.dataset
     elsif @user
       visible_space_ids = membership.authorized_space_ids_subquery(ROLES_FOR_SPACE_READING)
 
@@ -370,9 +386,9 @@ class VCAP::CloudController::Permissions
                   from_self: false
                 )]
         ])
-      ).select(:guid)
+      )
     else
-      VCAP::CloudController::SecurityGroup.where(id: nil).select(:guid)
+      VCAP::CloudController::SecurityGroup.where(id: nil)
     end
   end
 
