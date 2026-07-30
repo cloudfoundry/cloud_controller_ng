@@ -80,8 +80,31 @@ jobs:
         restore-keys: |
           parallel-runtime-postgres-${{ matrix.image }}-
           parallel-runtime-postgres-
+    - name: Clear previous coverage
+      if: matrix.image == 'postgres:17'
+      run: rm -rf coverage
     - name: Run tests
+      env:
+        COVERAGE: ${{ matrix.image == 'postgres:17' && 'true' || '' }}
       run: DB=postgres POSTGRES_CONNECTION_PREFIX="postgres://postgres:rootpassword@localhost:5432" RSPEC_PROFILE="${{ inputs.rspec_profile }}" bundle exec rake spec
+    - name: Report coverage
+      if: matrix.image == 'postgres:17'
+      run: |
+        pct=$(ruby -rjson -e 'puts JSON.parse(File.read("coverage/coverage.json"))["total"]["lines"]["percent"].round(2)')
+        echo "Total line coverage: ${pct}%"
+        echo "## Test coverage: ${pct}%" >> "$GITHUB_STEP_SUMMARY"
+    - name: Upload coverage report
+      if: matrix.image == 'postgres:17'
+      uses: actions/upload-artifact@v7
+      with:
+        name: coverage-report
+        path: |
+          coverage/*.html
+          coverage/*.css
+          coverage/*.js
+          coverage/*.png
+          coverage/coverage.json
+        retention-days: 7
     - name: Save parallel_rspec runtime logs
       if: always() && github.ref == 'refs/heads/main'
       uses: actions/cache/save@v6

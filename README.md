@@ -1,5 +1,4 @@
-[![Code Climate](https://api.codeclimate.com/v1/badges/aa47fb93c59ced5fcc4f/maintainability)](https://codeclimate.com/github/cloudfoundry/cloud_controller_ng)
-[![Code Climate](https://api.codeclimate.com/v1/badges/aa47fb93c59ced5fcc4f/test_coverage)](https://codeclimate.com/github/cloudfoundry/cloud_controller_ng)
+[![Maintainability](https://qlty.sh/gh/cloudfoundry/projects/cloud_controller_ng/maintainability.svg)](https://qlty.sh/gh/cloudfoundry/projects/cloud_controller_ng)
 [![slack.cloudfoundry.org](https://slack.cloudfoundry.org/badge.svg)](https://cloudfoundry.slack.com/messages/capi/)
 
 # Welcome to the Cloud Controller
