@@ -51,7 +51,6 @@ group :operations do
 end
 
 group :test do
-  gem 'codeclimate-test-reporter', '>= 1.0.8', require: false
   gem 'factory_bot', '~> 6.5'
   gem 'mock_redis'
   gem 'parallel_tests'
@@ -70,6 +69,7 @@ group :test do
   gem 'rubocop-rspec', '~> 3.10'
   gem 'rubocop-rspec_rails'
   gem 'rubocop-sequel', '~> 0.4.1'
+  gem 'simplecov', '~> 1.0', require: false
   gem 'timecop'
   gem 'webmock', '> 2.3.1'
   gem 'webrick', '~> 1.9.2'

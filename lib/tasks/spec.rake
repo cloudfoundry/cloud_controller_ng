@@ -4,11 +4,11 @@ task spec: 'spec:all'
 namespace :spec do
   task all: ['db:pick', 'db:parallel:recreate'] do
     if ARGV[1]
-      run_specs(ARGV[1])
+      run_specs(ARGV[1], coverage_env('adhoc'))
     else
-      run_specs_parallel('spec')
-      run_migration_specs_parallel
-      run_specs('spec/isolated_specs')
+      run_specs_parallel('spec', coverage_env('main'))
+      run_migration_specs_parallel(coverage_env('migrations'))
+      run_specs('spec/isolated_specs', coverage_env('isolated'))
     end
   end
 
@@ -68,6 +68,13 @@ namespace :spec do
 
   def rspec_profile_option
     ENV['RSPEC_PROFILE'].to_s.empty? ? '' : "--profile #{ENV.fetch('RSPEC_PROFILE', nil)}"
+  end
+
+  # Guard is required: ENV['COVERAGE'] == '' is truthy in Ruby.
+  def coverage_env(suite)
+    return '' unless ENV['COVERAGE'] && !ENV['COVERAGE'].empty?
+
+    "COVERAGE=true COVERAGE_SUITE=#{suite} "
   end
 
   def run_failed_specs

@@ -10,11 +10,7 @@ module SpecHelperHelper
 
     if ENV['COVERAGE']
       require 'simplecov'
-      SimpleCov.start do
-        add_filter '/spec/'
-        add_filter '/errors/'
-        add_filter '/docs/'
-      end
+      SimpleCov.start
     end
     ENV['PB_IGNORE_DEPRECATIONS'] = 'true'
     ENV['RAILS_ENV'] ||= 'test'
@@ -98,7 +94,7 @@ module SpecHelperHelper
       rspec_config.include SpaceRestrictedResponseGenerators
 
       rspec_config.before(:all) do
-        WebMock.disable_net_connect!(allow: %w[codeclimate.com fake.bbs])
+        WebMock.disable_net_connect!(allow: %w[fake.bbs])
       end
       rspec_config.before(:all, type: :integration) do
         WebMock.allow_net_connect!
@@ -109,7 +105,7 @@ module SpecHelperHelper
         skip 'Skipped due to NO_DB_MIGRATION env variable being set' if ENV['NO_DB_MIGRATION']
       end
       rspec_config.after(:all, type: :integration) do
-        WebMock.disable_net_connect!(allow: %w[codeclimate.com fake.bbs])
+        WebMock.disable_net_connect!(allow: %w[fake.bbs])
         @uaa_server.stop
       end
 
