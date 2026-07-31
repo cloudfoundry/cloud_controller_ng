@@ -31,7 +31,6 @@ gem 'sinatra-contrib'
 gem 'statsd-instrument', '~> 3.11'
 gem 'talentbox-delayed_job_sequel', '~> 4.4.0'
 gem 'uri', '~> 1.1'
-gem 'vmstat', '~> 2.3'
 
 # Rails Components
 gem 'actionpack', '~> 8.1.2'
