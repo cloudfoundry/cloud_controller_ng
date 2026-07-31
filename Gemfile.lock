@@ -153,7 +153,6 @@ GEM
       redis (~> 5)
     msgpack (1.8.4)
     multi_json (1.21.1)
-    multipart-parser (0.1.1)
     mustache (1.1.2)
     mustermann (3.1.1)
     mutex_m (0.3.0)
@@ -459,7 +458,6 @@ DEPENDENCIES
   listen
   mime-types (~> 3.7)
   mock_redis
-  multipart-parser
   mysql2 (~> 0.5.7)
   netaddr (>= 2.0.4)
   newrelic_rpm
