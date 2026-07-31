@@ -66,7 +66,6 @@ def generate_config(mode, hosts)
     %w[resource_pool packages droplets buildpacks].each do |store|
       config[store]['blobstore_type'] = 'local'
       config[store]['local_blobstore_path'] = blobstore_path
-      config[store]['fog_connection'] = {}
     end
   when 'storage-cli'
     config_dir = "#{Dir.pwd}/tmp/.dev-generated/storage_cli_configs"
@@ -78,7 +77,6 @@ def generate_config(mode, hosts)
                      'secret_access_key' => 'any', 'region' => 'us-east-1' }, mode: :compat, indent: 2
                  ))
       config[store]['blobstore_type'] = 'storage-cli'
-      config[store]['fog_connection'] = {}
       config[store].delete('local_blobstore_path')
       config["storage_cli_config_file_#{store}"] = "#{config_dir}/#{store}.json"
     end
