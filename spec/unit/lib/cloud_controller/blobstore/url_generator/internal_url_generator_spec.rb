@@ -1,4 +1,5 @@
 require 'spec_helper'
+require 'cloud_controller/blobstore/null_blob'
 require 'cloud_controller/blobstore/url_generator/internal_url_generator'
 
 module CloudController
