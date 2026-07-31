@@ -158,7 +158,6 @@ GEM
     mutex_m (0.3.0)
     mysql2 (0.5.7)
       bigdecimal
-    netaddr (2.0.6)
     newrelic_rpm (10.6.0)
       logger
     nio4r (2.7.5)
@@ -459,7 +458,6 @@ DEPENDENCIES
   mime-types (~> 3.7)
   mock_redis
   mysql2 (~> 0.5.7)
-  netaddr (>= 2.0.4)
   newrelic_rpm
   nokogiri (>= 1.10.5)
   oj

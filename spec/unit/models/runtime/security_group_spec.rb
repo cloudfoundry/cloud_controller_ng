@@ -115,7 +115,7 @@ module VCAP::CloudController
           end
 
           context 'when it is a valid range' do
-            let(:rule) { build_transport_rule('protocol' => protocol, 'destination' => '1.1.1.1.-2.2.2.2') }
+            let(:rule) { build_transport_rule('protocol' => protocol, 'destination' => '1.1.1.1-2.2.2.2') }
 
             it 'is valid' do
               expect(subject).to be_valid
@@ -281,7 +281,7 @@ module VCAP::CloudController
           end
 
           context 'when it is a valid range' do
-            let(:rule) { build_transport_rule('protocol' => protocol, 'destination' => '1.1.1.1.-2.2.2.2') }
+            let(:rule) { build_transport_rule('protocol' => protocol, 'destination' => '1.1.1.1-2.2.2.2') }
 
             it 'is valid' do
               expect(subject).to be_valid
@@ -758,7 +758,7 @@ module VCAP::CloudController
                 end
 
                 context 'when it is a valid range' do
-                  let(:rule) { build_all_rule('destination' => '1.1.1.1.-2.2.2.2') }
+                  let(:rule) { build_all_rule('destination' => '1.1.1.1-2.2.2.2') }
 
                   it 'is valid' do
                     expect(subject).to be_valid
