@@ -418,7 +418,6 @@ GEM
     unicode-emoji (4.2.0)
     uri (1.1.1)
     useragent (0.16.11)
-    vmstat (2.3.1)
     webmock (3.26.2)
       addressable (>= 2.8.0)
       crack (>= 0.3.2)
@@ -503,7 +502,6 @@ DEPENDENCIES
   talentbox-delayed_job_sequel (~> 4.4.0)
   timecop
   uri (~> 1.1)
-  vmstat (~> 2.3)
   webmock (> 2.3.1)
   webrick (~> 1.9.2)
 
