@@ -89,11 +89,11 @@ module VCAP::CloudController
       def with_root_job_guid_set
         return yield if @root_job_guid.nil?
 
-        previous = ::VCAP::Request.current_root_job_guid
+        current_root_job_guid = ::VCAP::Request.current_root_job_guid
         ::VCAP::Request.current_root_job_guid = @root_job_guid
         yield
       ensure
-        ::VCAP::Request.current_root_job_guid = previous unless @root_job_guid.nil?
+        ::VCAP::Request.current_root_job_guid = current_root_job_guid unless @root_job_guid.nil?
       end
     end
   end

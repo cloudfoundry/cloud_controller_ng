@@ -105,7 +105,7 @@ module VCAP::CloudController
           expect(seen).to be_nil
         end
 
-        it 'stamps the root job with its own guid, reported by the RootJobMixin handler' do
+        it 'stamps the root job with its own guid, reported by the RecursiveDeleteRootJobMixin handler' do
           allow(handler).to receive(:root_job_guid).and_return('root-guid-abc')
 
           seen = nil

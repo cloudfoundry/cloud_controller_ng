@@ -354,9 +354,8 @@ module VCAP::CloudController::Jobs
       end
 
       context 'row lock' do
-        it 'builds a SELECT ... FOR UPDATE query on the resource row' do
-          sql = VCAP::CloudController::AppModel.where(guid: app_model.guid).for_update.sql
-          expect(sql).to match(/FOR UPDATE/i)
+        it 'locks the resource row with SELECT ... FOR UPDATE exactly once' do
+          expect { enqueue }.to have_queried_db_times(/for update/i, 1)
         end
       end
     end

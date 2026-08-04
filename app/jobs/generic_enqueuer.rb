@@ -17,11 +17,17 @@ module VCAP::CloudController
       end
 
       def activate_root_context(root_job_guid:)
-        self.root_job_guid = root_job_guid
+        @root_job_guid = root_job_guid
       end
 
       def deactivate_root_context
-        self.root_job_guid = nil
+        @root_job_guid = nil
+      end
+
+      private
+
+      def current_root_job_guid
+        @root_job_guid
       end
     end
   end

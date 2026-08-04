@@ -1,11 +1,11 @@
 require 'spec_helper'
-require 'jobs/mixins/root_job_mixin'
+require 'jobs/mixins/recursive_delete_root_job_mixin'
 require 'jobs/reoccurring_job'
 
 # Integration-style: drives the real DelayedJob worker loop (+ Timecop) to prove root + sub-jobs converge.
 module VCAP::CloudController
   module Jobs
-    RSpec.describe 'RootJobMixin orchestration', isolation: :truncation do
+    RSpec.describe 'RecursiveDeleteRootJobMixin orchestration', isolation: :truncation do
       # Per-resource run counter, shared across ReoccurringJob's YAML reschedule and terminal-row deletion.
       RUN_COUNTS = Hash.new(0)
 
@@ -34,9 +34,10 @@ module VCAP::CloudController
         def handle_timeout; end
       end
 
-      # A root job mirroring the production body: defer while sub-jobs are in flight, else surface failure or finish.
+      # A root job mirroring the production body: the mixin defers while sub-jobs are in flight or surfaces
+      # their failure; the block only runs the resource-specific work (here: finish).
       class CountingRootJob < ReoccurringJob
-        include RootJobMixin
+        include RecursiveDeleteRootJobMixin
 
         attr_reader :resource_guid
 
@@ -46,11 +47,8 @@ module VCAP::CloudController
         end
 
         def perform
+          RUN_COUNTS[resource_guid] += 1
           perform_with_root_job_handling do
-            RUN_COUNTS[resource_guid] += 1
-            return if sub_jobs_in_flight?
-
-            raise_if_sub_jobs_failed
             finish
           end
         end
@@ -71,7 +69,7 @@ module VCAP::CloudController
         TestConfig.override(
           broker_client_default_async_poll_interval_seconds: interval,
           broker_client_async_poll_exponential_backoff_rate: 1.0,
-          broker_client_max_async_poll_interval_seconds: interval + RootJobMixin::ROOT_JOB_BUFFER_SECONDS,
+          broker_client_max_async_poll_interval_seconds: interval + RecursiveDeleteRootJobMixin::ROOT_JOB_BUFFER_SECONDS,
           broker_client_max_async_poll_duration_minutes: 24 * 60
         )
         Jobs::GenericEnqueuer.reset!
@@ -105,7 +103,7 @@ module VCAP::CloudController
 
           passes += 1
           yield(root_pollable.reload.state) if block_given?
-          Timecop.freeze(Time.now + interval + RootJobMixin::ROOT_JOB_BUFFER_SECONDS + 1)
+          Timecop.freeze(Time.now + interval + RecursiveDeleteRootJobMixin::ROOT_JOB_BUFFER_SECONDS + 1)
         end
         passes
       end
@@ -201,7 +199,7 @@ module VCAP::CloudController
           TestConfig.override(
             broker_client_default_async_poll_interval_seconds: root_backoff,
             broker_client_async_poll_exponential_backoff_rate: 1.0,
-            broker_client_max_async_poll_interval_seconds: sub_poll + RootJobMixin::ROOT_JOB_BUFFER_SECONDS,
+            broker_client_max_async_poll_interval_seconds: sub_poll + RecursiveDeleteRootJobMixin::ROOT_JOB_BUFFER_SECONDS,
             broker_client_max_async_poll_duration_minutes: 24 * 60
           )
         end

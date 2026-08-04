@@ -4,7 +4,7 @@ require 'cloud_controller/errors/compound_error'
 
 module VCAP::CloudController
   module Jobs
-    module RootJobMixin
+    module RecursiveDeleteRootJobMixin
       # Buffer added on top of the sub-jobs' next run_at so the root wakes just after them, never before.
       ROOT_JOB_BUFFER_SECONDS = 5
 
@@ -16,12 +16,26 @@ module VCAP::CloudController
 
       def perform_with_root_job_handling
         activate_root_job_context
+
+        if sub_jobs_in_flight?
+          add_in_progress_warning(root_job)
+          logger.info("#{display_name} #{resource_guid} (job #{root_job_guid}) waiting on in-progress sub-resource deletions")
+          return
+        end
+
+        raise_if_sub_jobs_failed
+
         yield
       rescue SubResourceError => e
-        return if e.any_in_progress?
+        if e.any_in_progress?
+          log_immediate_failures(e.failures) # log failures that surfaced this run; async ones still polling defer us and are retried on the next run
+          return
+        end
 
-        raise compound_error_for(e.failures)
-      rescue CloudController::Errors::ApiError, CloudController::Errors::CompoundError
+        raise log_recursive_delete_failure(compound_error_for(e.failures)) # sync error occurred & no async job pending -> log and fail
+      rescue CloudController::Errors::CompoundError => e
+        raise log_recursive_delete_failure(e) # async sub job failed -> log and fail
+      rescue CloudController::Errors::ApiError
         raise
       rescue StandardError => e
         raise CloudController::Errors::ApiError.new_from_details('UnableToPerform', 'delete', e.message)
@@ -76,16 +90,30 @@ module VCAP::CloudController
       end
 
       def sub_jobs_in_flight?
-        return false if active_sub_jobs.empty?
-
-        add_in_progress_warning(root_job)
-        true
+        active_sub_jobs.any?
       end
 
       def raise_if_sub_jobs_failed
-        return if sub_job_errors.empty?
+        return unless sub_jobs.any? { |s| s.state == PollableJobModel::FAILED_STATE }
 
         raise CloudController::Errors::CompoundError.new(all_failure_errors)
+      end
+
+      # Logs failures that surfaced during this run (a binding's unbind failed immediately rather than going
+      # async-in-progress). Makes them visible to operators even though the run defers on the async ones,
+      # which are retried on the next run.
+      def log_immediate_failures(failures)
+        failures.each do |error|
+          logger.warn("#{display_name} #{resource_guid} (job #{root_job_guid}) sub-resource deletion failed: #{error.message}")
+        end
+      end
+
+      # Logs each underlying failure and returns the error so callers can `raise log_recursive_delete_failure(error)`.
+      def log_recursive_delete_failure(error)
+        error.underlying_errors.each do |underlying|
+          logger.warn("#{display_name} #{resource_guid} (job #{root_job_guid}) sub-resource deletion failed: #{underlying.message}")
+        end
+        error
       end
 
       def add_in_progress_warning(job)

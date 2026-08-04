@@ -121,7 +121,7 @@ module VCAP::CloudController::Jobs
           enqueuer.activate_root_context(root_job_guid: 'root-guid-1')
           enqueuer.deactivate_root_context
 
-          expect(enqueuer.root_job_guid).to be_nil
+          expect(enqueuer.send(:current_root_job_guid)).to be_nil
         end
 
         it 'subsequent enqueues no longer carry the root_job_guid' do

@@ -135,6 +135,21 @@ module VCAP::CloudController
             expect { job.perform }.to raise_error(CloudController::Errors::CompoundError)
             expect(AppModel.find(guid: app_model.guid)).not_to be_nil
           end
+
+          it 'logs each underlying failure (with job guid) when it terminally fails' do
+            root = root_pollable
+            create(:pollable_job_model, root_job_guid: root.guid, state: PollableJobModel::FAILED_STATE,
+                                        resource_type: 'service_credential_binding', resource_guid: 'binding-guid',
+                                        cf_api_error: YAML.dump({ 'errors' => [{ 'detail' => 'broker down' }] }))
+            logger = instance_double(Steno::Logger, info: nil, warn: nil, error: nil)
+            allow(job).to receive(:logger).and_return(logger)
+
+            suppress(CloudController::Errors::CompoundError) { job.perform }
+
+            expect(logger).to have_received(:warn).with(
+              a_string_including('broker down').and(including(root.guid)).and(including('sub-resource deletion failed'))
+            )
+          end
         end
 
         context 'when a binding is left in delete/failed but no sub-job failed (e.g. a sporadic error)' do
@@ -148,17 +163,6 @@ module VCAP::CloudController
             job.perform
             expect(job.finished).to be(true)
             expect(AppModel.find(guid: app_model.guid)).to be_nil
-          end
-
-          it 'logs the failed binding (with detail and job guid) for operator visibility' do
-            logger = instance_double(Steno::Logger, info: nil, warn: nil, error: nil)
-            allow(job).to receive(:logger).and_return(logger)
-
-            job.perform
-
-            expect(logger).to have_received(:warn).with(
-              a_string_including(sporadically_failed_binding.guid).and(including('sporadic db error')).and(including(root_pollable_job.guid))
-            )
           end
         end
       end

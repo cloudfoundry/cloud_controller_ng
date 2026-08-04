@@ -52,12 +52,10 @@ module VCAP::CloudController
         end
 
         result
-      rescue SubResourceError => e
-        raise if !@fail_if_in_progress && e.any_in_progress? # re-raise SubResourceError so that root job continues to run
-
-        update_last_operation_with_failure(e.message) unless service_instance.operation_in_progress?
-        raise e
       rescue StandardError => e
+        # In-progress sub-resource deletions aren't failures: re-raise so the root job re-enqueues and waits.
+        raise if e.is_a?(SubResourceError) && e.any_in_progress?
+
         update_last_operation_with_failure(e.message) unless service_instance.operation_in_progress?
         raise e
       end
@@ -150,7 +148,7 @@ module VCAP::CloudController
       end
 
       def remove_associations
-        errors = delete_bindings(RouteBinding.where(service_instance:), user_audit_info: service_event_repository.user_audit_info)
+        errors = delete_bindings(service_instance.route_bindings, user_audit_info: service_event_repository.user_audit_info)
         errors += delete_bindings(service_instance.service_bindings, user_audit_info: service_event_repository.user_audit_info)
         errors += delete_bindings(service_instance.service_keys, user_audit_info: service_event_repository.user_audit_info)
         errors + unshare_all_spaces

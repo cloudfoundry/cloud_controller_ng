@@ -20,12 +20,8 @@ module VCAP::CloudController
       @errors.reject { |e| e.is_a?(AsyncOperationInProgress) }
     end
 
-    def in_progress_operations
-      @errors.select { |e| e.is_a?(AsyncOperationInProgress) }
-    end
-
     def any_in_progress?
-      in_progress_operations.any?
+      @errors.any? { |e| e.is_a?(AsyncOperationInProgress) }
     end
 
     def message

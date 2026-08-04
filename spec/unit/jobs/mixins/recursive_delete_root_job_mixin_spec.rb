@@ -1,14 +1,14 @@
 require 'spec_helper'
-require 'jobs/mixins/root_job_mixin'
+require 'jobs/mixins/recursive_delete_root_job_mixin'
 require 'jobs/reoccurring_job'
 require 'jobs/v3/recursive_delete_app_job'
 
 module VCAP::CloudController
   module Jobs
-    RSpec.describe RootJobMixin do
+    RSpec.describe RecursiveDeleteRootJobMixin do
       let(:test_job_class) do
         Class.new(ReoccurringJob) do
-          include RootJobMixin
+          include RecursiveDeleteRootJobMixin
 
           attr_reader :resource_guid
 
@@ -63,7 +63,7 @@ module VCAP::CloudController
           before { allow(job).to receive(:seconds_until_slowest_sub_job).and_return(30) }
 
           it 'wakes after that many seconds, plus the buffer' do
-            expect(job.send(:next_execution_in)).to eq(30 + RootJobMixin::ROOT_JOB_BUFFER_SECONDS)
+            expect(job.send(:next_execution_in)).to eq(30 + RecursiveDeleteRootJobMixin::ROOT_JOB_BUFFER_SECONDS)
           end
 
           it 'caps the interval at the max async poll interval' do
@@ -77,7 +77,7 @@ module VCAP::CloudController
 
           it 'falls back to the ReoccurringJob interval plus the buffer' do
             allow(job).to receive(:polling_interval_seconds).and_return(80)
-            expect(job.send(:next_execution_in)).to eq(80 + RootJobMixin::ROOT_JOB_BUFFER_SECONDS)
+            expect(job.send(:next_execution_in)).to eq(80 + RecursiveDeleteRootJobMixin::ROOT_JOB_BUFFER_SECONDS)
           end
         end
 
@@ -96,7 +96,7 @@ module VCAP::CloudController
             add_active_sub_job(run_at: now + 40)
             add_active_sub_job(run_at: now + 25)
 
-            expect(job.send(:next_execution_in)).to be_within(1).of(40 + RootJobMixin::ROOT_JOB_BUFFER_SECONDS)
+            expect(job.send(:next_execution_in)).to be_within(1).of(40 + RecursiveDeleteRootJobMixin::ROOT_JOB_BUFFER_SECONDS)
           end
 
           it 'ignores completed and failed sub-job rows, pacing only off the active ones' do
@@ -104,19 +104,19 @@ module VCAP::CloudController
             add_active_sub_job(run_at: now + 90, state: PollableJobModel::COMPLETE_STATE)
             add_active_sub_job(run_at: now + 90, state: PollableJobModel::FAILED_STATE)
 
-            expect(job.send(:next_execution_in)).to be_within(1).of(20 + RootJobMixin::ROOT_JOB_BUFFER_SECONDS)
+            expect(job.send(:next_execution_in)).to be_within(1).of(20 + RecursiveDeleteRootJobMixin::ROOT_JOB_BUFFER_SECONDS)
           end
 
           it 're-derives from fresh rows when a sub-job re-enqueues' do
             first = add_active_sub_job(run_at: now + 15)
-            expect(job.send(:next_execution_in)).to be_within(1).of(15 + RootJobMixin::ROOT_JOB_BUFFER_SECONDS)
+            expect(job.send(:next_execution_in)).to be_within(1).of(15 + RecursiveDeleteRootJobMixin::ROOT_JOB_BUFFER_SECONDS)
 
             # next_execution_in reads sub-jobs directly, so it tracks the fresh row, not the destroyed one.
             first.destroy
             PollableJobModel.where(delayed_job_guid: first.guid).delete
             add_active_sub_job(run_at: now + 55)
 
-            expect(job.send(:next_execution_in)).to be_within(1).of(55 + RootJobMixin::ROOT_JOB_BUFFER_SECONDS)
+            expect(job.send(:next_execution_in)).to be_within(1).of(55 + RecursiveDeleteRootJobMixin::ROOT_JOB_BUFFER_SECONDS)
           end
         end
       end
@@ -181,7 +181,7 @@ module VCAP::CloudController
 
         it 'installs the root_job_guid on the shared enqueuer so sub-jobs are linked' do
           job.send(:activate_root_job_context)
-          expect(Jobs::GenericEnqueuer.shared.root_job_guid).to eq(root_pollable_job.guid)
+          expect(Jobs::GenericEnqueuer.shared.send(:current_root_job_guid)).to eq(root_pollable_job.guid)
         ensure
           job.send(:deactivate_root_job_context)
         end
@@ -190,7 +190,7 @@ module VCAP::CloudController
           root_pollable_job.update(state: PollableJobModel::COMPLETE_STATE)
 
           job.send(:activate_root_job_context)
-          expect(Jobs::GenericEnqueuer.shared.root_job_guid).to be_nil
+          expect(Jobs::GenericEnqueuer.shared.send(:current_root_job_guid)).to be_nil
         ensure
           job.send(:deactivate_root_job_context)
         end
@@ -202,7 +202,7 @@ module VCAP::CloudController
           job.send(:activate_root_job_context)
           job.send(:deactivate_root_job_context)
 
-          expect(Jobs::GenericEnqueuer.shared.root_job_guid).to be_nil
+          expect(Jobs::GenericEnqueuer.shared.send(:current_root_job_guid)).to be_nil
         end
       end
 
@@ -232,56 +232,19 @@ module VCAP::CloudController
           expect(job.send(:sub_jobs_in_flight?)).to be(false)
         end
 
-        it 'does not raise even when a settled sub-job has failed' do
+        it 'returns false when a settled sub-job has failed' do
           make_sub_job(state: PollableJobModel::FAILED_STATE)
           job.send(:fetch_root_context)
           expect(job.send(:sub_jobs_in_flight?)).to be(false)
         end
 
-        it 'persists a user-facing in-progress warning (without the word "async") while deferring' do
-          make_sub_job(state: PollableJobModel::PROCESSING_STATE)
-          job.send(:fetch_root_context)
-
-          expect(job.send(:sub_jobs_in_flight?)).to be(true)
-
-          warnings = root_pollable_job.reload.warnings
-          expect(warnings.map(&:detail)).to contain_exactly(job.send(:in_progress_warning_detail))
-          expect(warnings.first.detail).not_to match(/async/i)
-        end
-
-        it 'uses the job-provided warning text when the job overrides it' do
-          overriding_job = Class.new(test_job_class) do
-            def in_progress_warning_detail
-              'custom in-progress message for this resource'
-            end
-          end.new('resource-guid-1')
-          make_sub_job(state: PollableJobModel::PROCESSING_STATE)
-          overriding_job.send(:fetch_root_context)
-
-          overriding_job.send(:sub_jobs_in_flight?)
-
-          expect(root_pollable_job.reload.warnings.map(&:detail)).to contain_exactly('custom in-progress message for this resource')
-        end
-
-        it 'persists the in-progress warning only once across reoccurring runs' do
+        it 'has no side effect: does not persist an in-progress warning' do
           make_sub_job(state: PollableJobModel::PROCESSING_STATE)
           job.send(:fetch_root_context)
 
           job.send(:sub_jobs_in_flight?)
-          job.send(:sub_jobs_in_flight?)
 
-          expect(root_pollable_job.reload.warnings.count).to eq(1)
-        end
-
-        it 'logs and does not raise when persisting the warning fails' do
-          make_sub_job(state: PollableJobModel::PROCESSING_STATE)
-          job.send(:fetch_root_context)
-          logger = instance_double(Steno::Logger, info: nil, warn: nil, error: nil)
-          allow(job).to receive(:logger).and_return(logger)
-          allow(JobWarningModel).to receive(:create).and_raise(Sequel::DatabaseError.new('warning insert failed'))
-
-          expect { job.send(:sub_jobs_in_flight?) }.not_to raise_error
-          expect(logger).to have_received(:warn).with(/could not add in-progress warning/)
+          expect(root_pollable_job.reload.warnings).to be_empty
         end
 
         context 'when some sub-jobs have failed but others are still active' do
@@ -294,6 +257,49 @@ module VCAP::CloudController
             job.send(:fetch_root_context)
             expect(job.send(:sub_jobs_in_flight?)).to be(true)
           end
+        end
+      end
+
+      describe '#add_in_progress_warning' do
+        let!(:root_pollable_job) { make_root }
+
+        before { job.send(:fetch_root_context) }
+
+        it 'persists a user-facing in-progress warning (without the word "async")' do
+          job.send(:add_in_progress_warning, root_pollable_job)
+
+          warnings = root_pollable_job.reload.warnings
+          expect(warnings.map(&:detail)).to contain_exactly(job.send(:in_progress_warning_detail))
+          expect(warnings.first.detail).not_to match(/async/i)
+        end
+
+        it 'uses the job-provided warning text when the job overrides it' do
+          overriding_job = Class.new(test_job_class) do
+            def in_progress_warning_detail
+              'custom in-progress message for this resource'
+            end
+          end.new('resource-guid-1')
+          overriding_job.send(:fetch_root_context)
+
+          overriding_job.send(:add_in_progress_warning, root_pollable_job)
+
+          expect(root_pollable_job.reload.warnings.map(&:detail)).to contain_exactly('custom in-progress message for this resource')
+        end
+
+        it 'persists the in-progress warning only once across reoccurring runs' do
+          job.send(:add_in_progress_warning, root_pollable_job)
+          job.send(:add_in_progress_warning, root_pollable_job)
+
+          expect(root_pollable_job.reload.warnings.count).to eq(1)
+        end
+
+        it 'logs and does not raise when persisting the warning fails' do
+          logger = instance_double(Steno::Logger, info: nil, warn: nil, error: nil)
+          allow(job).to receive(:logger).and_return(logger)
+          allow(JobWarningModel).to receive(:create).and_raise(Sequel::DatabaseError.new('warning insert failed'))
+
+          expect { job.send(:add_in_progress_warning, root_pollable_job) }.not_to raise_error
+          expect(logger).to have_received(:warn).with(/could not add in-progress warning/)
         end
       end
 
@@ -410,10 +416,39 @@ module VCAP::CloudController
         it 'activates the root context for the duration of the block' do
           observed = nil
           job.send(:perform_with_root_job_handling) do
-            observed = Jobs::GenericEnqueuer.shared.root_job_guid
+            observed = Jobs::GenericEnqueuer.shared.send(:current_root_job_guid)
           end
 
           expect(observed).to eq(root_pollable_job.guid)
+        end
+
+        context 'when a sub-job is in flight' do
+          before { make_sub_job(state: PollableJobModel::PROCESSING_STATE) }
+
+          it 'defers: skips the block, records the in-progress warning, and logs' do
+            logger = instance_double(Steno::Logger, info: nil, warn: nil, error: nil)
+            allow(job).to receive(:logger).and_return(logger)
+            ran = false
+
+            job.send(:perform_with_root_job_handling) { ran = true }
+
+            expect(ran).to be(false)
+            expect(root_pollable_job.reload.warnings).not_to be_empty
+            expect(logger).to have_received(:info).with(a_string_including('waiting on in-progress sub-resource deletions'))
+          end
+        end
+
+        it 'raises (before running the block) when a sub-job has settled failed' do
+          make_sub_job(state: PollableJobModel::FAILED_STATE,
+                       resource_type: 'service_credential_binding', resource_guid: 'binding-guid',
+                       cf_api_error: YAML.dump({ 'errors' => [{ 'detail' => 'broker down' }] }))
+          ran = false
+
+          expect do
+            job.send(:perform_with_root_job_handling) { ran = true }
+          end.to raise_error(CloudController::Errors::CompoundError)
+
+          expect(ran).to be(false)
         end
 
         it 'fetches the root job from the DB only once, even when the block hits several sub-job helpers' do
@@ -433,7 +468,7 @@ module VCAP::CloudController
             job.send(:perform_with_root_job_handling) { raise StandardError.new('boom') }
           end.to raise_error(CloudController::Errors::ApiError)
 
-          expect(Jobs::GenericEnqueuer.shared.root_job_guid).to be_nil
+          expect(Jobs::GenericEnqueuer.shared.send(:current_root_job_guid)).to be_nil
         end
 
         it 'swallows SubResourceError carrying only in-progress signals' do
@@ -442,6 +477,30 @@ module VCAP::CloudController
               raise SubResourceError.new([AsyncOperationInProgress.new('async')])
             end
           end.not_to raise_error
+        end
+
+        it 'logs the sync failures it carries before deferring on in-progress' do
+          logger = instance_double(Steno::Logger, info: nil, warn: nil, error: nil)
+          allow(job).to receive(:logger).and_return(logger)
+
+          job.send(:perform_with_root_job_handling) do
+            raise SubResourceError.new([AsyncOperationInProgress.new('async'), StandardError.new('network blip during unbind')])
+          end
+
+          expect(logger).to have_received(:warn).with(
+            a_string_including('network blip during unbind').and(including('sub-resource deletion failed'))
+          )
+        end
+
+        it 'does not log when deferring on in-progress with no sync failures' do
+          logger = instance_double(Steno::Logger, info: nil, warn: nil, error: nil)
+          allow(job).to receive(:logger).and_return(logger)
+
+          job.send(:perform_with_root_job_handling) do
+            raise SubResourceError.new([AsyncOperationInProgress.new('async')])
+          end
+
+          expect(logger).not_to have_received(:warn).with(a_string_including('sub-resource deletion failed'))
         end
 
         it 'translates SubResourceError with real failures to a CompoundError of UnprocessableEntity' do

@@ -2354,4 +2354,32 @@ RSpec.describe AppsV3Controller, type: :controller do
       end
     end
   end
+
+  describe 'DeleteAppErrorTranslatorJob' do
+    let(:error_translator) { AppsV3Controller::DeleteAppErrorTranslatorJob.new(job) }
+    let(:job) {}
+
+    context 'when the error is a SubResourceError' do
+      it 'translates it to CompoundError with underlying API errors' do
+        translated_error = error_translator.translate_error(VCAP::CloudController::SubResourceError.new([
+          StandardError.new('oops-1'),
+          StandardError.new('oops-2')
+        ]))
+
+        expect(translated_error).to be_a(CloudController::Errors::CompoundError)
+        expect(translated_error.underlying_errors).to contain_exactly(CloudController::Errors::ApiError.new_from_details('UnprocessableEntity', 'oops-1'),
+                                                                      CloudController::Errors::ApiError.new_from_details('UnprocessableEntity', 'oops-2'))
+      end
+    end
+
+    context 'when the error is not a SubResourceError' do
+      it 'justs return it' do
+        err = StandardError.new('oops')
+
+        translated_error = error_translator.translate_error(err)
+
+        expect(translated_error).to eq(err)
+      end
+    end
+  end
 end

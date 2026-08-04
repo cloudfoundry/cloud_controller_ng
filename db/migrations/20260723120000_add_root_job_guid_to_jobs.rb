@@ -24,9 +24,8 @@ Sequel.migration do
         drop_index :jobs, :root_job_guid, name: :jobs_root_job_guid_index, if_exists: true, concurrently: true
       end
       drop_column :jobs, :root_job_guid, if_exists: true
-    end
 
-    if database_type == :mysql
+    elsif database_type == :mysql
       alter_table :jobs do
         # rubocop:disable Sequel/ConcurrentIndex
         drop_index :root_job_guid, name: :jobs_root_job_guid_index if @db.indexes(:jobs).include?(:jobs_root_job_guid_index)

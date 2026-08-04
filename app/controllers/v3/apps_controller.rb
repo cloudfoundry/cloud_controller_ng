@@ -161,7 +161,9 @@ class AppsV3Controller < ApplicationController
         resource_model: AppModel,
         resource_guid: app.guid,
         operation: 'app.delete'
-      ) { VCAP::CloudController::V3::RecursiveDeleteAppJob.new(app.guid, user_audit_info) }
+      ) do |locked_app|
+        VCAP::CloudController::V3::RecursiveDeleteAppJob.new(locked_app.guid, user_audit_info)
+      end
 
       app_not_found! unless job
     else

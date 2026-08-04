@@ -1,5 +1,5 @@
-# Asserts a RootJobMixin-based delete job runs the mixin guards before its own delete action (mixin
-# behaviour itself is covered in root_job_mixin_spec). The host spec must define:
+# Asserts a RecursiveDeleteRootJobMixin-based delete job runs the mixin guards before its own delete action (mixin
+# behaviour itself is covered in recursive_delete_root_job_mixin_spec). The host spec must define:
 ##   subject(:job)                 - the job instance under test
 ##   root_operation                - the root pollable operation string, e.g. 'app.delete'
 ##   resource_guid_for_job         - the guid used on the root pollable's resource_guid

@@ -9,8 +9,6 @@ require 'securerandom'
 module VCAP::CloudController
   module Jobs
     class Enqueuer
-      attr_accessor :root_job_guid
-
       def initialize(opts={})
         @opts = opts
         @timeout_calculator = JobTimeoutCalculator.new(VCAP::CloudController::Config.config)
@@ -23,7 +21,7 @@ module VCAP::CloudController
       end
 
       def enqueue_pollable(job, existing_guid: nil, run_at: nil, priority_increment: nil, preserve_priority: false)
-        wrapped_job = PollableJobWrapper.new(job, existing_guid:, root_job_guid:)
+        wrapped_job = PollableJobWrapper.new(job, existing_guid: existing_guid, root_job_guid: current_root_job_guid)
 
         wrapped_job = yield wrapped_job if block_given?
 
@@ -48,6 +46,11 @@ module VCAP::CloudController
       end
 
       private
+
+      # Base enqueuer has no root-job context; GenericEnqueuer overrides this while a root job is active.
+      def current_root_job_guid
+        nil
+      end
 
       def enqueue_job(job, run_at: nil, priority_increment: nil, preserve_priority: false)
         @opts['guid'] = SecureRandom.uuid
