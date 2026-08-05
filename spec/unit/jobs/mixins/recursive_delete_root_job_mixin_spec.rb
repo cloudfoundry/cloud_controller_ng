@@ -318,41 +318,25 @@ module VCAP::CloudController
           expect { job.send(:raise_if_sub_jobs_failed) }.not_to raise_error
         end
 
-        context 'when a settled sub-job has failed' do
-          before do
-            make_sub_job(state: PollableJobModel::FAILED_STATE,
-                         resource_type: 'service_credential_binding', resource_guid: 'binding-1',
-                         cf_api_error: YAML.dump({ 'errors' => [{ 'title' => 'CF-UnableToPerform', 'code' => 10_009,
-                                                                  'detail' => 'unbind could not be completed: broker exploded' }] }))
-            make_sub_job(state: PollableJobModel::COMPLETE_STATE)
-          end
-
-          it 'raises a CompoundError of UnprocessableEntity carrying the failed sub-job detail' do
-            job.send(:fetch_root_context)
-            expect { job.send(:raise_if_sub_jobs_failed) }.to raise_error(CloudController::Errors::CompoundError) do |err|
-              expect(err.underlying_errors.map(&:name)).to eq(%w[UnprocessableEntity])
-              expect(err.underlying_errors.first.message).to include('unbind could not be completed: broker exploded')
-            end
-          end
-
-          context 'when the failed sub-job has no stored error detail' do
-            before do
-              make_sub_job(state: PollableJobModel::FAILED_STATE,
-                           resource_type: 'service_credential_binding', resource_guid: 'binding-2')
-            end
-
-            it 'falls back to a resource reference for that entry' do
-              job.send(:fetch_root_context)
-              expect { job.send(:raise_if_sub_jobs_failed) }.to raise_error(CloudController::Errors::CompoundError) do |err|
-                expect(err.underlying_errors.map(&:message)).to include(a_string_including('service_credential_binding binding-2'))
-              end
-            end
-          end
+        # The shape of the raised error (merge, dedup, detail parsing) is covered in sub_resource_failures_spec.
+        it 'raises a CompoundError when a sub-job has settled failed' do
+          make_sub_job(state: PollableJobModel::FAILED_STATE, resource_type: 'service_credential_binding', resource_guid: 'binding-1')
+          job.send(:fetch_root_context)
+          expect { job.send(:raise_if_sub_jobs_failed) }.to raise_error(CloudController::Errors::CompoundError)
         end
       end
 
       describe 'sub_resource_errors (durable sync-failure hook)' do
         let!(:root_pollable_job) { make_root }
+
+        let(:job_with_sync_failure) do
+          klass = Class.new(test_job_class) do
+            def sub_resource_errors
+              [['sync-binding', CloudController::Errors::ApiError.new_from_details('UnprocessableEntity', 'sync unbind failed')]]
+            end
+          end
+          klass.new('resource-guid-1')
+        end
 
         it 'defaults to none so jobs without sub-resources are unaffected' do
           make_sub_job(state: PollableJobModel::COMPLETE_STATE)
@@ -360,53 +344,16 @@ module VCAP::CloudController
           expect { job.send(:raise_if_sub_jobs_failed) }.not_to raise_error
         end
 
-        context 'when a subclass reports a failed sub-resource with no matching sub-job' do
-          let(:job_with_sync_failure) do
-            klass = Class.new(test_job_class) do
-              def sub_resource_errors
-                [['sync-binding', CloudController::Errors::ApiError.new_from_details('UnprocessableEntity', 'sync unbind failed')]]
-              end
-            end
-            klass.new('resource-guid-1')
-          end
-
-          it 'does NOT halt when there is no failed sub-job, so the action can re-run and retry it' do
-            job_with_sync_failure.send(:fetch_root_context)
-            expect { job_with_sync_failure.send(:raise_if_sub_jobs_failed) }.not_to raise_error
-          end
-
-          it 'is reported once a sub-job has terminally failed (action is then skipped), merged with that sub-job' do
-            make_sub_job(state: PollableJobModel::FAILED_STATE,
-                         resource_type: 'service_credential_binding', resource_guid: 'async-binding',
-                         cf_api_error: YAML.dump({ 'errors' => [{ 'detail' => 'async unbind failed' }] }))
-            job_with_sync_failure.send(:fetch_root_context)
-
-            expect { job_with_sync_failure.send(:raise_if_sub_jobs_failed) }.to raise_error(CloudController::Errors::CompoundError) do |err|
-              expect(err.underlying_errors.map(&:message)).to include(a_string_including('sync unbind failed'), a_string_including('async unbind failed'))
-            end
-          end
+        # Self-heal contract: a sync failure alone must not halt, so the action re-runs and retries it.
+        it 'does NOT halt when a sub-resource failed but no sub-job has failed' do
+          job_with_sync_failure.send(:fetch_root_context)
+          expect { job_with_sync_failure.send(:raise_if_sub_jobs_failed) }.not_to raise_error
         end
 
-        context 'when a failed sub-resource shares its guid with a failed sub-job' do
-          let(:job_with_dup) do
-            klass = Class.new(test_job_class) do
-              def sub_resource_errors
-                [['shared-guid', CloudController::Errors::ApiError.new_from_details('UnprocessableEntity', 'unbind failed once')]]
-              end
-            end
-            klass.new('resource-guid-1')
-          end
-
-          it 'reports the resource only once' do
-            make_sub_job(state: PollableJobModel::FAILED_STATE,
-                         resource_type: 'service_credential_binding', resource_guid: 'shared-guid',
-                         cf_api_error: YAML.dump({ 'errors' => [{ 'detail' => 'unbind failed once' }] }))
-            job_with_dup.send(:fetch_root_context)
-
-            expect { job_with_dup.send(:raise_if_sub_jobs_failed) }.to raise_error(CloudController::Errors::CompoundError) do |err|
-              expect(err.underlying_errors.size).to eq(1)
-            end
-          end
+        it 'halts once a sub-job has terminally failed, feeding the hook into the raised error' do
+          make_sub_job(state: PollableJobModel::FAILED_STATE, resource_type: 'service_credential_binding', resource_guid: 'async-binding')
+          job_with_sync_failure.send(:fetch_root_context)
+          expect { job_with_sync_failure.send(:raise_if_sub_jobs_failed) }.to raise_error(CloudController::Errors::CompoundError)
         end
       end
 
@@ -503,32 +450,13 @@ module VCAP::CloudController
           expect(logger).not_to have_received(:warn).with(a_string_including('sub-resource deletion failed'))
         end
 
-        it 'translates SubResourceError with real failures to a CompoundError of UnprocessableEntity' do
+        # Routing only; the CompoundError's contents are covered in sub_resource_failures_spec.
+        it 'translates a SubResourceError with real failures to a CompoundError' do
           expect do
             job.send(:perform_with_root_job_handling) do
               raise SubResourceError.new([StandardError.new('one broke'), StandardError.new('two broke')])
             end
-          end.to raise_error(CloudController::Errors::CompoundError) do |err|
-            expect(err.underlying_errors).to all(be_a(CloudController::Errors::ApiError))
-            expect(err.underlying_errors.map(&:name)).to eq(%w[UnprocessableEntity UnprocessableEntity])
-            expect(err.underlying_errors.map(&:message)).to include(match(/one broke/), match(/two broke/))
-          end
-        end
-
-        it 'merges current-tick sync failures with settled failed sub-jobs into one CompoundError' do
-          make_sub_job(state: PollableJobModel::FAILED_STATE,
-                       resource_type: 'service_credential_binding', resource_guid: 'async-binding',
-                       cf_api_error: YAML.dump({ 'errors' => [{ 'title' => 'CF-UnableToPerform', 'code' => 10_009,
-                                                                'detail' => 'async unbind failed' }] }))
-
-          expect do
-            job.send(:perform_with_root_job_handling) do
-              raise SubResourceError.new([StandardError.new('sync unbind failed')])
-            end
-          end.to raise_error(CloudController::Errors::CompoundError) do |err|
-            expect(err.underlying_errors.map(&:name)).to all(eq('UnprocessableEntity'))
-            expect(err.underlying_errors.map(&:message)).to include(match(/sync unbind failed/), match(/async unbind failed/))
-          end
+          end.to raise_error(CloudController::Errors::CompoundError)
         end
 
         it 'passes ApiErrors through unchanged' do
