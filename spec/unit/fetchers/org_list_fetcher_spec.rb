@@ -9,23 +9,23 @@ module VCAP::CloudController
     let!(:org3) { create(:organization, name: 'Beaver') }
     let!(:org4) { create(:organization, name: 'Capybara') }
     let!(:org5) { create(:organization, name: 'Groundhog') }
-    let(:some_org_guids) { [org1.guid, org3.guid, org4.guid] }
+    let(:some_org_ids) { [org1.id, org3.id, org4.id] }
 
     let(:fetcher) { OrgListFetcher }
 
     let(:message) { OrgsListMessage.from_params({}) }
 
     describe '#fetch' do
-      it 'includes all the orgs with the provided guids' do
-        results = fetcher.fetch(message: message, guids: some_org_guids).all
+      it 'includes all the orgs with the provided ids' do
+        results = fetcher.fetch(message: message, ids: some_org_ids).all
         expect(results).to contain_exactly(org1, org3, org4)
       end
 
       describe 'eager loading associated resources' do
-        let(:some_org_guids) { [org1.guid, org3.guid] }
+        let(:some_org_ids) { [org1.id, org3.id] }
 
         it 'eager loads the specified resources for all orgs' do
-          results = fetcher.fetch(message: message, guids: some_org_guids, eager_loaded_associations: %i[quota_definition labels]).all
+          results = fetcher.fetch(message: message, ids: some_org_ids, eager_loaded_associations: %i[quota_definition labels]).all
 
           expect(results.first.associations.key?(:quota_definition)).to be true
           expect(results.first.associations.key?(:labels)).to be true
@@ -38,34 +38,35 @@ module VCAP::CloudController
           let(:message) { OrgsListMessage.from_params names: %w[Marmot Capybara] }
 
           it 'returns the correct set of orgs' do
-            results = fetcher.fetch(message: message, guids: some_org_guids).all
+            results = fetcher.fetch(message: message, ids: some_org_ids).all
             expect(results).to contain_exactly(org1, org4)
           end
 
-          context 'respects any provided guids' do
+          context 'respects any provided ids' do
             let(:message) { OrgsListMessage.from_params names: %w[Marmot Rat] }
 
             it 'does not return orgs asked for if they are not part of the array passed into #fetch' do
-              results = fetcher.fetch(message: message, guids: some_org_guids).all
+              results = fetcher.fetch(message: message, ids: some_org_ids).all
               expect(results).to contain_exactly(org1)
             end
           end
         end
 
         context 'when org guids are provided' do
-          let(:all_org_guids) { [org1.guid, org2.guid, org3.guid, org4.guid, org5.guid] }
+          let(:all_org_ids) { [org1.id, org2.id, org3.id, org4.id, org5.id] }
           let(:message) { OrgsListMessage.from_params guids: some_org_guids }
+          let(:some_org_guids) { [org1.guid, org3.guid, org4.guid] }
 
           it 'returns the correct set of orgs' do
-            results = fetcher.fetch(message: message, guids: all_org_guids).all
+            results = fetcher.fetch(message: message, ids: all_org_ids).all
             expect(results).to contain_exactly(org1, org3, org4)
           end
 
-          context 'respects any provided guids' do
+          context 'respects any provided ids' do
             let(:message) { OrgsListMessage.from_params guids: [org1.guid, org2.guid] }
 
             it 'does not return orgs asked for if they are not part of the array passed into #fetch' do
-              results = fetcher.fetch(message: message, guids: some_org_guids).all
+              results = fetcher.fetch(message: message, ids: some_org_ids).all
               expect(results).to contain_exactly(org1)
             end
           end
@@ -109,6 +110,7 @@ module VCAP::CloudController
         end
 
         context 'when org guids are provided' do
+          let(:some_org_guids) { [org1.guid, org3.guid, org4.guid] }
           let(:message) { OrgsListMessage.from_params guids: some_org_guids }
 
           it 'returns the correct set of orgs' do
@@ -136,25 +138,25 @@ module VCAP::CloudController
       let(:isolation_segment) { create(:isolation_segment_model) }
       let(:assigner) { IsolationSegmentAssign.new }
       let(:message) { OrgsListMessage.from_params isolation_segment_guid: isolation_segment.guid }
-      let(:readable_org_guids) { [org1.guid, org2.guid] }
+      let(:readable_org_ids) { [org1.id, org2.id] }
 
       before do
         assigner.assign(isolation_segment, [org1, org2, org5])
       end
 
       it 'returns the correct isolation segment' do
-        returned_isolation_segment, = fetcher.fetch_for_isolation_segment(message: message, guids: readable_org_guids)
+        returned_isolation_segment, = fetcher.fetch_for_isolation_segment(message: message, ids: readable_org_ids)
         expect(returned_isolation_segment.guid).to eq(isolation_segment.guid)
       end
 
       it 'fetches the orgs that the user can see associated with the iso seg' do
-        _, results = fetcher.fetch_for_isolation_segment(message: message, guids: readable_org_guids)
+        _, results = fetcher.fetch_for_isolation_segment(message: message, ids: readable_org_ids)
         expect(results.all).to contain_exactly(org1, org2)
       end
 
       describe 'eager loading associated resources' do
         it 'eager loads the specified resources for all orgs' do
-          _, org_ds = fetcher.fetch_for_isolation_segment(message: message, guids: readable_org_guids, eager_loaded_associations: %i[quota_definition labels])
+          _, org_ds = fetcher.fetch_for_isolation_segment(message: message, ids: readable_org_ids, eager_loaded_associations: %i[quota_definition labels])
           results = org_ds.all
 
           expect(results).to contain_exactly(org1, org2)

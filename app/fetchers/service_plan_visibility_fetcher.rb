@@ -24,7 +24,7 @@ module VCAP::CloudController
                 join(:service_plans, id: :service_plan_visibilities__service_plan_id).
                 where(service_plans__guid: service_plan_guids)
 
-      dataset = dataset.where(organizations__guid: @permission_queryer.readable_org_guids_query) unless @permission_queryer.can_read_globally?
+      dataset = dataset.where(organizations__id: @permission_queryer.readable_org_ids_query) unless @permission_queryer.can_read_globally?
 
       dataset
     end

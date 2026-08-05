@@ -5,8 +5,8 @@ require 'fetchers/base_list_fetcher'
 module VCAP::CloudController
   class OrgListFetcher < BaseListFetcher
     class << self
-      def fetch(message:, guids:, eager_loaded_associations: [])
-        dataset = Organization.where(guid: guids)
+      def fetch(message:, ids:, eager_loaded_associations: [])
+        dataset = Organization.where(id: ids)
         dataset = eager_load(dataset, eager_loaded_associations)
         filter(message, dataset)
       end
@@ -17,11 +17,11 @@ module VCAP::CloudController
         filter(message, dataset)
       end
 
-      def fetch_for_isolation_segment(message:, guids:, eager_loaded_associations: [])
+      def fetch_for_isolation_segment(message:, ids:, eager_loaded_associations: [])
         isolation_segment = IsolationSegmentModel.where(guid: message.isolation_segment_guid).first
         return nil unless isolation_segment
 
-        dataset = isolation_segment.organizations_dataset.where(guid: guids)
+        dataset = isolation_segment.organizations_dataset.where(id: ids)
         dataset = eager_load(dataset, eager_loaded_associations)
         [isolation_segment, filter(message, dataset)]
       end

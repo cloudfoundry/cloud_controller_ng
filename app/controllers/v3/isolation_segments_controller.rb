@@ -90,7 +90,7 @@ class IsolationSegmentsController < ApplicationController
     organizations = if permission_queryer.can_read_globally?
                       fetcher.fetch_all
                     else
-                      fetcher.fetch_for_organizations(org_guids_query: permission_queryer.readable_org_guids_query)
+                      fetcher.fetch_for_organizations(org_ids_query: permission_queryer.readable_org_ids_query)
                     end
 
     render status: :ok, json: Presenters::V3::ToManyRelationshipPresenter.new(

@@ -1,9 +1,9 @@
 module VCAP::CloudController
   class SecurityGroupFetcher
     class << self
-      def fetch(guid, visible_security_group_guids=nil)
+      def fetch(guid, visible_security_group_ids=nil)
         dataset = SecurityGroup.where(guid:)
-        dataset = dataset.where(guid: visible_security_group_guids) if visible_security_group_guids
+        dataset = dataset.where(id: visible_security_group_ids) if visible_security_group_ids
         dataset = eager_load_running_and_staging_space_guids(dataset)
         dataset.all.first
       end

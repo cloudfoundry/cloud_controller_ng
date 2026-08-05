@@ -41,7 +41,7 @@ module VCAP::CloudController
     end
 
     describe '#fetch' do
-      let(:visible_security_groups) { [security_group_1.guid, security_group_2.guid] }
+      let(:visible_security_groups) { [security_group_1.id, security_group_2.id] }
       let(:security_groups) { fetcher.fetch(message, visible_security_groups) }
 
       include_examples 'eager loading'

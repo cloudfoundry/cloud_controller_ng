@@ -5,9 +5,9 @@ require 'fetchers/base_list_fetcher'
 module VCAP::CloudController
   class OrganizationQuotaListFetcher < BaseListFetcher
     class << self
-      def fetch(message:, readable_org_guids_query:)
+      def fetch(message:, readable_org_ids_query:)
         dataset = QuotaDefinition.dataset
-        filter(message, dataset, readable_org_guids_query)
+        filter(message, dataset, readable_org_ids_query)
       end
 
       def fetch_all(message:)
@@ -17,7 +17,7 @@ module VCAP::CloudController
 
       private
 
-      def filter(message, dataset, readable_org_guids_query=nil)
+      def filter(message, dataset, readable_org_ids_query=nil)
         dataset = dataset.where(name: message.names) if message.requested? :names
 
         if message.requested? :organization_guids
@@ -26,7 +26,7 @@ module VCAP::CloudController
                     where(organizations__guid: message.organization_guids).distinct(:id).
                     qualify(:quota_definitions)
 
-          dataset = dataset.where(organizations__guid: readable_org_guids_query) if readable_org_guids_query
+          dataset = dataset.where(organizations__id: readable_org_ids_query) if readable_org_ids_query
         end
 
         super(message, dataset, QuotaDefinition)

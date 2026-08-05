@@ -9,7 +9,7 @@ module VCAP::CloudController
     let(:permission_querier) do
       double('Permission Querier',
              can_read_globally?: can_read_globally,
-             readable_org_guids_query: Organization.where(guid: readable_org_guids).select(:guid))
+             readable_org_ids_query: Organization.where(guid: readable_org_guids).select(:id))
     end
 
     let(:fetcher) { ServicePlanVisibilityFetcher.new(permission_querier) }

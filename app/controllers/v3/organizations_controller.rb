@@ -149,7 +149,8 @@ class OrganizationsV3Controller < ApplicationController
     message = DomainsListMessage.from_params(query_params.except(:guid))
     invalid_param!(message.errors.full_messages) unless message.valid?
 
-    domains = DomainFetcher.fetch(message, permission_queryer.readable_org_guids_for_domains_query.where(guid: org.guid))
+    readable_org_ids = Organization.where(id: org.id).where(id: permission_queryer.readable_org_ids_for_domains_query).select(:id)
+    domains = DomainFetcher.fetch(message, readable_org_ids)
 
     render status: :ok, json: Presenters::V3::PaginatedListPresenter.new(
       presenter: Presenters::V3::DomainPresenter,
@@ -166,7 +167,7 @@ class OrganizationsV3Controller < ApplicationController
     domain = org.default_domain
 
     domain_not_found! unless domain
-    domain_not_found! if domain.private? && permission_queryer.readable_org_guids_for_domains_query.where(guid: org.guid).empty?
+    domain_not_found! if domain.private? && Organization.where(id: org.id).where(id: permission_queryer.readable_org_ids_for_domains_query).empty?
 
     render status: :ok, json: Presenters::V3::DomainPresenter.new(domain, **presenter_args)
   end
@@ -245,7 +246,7 @@ class OrganizationsV3Controller < ApplicationController
     else
       OrgListFetcher.fetch(
         message: message,
-        guids: permission_queryer.readable_org_guids_query,
+        ids: permission_queryer.readable_org_ids_query,
         eager_loaded_associations: Presenters::V3::OrganizationPresenter.associated_resources
       )
     end
@@ -260,7 +261,7 @@ class OrganizationsV3Controller < ApplicationController
     else
       isolation_segment, dataset = OrgListFetcher.fetch_for_isolation_segment(
         message: message,
-        guids: permission_queryer.readable_org_guids_query,
+        ids: permission_queryer.readable_org_ids_query,
         eager_loaded_associations: Presenters::V3::OrganizationPresenter.associated_resources
       )
     end
@@ -272,7 +273,7 @@ class OrganizationsV3Controller < ApplicationController
     if permission_queryer.can_read_globally?
       { all_orgs_visible: true }
     else
-      { visible_org_guids_query: permission_queryer.readable_org_guids_query }
+      { visible_org_ids_query: permission_queryer.readable_org_ids_query }
     end
   end
 end

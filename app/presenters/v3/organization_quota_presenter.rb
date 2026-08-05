@@ -8,11 +8,11 @@ module VCAP::CloudController::Presenters::V3
       show_secrets: false,
       censored_message: VCAP::CloudController::Presenters::Censorship::REDACTED_CREDENTIAL,
       all_orgs_visible: false,
-      visible_org_guids_query: nil
+      visible_org_ids_query: nil
     )
       super(resource, show_secrets:, censored_message:)
       @all_orgs_visible = all_orgs_visible
-      @visible_org_guids_query = visible_org_guids_query
+      @visible_org_ids_query = visible_org_ids_query
     end
 
     def to_hash
@@ -53,7 +53,7 @@ module VCAP::CloudController::Presenters::V3
 
     def filtered_visible_orgs
       ds = organization_quota.organizations_dataset
-      ds = ds.where(guid: @visible_org_guids_query) unless @all_orgs_visible
+      ds = ds.where(id: @visible_org_ids_query) unless @all_orgs_visible
       ds.select_map(:guid).map { |g| { guid: g } }
     end
 

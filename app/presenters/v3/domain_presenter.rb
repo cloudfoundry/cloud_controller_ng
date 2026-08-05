@@ -10,10 +10,10 @@ module VCAP::CloudController::Presenters::V3
       resource,
       show_secrets: false,
       censored_message: VCAP::CloudController::Presenters::Censorship::REDACTED_CREDENTIAL,
-      visible_org_guids_query: nil,
+      visible_org_ids_query: nil,
       all_orgs_visible: false
     )
-      @visible_org_guids_query = visible_org_guids_query
+      @visible_org_ids_query = visible_org_ids_query
       @all_orgs_visible = all_orgs_visible
 
       super(resource, show_secrets:, censored_message:)
@@ -55,11 +55,11 @@ module VCAP::CloudController::Presenters::V3
 
     private
 
-    attr_reader :visible_org_guids_query, :all_orgs_visible
+    attr_reader :visible_org_ids_query, :all_orgs_visible
 
     def shared_org_guids
       ds = domain.shared_organizations_dataset
-      ds = ds.where(guid: @visible_org_guids_query) unless @all_orgs_visible
+      ds = ds.where(id: @visible_org_ids_query) unless @all_orgs_visible
       ds.select_map(:guid).map { |g| { guid: g } }
     end
 

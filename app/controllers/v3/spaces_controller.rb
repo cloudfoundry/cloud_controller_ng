@@ -106,8 +106,8 @@ class SpacesV3Controller < ApplicationController
     space = SpaceFetcher.new.fetch(hashed_params[:guid])
     space_not_found! unless space && permission_queryer.can_read_from_space?(space.id, space.organization_id)
 
-    unfiltered_group_guids = fetch_running_security_group_guids(space)
-    dataset = SecurityGroupListFetcher.fetch(message, unfiltered_group_guids)
+    unfiltered_group_ids = fetch_running_security_group_ids(space)
+    dataset = SecurityGroupListFetcher.fetch(message, unfiltered_group_ids)
 
     render status: :ok, json: Presenters::V3::PaginatedListPresenter.new(
       presenter: Presenters::V3::SecurityGroupPresenter,
@@ -125,8 +125,8 @@ class SpacesV3Controller < ApplicationController
     space = SpaceFetcher.new.fetch(hashed_params[:guid])
     space_not_found! unless space && permission_queryer.can_read_from_space?(space.id, space.organization_id)
 
-    unfiltered_group_guids = fetch_staging_security_group_guids(space)
-    dataset = SecurityGroupListFetcher.fetch(message, unfiltered_group_guids)
+    unfiltered_group_ids = fetch_staging_security_group_ids(space)
+    dataset = SecurityGroupListFetcher.fetch(message, unfiltered_group_ids)
 
     render status: :ok, json: Presenters::V3::PaginatedListPresenter.new(
       presenter: Presenters::V3::SecurityGroupPresenter,
@@ -243,16 +243,16 @@ class SpacesV3Controller < ApplicationController
     IsolationSegmentModel.where(guid:).first
   end
 
-  def fetch_running_security_group_guids(space)
+  def fetch_running_security_group_ids(space)
     space_level_groups = SecurityGroup.where(spaces: space)
     global_groups = SecurityGroup.where(running_default: true)
-    space_level_groups.union(global_groups).select_map(:guid)
+    space_level_groups.union(global_groups).select_map(:id)
   end
 
-  def fetch_staging_security_group_guids(space)
+  def fetch_staging_security_group_ids(space)
     space_level_groups = SecurityGroup.where(staging_spaces: space)
     global_groups = SecurityGroup.where(staging_default: true)
-    space_level_groups.union(global_groups).distinct.select_map(:guid)
+    space_level_groups.union(global_groups).distinct.select_map(:id)
   end
 
   def space_not_found!

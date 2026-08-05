@@ -28,16 +28,16 @@ module VCAP::CloudController
         expect(security_group).to eq(security_group_1)
       end
 
-      context 'security group guid in visible_security_group_guids' do
-        let(:visible_security_groups) { [security_group_1.guid] }
+      context 'security group id in visible_security_group_ids' do
+        let(:visible_security_groups) { [security_group_1.id] }
 
         it 'returns the security group' do
           expect(security_group).to eq(security_group_1)
         end
       end
 
-      context 'security group guid not in visible_security_group_guids' do
-        let(:visible_security_groups) { [security_group_2.guid] }
+      context 'security group id not in visible_security_group_ids' do
+        let(:visible_security_groups) { [security_group_2.id] }
 
         it 'returns nil' do
           expect(security_group).to be_nil

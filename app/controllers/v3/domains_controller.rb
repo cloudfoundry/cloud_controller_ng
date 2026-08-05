@@ -18,7 +18,7 @@ class DomainsController < ApplicationController
     message = DomainsListMessage.from_params(query_params)
     invalid_param!(message.errors.full_messages) unless message.valid?
 
-    dataset = DomainFetcher.fetch(message, permission_queryer.readable_org_guids_for_domains_query)
+    dataset = DomainFetcher.fetch(message, permission_queryer.readable_org_ids_for_domains_query)
 
     render status: :ok, json: Presenters::V3::PaginatedListPresenter.new(
       presenter: Presenters::V3::DomainPresenter,
@@ -164,7 +164,7 @@ class DomainsController < ApplicationController
   def find_domain(message)
     DomainFetcher.fetch(
       message,
-      permission_queryer.readable_org_guids_for_domains_query
+      permission_queryer.readable_org_ids_for_domains_query
     ).first
   end
 
@@ -249,7 +249,7 @@ class DomainsController < ApplicationController
     if permission_queryer.can_read_globally?
       { all_orgs_visible: true }
     else
-      { visible_org_guids_query: permission_queryer.readable_org_guids_query }
+      { visible_org_ids_query: permission_queryer.readable_org_ids_query }
     end
   end
 end
