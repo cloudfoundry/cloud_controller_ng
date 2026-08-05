@@ -294,7 +294,7 @@ module VCAP::CloudController::Jobs
 
     describe '#enqueue_or_find_active_pollable' do
       let(:app_model) { create(:app_model) }
-      let(:user_audit_info) { VCAP::CloudController::UserAuditInfo.new(user_guid: create(:user).guid, user_email: 'test@example.com') }
+      let(:user_audit_info) { VCAP::CloudController::UserAuditInfo.new(user_guid: SecureRandom.uuid, user_email: 'test@example.com') }
       let(:job_factory) { ->(_resource) { VCAP::CloudController::V3::RecursiveDeleteAppJob.new(app_model.guid, user_audit_info) } }
 
       def enqueue

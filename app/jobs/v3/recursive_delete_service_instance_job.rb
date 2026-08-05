@@ -81,11 +81,7 @@ module VCAP::CloudController
         si = service_instance
         return [] unless si
 
-        children = si.service_bindings + si.service_keys + si.route_bindings
-        children.select(&:delete_failed?).map do |child|
-          identity = "#{child.class.name.demodulize.underscore} #{child.guid}"
-          [child.guid, CloudController::Errors::ApiError.new_from_details('UnprocessableEntity', "#{identity}: #{child.last_operation.description}")]
-        end
+        failed_child_errors(si.service_bindings + si.service_keys + si.route_bindings)
       end
     end
   end

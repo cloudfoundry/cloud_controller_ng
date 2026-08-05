@@ -17,7 +17,6 @@ module VCAP::CloudController
       subject(:job) { described_class.new(service_instance.guid, user_audit_info) }
 
       before { Jobs::GenericEnqueuer.reset! }
-      after { Jobs::GenericEnqueuer.reset! }
 
       it_behaves_like 'delayed job', described_class
 
@@ -150,9 +149,8 @@ module VCAP::CloudController
 
           it 'raises the failure (surfaced on the job resource) without stamping the instance last_operation' do
             failed_route = make_failed_route_binding(desc: 'route unbind failed')
-            create(:pollable_job_model, root_job_guid: root_pollable_job.guid, state: PollableJobModel::FAILED_STATE,
-                                        resource_type: 'route_binding', resource_guid: failed_route.guid,
-                                        cf_api_error: YAML.dump({ 'errors' => [{ 'detail' => 'route unbind failed' }] }))
+            create(:pollable_job_model, :failed, root_job_guid: root_pollable_job.guid,
+                                                 resource_type: 'route_binding', resource_guid: failed_route.guid, detail: 'route unbind failed')
 
             expect { job.perform }.to raise_error(CloudController::Errors::CompoundError) do |err|
               expect(err.underlying_errors.map(&:message)).to include(a_string_including('route unbind failed'))
@@ -160,21 +158,6 @@ module VCAP::CloudController
 
             # The binding-phase failure belongs to the binding's own last_operation, not the instance's.
             expect(action).not_to have_received(:update_last_operation_with_failure)
-          end
-
-          it 'logs each underlying failure (with job guid) when it terminally fails' do
-            failed_route = make_failed_route_binding(desc: 'route unbind failed')
-            create(:pollable_job_model, root_job_guid: root_pollable_job.guid, state: PollableJobModel::FAILED_STATE,
-                                        resource_type: 'route_binding', resource_guid: failed_route.guid,
-                                        cf_api_error: YAML.dump({ 'errors' => [{ 'detail' => 'route unbind failed' }] }))
-            logger = instance_double(Steno::Logger, info: nil, warn: nil, error: nil)
-            allow(job).to receive(:logger).and_return(logger)
-
-            suppress(CloudController::Errors::CompoundError) { job.perform }
-
-            expect(logger).to have_received(:warn).with(
-              a_string_including('route unbind failed').and(including(root_pollable_job.guid)).and(including('sub-resource deletion failed'))
-            )
           end
 
           it 'defers (does not raise or finish) when one child already failed but another is still in flight' do

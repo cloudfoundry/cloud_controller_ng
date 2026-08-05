@@ -5,8 +5,6 @@ module VCAP::CloudController
   class AsyncOperationInProgress < StandardError; end
 
   class SubResourceError < StandardError
-    attr_reader :errors
-
     def initialize(errors)
       super()
       @errors = errors

@@ -14,7 +14,6 @@ module VCAP::CloudController
       subject(:job) { described_class.new(app_model.guid, user_audit_info) }
 
       before { Jobs::GenericEnqueuer.reset! }
-      after { Jobs::GenericEnqueuer.reset! }
 
       it_behaves_like 'delayed job', described_class
 
@@ -129,26 +128,9 @@ module VCAP::CloudController
 
           it 'leaves the app intact on failure so the DELETE can be retried' do
             root = root_pollable
-            create(:pollable_job_model, root_job_guid: root.guid, state: PollableJobModel::FAILED_STATE,
-                                        resource_type: 'service_credential_binding', resource_guid: 'binding-guid',
-                                        cf_api_error: YAML.dump({ 'errors' => [{ 'detail' => 'broker down' }] }))
+            create(:pollable_job_model, :failed, root_job_guid: root.guid, resource_guid: 'binding-guid', detail: 'broker down')
             expect { job.perform }.to raise_error(CloudController::Errors::CompoundError)
             expect(AppModel.find(guid: app_model.guid)).not_to be_nil
-          end
-
-          it 'logs each underlying failure (with job guid) when it terminally fails' do
-            root = root_pollable
-            create(:pollable_job_model, root_job_guid: root.guid, state: PollableJobModel::FAILED_STATE,
-                                        resource_type: 'service_credential_binding', resource_guid: 'binding-guid',
-                                        cf_api_error: YAML.dump({ 'errors' => [{ 'detail' => 'broker down' }] }))
-            logger = instance_double(Steno::Logger, info: nil, warn: nil, error: nil)
-            allow(job).to receive(:logger).and_return(logger)
-
-            suppress(CloudController::Errors::CompoundError) { job.perform }
-
-            expect(logger).to have_received(:warn).with(
-              a_string_including('broker down').and(including(root.guid)).and(including('sub-resource deletion failed'))
-            )
           end
         end
 

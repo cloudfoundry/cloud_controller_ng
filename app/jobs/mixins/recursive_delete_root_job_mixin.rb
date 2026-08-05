@@ -9,8 +9,11 @@ module VCAP::CloudController
       # Buffer added on top of the sub-jobs' next run_at so the root wakes just after them, never before.
       ROOT_JOB_BUFFER_SECONDS = 5
 
+      # Reuses the fetched context when active (the common path); only falls back to a lookup for callers
+      # that run before perform (e.g. LoggingContextJob#before) or after the row has settled, where any
+      # matching row still serves log correlation.
       def root_job_guid
-        @root_job_guid ||= PollableJobModel.first(resource_guid: resource_guid, operation: display_name)&.guid
+        @root_job&.guid || PollableJobModel.first(resource_guid: resource_guid, operation: display_name)&.guid
       end
 
       private
@@ -124,6 +127,14 @@ module VCAP::CloudController
       # Host hook: [guid, ApiError] pairs for child resources that failed synchronously with no async sub-job.
       def sub_resource_errors
         []
+      end
+
+      # Maps failed child resources to the [guid, ApiError] pairs sub_resource_errors returns.
+      def failed_child_errors(children)
+        children.select(&:delete_failed?).map do |child|
+          identity = "#{child.class.name.demodulize.underscore} #{child.guid}"
+          [child.guid, CloudController::Errors::ApiError.new_from_details('UnprocessableEntity', "#{identity}: #{child.last_operation.description}")]
+        end
       end
     end
   end

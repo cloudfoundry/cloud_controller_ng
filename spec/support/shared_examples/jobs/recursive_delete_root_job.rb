@@ -14,12 +14,10 @@ RSpec.shared_examples 'a recursive delete root job' do
   end
 
   def make_failed_sub_job(resource_guid: 'binding-guid')
-    create(:pollable_job_model,
+    create(:pollable_job_model, :failed,
            root_job_guid: root_pollable_job.guid,
-           state: VCAP::CloudController::PollableJobModel::FAILED_STATE,
-           resource_type: 'service_credential_binding',
            resource_guid: resource_guid,
-           cf_api_error: YAML.dump({ 'errors' => [{ 'detail' => 'unbind could not be completed: broker down' }] }))
+           detail: 'unbind could not be completed: broker down')
   end
 
   context 'when a sub-job is still in flight' do

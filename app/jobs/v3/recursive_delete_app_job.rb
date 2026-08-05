@@ -18,13 +18,14 @@ module VCAP::CloudController
 
       def perform
         perform_with_root_job_handling do
-          app = AppModel.first(guid: resource_guid)
           return finish unless app
 
           AppStop.stop(app: app, user_audit_info: @user_audit_info, delete_triggered: true) if app.desired_state != ProcessModel::STOPPED
           AppDelete.new(@user_audit_info).delete([app])
           finish
         end
+      ensure
+        @app = nil # drop the per-pass cache so it is not serialised into the reoccurring-job reschedule
       end
 
       def handle_timeout; end
@@ -51,12 +52,13 @@ module VCAP::CloudController
       end
 
       def sub_resource_errors
-        app = AppModel.first(guid: resource_guid)
         return [] unless app
 
-        app.service_bindings.select(&:delete_failed?).map do |binding|
-          [binding.guid, CloudController::Errors::ApiError.new_from_details('UnprocessableEntity', "service_binding #{binding.guid}: #{binding.last_operation.description}")]
-        end
+        failed_child_errors(app.service_bindings)
+      end
+
+      def app
+        @app ||= AppModel.first(guid: resource_guid)
       end
     end
   end

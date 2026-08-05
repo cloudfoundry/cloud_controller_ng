@@ -11,12 +11,7 @@ module VCAP::CloudController
       let(:label) { "#{display_name} #{resource_guid} (job #{root_job_guid})" }
 
       def failed_sub_job(resource_guid: 'binding-1', resource_type: 'service_credential_binding', detail: 'broker exploded')
-        errors = detail.nil? ? nil : { 'errors' => [{ 'detail' => detail }] }
-        create(:pollable_job_model,
-               state: PollableJobModel::FAILED_STATE,
-               resource_type: resource_type,
-               resource_guid: resource_guid,
-               cf_api_error: errors && YAML.dump(errors))
+        create(:pollable_job_model, :failed, resource_type: resource_type, resource_guid: resource_guid, detail: detail)
       end
 
       def settled_sub_job(state:)

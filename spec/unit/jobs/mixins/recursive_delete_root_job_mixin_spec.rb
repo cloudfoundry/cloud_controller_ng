@@ -41,8 +41,6 @@ module VCAP::CloudController
 
       before { Jobs::GenericEnqueuer.reset! }
 
-      after { Jobs::GenericEnqueuer.reset! }
-
       def make_root(state: PollableJobModel::PROCESSING_STATE)
         create(:pollable_job_model, state: state, resource_guid: 'resource-guid-1', operation: 'test.delete')
       end
