@@ -2,7 +2,7 @@ module VCAP::CloudController
   class IncludeOrganizationDecorator
     class << self
       def match?(include)
-        include&.any? { |i| %w[org space.organization].include?(i) }
+        include&.intersect?(%w[org space.organization])
       end
 
       def decorate(hash, resources)
