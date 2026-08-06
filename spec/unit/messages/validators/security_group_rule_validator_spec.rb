@@ -1487,7 +1487,7 @@ module VCAP::CloudController::Validators
             [
               {
                 protocol: 'icmpv6',
-                destination: '1.0.0.000-1.0.0.200',
+                destination: '1.0.0.1-1.0.0.200',
                 type: -1,
                 code: 255
               }

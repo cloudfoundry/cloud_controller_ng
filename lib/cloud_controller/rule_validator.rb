@@ -1,3 +1,5 @@
+require 'ipaddr'
+
 module CloudController
   class RuleValidator
     class_attribute :required_fields, :optional_fields
@@ -53,11 +55,7 @@ module CloudController
         ips = parse_ip(address_list)
         return false if ips.nil?
 
-        sorted_ips = if ips.first.is_a?(NetAddr::IPv4)
-                       NetAddr.sort_IPv4(ips)
-                     else
-                       NetAddr.sort_IPv6(ips)
-                     end
+        sorted_ips = ips.sort
 
         return true if ips.first == sorted_ips.first
       end
@@ -122,26 +120,36 @@ module CloudController
 
     private_class_method def self.parse_ipv4(val)
       if val.is_a?(Array)
-        val.map do |ip|
-          NetAddr::IPv4.parse(ip)
-        end
+        val.map { |ip| parse_address(ip, :ipv4?) }
       else
-        NetAddr::IPv4Net.parse(val)
+        parse_cidr(val, :ipv4?)
       end
-    rescue NetAddr::ValidationError
+    rescue IPAddr::Error
       nil
     end
 
     private_class_method def self.parse_ipv6(val)
       if val.is_a?(Array)
-        val.map do |ip|
-          NetAddr::IPv6.parse(ip)
-        end
+        val.map { |ip| parse_address(ip, :ipv6?) }
       else
-        NetAddr::IPv6Net.parse(val)
+        parse_cidr(val, :ipv6?)
       end
-    rescue NetAddr::ValidationError
+    rescue IPAddr::Error
       nil
+    end
+
+    # A range endpoint must be a plain address, so a prefix is not allowed here.
+    private_class_method def self.parse_address(val, family)
+      raise IPAddr::InvalidAddressError if val.include?('/')
+
+      parse_cidr(val, family)
+    end
+
+    private_class_method def self.parse_cidr(val, family)
+      ip = IPAddr.new(val)
+      raise IPAddr::InvalidAddressError unless ip.public_send(family)
+
+      ip
     end
   end
 end

@@ -1,5 +1,3 @@
-require 'netaddr'
-
 module VCAP::CloudController
   class SecurityGroup < Sequel::Model
     SECURITY_GROUP_NAME_REGEX = /\A[[:alnum:][:punct:][:print:]]+\Z/

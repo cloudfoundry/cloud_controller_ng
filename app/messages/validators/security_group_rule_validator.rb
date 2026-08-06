@@ -149,34 +149,39 @@ class RulesValidator < ActiveModel::Validator
     address_list = destination.split('-')
 
     zeros_error_message = 'destination octets cannot contain leading zeros'
-    add_rule_error(zeros_error_message, record, index) unless CloudController::RuleValidator.no_leading_zeros(address_list)
+    no_leading_zeros = CloudController::RuleValidator.no_leading_zeros(address_list)
+    add_rule_error(zeros_error_message, record, index) unless no_leading_zeros
     if address_list.length == 1
       parsed_ip = CloudController::RuleValidator.parse_ip(address_list.first)
-      add_rule_error(error_message, record, index) unless parsed_ip
-      add_rule_error("for protocol \"#{protocol}\" you cannot use IPv#{parsed_ip.version} addresses", record, index) \
+      # The leading-zeros error already explains this parse failure; don't pile on the generic one.
+      add_rule_error(error_message, record, index) if parsed_ip.nil? && no_leading_zeros
+      add_rule_error("for protocol \"#{protocol}\" you cannot use IPv#{ip_version(parsed_ip)} addresses", record, index) \
         unless valid_ip_version?(allowed_ip_version, parsed_ip)
     elsif address_list.length == 2
       ips = CloudController::RuleValidator.parse_ip(address_list)
 
       return add_rule_error('destination IP address range is invalid', record, index) unless ips
 
-      sorted_ips = if ips.first.is_a?(NetAddr::IPv4)
-                     NetAddr.sort_IPv4(ips)
-                   else
-                     NetAddr.sort_IPv6(ips)
-                   end
+      sorted_ips = ips.sort
 
       reversed_range_error = 'beginning of IP address range is numerically greater than the end of its range (range endpoints are inverted)'
       add_rule_error(reversed_range_error, record, index) unless ips.first == sorted_ips.first
-      add_rule_error("for protocol \"#{protocol}\" you cannot use IPv#{ips.first.version} addresses", record, index) \
+      add_rule_error("for protocol \"#{protocol}\" you cannot use IPv#{ip_version(ips.first)} addresses", record, index) \
         unless valid_ip_version?(allowed_ip_version, sorted_ips.first)
     else
       add_rule_error(error_message, record, index)
     end
   end
 
+  def ip_version(parsed_ip)
+    return 4 if parsed_ip.ipv4?
+    return 6 if parsed_ip.ipv6?
+
+    raise ArgumentError.new("unsupported IP family: #{parsed_ip}")
+  end
+
   def valid_ip_version?(allowed_ip_version, parsed_ip)
-    parsed_ip.nil? || allowed_ip_version.nil? || parsed_ip.version == allowed_ip_version
+    parsed_ip.nil? || allowed_ip_version.nil? || ip_version(parsed_ip) == allowed_ip_version
   end
 
   def add_rule_error(message, record, index)
