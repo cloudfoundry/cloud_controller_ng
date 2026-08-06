@@ -95,11 +95,13 @@ module VCAP::CloudController
         org_error_msg = org_error_msg_1 + org_error_msg_2
         error_message = e.message
 
+        # rubocop:disable Style/ArrayIntersect -- e.message is a String, not an Array
         if space_quota_errors.any? { |substring| e.message.include?(substring) }
           error_message += space_error_msg
         elsif org_quota_errors.any? { |substring| e.message.include?(substring) }
           error_message += org_error_msg
         end
+        # rubocop:enable Style/ArrayIntersect
 
         error = DeploymentCreate::Error.new(error_message)
         error.set_backtrace(e.backtrace)

@@ -2,7 +2,7 @@ module VCAP::CloudController
   class IncludeBindingAppDecorator
     class << self
       def match?(include)
-        include&.any? { |i| %w[app].include?(i) }
+        include&.intersect?(%w[app])
       end
 
       def decorate(hash, bindings)

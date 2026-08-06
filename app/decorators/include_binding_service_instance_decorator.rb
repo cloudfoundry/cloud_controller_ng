@@ -4,7 +4,7 @@ module VCAP::CloudController
   class IncludeBindingServiceInstanceDecorator
     class << self
       def match?(include)
-        include&.any? { |i| %w[service_instance].include?(i) }
+        include&.intersect?(%w[service_instance])
       end
 
       def decorate(hash, bindings)

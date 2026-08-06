@@ -17,7 +17,7 @@ module VCAP::CloudController
       yield
     rescue Sequel::UniqueConstraintViolation => e
       unique_indexes = %w[org_users_idx org_auditors_idx org_managers_idx org_billing_managers_idx]
-      raise e unless unique_indexes.any? { |pattern| e.message.include?(pattern) }
+      raise e unless unique_indexes.any? { |pattern| e.message.include?(pattern) } # rubocop:disable Style/ArrayIntersect -- e.message is a String, not an Array
 
       errors.add(%i[organization_id user_id], :unique)
       raise validation_failed_error

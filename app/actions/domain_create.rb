@@ -42,11 +42,11 @@ module VCAP::CloudController
     private
 
     def validation_error!(message, error)
-      error!("The domain name \"#{message.name}\" is already in use") if error.errors.on(:name)&.any? { |e| [:unique].include?(e) }
+      error!("The domain name \"#{message.name}\" is already in use") if error.errors.on(:name)&.intersect?([:unique])
 
-      error!("The \"#{message.name}\" domain is reserved and cannot be used for org-scoped domains.") if error.errors.on(:name)&.any? { |e| [:reserved].include?(e) }
+      error!("The \"#{message.name}\" domain is reserved and cannot be used for org-scoped domains.") if error.errors.on(:name)&.intersect?([:reserved])
 
-      if error.errors.on(:organization)&.any? { |e| [:total_private_domains_exceeded].include?(e) }
+      if error.errors.on(:organization)&.intersect?([:total_private_domains_exceeded])
         org = Organization.find(guid: message.organization_guid).name
         error!("The number of private domains exceeds the quota for organization \"#{org}\"")
       end

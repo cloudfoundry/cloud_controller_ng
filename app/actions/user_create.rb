@@ -26,11 +26,9 @@ module VCAP::CloudController
     private
 
     def validation_error!(message, error)
-      error!("User with guid '#{message.guid}' already exists.") if message.guid && error.errors.on(:guid)&.any? { |e| [:unique].include?(e) }
+      error!("User with guid '#{message.guid}' already exists.") if message.guid && error.errors.on(:guid)&.intersect?([:unique])
 
-      if !message.guid && error.errors.on(:guid)&.any? { |e| [:unique].include?(e) }
-        error!("User with username '#{message.username}' and origin '#{message.origin}' already exists.")
-      end
+      error!("User with username '#{message.username}' and origin '#{message.origin}' already exists.") if !message.guid && error.errors.on(:guid)&.intersect?([:unique])
 
       error!(error.message)
     end

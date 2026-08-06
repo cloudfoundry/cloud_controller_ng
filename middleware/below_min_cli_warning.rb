@@ -11,7 +11,7 @@ module CloudFoundry
 
         included_endpoints = %w[/v3/spaces /v3/organizations /v2/spaces /v2/organizations]
 
-        if included_endpoints.any? { |ep| env['REQUEST_PATH'].include?(ep) } && is_below_min_cli_version?(env['HTTP_USER_AGENT'])
+        if included_endpoints.any? { |ep| env['REQUEST_PATH'].include?(ep) } && is_below_min_cli_version?(env['HTTP_USER_AGENT']) # rubocop:disable Style/ArrayIntersect -- env['REQUEST_PATH'] is a String, not an Array
           # Ensure existing warnings are appended by ',' (unicode %2C)
           new_warning = env['X-Cf-Warnings'].nil? ? escaped_warning : "#{env['X-Cf-Warnings']}%2C#{escaped_warning}"
           headers['X-Cf-Warnings'] = new_warning

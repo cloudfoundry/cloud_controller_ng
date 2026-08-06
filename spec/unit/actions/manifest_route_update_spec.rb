@@ -89,7 +89,7 @@ module VCAP::CloudController
             ManifestRouteUpdate.update(app.guid, message, user_audit_info)
 
             routes = app.reload.routes
-            expect(routes.length).to eq(num_routes + 0)
+            expect(routes.length).to eq(num_routes)
             expect(Route.count).to eq(num_maps + 1)
 
             route = routes.first
