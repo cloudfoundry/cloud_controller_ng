@@ -5,7 +5,7 @@ module VCAP::CloudController
         def perform
           logger.info('Deleting package and droplet blobs that are expired or failed')
 
-          DropletModel.where(state: [DropletModel::EXPIRED_STATE, DropletModel::FAILED_STATE]).exclude(droplet_hash: nil).each do |droplet|
+          DropletModel.where(state: [DropletModel::EXPIRED_STATE, DropletModel::FAILED_STATE]).each do |droplet|
             enqueue_droplet_delete_job(droplet.guid)
           end
 
