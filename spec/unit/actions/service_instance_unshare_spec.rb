@@ -80,7 +80,7 @@ module VCAP::CloudController
           it 'fails to unshare' do
             expect { service_instance_unshare.unshare(service_instance, target_space, user_audit_info) }.
               to raise_error(VCAP::CloudController::ServiceInstanceUnshare::Error) do |err|
-              expect(err.message).to include("\n\tThe binding between an application and service instance #{service_instance.name} " \
+              expect(err.message).to include("The binding between an application and service instance #{service_instance.name} " \
                                              "in space #{target_space.name} is being deleted asynchronously.")
             end
 
@@ -94,6 +94,13 @@ module VCAP::CloudController
             binding_guids = [service_binding_1.guid, service_binding_2.guid, service_binding_3.guid]
             jobs = VCAP::CloudController::PollableJobModel.where(resource_guid: binding_guids)
             expect(jobs.count).to eq(3)
+          end
+
+          context 'when called with fail_if_in_progress: false' do
+            it 'raises SubResourceError instead of Error' do
+              expect { service_instance_unshare.unshare(service_instance, target_space, user_audit_info, fail_if_in_progress: false) }.
+                to raise_error(VCAP::CloudController::SubResourceError)
+            end
           end
         end
 

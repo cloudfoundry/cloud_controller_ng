@@ -71,7 +71,11 @@ module VCAP::CloudController
       end
 
       def next_enqueue_would_exceed_maximum_duration?
-        Time.now + next_execution_in > start_time + maximum_duration_seconds
+        Time.now + next_execution_in > get_start_time + maximum_duration_seconds
+      end
+
+      def get_start_time
+        start_time
       end
 
       def finish
