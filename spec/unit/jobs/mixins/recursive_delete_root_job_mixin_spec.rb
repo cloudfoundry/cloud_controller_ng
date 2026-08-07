@@ -49,6 +49,33 @@ module VCAP::CloudController
         create(:pollable_job_model, root_job_guid: root_pollable_job.guid, state: state, **attrs)
       end
 
+      describe '#next_enqueue_would_exceed_maximum_duration?' do
+        let!(:root_pollable_job) { make_root }
+
+        it 'does not expire while a sub-job is still in flight, however long the wait' do
+          make_sub_job(state: PollableJobModel::PROCESSING_STATE)
+          job.instance_variable_set(:@start_time, Time.now - 1.year)
+
+          expect(job.send(:next_enqueue_would_exceed_maximum_duration?)).to be(false)
+        end
+
+        it 'restarts the remaining duration once the sub-jobs finish, so a long wait does not expire the root' do
+          make_sub_job(state: PollableJobModel::COMPLETE_STATE)
+          job.instance_variable_set(:@start_time, Time.now - 1.year)
+
+          expect(job.send(:next_enqueue_would_exceed_maximum_duration?)).to be(false)
+          expect(job.send(:get_start_time)).to be_within(5.seconds).of(Time.now)
+        end
+
+        it 'expires once the root has spent its own budget after the sub-jobs finished' do
+          make_sub_job(state: PollableJobModel::COMPLETE_STATE)
+          job.send(:next_enqueue_would_exceed_maximum_duration?) # stamp sub_jobs_completed_at
+          job.instance_variable_set(:@sub_jobs_completed_at, Time.now - 1.year)
+
+          expect(job.send(:next_enqueue_would_exceed_maximum_duration?)).to be(true)
+        end
+      end
+
       describe '#next_execution_in' do
         let(:max_interval) { 100 }
 

@@ -9,14 +9,25 @@ module VCAP::CloudController
       # Buffer added on top of the sub-jobs' next run_at so the root wakes just after them, never before.
       ROOT_JOB_BUFFER_SECONDS = 5
 
-      # Reuses the fetched context when active (the common path); only falls back to a lookup for callers
-      # that run before perform (e.g. LoggingContextJob#before) or after the row has settled, where any
-      # matching row still serves log correlation.
+      # Reuses the fetched context when active (the common path); fetch from db as fallback
       def root_job_guid
         @root_job&.guid || PollableJobModel.first(resource_guid: resource_guid, operation: display_name)&.guid
       end
 
       private
+
+      # While sub-jobs are still deleting, never time out: the wait is legitimate and each sub-job has its own timeout
+      # Once they finish, restart the remaining duration from that point so it bounds the root's own delete
+      def next_enqueue_would_exceed_maximum_duration?
+        return false if active_sub_jobs_in_db?
+
+        @sub_jobs_completed_at ||= Time.now
+        super
+      end
+
+      def get_start_time
+        @sub_jobs_completed_at || super
+      end
 
       def perform_with_root_job_handling
         activate_root_job_context
@@ -81,10 +92,7 @@ module VCAP::CloudController
       end
 
       def seconds_until_slowest_sub_job
-        job = PollableJobModel.find_active_delete(resource_guid: resource_guid, operation: display_name)
-        return nil unless job
-
-        active_guids = job.sub_jobs_dataset.where(state: [PollableJobModel::PROCESSING_STATE, PollableJobModel::POLLING_STATE]).select_map(:delayed_job_guid)
+        active_guids = active_sub_jobs_dataset&.select_map(:delayed_job_guid) || []
         return nil if active_guids.empty?
 
         latest = Delayed::Job.where(guid: active_guids).max(:run_at)
@@ -92,6 +100,18 @@ module VCAP::CloudController
         return nil unless latest && latest > now
 
         (latest - now).ceil
+      end
+
+      def active_sub_jobs_in_db?
+        active_sub_jobs_dataset&.any? || false
+      end
+
+      # Non-terminal sub-jobs of this root read fresh from the DB - used after the cached context has been cleared
+      def active_sub_jobs_dataset
+        job = PollableJobModel.find_active_delete(resource_guid: resource_guid, operation: display_name)
+        return unless job
+
+        job.sub_jobs_dataset.where(state: [PollableJobModel::PROCESSING_STATE, PollableJobModel::POLLING_STATE])
       end
 
       def sub_jobs_in_flight?
