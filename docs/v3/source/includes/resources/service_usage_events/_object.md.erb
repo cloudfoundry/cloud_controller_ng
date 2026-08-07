@@ -26,3 +26,25 @@ Name | Type | Description
 **service_broker.guid** | _string_ or `null` | Unique identifier of the service broker that this event pertains to, if applicable
 **service_broker.name** | _string_ or `null` | Name of the service broker that this event pertains to, if applicable
 **links** | [_links object_](#links) | Links to related resources
+
+#### WAS_RUNNING events
+
+`WAS_RUNNING` is a synthetic value for `state` recorded once per existing service instance by a one-time data migration when the keep-running cleanup feature was introduced. It marks every service instance that existed at the time of the upgrade so that billing consumers can bootstrap from a complete baseline of service instances even if the original `CREATED` events have been pruned.
+
+**Consumer interpretation:**
+
+* If you have not previously recorded a `CREATED` event for this service instance, treat `WAS_RUNNING` as equivalent to `CREATED`.
+* If you have already recorded `CREATED` (or an earlier `WAS_RUNNING`) for this instance, treat as a redundant baseline confirmation and ignore.
+* `created_at` reflects when the backfill migration ran, **not** when the service instance was created. Treat `WAS_RUNNING` as a baseline marker that the instance already existed as of that timestamp.
+
+#### Repaired ending events
+
+The backfill (and any later run of its recovery task) repairs baselines that turn out to be unpaired: if a `WAS_RUNNING` event was recorded for a service instance that no longer exists and no later `DELETED` event exists for it — for example because the instance was deleted while the backfill was still in progress — the missing `DELETED` event is appended, copying the baseline's instance, plan, and broker attributes. Baselines are never deleted. A repaired `DELETED` event carries a `created_at` of when the repair ran, **not** when the instance was actually deleted — the interval it closes may overstate the instance's true lifetime by that gap.
+
+#### What a consumer must do
+
+Independent of the backfill, the events stream asks three things of any consumer that pairs beginnings with endings:
+
+1. Ignore a `WAS_RUNNING` event for a service instance you already track (see above).
+2. Tolerate duplicate `DELETED` events for the same instance: close the interval on the first one and ignore the rest.
+3. Treat a `DELETED` event with no visible `CREATED`/`UPDATED`/`WAS_RUNNING` for that instance as noise.
