@@ -1,0 +1,25 @@
+description: Managed service instance to update
+content:
+  application/json:
+    schema:
+      type: object
+      properties:
+        name:
+          type: string
+          description: Name of the service instance
+        tags:
+          type: array
+          items:
+            type: string
+          description: Tags for the service instance
+        parameters:
+          type: object
+          description: Parameters for the service instance
+        relationships:
+          type: object
+          properties:
+            service_plan:
+              $ref: '../schemas/RelationshipToOne.yaml'
+          description: Relationships for the service instance
+        metadata:
+          $ref: '../schemas/Metadata.yaml'

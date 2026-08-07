@@ -1,0 +1,402 @@
+/v3/service_route_bindings:
+  get:
+    summary: List service route bindings
+    description: This endpoint retrieves the service route bindings the user has access to.
+    operationId: listServiceRouteBindings
+    tags:
+      - Service Route Bindings
+    parameters:
+      - $ref: ../components/parameters/Page.yaml
+      - $ref: ../components/parameters/PerPage.yaml
+      - $ref: ../components/parameters/OrderBy.yaml
+      - name: route_guids
+        in: query
+        schema:
+          type: array
+          items:
+            type: string
+        description: Comma-delimited list of route guids to filter by
+      - name: service_instance_guids
+        in: query
+        schema:
+          type: array
+          items:
+            type: string
+        description: Comma-delimited list of service instance guids to filter by
+      - name: service_instance_names
+        in: query
+        schema:
+          type: array
+          items:
+            type: string
+        description: Comma-delimited list of service instance names to filter by
+      - $ref: ../components/parameters/LabelSelector.yaml
+      - name: guids
+        in: query
+        schema:
+          type: array
+          items:
+            type: string
+        description: Comma-delimited list of service route binding guids to filter by
+      - $ref: ../components/parameters/CreatedAts.yaml
+      - $ref: ../components/parameters/UpdatedAts.yaml
+      - name: include
+        in: query
+        schema:
+          type: array
+          items:
+            type: string
+            enum:
+              - route
+              - service_instance
+        description: 'Optionally include a list of unique related resources in the response. Valid values are: `route`, `service_instance`'
+    responses:
+      '200':
+        description: OK
+        content:
+          application/json:
+            schema:
+              $ref: ../components/schemas/ServiceRouteBindingList.yaml
+      '400':
+        $ref: ../components/responses/BadRequest.yaml
+      '401':
+        $ref: ../components/responses/Unauthorized.yaml
+      '403':
+        $ref: ../components/responses/Forbidden.yaml
+      '409':
+        $ref: ../components/responses/Conflict.yaml
+      '422':
+        $ref: ../components/responses/UnprocessableEntity.yaml
+      '500':
+        $ref: ../components/responses/500.yaml
+      '502':
+        $ref: ../components/responses/BadGateway.yaml
+      '503':
+        $ref: ../components/responses/ServiceUnavailable.yaml
+  post:
+    summary: Create a service route binding
+    description: |-
+      This endpoint creates a new route service binding. The service instance and the route must be in the same space.
+
+      To bind a route to a user-provided service instance, the service instance must have the `route_service_url` property set.
+
+      To bind a route to a managed service instance, the service offering must be bindable, and the service offering must have `route_forwarding` set in the `requires` property.
+    operationId: createServiceRouteBinding
+    tags:
+      - Service Route Bindings
+    requestBody:
+      content:
+        application/json:
+          schema:
+            $ref: ../components/schemas/ServiceRouteBindingCreate.yaml
+          examples:
+            default:
+              summary: default
+              value:
+                metadata:
+                  annotations:
+                    foo: bar
+                  labels:
+                    baz: qux
+                relationships:
+                  route:
+                    data:
+                      guid: 123e4567-e89b-12d3-a456-426614174000
+                  service_instance:
+                    data:
+                      guid: 123e4567-e89b-12d3-a456-426614174000
+                parameters:
+                  key1: value1
+                  key2: value2
+    responses:
+      '201':
+        description: Created
+        content:
+          application/json:
+            schema:
+              $ref: ../components/schemas/ServiceRouteBinding.yaml
+            examples:
+              default:
+                summary: default
+                value:
+                  guid: 123e4567-e89b-12d3-a456-426614174000
+                  created_at: '2015-11-13T17:02:56Z'
+                  updated_at: '2016-06-08T16:41:26Z'
+                  route_service_url: https://route-service-url.io
+                  last_operation:
+                    type: create
+                    state: succeeded
+                    description: Operation succeeded
+                    updated_at: '2020-03-10T15:49:32Z'
+                    created_at: '2020-03-10T15:49:29Z'
+                  metadata:
+                    annotations:
+                      foo: bar
+                    labels:
+                      baz: qux
+                  relationships:
+                    service_instance:
+                      data:
+                        guid: 123e4567-e89b-12d3-a456-426614174000
+                    route:
+                      data:
+                        guid: 123e4567-e89b-12d3-a456-426614174000
+                  links:
+                    self:
+                      href: https://api.example.org/v3/service_route_bindings/dde5ad2a-d8f4-44dc-a56f-0452d744f1c3
+                    service_instance:
+                      href: https://api.example.org/v3/service_instances/8bfe4c1b-9e18-45b1-83be-124163f31f9e
+                    route:
+                      href: https://api.example.org/v3/routes/74f7c078-0934-470f-9883-4fddss5b8f13
+                    parameters:
+                      href: https://api.example.org/v3/service_route_bindings/b3536566-63e2-428f-8f87-a1b99864ada6/parameters
+        links:
+          route:
+            operationId: getRoute
+            parameters:
+              guid: $response.body#/relationships/route/data/guid
+            description: Retrieve the route for this service route binding
+          service_instance:
+            operationId: getServiceInstance
+            parameters:
+              guid: $response.body#/relationships/service_instance/data/guid
+            description: Retrieve the service instance for this service route binding
+      '202':
+        description: Accepted
+        headers:
+          Location:
+            description: URL of the job that is creating the service route binding
+            schema:
+              type: string
+              format: uri
+      '400':
+        $ref: ../components/responses/BadRequest.yaml
+      '401':
+        $ref: ../components/responses/Unauthorized.yaml
+      '403':
+        $ref: ../components/responses/Forbidden.yaml
+      '409':
+        $ref: ../components/responses/Conflict.yaml
+      '422':
+        $ref: ../components/responses/UnprocessableEntity.yaml
+      '500':
+        $ref: ../components/responses/500.yaml
+      '503':
+        $ref: ../components/responses/ServiceUnavailable.yaml
+/v3/service_route_bindings/{guid}:
+  get:
+    summary: Get a service route binding
+    description: This endpoint retrieves the service route binding by GUID.
+    operationId: getServiceRouteBinding
+    tags:
+      - Service Route Bindings
+    parameters:
+      - $ref: ../components/parameters/Guid.yaml
+      - name: include
+        in: query
+        schema:
+          type: array
+          items:
+            type: string
+            enum:
+              - route
+              - service_instance
+        description: Optionally include a list of unique related resources in the response
+    responses:
+      '200':
+        description: OK
+        content:
+          application/json:
+            schema:
+              $ref: ../components/schemas/ServiceRouteBinding.yaml
+            examples:
+              default:
+                summary: default
+                value:
+                  guid: 123e4567-e89b-12d3-a456-426614174000
+                  created_at: '2015-11-13T17:02:56Z'
+                  updated_at: '2016-06-08T16:41:26Z'
+                  route_service_url: https://route-service-url.io
+                  last_operation:
+                    type: create
+                    state: succeeded
+                    description: Operation succeeded
+                    updated_at: '2020-03-10T15:49:32Z'
+                    created_at: '2020-03-10T15:49:29Z'
+                  metadata:
+                    annotations:
+                      foo: bar
+                    labels:
+                      baz: qux
+                  relationships:
+                    service_instance:
+                      data:
+                        guid: 123e4567-e89b-12d3-a456-426614174000
+                    route:
+                      data:
+                        guid: 123e4567-e89b-12d3-a456-426614174000
+                  links:
+                    self:
+                      href: https://api.example.org/v3/service_route_bindings/dde5ad2a-d8f4-44dc-a56f-0452d744f1c3
+                    service_instance:
+                      href: https://api.example.org/v3/service_instances/8bfe4c1b-9e18-45b1-83be-124163f31f9e
+                    route:
+                      href: https://api.example.org/v3/routes/74f7c078-0934-470f-9883-4fddss5b8f13
+                    parameters:
+                      href: https://api.example.org/v3/service_route_bindings/b3536566-63e2-428f-8f87-a1b99864ada6/parameters
+        links:
+          route:
+            operationId: getRoute
+            parameters:
+              guid: $response.body#/relationships/route/data/guid
+            description: Retrieve the route for this service route binding
+          service_instance:
+            operationId: getServiceInstance
+            parameters:
+              guid: $response.body#/relationships/service_instance/data/guid
+            description: Retrieve the service instance for this service route binding
+      '401':
+        $ref: ../components/responses/Unauthorized.yaml
+      '403':
+        $ref: ../components/responses/Forbidden.yaml
+      '404':
+        $ref: ../components/responses/NotFound.yaml
+  patch:
+    summary: Update a service route binding
+    description: This endpoint updates a service route binding with labels and annotations.
+    operationId: updateServiceRouteBinding
+    tags:
+      - Service Route Bindings
+    parameters:
+      - $ref: ../components/parameters/Guid.yaml
+    requestBody:
+      content:
+        application/json:
+          schema:
+            properties:
+              metadata:
+                $ref: ../components/schemas/Metadata.yaml
+          examples:
+            default:
+              summary: default
+              value:
+                metadata:
+                  labels:
+                    key: value
+                  annotations:
+                    note: detailed information
+    responses:
+      '200':
+        description: OK
+        content:
+          application/json:
+            schema:
+              $ref: ../components/schemas/ServiceRouteBinding.yaml
+            examples:
+              default:
+                summary: default
+                value:
+                  guid: 123e4567-e89b-12d3-a456-426614174000
+                  created_at: '2015-11-13T17:02:56Z'
+                  updated_at: '2016-06-08T16:41:26Z'
+                  route_service_url: https://route-service-url.io
+                  last_operation:
+                    type: create
+                    state: succeeded
+                    description: Operation succeeded
+                    updated_at: '2020-03-10T15:49:32Z'
+                    created_at: '2020-03-10T15:49:29Z'
+                  metadata:
+                    annotations:
+                      foo: bar
+                    labels:
+                      baz: qux
+                  relationships:
+                    service_instance:
+                      data:
+                        guid: 123e4567-e89b-12d3-a456-426614174000
+                    route:
+                      data:
+                        guid: 123e4567-e89b-12d3-a456-426614174000
+                  links:
+                    self:
+                      href: https://api.example.org/v3/service_route_bindings/dde5ad2a-d8f4-44dc-a56f-0452d744f1c3
+                    service_instance:
+                      href: https://api.example.org/v3/service_instances/8bfe4c1b-9e18-45b1-83be-124163f31f9e
+                    route:
+                      href: https://api.example.org/v3/routes/74f7c078-0934-470f-9883-4fddss5b8f13
+                    parameters:
+                      href: https://api.example.org/v3/service_route_bindings/b3536566-63e2-428f-8f87-a1b99864ada6/parameters
+      '400':
+        $ref: ../components/responses/BadRequest.yaml
+      '401':
+        $ref: ../components/responses/Unauthorized.yaml
+      '403':
+        $ref: ../components/responses/Forbidden.yaml
+      '404':
+        $ref: ../components/responses/NotFound.yaml
+      '409':
+        $ref: ../components/responses/Conflict.yaml
+      '422':
+        $ref: ../components/responses/UnprocessableEntity.yaml
+      '500':
+        $ref: ../components/responses/500.yaml
+      '503':
+        $ref: ../components/responses/ServiceUnavailable.yaml
+  delete:
+    summary: Delete a service route binding
+    description: This endpoint deletes a service route binding. When deleting route bindings originating from user provided service instances, the delete operation does not require interactions with service brokers, therefore the API will respond synchronously to the delete request. Consequently, deleting route bindings from managed service instances responds with a job which can be used to track the progress of the delete operation.
+    operationId: deleteServiceRouteBinding
+    tags:
+      - Service Route Bindings
+    parameters:
+      - $ref: ../components/parameters/Guid.yaml
+    responses:
+      '202':
+        description: Accepted
+        headers:
+          Location:
+            description: URL of the job that is deleting the service route binding
+            schema:
+              type: string
+              format: uri
+      '204':
+        description: No Content
+      '401':
+        $ref: ../components/responses/Unauthorized.yaml
+      '403':
+        $ref: ../components/responses/Forbidden.yaml
+      '404':
+        $ref: ../components/responses/NotFound.yaml
+      '422':
+        $ref: ../components/responses/UnprocessableEntity.yaml
+      '500':
+        $ref: ../components/responses/500.yaml
+/v3/service_route_bindings/{guid}/parameters:
+  get:
+    summary: Get parameters for a route binding
+    description: Queries the Service Broker for the parameters associated with this service route binding. The broker catalog must have enabled the `bindings_retrievable` feature for the Service Offering. Check the [Service Offering object](#the-service-offering-object) for the value of this feature flag. This endpoint is not available for User-Provided Service Instances.
+    operationId: getServiceRouteBindingParameters
+    tags:
+      - Service Route Bindings
+    parameters:
+      - $ref: ../components/parameters/Guid.yaml
+    responses:
+      '200':
+        description: OK
+        content:
+          application/json:
+            schema:
+              type: object
+            examples:
+              default:
+                summary: default
+                value:
+                  foo: bar
+                  foz: baz
+      '401':
+        $ref: ../components/responses/Unauthorized.yaml
+      '403':
+        $ref: ../components/responses/Forbidden.yaml
+      '404':
+        $ref: ../components/responses/NotFound.yaml

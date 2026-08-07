@@ -1,0 +1,31 @@
+description: App object that needs to be updated
+required: true
+content:
+  application/json:
+    schema:
+      type: object
+      properties:
+        name:
+          type: string
+          description: Name of the app
+        environment_variables:
+          type: object
+          description: Environment variables to be used for the App when running
+          additionalProperties:
+            type: string
+        lifecycle:
+          $ref: ../schemas/Lifecycle.yaml
+          description: Lifecycle to be used when updating the app; note `data` is a required field in lifecycle if lifecycle is updated. `type` may NOT be changed from its current value.
+        metadata:
+          $ref: ../schemas/Metadata.yaml
+      description: Request schema for updating an app
+    examples:
+      default:
+        summary: default
+        value:
+          name: my_app
+          lifecycle:
+            type: buildpack
+            data:
+              buildpacks:
+                - java_buildpack

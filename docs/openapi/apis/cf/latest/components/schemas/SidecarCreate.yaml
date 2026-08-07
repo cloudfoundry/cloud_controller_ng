@@ -1,0 +1,16 @@
+type: object
+properties:
+  name:
+    type: string
+    description: Name of the sidecar
+  command:
+    type: string
+    description: Command to run for the sidecar
+  process_types:
+    type: array
+    items:
+      type: string
+    description: Process types that the sidecar applies to
+  memory_in_mb:
+    type: [integer, "null"]
+    description: Memory limit for the sidecar in MB

@@ -1,0 +1,56 @@
+description: Service broker object that needs to be updated
+required: true
+content:
+  application/json:
+    schema:
+      type: object
+      properties:
+        name:
+          type: string
+          description: Name of the service broker
+        url:
+          type: string
+          description: URL of the service broker
+        authentication:
+          type: object
+          description: Credentials used to authenticate against the service broker
+          properties:
+            type:
+              type: string
+              enum:
+                - basic
+              description: Authentication type
+            credentials:
+              type: object
+              description: Authentication credentials
+              properties:
+                username:
+                  type: string
+                  description: Username for basic authentication
+                password:
+                  type: string
+                  description: Password for basic authentication
+              required:
+                - username
+                - password
+          required:
+            - type
+            - credentials
+        metadata:
+          $ref: ../schemas/Metadata.yaml
+    examples:
+      default:
+        summary: default
+        value:
+          name: my_service_broker
+          url: https://example.service-broker.com
+          authentication:
+            type: basic
+            credentials:
+              username: us3rn4me
+              password: p4ssw0rd
+          metadata:
+            labels:
+              key: value
+            annotations:
+              note: detailed information

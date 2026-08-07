@@ -1,0 +1,5 @@
+description: Successfully created buildpack
+content:
+  application/json:
+    schema:
+      $ref: '../schemas/Buildpack.yaml'

@@ -1,0 +1,115 @@
+get:
+    summary: Get V3 API root
+    description: |-
+      Returns the V3 API root endpoint information.
+    operationId: getV3ApiRoot
+    tags:
+      - Root
+    responses:
+      '200':
+        description: OK
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                links:
+                  type: object
+                  description: Links to related resources
+                  properties:
+                    self:
+                      allOf:
+                        - $ref: '../components/schemas/Link.yaml'
+                        - description: Link to the current endpoint
+                    apps:
+                      allOf:
+                        - $ref: '../components/schemas/Link.yaml'
+                        - description: Link to the apps endpoint
+                    builds:
+                      allOf:
+                        - $ref: '../components/schemas/Link.yaml'
+                        - description: Link to the builds endpoint
+                    deployments:
+                      allOf:
+                        - $ref: '../components/schemas/Link.yaml'
+                        - description: Link to the deployments endpoint
+                    domains:
+                      allOf:
+                        - $ref: '../components/schemas/Link.yaml'
+                        - description: Link to the domains endpoint
+                    droplets:
+                      allOf:
+                        - $ref: '../components/schemas/Link.yaml'
+                        - description: Link to the droplets endpoint
+                    feature_flags:
+                      allOf:
+                        - $ref: '../components/schemas/Link.yaml'
+                        - description: Link to the feature flags endpoint
+                    info:
+                      allOf:
+                        - $ref: '../components/schemas/Link.yaml'
+                        - description: Link to the info endpoint
+                    isolation_segments:
+                      allOf:
+                        - $ref: '../components/schemas/Link.yaml'
+                        - description: Link to the isolation segments endpoint
+                    organizations:
+                      allOf:
+                        - $ref: '../components/schemas/Link.yaml'
+                        - description: Link to the organizations endpoint
+                    packages:
+                      allOf:
+                        - $ref: '../components/schemas/Link.yaml'
+                        - description: Link to the packages endpoint
+                    processes:
+                      allOf:
+                        - $ref: '../components/schemas/Link.yaml'
+                        - description: Link to the processes endpoint
+                    roles:
+                      allOf:
+                        - $ref: '../components/schemas/Link.yaml'
+                        - description: Link to the roles endpoint
+                    routes:
+                      allOf:
+                        - $ref: '../components/schemas/Link.yaml'
+                        - description: Link to the routes endpoint
+                    security_groups:
+                      allOf:
+                        - $ref: '../components/schemas/Link.yaml'
+                        - description: Link to the security groups endpoint
+                    service_brokers:
+                      allOf:
+                        - $ref: '../components/schemas/Link.yaml'
+                        - description: Link to the service brokers endpoint
+                    service_instances:
+                      allOf:
+                        - $ref: '../components/schemas/Link.yaml'
+                        - description: Link to the service instances endpoint
+                    service_offerings:
+                      allOf:
+                        - $ref: '../components/schemas/Link.yaml'
+                        - description: Link to the service offerings endpoint
+                    service_plans:
+                      allOf:
+                        - $ref: '../components/schemas/Link.yaml'
+                        - description: Link to the service plans endpoint
+                    spaces:
+                      allOf:
+                        - $ref: '../components/schemas/Link.yaml'
+                        - description: Link to the spaces endpoint
+                    stacks:
+                      allOf:
+                        - $ref: '../components/schemas/Link.yaml'
+                        - description: Link to the stacks endpoint
+                    tasks:
+                      allOf:
+                        - $ref: '../components/schemas/Link.yaml'
+                        - description: Link to the tasks endpoint
+                    users:
+                      allOf:
+                        - $ref: '../components/schemas/Link.yaml'
+                        - description: Link to the users endpoint
+      '404':
+        $ref: '../components/responses/NotFound.yaml'
+      '500':
+        $ref: '../components/responses/500.yaml'

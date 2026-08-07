@@ -1,0 +1,43 @@
+type: object
+allOf:
+  - $ref: './BaseSchema.yaml'
+  - properties:
+      name:
+        type: string
+        description: The name of the buildpack; to be used by app buildpack field (only alphanumeric characters)
+      state:
+        type: string
+        description: The state of the buildpack
+        enum:
+          - AWAITING_UPLOAD
+          - READY
+      stack:
+        type: [string, 'null']
+        description: The name of the stack that the buildpack uses
+      lifecycle:
+        type: string
+        description: The version of buildpacks the buildpack uses. `buildpack` indicates [Classic Buildpacks](https://docs.cloudfoundry.org/buildpacks/classic.html). `cnb` indicates [Cloud Native Buildpacks](https://docs.cloudfoundry.org/buildpacks/cnb/)
+      position:
+        type: integer
+        description: The order in which the buildpacks are checked during buildpack auto-detection
+      enabled:
+        type: boolean
+        description: Whether or not the buildpack can be used for staging
+      locked:
+        type: boolean
+        description: Whether or not the buildpack is locked to prevent updating the bits
+      filename:
+        type: [string, 'null']
+        description: The filename of the buildpack
+      metadata:
+        $ref: './Metadata.yaml'
+      links:
+        type: object
+        properties:
+          self:
+            $ref: './Link.yaml'
+            description: The URL of the buildpack
+          upload:
+            $ref: './Link.yaml'
+            description: The URL to upload the buildpack
+description: A buildpack represents a set of scripts used to prepare an application for launch.

@@ -1,0 +1,66 @@
+allOf:
+  - $ref: './BaseSchema.yaml'
+type: object
+properties:
+  type:
+    type: string
+    description: |-
+      Role type. Possible values are:
+      - `organization_user`: A user in the organization
+      - `organization_auditor`: An auditor in the organization
+      - `organization_manager`: A manager in the organization
+      - `organization_billing_manager`: A billing manager in the organization
+      - `space_auditor`: An auditor in the space
+      - `space_developer`: A developer in the space
+      - `space_manager`: A manager in the space
+      - `space_supporter`: A supporter in the space (not authorized to use the V2 API)
+    enum:
+      - organization_user
+      - organization_auditor
+      - organization_manager
+      - organization_billing_manager
+      - space_auditor
+      - space_developer
+      - space_manager
+      - space_supporter
+  relationships:
+    allOf:
+      - $ref: './Relationships.yaml'
+    properties:
+      organization:
+        allOf:
+          - $ref: './RelationshipToOne.yaml'
+          - description: |
+              A relationship to the organization the role controls access to; when this is a space role, `organization.data` will be `null`.
+      space:
+        allOf:
+          - $ref: './RelationshipToOne.yaml'
+          - description: |
+              A relationship to the space the role controls access to; when this is an organization role, `space.data` will be `null`.
+      user:
+        allOf:
+          - $ref: './UserRelationshipToOne.yaml'
+          - description: |
+              A relationship to the user; this is the user that has the role
+  links:
+    type: object
+    properties:
+      self:
+        $ref: './Link.yaml'
+        description: The URL to get this role
+      user:
+        $ref: './Link.yaml'
+        description: The URL to get the user for this role
+      organization:
+        $ref: './Link.yaml'
+        description: The URL to get the organization for this role
+      space:
+        $ref: './Link.yaml'
+        description: The URL to get the space for this role
+  included:
+    $ref: './IncludedResources.yaml'
+    description: Additional related resources included in the response when using the include parameter
+description: |
+  Roles represent a set of permissions that can be granted to users. Roles are represented as a JSON object.
+  A role consists of several required role fields and other attributes specific to the role.
+  See Roles for specific roles.

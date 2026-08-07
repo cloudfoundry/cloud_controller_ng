@@ -1,0 +1,72 @@
+type: object
+allOf:
+  - $ref: './BaseSchema.yaml'
+  - properties:
+      name:
+        type: string
+        description: Name of the security group
+      globally_enabled:
+        type: object
+        properties:
+          running:
+            type: boolean
+            description: Whether the security group is globally enabled for running apps
+          staging:
+            type: boolean
+            description: Whether the security group is globally enabled for staging apps
+      rules:
+        type: array
+        items:
+          type: object
+          properties:
+            protocol:
+              type: string
+              description: Protocol for the rule
+            destination:
+              type: string
+              description: Destination for the rule
+            ports:
+              type: string
+              description: Ports for the rule
+            type:
+              type: integer
+              description: Type for ICMP rules
+            code:
+              type: integer
+              description: Code for ICMP rules
+            description:
+              type: string
+              description: Description of the rule
+        description: Rules for the security group
+      running_spaces:
+        type: object
+        properties:
+          data:
+            type: array
+            items:
+              $ref: './Relationship.yaml'
+        description: Spaces where this security group is applied to running apps
+      staging_spaces:
+        type: object
+        properties:
+          data:
+            type: array
+            items:
+              $ref: './Relationship.yaml'
+        description: Spaces where this security group is applied to staging apps
+      links:
+        type: object
+        properties:
+          self:
+            $ref: './Link.yaml'
+          running_spaces:
+            $ref: './Link.yaml'
+          staging_spaces:
+            $ref: './Link.yaml'
+      metadata:
+        $ref: './Metadata.yaml'
+    required:
+    - name
+    - globally_enabled
+    - rules
+    - links

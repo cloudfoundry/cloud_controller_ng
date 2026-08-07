@@ -1,0 +1,8 @@
+description: Bad Request
+content:
+  application/json:
+    schema:
+      $ref: '../schemas/Errors.yaml'
+  text/html:
+    schema:
+      type: string

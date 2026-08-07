@@ -1,0 +1,9 @@
+allOf:
+  - $ref: './Pagination.yaml'
+  - type: object
+    properties:
+      resources:
+        type: array
+        items:
+          $ref: './Process.yaml'
+description: 'A list of processes'

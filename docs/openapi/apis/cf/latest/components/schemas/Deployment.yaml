@@ -1,0 +1,124 @@
+type: object
+allOf:
+- $ref: ./BaseSchema.yaml
+- properties:
+    status:
+      type: object
+      properties:
+        value:
+          type: string
+          description: The current status of the deployment
+          enum:
+          - ACTIVE
+          - FINALIZED
+        reason:
+          type: string
+          description: The reason for the status of the deployment
+          enum:
+          - DEPLOYING
+          - PAUSED
+          - CANCELING
+          - DEPLOYED
+          - CANCELED
+          - SUPERSEDED
+        details:
+          type: object
+          properties:
+            last_successful_healthcheck:
+              type: string
+              format: date-time
+              description: Timestamp of the last successful health check
+            last_status_change:
+              type: string
+              format: date-time
+              description: Timestamp of last change to status.value or status.reason
+    strategy:
+      type: string
+      description: Strategy used for the deployment
+      enum:
+      - rolling
+      - canary
+    options:
+      type: object
+      properties:
+        max_in_flight:
+          type: integer
+          description: The maximum number of new instances to deploy simultaneously
+        web_instances:
+          type: integer
+          description: The number of instances for the web process of the new droplet
+        memory_in_mb:
+          type: integer
+          description: The amount of memory in megabytes to allocate for the web process
+        disk_in_mb:
+          type: integer
+          description: The amount of disk space in megabytes to allocate for the web process
+        log_rate_limit_in_bytes_per_second:
+          type: integer
+          description: The log rate limit in bytes per second for the web process. A value of -1 indicates unlimited, 0 prevents any logs from being emitted.
+        canary:
+          type: object
+          description: Configuration for canary deployments. Present when strategy is 'canary'.
+          properties:
+            steps:
+              type: array
+              description: Array of steps defining the canary deployment progression
+              items:
+                type: object
+                properties:
+                  instance_weight:
+                    type: integer
+                    description: The percentage of instances to be deployed as part of the canary process in this step
+    droplet:
+      type: object
+      properties:
+        guid:
+          type: string
+          format: uuid
+      description: The droplet guid that the deployment is transitioning the app to
+    previous_droplet:
+      type: object
+      properties:
+        guid:
+          type: string
+          format: uuid
+      description: "The app\u2019s [current droplet guid](#get-current-droplet-association-for-an-app) before the deployment was created"
+    new_processes:
+      type: array
+      items:
+        type: object
+        properties:
+          guid:
+            type: string
+            format: uuid
+            description: The GUID of the new process created as part of the deployment
+          type:
+            type: string
+            description: The type of the new process created as part of the deployment
+    revision:
+      type: [object, "null"]
+      properties:
+        guid:
+          type: string
+          format: uuid
+          description: The revision the deployment is transitioning the app to
+        version:
+          type: integer
+          description: The version of the revision
+    relationships:
+      $ref: ./Relationships.yaml
+    metadata:
+      $ref: ./Metadata.yaml
+    links:
+      type: object
+      properties:
+        self:
+          $ref: ./Link.yaml
+          description: The URL to get this deployment
+        app:
+          $ref: ./Link.yaml
+          description: The URL to get the app for this deployment
+        cancel:
+          $ref: ./Link.yaml
+          description: The URL to cancel this deployment
+description: "Deployments are objects that manage updates to applications with zero downtime. They can either: - Manage updating an app\u2019s droplet directly after an application package is staged - Roll an app back to a specific revision along with its associated droplet\nDeployment strategies supported: - Rolling deployments allow for applications to be deployed without incurring downtime by gradually rolling out instances. Max-in-flight can be configured to specify how many instances are rolled out simultaneously. - Canary deployments deploy a single instance and pause for user evaluation. If the canary instance is deemed successful, the deployment can be resumed via the continue action. The deployment then continues like a rolling deployment. This feature is experimental and is subject to change.\n"

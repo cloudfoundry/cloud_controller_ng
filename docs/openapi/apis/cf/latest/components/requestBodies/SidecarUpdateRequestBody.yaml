@@ -1,0 +1,31 @@
+description: Sidecar object that needs to be updated
+required: true
+content:
+  application/json:
+    schema:
+      type: object
+      properties:
+        name:
+          type: string
+          description: Human-readable name for the sidecar
+        command:
+          type: string
+          description: The command used to start the sidecar
+        process_types:
+          type: array
+          items:
+            type: string
+          description: A list of process types the sidecar applies to
+        memory_in_mb:
+          type: integer
+          description: Reserved memory for sidecar
+    examples:
+      default:
+        summary: default
+        value:
+          name: auth-sidecar
+          command: bundle exec rackup
+          process_types:
+            - web
+            - worker
+          memory_in_mb: 300

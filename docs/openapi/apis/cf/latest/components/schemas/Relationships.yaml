@@ -1,0 +1,12 @@
+type: object
+description: |
+  Relationships represent associations between resources. When relationships are mutable, they can be used to create, read, update, and delete these associations. An app’s relationship to its current droplet is mutable, but an app’s relationship to its space is not.
+
+  Relationships do not affect the fundamental properties of a resource, but may affect their behavior and permissions logic. Relationships are tied to the lifecycles of the associated resources and will be removed if either of the associated resources are deleted. For example, if a user is removed from an organization, both the user and the organization persist, but the relationship between them does not.
+
+  Not all resources implement every relationship operation demonstrated in the examples below. See the docs for each resource to see how it interacts with its relationships.
+
+  Endpoints that return relationship data list this information under the relationships key.
+
+  The relationship object
+  The relationship object is a key-value pair that uniquely identifies a resource. In practice this is almost always the guid of a resource.

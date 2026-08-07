@@ -1,0 +1,24 @@
+type: object
+properties:
+  name:
+    type: string
+    description: Name of the service instance
+  tags:
+    type: array
+    items:
+      type: string
+    description: Tags for the service instance
+  credentials:
+    type: object
+    description: Service credentials
+  syslog_drain_url:
+    type: [string, "null"]
+    format: uri
+    description: URL for syslog drain
+  route_service_url:
+    type: string
+    format: uri
+    description: URL for route service
+  metadata:
+    $ref: './Metadata.yaml'
+description: Schema for updating a user-provided service instance

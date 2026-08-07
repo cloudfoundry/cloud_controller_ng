@@ -1,0 +1,74 @@
+type: object
+allOf:
+  - $ref: './BaseSchema.yaml'
+  - properties:
+      state:
+        type: string
+        description: State of the droplet; valid states are AWAITING_UPLOAD, PROCESSING_UPLOAD, STAGED, COPYING, FAILED, or EXPIRED
+      error:
+        type: [string, 'null']
+        description: A string describing the last error during the droplet lifecycle
+      lifecycle:
+        $ref: './Lifecycle.yaml'
+      execution_metadata:
+        type: [string, "null"]
+        description: Serialized JSON data resulting from staging for use when executing a droplet
+      process_types:
+        type: object
+        description: The process types (keys) and associated start commands (values) that will be created when the droplet is executed
+      metadata:
+        $ref: './Metadata.yaml'
+      links:
+        type: object
+        properties:
+          self:
+            $ref: './Link.yaml'
+            description: The URL to get this droplet
+          package:
+            $ref: './Link.yaml'
+            description: The URL to get the package for this droplet
+          app:
+            $ref: './Link.yaml'
+            description: The URL to get the app for this droplet
+          assign_current_droplet:
+            $ref: './Link.yaml'
+            description: The URL to assign the droplet to an application
+          download:
+            $ref: './Link.yaml'
+            description: The URL to download the droplet
+          upload:
+            $ref: './Link.yaml'
+            description: The URL to upload the droplet
+      checksum:
+        type: [object, 'null']
+        properties:
+          type:
+            type: string
+            description: Hashing algorithm for checksum; supported algorithms are sha256 and sha1
+          value:
+            type: string
+            description: Checksum of the droplet
+      buildpacks:
+        type: [array, "null"]
+        items:
+          type: object
+          properties:
+            name:
+              type: [string, "null"]
+              description: System buildpack name
+            detect_output:
+              type: [string, 'null']
+              description: Output during buildpack detect process
+            version:
+              type: [string, 'null']
+              description: Version reported by the buildpack
+            buildpack_name:
+              type: [string, "null"]
+              description: Name reported by the buildpack
+      stack:
+        type: [string, 'null']
+        description: The root filesystem to use with the buildpack, for example cflinuxfs4
+      image:
+        type: [string, 'null']
+        description: Docker image name for Docker droplets
+description: A droplet is the result of staging an application package. There are two types (lifecycles) of droplets buildpack and docker. In the case of the buildpacks, the droplet contains the bits produced by the buildpack, typically application code and dependencies.

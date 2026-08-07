@@ -1,0 +1,77 @@
+type: object
+properties:
+  labels:
+    type: object
+    additionalProperties:
+      type: [string, "null"]
+    description: |
+      A set of key-value pairs that describe the resource. Labels are a JSON object that contains information about a resource. They are used to tag resources with metadata that can be used to filter and group resources. Labels are included in the response body of a request to retrieve a resource.
+      Labels are user-specified key/value pairs that are attached to API Resources. They are queryable, identifying attributes of a resource, but they do not affect the operation of CloudFoundry.
+
+      For example, an app may be assigned a label with key sensitive and possible values true or false.
+
+      Users could then find all sensitive apps with a selector for sensitive=true, resulting in a response containing only apps having the label key sensitive with a label value of true.
+
+      Labels
+      Labels allow users to apply identifying attributes to resources that are meaningful to the user, but not the CloudFoundry system.
+
+      Examples may include (but are not limited to):
+
+      "production" : "true" or "production" : "false"
+      "env" : "dev" or "env" : "test" or "env" : "prod"
+      "chargeback-code" : "abc123"
+      Label keys
+      Label keys are made up of an (optional) prefix, and name. If a prefix is present, it is separated from the name by a /. Prefixes are dns names intended to enable namespacing of label keys.
+
+      A label key prefix must adhere to the following restrictions:
+
+      Length: 0-253 characters
+      Allowed characters: alphanumeric ( [a-z0-9A-Z] ), -, and .
+      DNS subdomain format (series of subdomain labels separated by .)
+      A label key name must adhere to the following restrictions:
+
+      Length: 1-63 characters
+      Allowed characters: alphanumeric ( [a-z0-9A-Z] ), -, _, and .
+      Must begin and end with an alphanumeric character
+      Label values
+      Label values must adhere to the following restrictions:
+
+      Length: 0-63 characters
+      Allowed characters: alphanumeric ( [a-z0-9A-Z] ), -, _, and .
+      Must begin and end with an alphanumeric character
+      Empty values are allowed
+  annotations:
+    type: object
+    additionalProperties:
+      type: [string, "null"]
+    description: |
+      A set of key-value pairs that describe the resource. Annotations are a JSON object that contains information about a resource. They are used to tag resources with metadata that can be used to filter and group resources. Annotations are included in the response body of a request to retrieve a resource.
+      Annotations are user-specified key-value pairs that are attached to API resources. They do not affect the operation of Cloud Foundry. Annotations cannot be used in filters.
+
+      When a service instance is being created, the service broker is sent the annotations of the service instance, and the space and organization in which the service instance resides. When a service instance is being updated, the service broker is sent the annotations of the space and organization in which the service instance resides. When a service binding is being created, the service broker is sent annotations of any associated app, and the space and organization in which the binding resides. Only annotations with a prefix (e.g. company.com/contacts) are sent to service brokers.
+
+      Examples may include (but are not limited to):
+
+      "contact info": "bob@example.com jane@example.com"
+      "library versions": "Spring: 5.1, Redis Client: a184098. yaml parser: 38"
+      "git-sha": "d56fe0367554ae5e878e37ed6c5b9a82f5995512"
+      Annotation keys
+      Annotation keys are made up of an (optional) prefix and name. If a prefix is present, it is separated from the name by a /. Prefixes are DNS names intended to enable namespacing of annotation keys.
+
+      An annotation key prefix must adhere to the following restrictions:
+
+      Length: 0-253 characters
+      Allowed characters: a-z, A-Z, 0-9, -, and .; emojis cannot be used in keys
+      DNS subdomain format (series of subdomain annotations separated by .)
+      An annotation key name must adhere to the following restrictions:
+
+      Length: 1-63 characters
+      Allowed characters: a-z, A-Z, 0-9, -, _, and .; emojis cannot be used in keys
+      Must begin and end with an alphanumeric character
+      Annotation values
+      Annotation values must adhere to the following restrictions:
+
+      Length: 0-5000 unicode characters
+description: |
+  Metadata is a JSON object that contains information about a resource. It includes the GUID of the resource, the time the resource was created, the time the resource was last updated, and links to the resource.
+  Metadata is included in the response body of a request to retrieve a resource.

@@ -1,0 +1,20 @@
+description: Space to create
+content:
+  application/json:
+    schema:
+      type: object
+      properties:
+        name:
+          type: string
+          description: Name of the space
+        relationships:
+          type: object
+          properties:
+            organization:
+              $ref: '../schemas/RelationshipToOne.yaml'
+          description: The organization that the space belongs to
+        metadata:
+          $ref: '../schemas/Metadata.yaml'
+      required:
+        - name
+        - relationships

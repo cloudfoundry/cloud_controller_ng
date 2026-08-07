@@ -1,0 +1,13 @@
+type: object
+properties:
+  name:
+    type: string
+    description: The name of the app feature
+  description:
+    type: [string, "null"]
+    description: The description of the app feature
+  enabled:
+    type: boolean
+    description: Denotes whether or not the app feature is enabled
+description: >
+  App features are used to manage whether optional capabilities are enabled for a given application.
