@@ -74,7 +74,7 @@ GEM
     diff-lcs (1.6.2)
     digest-xxhash (0.2.9)
     drb (2.2.3)
-    erb (6.0.6)
+    erb (6.0.7)
     erubi (1.13.1)
     factory_bot (6.6.0)
       activesupport (>= 6.1.0)
