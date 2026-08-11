@@ -3,6 +3,7 @@ require 'jobs/enqueuer'
 require 'jobs/generic_enqueuer'
 require 'jobs/v3/delete_binding_job'
 require 'jobs/v3/delete_service_binding_job_factory'
+require 'errors/sub_resource_error'
 
 module VCAP::CloudController
   module V3
@@ -21,11 +22,15 @@ module VCAP::CloudController
           unless result[:finished]
             polling_job = DeleteBindingJob.new(type, binding.guid, user_audit_info:)
             Jobs::GenericEnqueuer.shared.enqueue_pollable(polling_job)
-            unbinding_operation_in_progress!(binding)
+            raise AsyncOperationInProgress.new(unbinding_in_progress_message(binding))
           end
         rescue StandardError => e
           errors << e
         end
+      end
+
+      def unbinding_in_progress_message(binding)
+        "An operation for service binding #{binding.guid} is in progress."
       end
     end
   end

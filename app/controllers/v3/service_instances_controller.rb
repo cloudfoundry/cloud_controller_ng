@@ -29,6 +29,7 @@ require 'controllers/v3/mixins/service_permissions'
 require 'decorators/field_service_instance_plan_decorator'
 require 'jobs/v3/create_service_instance_job'
 require 'jobs/v3/update_service_instance_job'
+require 'jobs/v3/recursive_delete_service_instance_job'
 
 class ServiceInstancesV3Controller < ApplicationController
   include ServicePermissions
@@ -115,13 +116,33 @@ class ServiceInstancesV3Controller < ApplicationController
     end
 
     delete_action = V3::ServiceInstanceDelete.new(service_instance, service_event_repository)
-    operation_in_progress! if delete_action.blocking_operation_in_progress?
 
     case service_instance
     when VCAP::CloudController::ManagedServiceInstance
-      job_guid = enqueue_delete_job(service_instance)
-      head :accepted, 'Location' => url_builder.build_url(path: "/v3/jobs/#{job_guid}")
+      if async_recursive_delete_enabled?
+        # Idempotent retry: return the active delete job instead of 422-ing on its delete-in-progress last_operation.
+        active_delete = PollableJobModel.find_active_delete(resource_guid: service_instance.guid, operation: 'service_instance.delete')
+        operation_in_progress! if active_delete.nil? && delete_action.blocking_operation_in_progress?
+
+        job = Jobs::Enqueuer.new(queue: Jobs::Queues.generic).enqueue_or_find_active_pollable(
+          resource_model: ManagedServiceInstance,
+          resource_guid: service_instance.guid,
+          operation: 'service_instance.delete'
+        ) do |locked_instance|
+          log_service_instance_deletion(locked_instance)
+          V3::RecursiveDeleteServiceInstanceJob.new(locked_instance.guid, user_audit_info)
+        end
+
+        service_instance_not_found! unless job
+
+        head :accepted, 'Location' => url_builder.build_url(path: "/v3/jobs/#{job.guid}")
+      else
+        operation_in_progress! if delete_action.blocking_operation_in_progress?
+        job_guid = enqueue_delete_job(service_instance)
+        head :accepted, 'Location' => url_builder.build_url(path: "/v3/jobs/#{job_guid}")
+      end
     when VCAP::CloudController::UserProvidedServiceInstance
+      operation_in_progress! if delete_action.blocking_operation_in_progress?
       delete_action.delete
       head :no_content
     end
@@ -391,9 +412,7 @@ class ServiceInstancesV3Controller < ApplicationController
     service_instance
   end
 
-  def enqueue_delete_job(service_instance)
-    delete_job = V3::DeleteServiceInstanceJob.new(service_instance.guid, user_audit_info)
-
+  def log_service_instance_deletion(service_instance)
     plan = service_instance.service_plan
     service = plan.service
     broker = service.service_broker
@@ -404,9 +423,18 @@ class ServiceInstancesV3Controller < ApplicationController
       "from service offering '#{service.label}' " \
       "provided by broker '#{broker.name}'."
     )
+  end
 
+  # Legacy enqueue path used when the async-recursive-delete rollout flag is off. Preserves main's behaviour.
+  def enqueue_delete_job(service_instance)
+    log_service_instance_deletion(service_instance)
+    delete_job = V3::DeleteServiceInstanceJob.new(service_instance.guid, user_audit_info)
     pollable_job = Jobs::Enqueuer.new(queue: Jobs::Queues.generic).enqueue_pollable(delete_job)
     pollable_job.guid
+  end
+
+  def async_recursive_delete_enabled?
+    !!VCAP::CloudController::Config.config.get(:temporary_enable_async_recursive_delete, :service_instances)
   end
 
   def unreadable_error_message(service_instance_name, unreadable_space_guids)

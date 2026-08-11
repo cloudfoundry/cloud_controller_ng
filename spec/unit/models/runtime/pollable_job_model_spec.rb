@@ -167,5 +167,39 @@ module VCAP::CloudController
         expect(JobWarningModel.all).to be_empty
       end
     end
+
+    describe '#sub_jobs' do
+      let(:root) { create(:pollable_job_model) }
+      let!(:sub1) { create(:pollable_job_model, root_job_guid: root.guid) }
+      let!(:sub2) { create(:pollable_job_model, root_job_guid: root.guid) }
+      let!(:unrelated) { create(:pollable_job_model) }
+
+      it 'returns jobs whose root_job_guid matches this job\'s guid' do
+        expect(root.sub_jobs).to contain_exactly(sub1, sub2)
+      end
+    end
+
+    describe '.find_active_delete' do
+      it 'returns a PROCESSING job for the given resource and operation' do
+        job = create(:pollable_job_model, state: 'PROCESSING', resource_guid: 'guid-1', operation: 'app.delete')
+        expect(PollableJobModel.find_active_delete(resource_guid: 'guid-1', operation: 'app.delete')).to eq(job)
+      end
+
+      it 'returns a POLLING job for the given resource and operation' do
+        job = create(:pollable_job_model, state: 'POLLING', resource_guid: 'guid-1', operation: 'app.delete')
+        expect(PollableJobModel.find_active_delete(resource_guid: 'guid-1', operation: 'app.delete')).to eq(job)
+      end
+
+      it 'ignores terminal jobs' do
+        create(:pollable_job_model, state: 'COMPLETE', resource_guid: 'guid-1', operation: 'app.delete')
+        create(:pollable_job_model, state: 'FAILED', resource_guid: 'guid-1', operation: 'app.delete')
+        expect(PollableJobModel.find_active_delete(resource_guid: 'guid-1', operation: 'app.delete')).to be_nil
+      end
+
+      it 'ignores jobs for a different operation' do
+        create(:pollable_job_model, state: 'PROCESSING', resource_guid: 'guid-1', operation: 'something.else')
+        expect(PollableJobModel.find_active_delete(resource_guid: 'guid-1', operation: 'app.delete')).to be_nil
+      end
+    end
   end
 end

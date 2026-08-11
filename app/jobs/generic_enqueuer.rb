@@ -15,6 +15,20 @@ module VCAP::CloudController
       def self.reset!
         Thread.current[:generic_enqueuer] = nil
       end
+
+      def activate_root_context(root_job_guid:)
+        @root_job_guid = root_job_guid
+      end
+
+      def deactivate_root_context
+        @root_job_guid = nil
+      end
+
+      private
+
+      def current_root_job_guid
+        @root_job_guid
+      end
     end
   end
 end

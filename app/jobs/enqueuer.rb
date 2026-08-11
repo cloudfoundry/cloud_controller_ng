@@ -21,7 +21,7 @@ module VCAP::CloudController
       end
 
       def enqueue_pollable(job, existing_guid: nil, run_at: nil, priority_increment: nil, preserve_priority: false)
-        wrapped_job = PollableJobWrapper.new(job, existing_guid:)
+        wrapped_job = PollableJobWrapper.new(job, existing_guid: existing_guid, root_job_guid: current_root_job_guid)
 
         wrapped_job = yield wrapped_job if block_given?
 
@@ -29,11 +29,28 @@ module VCAP::CloudController
         PollableJobModel.find_by_delayed_job(delayed_job)
       end
 
+      def enqueue_or_find_active_pollable(resource_model:, resource_guid:, operation:)
+        resource_model.db.transaction do
+          resource = resource_model.where(guid: resource_guid).for_update.first
+          return nil unless resource
+
+          existing = PollableJobModel.find_active_delete(resource_guid:, operation:)
+          return existing if existing
+
+          enqueue_pollable(yield(resource))
+        end
+      end
+
       def self.unwrap_job(job)
         job.is_a?(WrappingJob) ? unwrap_job(job.handler) : job
       end
 
       private
+
+      # Base enqueuer has no root-job context; GenericEnqueuer overrides this while a root job is active.
+      def current_root_job_guid
+        nil
+      end
 
       def enqueue_job(job, run_at: nil, priority_increment: nil, preserve_priority: false)
         @opts['guid'] = SecureRandom.uuid

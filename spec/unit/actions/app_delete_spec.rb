@@ -237,25 +237,24 @@ module VCAP::CloudController
               it 'alwayses call the broker with accepts_incomplete true' do
                 expect(client).to receive(:unbind).with(binding1, user_guid: user_audit_info.user_guid, accepts_incomplete: true)
 
-                expect { app_delete.delete(app_dataset) }.to raise_error(AppDelete::SubResourceError)
+                expect { app_delete.delete(app_dataset) }.to raise_error(SubResourceError)
               end
 
-              it 'return an error that a service binding is being deleted asynchronously' do
-                expect { app_delete.delete(app_dataset) }.to raise_error(AppDelete::SubResourceError) do |err|
-                  expect(err.underlying_errors.map(&:message)).to contain_exactly(
-                    "An operation for the service binding between app #{binding1.app.name} and service instance #{binding1.service_instance.name} is in progress."
-                  )
-                end
+              it 'raises SubResourceError referencing the app and service instance' do
+                expect { app_delete.delete(app_dataset) }.to raise_error(
+                  SubResourceError,
+                  "An operation for the service binding between app #{binding1.app.name} and service instance #{binding1.service_instance.name} is in progress."
+                )
               end
 
               it 'does not delete the app' do
-                expect { app_delete.delete(app_dataset) }.to raise_error(AppDelete::SubResourceError)
+                expect { app_delete.delete(app_dataset) }.to raise_error(SubResourceError)
                 expect(binding1).to exist
                 expect(app).to exist
               end
 
               it 'does not rollback the enqueuing of a job to delete the service binding' do
-                expect { app_delete.delete(app_dataset) }.to raise_error(AppDelete::SubResourceError)
+                expect { app_delete.delete(app_dataset) }.to raise_error(SubResourceError)
                 expect(Delayed::Job.count).to eq 1
               end
             end
@@ -264,13 +263,14 @@ module VCAP::CloudController
               let!(:binding1) { create(:service_binding, app: app, service_instance: create(:managed_service_instance, space: app.space)) }
               let!(:binding2) { create(:service_binding, app: app, service_instance: create(:managed_service_instance, space: app.space)) }
 
-              it 'returns some errors describing that the service bindings are being deleted asynchronously' do
-                expect { app_delete.delete(app_dataset) }.to raise_error(AppDelete::SubResourceError) do |err|
-                  expect(err.underlying_errors.map(&:message)).to contain_exactly(
-                    "An operation for the service binding between app #{binding2.app.name} and service instance #{binding2.service_instance.name} is in progress.",
-                    "An operation for the service binding between app #{binding1.app.name} and service instance #{binding1.service_instance.name} is in progress."
+              it 'raises SubResourceError carrying every binding\'s message after enqueueing a polling job each' do
+                expect { app_delete.delete(app_dataset) }.to raise_error(SubResourceError) do |err|
+                  expect(err.message).to include(
+                    "An operation for the service binding between app #{binding1.app.name} and service instance #{binding1.service_instance.name} is in progress.",
+                    "An operation for the service binding between app #{binding2.app.name} and service instance #{binding2.service_instance.name} is in progress."
                   )
                 end
+                expect(Delayed::Job.count).to eq 2
               end
             end
           end
@@ -291,7 +291,7 @@ module VCAP::CloudController
             it 'raises the errors wrapped into a SubResourceError' do
               expect do
                 app_delete.delete(app_dataset)
-              end.to raise_error(AppDelete::SubResourceError) do |err|
+              end.to raise_error(SubResourceError) do |err|
                 expect(err.underlying_errors).to have(2).items
                 expect(err.underlying_errors).to all(be_a(StandardError))
                 expect(err.underlying_errors.map(&:message)).to eq(['error 1', 'error 2'])
