@@ -73,7 +73,7 @@ module Sequel::Plugins::VcapRelations
           end
         rescue Sequel::UniqueConstraintViolation => e
           # ignore the error and rollback the inner transaction
-          raise Sequel::Rollback if opts[:ignored_unique_constraint_violation_errors]&.any? { |pattern| e.message.include?(pattern) } # rubocop:disable Style/ArrayIntersect -- e.message is a String, not an Array
+          raise Sequel::Rollback if opts[:ignored_unique_constraint_violation_errors]&.any? { |pattern| e.message.include?(pattern) } # -- e.message is a String, not an Array
 
           raise e
         end

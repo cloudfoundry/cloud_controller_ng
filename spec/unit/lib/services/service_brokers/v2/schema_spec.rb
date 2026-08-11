@@ -73,7 +73,7 @@ module VCAP::Services::ServiceBrokers::V2
           it 'add a schema error message with a wrapped error' do
             expect(schema.validate).to be false
             expect(schema.errors.full_messages.length).to eq 1
-            expect(schema.errors.full_messages.first).to eq 'Must conform to JSON Schema Draft 04 (experimental support for later versions): whoops' \
+            expect(schema.errors.full_messages.first).to eq 'Must conform to JSON Schema Draft 04 (experimental support for later versions): whoops'
           end
         end
 
