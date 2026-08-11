@@ -3086,6 +3086,7 @@ RSpec.describe 'V3 service instances' do
       before do
         allow(Steno).to receive(:logger).and_call_original
         allow(Steno).to receive(:logger).with('cc.api').and_return(mock_logger)
+        TestConfig.override(temporary_enable_async_recursive_delete: { apps: true, service_instances: true })
       end
 
       it 'responds with job resource' do
@@ -3099,6 +3100,89 @@ RSpec.describe 'V3 service instances' do
         expect(job.operation).to eq('service_instance.delete')
         expect(job.resource_guid).to eq(instance.guid)
         expect(job.resource_type).to eq('service_instance')
+      end
+
+      context 'when temporary_enable_async_recursive_delete.service_instances is disabled (legacy path)' do
+        before { TestConfig.override(temporary_enable_async_recursive_delete: { apps: false, service_instances: false }) }
+
+        it 'still enqueues a pollable service_instance.delete job (legacy shape)' do
+          api_call.call(admin_headers)
+          expect(last_response).to have_status_code(202)
+
+          job = VCAP::CloudController::PollableJobModel.last
+          expect(job.operation).to eq('service_instance.delete')
+          expect(job.resource_guid).to eq(instance.guid)
+          expect(last_response.headers['Location']).to end_with("/v3/jobs/#{job.guid}")
+        end
+      end
+
+      context 'when a delete is already in flight for the instance' do
+        let!(:existing_job) do
+          create(:pollable_job_model,
+                 state: VCAP::CloudController::PollableJobModel::PROCESSING_STATE,
+                 resource_guid: instance.guid,
+                 operation: 'service_instance.delete')
+        end
+
+        it 'returns 202 pointing at the existing job and does not enqueue a second one' do
+          expect do
+            api_call.call(admin_headers)
+          end.not_to(change(VCAP::CloudController::PollableJobModel, :count))
+
+          expect(last_response).to have_status_code(202)
+          expect(last_response.headers['Location']).to end_with("/v3/jobs/#{existing_job.guid}")
+        end
+
+        context 'and last_operation is delete/in progress (retry during async deprovision)' do
+          before do
+            instance.save_with_new_operation({}, { type: 'delete', state: 'in progress', description: 'draining bindings' })
+          end
+
+          it 'returns 202 pointing at the existing job rather than 422' do
+            expect do
+              api_call.call(admin_headers)
+            end.not_to(change(VCAP::CloudController::PollableJobModel, :count))
+
+            expect(last_response).to have_status_code(202)
+            expect(last_response.headers['Location']).to end_with("/v3/jobs/#{existing_job.guid}")
+          end
+        end
+      end
+
+      context 'when a create operation is initial (no delete job)' do
+        before do
+          instance.save_with_new_operation({}, { type: 'create', state: 'initial' })
+        end
+
+        it 'returns 422 with an operation-in-progress error' do
+          api_call.call(admin_headers)
+          expect(last_response).to have_status_code(422)
+          expect(parsed_response['errors'].first['detail']).to include('operation in progress')
+        end
+      end
+
+      context 'when an update operation is in progress (no delete job)' do
+        before do
+          instance.save_with_new_operation({}, { type: 'update', state: 'in progress' })
+        end
+
+        it 'returns 422 with an operation-in-progress error' do
+          api_call.call(admin_headers)
+          expect(last_response).to have_status_code(422)
+          expect(parsed_response['errors'].first['detail']).to include('operation in progress')
+        end
+      end
+
+      context 'when last_operation is delete/in progress but there is no active job (stale state)' do
+        before do
+          instance.save_with_new_operation({}, { type: 'delete', state: 'in progress' })
+        end
+
+        it 'returns 422 with an operation-in-progress error (preserves safety net for orphaned state)' do
+          api_call.call(admin_headers)
+          expect(last_response).to have_status_code(422)
+          expect(parsed_response['errors'].first['detail']).to include('operation in progress')
+        end
       end
 
       it 'logs the correct names when deleting a managed service instance' do
@@ -3433,14 +3517,12 @@ RSpec.describe 'V3 service instances' do
                 to_return(status: 202, body: '{}', headers: {})
             end
 
-            it 'fails when the unbind is async' do
+            it 'enqueues an async unbind sub-job and defers the SI delete' do
               api_call.call(admin_headers)
-              execute_all_jobs(expected_successes: 0, expected_failures: 1, jobs_to_execute: 1)
+              # The root job enqueues an unbind sub-job then defers (re-enqueues itself), counting as 1 success.
+              execute_all_jobs(expected_successes: 1, expected_failures: 0, jobs_to_execute: 1)
 
-              lo = instance.last_operation
-              expect(lo.type).to eq('delete')
-              expect(lo.state).to eq('failed')
-              expect(lo.description).to eq("An operation for the service binding between app #{application.name} and service instance #{instance.name} is in progress.")
+              expect(VCAP::CloudController::ServiceInstance.first(guid: instance.guid)).not_to be_nil
 
               expect(
                 stub_request(:delete, "#{instance.service_broker.broker_url}/v2/service_instances/#{instance.guid}/service_bindings/#{service_binding.guid}").
@@ -3517,14 +3599,16 @@ RSpec.describe 'V3 service instances' do
               end
             end
 
-            it 'fails and starts the delete operation on the bindings' do
+            it 'defers and starts the delete operation on the bindings' do
               api_call.call(admin_headers)
-              execute_all_jobs(expected_successes: 0, expected_failures: 1, jobs_to_execute: 1)
+              # The root job enqueues 3 unbind sub-jobs then defers (re-enqueues itself), counting as 1 success.
+              execute_all_jobs(expected_successes: 1, expected_failures: 0, jobs_to_execute: 1)
 
-              lo = VCAP::CloudController::ServiceInstance.first.last_operation
-              expect(lo.type).to eq('delete')
-              expect(lo.state).to eq('failed')
-              expect(lo.description).to eq("An operation for a service binding of service instance #{instance.name} is in progress.")
+              instance.reload
+              expect(VCAP::CloudController::ServiceInstance.first(guid: instance.guid)).not_to be_nil
+              # The instance's own last_operation is untouched during binding cleanup (no broker deprovision has
+              # started yet); the in-flight state is reflected on the bindings' last_operation instead.
+              expect(instance.last_operation&.state).not_to eq('failed')
 
               lo = VCAP::CloudController::RouteBinding.first.last_operation
               expect(lo.type).to eq('delete')
@@ -3541,7 +3625,8 @@ RSpec.describe 'V3 service instances' do
 
             it 'continues to poll the last operation for the bindings' do
               api_call.call(admin_headers)
-              execute_all_jobs(expected_successes: 3, expected_failures: 1)
+              # 4 successes: the 3 binding-poll sub-jobs each poll once; the deferred root re-enqueues for later.
+              execute_all_jobs(expected_successes: 4, expected_failures: 0)
 
               [route_binding, service_binding, service_key].each do |binding|
                 expect(
@@ -3556,11 +3641,71 @@ RSpec.describe 'V3 service instances' do
 
             it 'eventually removes the bindings' do
               api_call.call(admin_headers)
-              execute_all_jobs(expected_successes: 3, expected_failures: 1)
+              execute_all_jobs(expected_successes: 4, expected_failures: 0)
 
               expect(VCAP::CloudController::RouteBinding.all).to be_empty
               expect(VCAP::CloudController::ServiceBinding.all).to be_empty
               expect(VCAP::CloudController::ServiceKey.all).to be_empty
+            end
+          end
+
+          context 'and an async unbind eventually fails' do
+            before do
+              [route_binding, service_binding, service_key].each do |binding|
+                stub_request(:delete, "#{instance.service_broker.broker_url}/v2/service_instances/#{instance.guid}/service_bindings/#{binding.guid}").
+                  with(query: {
+                         'accepts_incomplete' => true,
+                         'service_id' => instance.service.broker_provided_id,
+                         'plan_id' => instance.service_plan.broker_provided_id
+                       }).
+                  to_return(status: 202, body: '{}', headers: {})
+
+                stub_request(:get, "#{instance.service_broker.broker_url}/v2/service_instances/#{instance.guid}/service_bindings/#{binding.guid}/last_operation").
+                  with(query: {
+                         'service_id' => instance.service.broker_provided_id,
+                         'plan_id' => instance.service_plan.broker_provided_id
+                       }).
+                  to_return(status: 200, body: '{"state":"failed","description":"broker refused to unbind"}', headers: {})
+              end
+            end
+
+            it 'records the failure on the binding last_operation, not the instance (which owns no broker deprovision here)' do
+              api_call.call(admin_headers)
+              # Root enqueues 3 unbind sub-jobs and defers (1 success); the sub-jobs poll and fail (3 failures).
+              execute_all_jobs(expected_successes: 1, expected_failures: 3)
+              # Deferred root then observes the failed sub-jobs and surfaces the failure on the job resource.
+              Timecop.freeze(Time.now + 1.hour) do
+                execute_all_jobs(expected_successes: 0, expected_failures: 1, jobs_to_execute: 1)
+              end
+
+              # The unbind failure lives on the binding's own last_operation.
+              binding_lo = VCAP::CloudController::ServiceBinding.first.last_operation
+              expect(binding_lo.type).to eq('delete')
+              expect(binding_lo.state).to eq('failed')
+              expect(binding_lo.description).to include('broker refused to unbind')
+
+              # The instance's last_operation is NOT co-opted for a binding-phase failure: no broker
+              # deprovision of the instance was ever attempted, so it must not read delete/failed.
+              instance.reload
+              expect(instance.last_operation&.state).not_to eq('failed')
+            end
+
+            it 'ends the delete job FAILED with a populated errors[].detail so `cf delete-service` shows the reason' do
+              api_call.call(admin_headers)
+              execute_all_jobs(expected_successes: 1, expected_failures: 3)
+              Timecop.freeze(Time.now + 1.hour) do
+                execute_all_jobs(expected_successes: 0, expected_failures: 1, jobs_to_execute: 1)
+              end
+
+              root_job = VCAP::CloudController::PollableJobModel.find(resource_guid: instance.guid, operation: 'service_instance.delete')
+              expect(root_job.state).to eq(VCAP::CloudController::PollableJobModel::FAILED_STATE)
+
+              # aliases: true is test-only — the stored payload carries test_mode_info backtraces Psych anchors; prod payloads don't.
+              expect(root_job.cf_api_error).to be_present
+              parsed = Psych.safe_load(root_job.cf_api_error, strict_integer: true, aliases: true)
+              details = parsed['errors'].pluck('detail')
+              expect(details).to all(be_present)
+              expect(details).to include(a_string_including('broker refused to unbind'))
             end
           end
         end

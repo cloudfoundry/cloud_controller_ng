@@ -6,6 +6,7 @@ module VCAP::CloudController
     POLLING_STATE = 'POLLING'.freeze
 
     one_to_many :warnings, class: 'VCAP::CloudController::JobWarningModel', key: :job_id
+    one_to_many :sub_jobs, class: 'VCAP::CloudController::PollableJobModel', key: :root_job_guid, primary_key: :guid
 
     plugin :serialization
     add_association_dependencies warnings: :destroy
@@ -45,6 +46,10 @@ module VCAP::CloudController
       raise "No pollable job found for delayed_job '#{delayed_job_guid}'" if pollable_job.nil?
 
       pollable_job
+    end
+
+    def self.find_active_delete(resource_guid:, operation:)
+      PollableJobModel.first(resource_guid: resource_guid, operation: operation, state: [PROCESSING_STATE, POLLING_STATE])
     end
 
     def self.number_of_active_jobs_by_user(user_guid)

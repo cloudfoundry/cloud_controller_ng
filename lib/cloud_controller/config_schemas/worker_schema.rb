@@ -23,6 +23,11 @@ module VCAP::CloudController
 
           optional(:temporary_enable_v2) => bool,
 
+          optional(:temporary_enable_async_recursive_delete) => {
+            optional(:apps) => bool,
+            optional(:service_instances) => bool
+          },
+
           uaa: {
             internal_url: String,
             optional(:ca_file) => String,
