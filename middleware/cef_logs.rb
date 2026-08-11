@@ -36,7 +36,7 @@ module CloudFoundry
           "cs2Label=vcapRequestId cs2=#{escape_extension(env['cf.request_id'])} " \
           "cs3Label=result cs3=#{get_result(status)} " \
           "cs4Label=httpStatusCode cs4=#{status} " \
-          "cs5Label=xForwardedFor cs5=#{escape_extension(request.headers['HTTP_X_FORWARDED_FOR'])}" \
+          "cs5Label=xForwardedFor cs5=#{escape_extension(request.headers['HTTP_X_FORWARDED_FOR'])}"
         )
 
         [status, headers, body]
