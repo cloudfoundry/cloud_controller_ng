@@ -275,6 +275,14 @@ rate_limiter_v2_api:
   global_admin_limit: 20000
   reset_interval_in_minutes: 60
 
+concurrency_rate_limiter:
+  enabled: false
+  blocking_limit: 10
+  logging_limit: 10
+  redis_connection_pool_size: 40
+  redis_counter_ttl_seconds: 60
+
+
 temporary_enable_v2: true
 
 max_concurrent_service_broker_requests: 0

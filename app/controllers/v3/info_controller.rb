@@ -4,6 +4,8 @@ require 'presenters/v3/info_usage_summary_presenter'
 
 class InfoController < ApplicationController
   def v3_info
+    # sleep 1000ms to simulate avg running request
+    sleep(1)
     info = Info.new
     populate_info_fields(info)
     osbapi_version_file = Rails.root.join('config/osbapi_version').to_s

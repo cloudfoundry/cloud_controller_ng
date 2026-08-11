@@ -395,6 +395,14 @@ module VCAP::CloudController
             reset_interval_in_minutes: Integer
           },
 
+          optional(:concurrency_rate_limiter) => {
+            enabled: bool,
+            optional(:blocking_limit) => Integer,
+            optional(:logging_limit) => Integer,
+            optional(:redis_connection_pool_size) => Integer,
+            optional(:redis_counter_ttl_seconds) => Integer
+          },
+
           optional(:temporary_enable_v2) => bool,
 
           allow_app_ssh_access: bool,

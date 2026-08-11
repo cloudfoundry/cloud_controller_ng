@@ -7,13 +7,16 @@ require 'security_context_setter'
 require 'rate_limiter'
 require 'service_broker_rate_limiter'
 require 'rate_limiter_v2_api'
+require 'concurrency_rate_limiter'
 require 'new_relic_custom_attributes'
 require 'zipkin'
 require 'block_v3_only_roles'
 require 'below_min_cli_warning'
+require 'user_context_setter'
 
 module VCAP::CloudController
   class RackAppBuilder
+    # rubocop:disable Metrics/MethodLength, Metrics/BlockLength
     def build(config, request_metrics, request_logs)
       token_decoder = VCAP::CloudController::UaaTokenDecoder.new(config.get(:uaa))
       configurer = VCAP::CloudController::Security::SecurityContextConfigurer.new(token_decoder)
@@ -21,7 +24,6 @@ module VCAP::CloudController
       logger = access_log(config)
 
       Rack::Builder.new do
-        use CloudFoundry::Middleware::RequestMetrics, request_metrics
         use CloudFoundry::Middleware::Cors, config.get(:allowed_cors_domains)
         use CloudFoundry::Middleware::VcapRequestContextSetter
         use CloudFoundry::Middleware::BelowMinCliWarning if config.get(:warn_if_below_min_cli_version)
@@ -29,6 +31,17 @@ module VCAP::CloudController
         use CloudFoundry::Middleware::SecurityContextSetter, configurer
         use CloudFoundry::Middleware::Zipkin
         use CloudFoundry::Middleware::RequestLogs, request_logs
+
+        if config.get(:concurrency_rate_limiter, :enabled)
+          use CloudFoundry::Middleware::ConcurrencyRateLimiter, {
+            logger: Steno.logger('cc.concurrency_rate_limiter'),
+            blocking_limit: config.get(:concurrency_rate_limiter, :blocking_limit),
+            logging_limit: config.get(:concurrency_rate_limiter, :logging_limit),
+            redis_connection_pool_size: config.get(:concurrency_rate_limiter, :redis_connection_pool_size),
+            redis_counter_ttl_seconds: config.get(:concurrency_rate_limiter, :redis_counter_ttl_seconds)
+          }
+        end
+
         if config.get(:rate_limiter, :enabled)
           use CloudFoundry::Middleware::RateLimiter, {
             logger: Steno.logger('cc.rate_limiter'),
@@ -59,6 +72,9 @@ module VCAP::CloudController
           }
         end
 
+        use CloudFoundry::Middleware::RequestMetrics, request_metrics
+        use CloudFoundry::Middleware::UserContextSetter, configurer
+
         use CloudFoundry::Middleware::CefLogs, Logger.new(config.get(:security_event_logging, :file)), config.get(:local_route) if config.get(:security_event_logging, :enabled)
         use Rack::CommonLogger, logger if logger
 
@@ -76,6 +92,7 @@ module VCAP::CloudController
         end
       end
     end
+    # rubocop:enable Metrics/MethodLength, Metrics/BlockLength
 
     private
 
