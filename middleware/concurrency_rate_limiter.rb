@@ -20,8 +20,7 @@ module CloudFoundry
 
       def increment(key, logger)
         count = @redis.incr(key).to_i
-        # Set TTL only at key creation (count==1): fixed deadline ensures expiry even under sustained load if decrement is broken.
-        @redis.expire(key, @counter_ttl_seconds) if count == 1 && @counter_ttl_seconds
+        @redis.expire(key, @counter_ttl_seconds) if @counter_ttl_seconds
         count
       rescue Redis::BaseError => e
         logger.error("Redis error: #{e.class} - #{e.message}")
@@ -199,7 +198,7 @@ module CloudFoundry
         @logger.info("Concurrent rate limit exceeded for user '#{user_guid}' " \
                      "path=#{env['PATH_INFO']} limit=#{rate_limit_headers.limit} remaining=#{rate_limit_headers.remaining}")
         headers = rate_limit_headers.to_hash
-        headers["Retry-After-#{@header_suffix}"] = @concurrency_limiter.suggested_retry_after.to_s
+        headers['Retry-After'] = @concurrency_limiter.suggested_retry_after.to_s
         headers['Content-Type'] = 'text/plain; charset=utf-8'
         message = rate_limit_error(env).to_json
         headers['Content-Length'] = message.length.to_s

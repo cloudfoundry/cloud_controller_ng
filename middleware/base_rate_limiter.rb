@@ -84,7 +84,7 @@ module CloudFoundry
       def to_hash
         return {} if [@limit, @reset, @remaining].all?(&:nil?)
 
-        { "#{@prefix}-Limit#{@suffix}" => @limit, "#{@prefix}-Reset#{@suffix}" => @reset, "#{@prefix}-Remaining#{@suffix}" => @remaining }
+        { "#{@prefix}-Limit#{@suffix}" => @limit, "#{@prefix}-Reset#{@suffix}" => @reset, "#{@prefix}-Remaining#{@suffix}" => @remaining }.compact
       end
     end
 
