@@ -30,7 +30,6 @@ module VCAP::CloudController
         use CloudFoundry::Middleware::NewRelicCustomAttributes if config.get(:newrelic_enabled)
         use CloudFoundry::Middleware::SecurityContextSetter, configurer
         use CloudFoundry::Middleware::Zipkin
-        use CloudFoundry::Middleware::RequestLogs, request_logs
 
         if config.get(:concurrency_rate_limiter, :enabled)
           use CloudFoundry::Middleware::ConcurrencyRateLimiter, {
@@ -74,6 +73,7 @@ module VCAP::CloudController
 
         use CloudFoundry::Middleware::RequestMetrics, request_metrics
         use CloudFoundry::Middleware::UserContextSetter, configurer
+        use CloudFoundry::Middleware::RequestLogs, request_logs
 
         use CloudFoundry::Middleware::CefLogs, Logger.new(config.get(:security_event_logging, :file)), config.get(:local_route) if config.get(:security_event_logging, :enabled)
         use Rack::CommonLogger, logger if logger
