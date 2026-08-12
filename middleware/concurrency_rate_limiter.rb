@@ -207,7 +207,7 @@ module CloudFoundry
 
       def apply_rate_limiting?(env)
         request = ActionDispatch::Request.new(env)
-        !basic_auth?(env) && !internal_api?(request) && !root_api?(request) && !admin?
+        !basic_auth?(env) && !internal_api?(request) && !root_api?(request)
       end
 
       def root_api?(request)
@@ -221,10 +221,6 @@ module CloudFoundry
       def basic_auth?(env)
         auth = Rack::Auth::Basic::Request.new(env)
         auth.provided? && auth.basic?
-      end
-
-      def admin?
-        VCAP::CloudController::SecurityContext.admin? || VCAP::CloudController::SecurityContext.admin_read_only?
       end
 
       def rate_limit_error(env)
