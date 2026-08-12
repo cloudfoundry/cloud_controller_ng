@@ -1,0 +1,87 @@
+urls:
+  - url: /specs/apps.yaml
+    name: Apps
+  - url: /specs/app_features.yaml
+    name: App Features
+  - url: /specs/app_manifests.yaml
+    name: App Manifests
+  - url: /specs/app_usage_events.yaml
+    name: App Usage Events
+  - url: /specs/builds.yaml
+    name: Builds
+  - url: /specs/buildpacks.yaml
+    name: Buildpacks
+  - url: /specs/deployments.yaml
+    name: Deployments
+  - url: /specs/domains.yaml
+    name: Domains
+  - url: /specs/droplets.yaml
+    name: Droplets
+  - url: /specs/environment_variable_groups.yaml
+    name: Environment Variable Groups
+  - url: /specs/events.yaml
+    name: Events
+  - url: /specs/feature_flags.yaml
+    name: Feature Flags
+  - url: /specs/health.yaml
+    name: Health
+  - url: /specs/info.yaml
+    name: Info
+  - url: /specs/isolation_segments.yaml
+    name: Isolation Segments
+  - url: /specs/jobs.yaml
+    name: Jobs
+  - url: /specs/organizations.yaml
+    name: Organizations
+  - url: /specs/organization_quotas.yaml
+    name: Organization Quotas
+  - url: /specs/packages.yaml
+    name: Packages
+  - url: /specs/processes.yaml
+    name: Processes
+  - url: /specs/rate_limit.yaml
+    name: Rate Limit
+  - url: /specs/resource_matches.yaml
+    name: Resource Matches
+  - url: /specs/revisions.yaml
+    name: Revisions
+  - url: /specs/roles.yaml
+    name: Roles
+  - url: /specs/routes.yaml
+    name: Routes
+  - url: /specs/route_destinations.yaml
+    name: Route Destinations
+  - url: /specs/security_groups.yaml
+    name: Security Groups
+  - url: /specs/service_brokers.yaml
+    name: Service Brokers
+  - url: /specs/service_credential_bindings.yaml
+    name: Service Credential Bindings
+  - url: /specs/service_instances.yaml
+    name: Service Instances
+  - url: /specs/service_offerings.yaml
+    name: Service Offerings
+  - url: /specs/service_plans.yaml
+    name: Service Plans
+  - url: /specs/service_plan_visibility.yaml
+    name: Service Plan Visibility
+  - url: /specs/service_route_bindings.yaml
+    name: Service Route Bindings
+  - url: /specs/service_usage_events.yaml
+    name: Service Usage Events
+  - url: /specs/sidecars.yaml
+    name: Sidecars
+  - url: /specs/spaces.yaml
+    name: Spaces
+  - url: /specs/space_features.yaml
+    name: Space Features
+  - url: /specs/space_manifests.yaml
+    name: Space Manifests
+  - url: /specs/space_quotas.yaml
+    name: Space Quotas
+  - url: /specs/stacks.yaml
+    name: Stacks
+  - url: /specs/tasks.yaml
+    name: Tasks
+  - url: /specs/users.yaml
+    name: Users

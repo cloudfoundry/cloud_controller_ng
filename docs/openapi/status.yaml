@@ -1,0 +1,32 @@
+---
+openapi: 3.0.3
+info:
+  title: Cloud Controller V3 API
+  version: v3
+servers: []
+paths:
+  "/internal/v4/status":
+    get:
+      summary: GET /internal/v4/status
+      responses:
+        '200':
+          description: returns 200 OK
+          content:
+            text/plain:
+              schema:
+                type: string
+              example: OK
+        '429':
+          description: returns 429 BUSY
+          content:
+            text/plain:
+              schema:
+                type: string
+              example: BUSY
+        '503':
+          description: returns 503 UNHEALTHY
+          content:
+            text/plain:
+              schema:
+                type: string
+              example: UNHEALTHY
