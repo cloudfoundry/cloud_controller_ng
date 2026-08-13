@@ -1,12 +1,12 @@
 module VCAP::CloudController
   module Jobs
     module Runtime
-      class ServiceOperationsUpdateInProgressCleanup < VCAP::CloudController::Jobs::CCJob
+      class ServiceOperationsUpdateStuckInProgressFailed < VCAP::CloudController::Jobs::CCJob
         BATCH_SIZE = 10
 
         def perform
-          logger.info("Cleaning up service 'update' operations stuck in 'in progress'")
-          cleanup_operations(ServiceInstanceOperation, ServiceInstance, :service_instance_id, 'service_instance.update')
+          logger.info("Marking stuck service 'update' operations as 'failed'")
+          mark_stuck_in_progress_failed(ServiceInstanceOperation, ServiceInstance, :service_instance_id, 'service_instance.update')
         end
 
         def max_attempts
@@ -15,7 +15,7 @@ module VCAP::CloudController
 
         private
 
-        def cleanup_operations(operation_model, instance_model, foreign_key, jobs_operation)
+        def mark_stuck_in_progress_failed(operation_model, instance_model, foreign_key, jobs_operation)
           operation_table = operation_model.table_name
           instance_table = instance_model.table_name
 
@@ -72,11 +72,11 @@ module VCAP::CloudController
         end
 
         def logger
-          @logger ||= Steno.logger('cc.background.service-operations-update-in-progress-cleanup')
+          @logger ||= Steno.logger('cc.background.service-operations-update-stuck-in-progress-failed')
         end
 
         def job_name_in_configuration
-          :service_operations_update_in_progress_cleanup
+          :service_operations_update_stuck_in_progress_failed
         end
       end
     end

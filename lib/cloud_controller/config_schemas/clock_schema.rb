@@ -37,7 +37,7 @@ module VCAP::CloudController
           service_operations_create_in_progress_cleanup: {
             frequency_in_seconds: Integer
           },
-          service_operations_update_in_progress_cleanup: {
+          service_operations_update_stuck_in_progress_failed: {
             frequency_in_seconds: Integer
           },
           # One-off backfill - to be removed in a future version.

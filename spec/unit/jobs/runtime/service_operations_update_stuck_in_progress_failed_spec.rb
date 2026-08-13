@@ -2,8 +2,8 @@ require 'spec_helper'
 
 module VCAP::CloudController
   module Jobs::Runtime
-    RSpec.describe ServiceOperationsUpdateInProgressCleanup, job_context: :worker do
-      subject(:job) { ServiceOperationsUpdateInProgressCleanup.new }
+    RSpec.describe ServiceOperationsUpdateStuckInProgressFailed, job_context: :worker do
+      subject(:job) { ServiceOperationsUpdateStuckInProgressFailed.new }
 
       let(:fake_logger) { instance_double(Steno::Logger, info: nil, warn: nil) }
       let(:max_poll_duration_minutes) { 60 }
@@ -50,9 +50,10 @@ module VCAP::CloudController
       shared_examples 'does not resolve the operation' do
         it 'leaves the operation in progress and the pollable job untouched' do
           scenario = subject_scenario
+          original_pollable_state = scenario[:pjob].state
           job.perform
           expect(scenario[:service_instance].last_operation.reload.state).to eq('in progress')
-          expect(scenario[:pjob].reload.state).to eq(scenario[:pjob].state)
+          expect(scenario[:pjob].reload.state).to eq(original_pollable_state)
         end
       end
 
@@ -137,9 +138,9 @@ module VCAP::CloudController
 
         context 'when there are more stuck jobs than the batch size' do
           it 'processes only up to BATCH_SIZE jobs per run' do
-            (ServiceOperationsUpdateInProgressCleanup::BATCH_SIZE + 1).times { prepare_stuck_service_instance }
+            (ServiceOperationsUpdateStuckInProgressFailed::BATCH_SIZE + 1).times { prepare_stuck_service_instance }
             job.perform
-            expect(ServiceInstanceOperation.where(state: 'failed').count).to eq(ServiceOperationsUpdateInProgressCleanup::BATCH_SIZE)
+            expect(ServiceInstanceOperation.where(state: 'failed').count).to eq(ServiceOperationsUpdateStuckInProgressFailed::BATCH_SIZE)
           end
         end
       end
