@@ -61,8 +61,6 @@ module CloudFoundry
     end
 
     class ConcurrencyLimiter
-      AVERAGE_RESPONSE_TIME_SEC = 0.1
-
       @instance_mutex = Mutex.new
 
       def self.instance(logger, blocking_limit: nil, logging_limit: nil, redis_connection_pool_size: nil, redis_counter_ttl_seconds: nil)
@@ -86,20 +84,20 @@ module CloudFoundry
         @logger = logger
       end
 
-      def try_increment?(user_guid, rate_limit_headers)
+      def try_increment?(user_guid)
+        return true unless @blocking_limit&.>=(0) || @logging_limit&.>=(0)
+
         key = "#{key_prefix}:#{user_guid}"
         count = store.increment(key, @logger)
 
-        @logger.info("Concurrency limit warning for user '#{user_guid}', count=#{count} exceeded logging_limit=#{@logging_limit}") if @logging_limit && count > @logging_limit
+        if @logging_limit&.>=(0) && count > @logging_limit
+          @logger.info("Concurrency limit warning for user '#{user_guid}', count=#{count} exceeded logging_limit=#{@logging_limit}")
+        end
 
-        if @blocking_limit
-          rate_limit_headers.limit = @blocking_limit.to_s
-          if count > @blocking_limit
-            store.decrement(key, @logger)
-            rate_limit_headers.remaining = '0'
-            return false
-          end
-          rate_limit_headers.remaining = (@blocking_limit - count).to_s
+        if @blocking_limit&.>=(0) && count > @blocking_limit
+          store.decrement(key, @logger)
+          @logger.info("Concurrent rate limit exceeded for user '#{user_guid}', limit=#{@blocking_limit} remaining=0")
+          return false
         end
 
         true
@@ -109,6 +107,8 @@ module CloudFoundry
       end
 
       def decrement(user_guid)
+        return unless @blocking_limit&.>=(0) || @logging_limit&.>=(0)
+
         key = "#{key_prefix}:#{user_guid}"
         store.decrement(key, @logger)
       rescue StoreError
@@ -116,9 +116,7 @@ module CloudFoundry
       end
 
       def suggested_retry_after
-        base = [(@blocking_limit.to_i * AVERAGE_RESPONSE_TIME_SEC).ceil, 1].max
-        delay_range = [(base * 0.5).floor, 1].max..(base * 1.5).ceil
-        rand(delay_range).to_i
+        rand(1..5).to_i
       end
 
       def error_name
@@ -127,10 +125,6 @@ module CloudFoundry
 
       def error_name_ip_based
         'IPBasedConcurrentRequestLimitExceeded'
-      end
-
-      def header_suffix
-        'Concurrent'
       end
 
       private
@@ -164,22 +158,20 @@ module CloudFoundry
           redis_connection_pool_size: opts[:redis_connection_pool_size],
           redis_counter_ttl_seconds: opts[:redis_counter_ttl_seconds]
         )
-        @header_suffix = @concurrency_limiter.header_suffix
       end
 
       def call(env)
-        rate_limit_headers = RateLimitHeaders.new(@header_suffix)
         user_guid = nil
         incremented = false
 
         if apply_rate_limiting?(env)
           user_guid = get_user_id(env)
-          incremented = @concurrency_limiter.try_increment?(user_guid, rate_limit_headers)
-          return too_many_requests!(env, user_guid, rate_limit_headers) unless incremented
+          incremented = @concurrency_limiter.try_increment?(user_guid)
+          return too_many_requests!(env) unless incremented
         end
 
         status, headers, body = @app.call(env)
-        [status, headers.merge(rate_limit_headers.to_hash), body]
+        [status, headers, body]
       ensure
         @concurrency_limiter.decrement(user_guid) if incremented
       end
@@ -194,10 +186,8 @@ module CloudFoundry
         !!env['cf.user_guid']
       end
 
-      def too_many_requests!(env, user_guid, rate_limit_headers)
-        @logger.info("Concurrent rate limit exceeded for user '#{user_guid}' " \
-                     "path=#{env['PATH_INFO']} limit=#{rate_limit_headers.limit} remaining=#{rate_limit_headers.remaining}")
-        headers = rate_limit_headers.to_hash
+      def too_many_requests!(env)
+        headers = {}
         headers['Retry-After'] = @concurrency_limiter.suggested_retry_after.to_s
         headers['Content-Type'] = 'text/plain; charset=utf-8'
         message = rate_limit_error(env).to_json

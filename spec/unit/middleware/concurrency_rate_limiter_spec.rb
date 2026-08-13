@@ -10,7 +10,7 @@ module CloudFoundry
       let(:blocking_limit) { 2 }
       let(:logging_limit) { nil }
       let(:concurrency_limiter) do
-        instance_double(ConcurrencyLimiter, try_increment?: true, decrement: nil, header_suffix: 'Concurrent', suggested_retry_after: 1,
+        instance_double(ConcurrencyLimiter, try_increment?: true, decrement: nil, suggested_retry_after: 1,
                                             error_name: 'ConcurrentRequestLimitExceeded',
                                             error_name_ip_based: 'IPBasedConcurrentRequestLimitExceeded')
       end
@@ -34,31 +34,11 @@ module CloudFoundry
             middleware.call(user_env)
             expect(concurrency_limiter).to have_received(:decrement).with(user_guid)
           end
-
-          it 'adds concurrent rate limit headers to the response' do
-            allow(concurrency_limiter).to receive(:try_increment?) do |_, headers|
-              headers.limit = '2'
-              headers.remaining = '1'
-              true
-            end
-            _, response_headers, = middleware.call(user_env)
-            expect(response_headers['X-RateLimit-Limit-Concurrent']).to eq('2')
-            expect(response_headers['X-RateLimit-Remaining-Concurrent']).to eq('1')
-          end
-
-          it 'does not include X-RateLimit-Reset-Concurrent header' do
-            _, response_headers, = middleware.call(user_env)
-            expect(response_headers).not_to have_key('X-RateLimit-Reset-Concurrent')
-          end
         end
 
         context 'when over the limit' do
           before do
-            allow(concurrency_limiter).to receive(:try_increment?) do |_, headers|
-              headers.limit = '2'
-              headers.remaining = '0'
-              false
-            end
+            allow(concurrency_limiter).to receive(:try_increment?).and_return(false)
           end
 
           it 'returns 429' do
@@ -79,17 +59,6 @@ module CloudFoundry
           it 'includes Retry-After header as seconds' do
             _, response_headers, = middleware.call(user_env)
             expect(response_headers['Retry-After'].to_i).to be > 0
-          end
-
-          it 'includes rate limit headers on the 429 response' do
-            _, response_headers, = middleware.call(user_env)
-            expect(response_headers['X-RateLimit-Limit-Concurrent']).to eq('2')
-            expect(response_headers['X-RateLimit-Remaining-Concurrent']).to eq('0')
-          end
-
-          it 'logs the rate limit exceeded event' do
-            middleware.call(user_env)
-            expect(logger).to have_received(:info).with(/Concurrent rate limit exceeded/)
           end
 
           context 'when the path is /v3' do
@@ -138,7 +107,7 @@ module CloudFoundry
 
           it 'uses IP as the user identifier' do
             middleware.call(ip_env)
-            expect(concurrency_limiter).to have_received(:try_increment?).with('1.2.3.4', anything)
+            expect(concurrency_limiter).to have_received(:try_increment?).with('1.2.3.4')
           end
 
           context 'when over the limit' do
@@ -202,7 +171,6 @@ module CloudFoundry
       let(:blocking_limit) { 3 }
       let(:logging_limit) { 2 }
       let(:user_guid) { 'user-id-1' }
-      let(:rate_limit_headers) { RateLimitHeaders.new('Concurrent') }
 
       subject(:limiter) { ConcurrencyLimiter.new(logger, blocking_limit: blocking_limit, logging_limit: logging_limit) }
 
@@ -212,69 +180,83 @@ module CloudFoundry
 
       describe '#try_increment?' do
         it 'returns true when under the blocking limit' do
-          expect(limiter.try_increment?(user_guid, rate_limit_headers)).to be true
-        end
-
-        it 'sets limit and remaining headers' do
-          limiter.try_increment?(user_guid, rate_limit_headers)
-          expect(rate_limit_headers.limit).to eq('3')
-          expect(rate_limit_headers.remaining).to eq('2')
+          expect(limiter.try_increment?(user_guid)).to be true
         end
 
         it 'returns false when over the blocking limit' do
-          blocking_limit.times { limiter.try_increment?(user_guid, RateLimitHeaders.new('Concurrent')) }
-          expect(limiter.try_increment?(user_guid, rate_limit_headers)).to be false
-        end
-
-        it 'sets remaining to 0 when blocked' do
-          blocking_limit.times { limiter.try_increment?(user_guid, RateLimitHeaders.new('Concurrent')) }
-          limiter.try_increment?(user_guid, rate_limit_headers)
-          expect(rate_limit_headers.remaining).to eq('0')
+          blocking_limit.times { limiter.try_increment?(user_guid) }
+          expect(limiter.try_increment?(user_guid)).to be false
         end
 
         it 'logs a warning when count exceeds logging_limit' do
-          logging_limit.times { limiter.try_increment?(user_guid, RateLimitHeaders.new('Concurrent')) }
-          limiter.try_increment?(user_guid, rate_limit_headers)
+          logging_limit.times { limiter.try_increment?(user_guid) }
+          limiter.try_increment?(user_guid)
           expect(logger).to have_received(:info).with(/Concurrency limit warning/)
         end
 
         it 'does not log warning when under logging_limit' do
-          limiter.try_increment?(user_guid, rate_limit_headers)
+          limiter.try_increment?(user_guid)
           expect(logger).not_to have_received(:info)
+        end
+
+        it 'logs rate limit exceeded when blocked' do
+          blocking_limit.times { limiter.try_increment?(user_guid) }
+          limiter.try_increment?(user_guid)
+          expect(logger).to have_received(:info).with(/Concurrent rate limit exceeded/)
         end
 
         context 'with only logging_limit (no blocking_limit)' do
           subject(:limiter) { ConcurrencyLimiter.new(logger, logging_limit: logging_limit) }
 
           it 'always returns true' do
-            10.times { limiter.try_increment?(user_guid, RateLimitHeaders.new('Concurrent')) }
-            expect(limiter.try_increment?(user_guid, rate_limit_headers)).to be true
+            10.times { limiter.try_increment?(user_guid) }
+            expect(limiter.try_increment?(user_guid)).to be true
           end
 
-          it 'does not set limit or remaining headers' do
-            limiter.try_increment?(user_guid, rate_limit_headers)
-            expect(rate_limit_headers.limit).to be_nil
-            expect(rate_limit_headers.remaining).to be_nil
+          it 'logs a warning when count exceeds logging_limit but does not block' do
+            logging_limit.times { limiter.try_increment?(user_guid) }
+            result = limiter.try_increment?(user_guid)
+            expect(result).to be true
+            expect(logger).to have_received(:info).with(/Concurrency limit warning/)
+          end
+        end
+
+        context 'with only blocking_limit (no logging_limit)' do
+          subject(:limiter) { ConcurrencyLimiter.new(logger, blocking_limit: blocking_limit) }
+
+          it 'returns false when over the blocking limit' do
+            blocking_limit.times { limiter.try_increment?(user_guid) }
+            expect(limiter.try_increment?(user_guid)).to be false
+          end
+
+          it 'does not log any warnings' do
+            blocking_limit.times { limiter.try_increment?(user_guid) }
+            limiter.try_increment?(user_guid)
+            expect(logger).not_to have_received(:info).with(/Concurrency limit warning/)
           end
         end
 
         context 'with neither blocking_limit nor logging_limit' do
           subject(:limiter) { ConcurrencyLimiter.new(logger) }
 
-          it 'always returns true' do
-            10.times { limiter.try_increment?(user_guid, RateLimitHeaders.new('Concurrent')) }
-            expect(limiter.try_increment?(user_guid, rate_limit_headers)).to be true
+          it 'always returns true without hitting the store' do
+            store = instance_double(ConcurrentInMemoryStore)
+            allow(store).to receive(:increment)
+            limiter.instance_variable_set(:@store, store)
+            expect(limiter.try_increment?(user_guid)).to be true
+            expect(store).not_to have_received(:increment)
           end
+        end
 
-          it 'does not set any headers' do
-            limiter.try_increment?(user_guid, rate_limit_headers)
-            expect(rate_limit_headers.limit).to be_nil
-            expect(rate_limit_headers.remaining).to be_nil
-          end
+        context 'with negative limits (disabled)' do
+          subject(:limiter) { ConcurrencyLimiter.new(logger, blocking_limit: -1, logging_limit: -1) }
 
-          it 'does not log any warnings' do
-            10.times { limiter.try_increment?(user_guid, RateLimitHeaders.new('Concurrent')) }
-            expect(logger).not_to have_received(:info)
+          it 'always returns true without hitting the store' do
+            store = instance_double(ConcurrentInMemoryStore)
+            allow(store).to receive(:increment)
+            limiter.instance_variable_set(:@store, store)
+            expect(limiter.try_increment?(user_guid)).to be true
+            expect(store).not_to have_received(:increment)
           end
         end
 
@@ -286,16 +268,40 @@ module CloudFoundry
           end
 
           it 'fails open and returns true' do
-            expect(limiter.try_increment?(user_guid, rate_limit_headers)).to be true
+            expect(limiter.try_increment?(user_guid)).to be true
           end
         end
       end
 
       describe '#decrement' do
         it 'decrements the counter' do
-          blocking_limit.times { limiter.try_increment?(user_guid, RateLimitHeaders.new('Concurrent')) }
+          blocking_limit.times { limiter.try_increment?(user_guid) }
           limiter.decrement(user_guid)
-          expect(limiter.try_increment?(user_guid, rate_limit_headers)).to be true
+          expect(limiter.try_increment?(user_guid)).to be true
+        end
+
+        context 'with neither blocking_limit nor logging_limit' do
+          subject(:limiter) { ConcurrencyLimiter.new(logger) }
+
+          it 'does not hit the store' do
+            store = instance_double(ConcurrentInMemoryStore)
+            allow(store).to receive(:decrement)
+            limiter.instance_variable_set(:@store, store)
+            limiter.decrement(user_guid)
+            expect(store).not_to have_received(:decrement)
+          end
+        end
+
+        context 'with negative limits (disabled)' do
+          subject(:limiter) { ConcurrencyLimiter.new(logger, blocking_limit: -1, logging_limit: -1) }
+
+          it 'does not hit the store' do
+            store = instance_double(ConcurrentInMemoryStore)
+            allow(store).to receive(:decrement)
+            limiter.instance_variable_set(:@store, store)
+            limiter.decrement(user_guid)
+            expect(store).not_to have_received(:decrement)
+          end
         end
 
         context 'when store raises StoreError' do
@@ -316,11 +322,8 @@ module CloudFoundry
           expect(limiter.suggested_retry_after).to be >= 1
         end
 
-        it 'returns a value within the expected range based on blocking_limit' do
-          base = [(blocking_limit * ConcurrencyLimiter::AVERAGE_RESPONSE_TIME_SEC).ceil, 1].max
-          min = [(base * 0.5).floor, 1].max
-          max = (base * 1.5).ceil
-          100.times { expect(limiter.suggested_retry_after).to be_between(min, max) }
+        it 'returns a value between 1 and 5' do
+          100.times { expect(limiter.suggested_retry_after).to be_between(1, 5) }
         end
       end
     end
