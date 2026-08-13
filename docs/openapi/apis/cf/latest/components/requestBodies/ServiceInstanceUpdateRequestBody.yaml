@@ -1,0 +1,106 @@
+description: A request to update a service instance
+content:
+  application/json:
+    schema:
+      type: object
+      properties:
+        name:
+          type: string
+          description: Name of the service instance
+        parameters:
+          type: object
+          description: A JSON object that is passed to the service broker (managed services only)
+        credentials:
+          type: object
+          description: A JSON object that is made available to apps bound to this service instance (user-provided services only)
+        tags:
+          type: array
+          items:
+            type: string
+          description: Tags are used by apps to identify service instances; they are shown in the app VCAP_SERVICES env
+        syslog_drain_url:
+          type: string
+          description: URL to which logs for bound applications will be streamed (user-provided services only)
+        route_service_url:
+          type: string
+          description: URL to which requests for bound routes will be forwarded; must use the https protocol (user-provided services only)
+        relationships:
+          type: object
+          properties:
+            service_plan:
+              $ref: ../schemas/RelationshipToOne.yaml
+              description: The service plan from which to create the service instance
+          description: Relationships for the service instance
+        maintenance_info:
+          type: object
+          required:
+            - version
+          properties:
+            version:
+              type: string
+              description: Must be a semantic version value and it must match the version in the maintenance_info for the service instance plan in the updated broker catalog
+          description: If provided, must have the `version` field; `version` must be a semantic version value and it must match the `version` in the `maintenance_info` for the service instance plan in the updated broker catalog. Any other value for `version` will cause a `MaintenanceInfoConflict` error
+        metadata:
+          $ref: ../schemas/Metadata.yaml
+    examples:
+      managed_service_instance:
+        summary: Update managed service instance
+        value:
+          name: my_service_instance
+          parameters:
+            foo: bar
+            baz: qux
+          tags:
+            - foo
+            - bar
+            - baz
+          relationships:
+            service_plan:
+              data:
+                guid: f2b6ba9c-a4d2-11ea-8ae6-48bf6bec2d78
+          metadata:
+            annotations:
+              note: detailed information
+            labels:
+              key: value
+      managed_service_instance_upgrade:
+        summary: Upgrade managed service instance
+        value:
+          maintenance_info:
+            version: 2.1.1
+      user_provided_service_instance:
+        summary: Update user-provided service instance
+        value:
+          name: my_service_instance
+          credentials:
+            foo: bar
+            baz: qux
+          tags:
+            - foo
+            - bar
+            - baz
+          syslog_drain_url: https://syslog.com/drain
+          route_service_url: https://route.com/service
+          metadata:
+            annotations:
+              foo: bar
+            labels:
+              baz: qux
+      default:
+        summary: default
+        value:
+          name: my_service_instance
+          credentials:
+            foo: bar
+            baz: qux
+          tags:
+            - foo
+            - bar
+            - baz
+          syslog_drain_url: https://syslog.com/drain
+          route_service_url: https://route.com/service
+          metadata:
+            annotations:
+              foo: bar
+            labels:
+              baz: qux

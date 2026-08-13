@@ -1,0 +1,65 @@
+type: object
+allOf:
+  - $ref: './BaseSchema.yaml'
+  - properties:
+      type:
+        type: string
+        description: Type of the package; valid values are bits or docker
+        enum:
+          - bits
+          - docker
+      data:
+        type: object
+        description: Data for package type
+        properties:
+          error:
+            type: [string, 'null']
+            description: If an error occurs this field will contain the error message
+          checksum:
+            type: object
+            properties:
+              type:
+                type: string
+                description: The checksum type, for example sha256
+              value:
+                type: [string, 'null']
+                description: The checksum value; this will be populated after bits are uploaded
+          image:
+            type: string
+            description: The registry address of the image
+          username:
+            type: [string, "null"]
+            description: The username for the image's registry
+          password:
+            type: [string, "null"]
+            description: The password for the image's registry
+      state:
+        type: string
+        description: State of the package; valid states are AWAITING_UPLOAD, PROCESSING_UPLOAD, READY, FAILED, COPYING, or EXPIRED
+        enum:
+          - AWAITING_UPLOAD
+          - PROCESSING_UPLOAD
+          - READY
+          - FAILED
+          - COPYING
+          - EXPIRED
+      relationships:
+        $ref: './Relationships.yaml'
+      metadata:
+        $ref: './Metadata.yaml'
+      links:
+        type: object
+        properties:
+          self:
+            $ref: './Link.yaml'
+            description: The URL to get this package
+          upload:
+            $ref: './Link.yaml'
+            description: The URL to upload the package bits
+          download:
+            $ref: './Link.yaml'
+            description: The URL to download the package bits
+          app:
+            $ref: './Link.yaml'
+            description: The URL to get the app for this package
+description: 'A package represents an application"s "source code" - either raw bits or a pointer to these bits. Packages are used to create builds, which result in a droplet that can be deployed.'

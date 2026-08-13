@@ -1,0 +1,20 @@
+description: Too Many Requests
+content:
+  application/json:
+    schema:
+      type: object
+      properties:
+        errors:
+          type: array
+          items:
+            type: object
+            properties:
+              code:
+                type: integer
+                example: 10008
+              title:
+                type: string
+                example: "CF-RateLimitExceeded"
+              detail:
+                type: string
+                example: "Rate limit exceeded"

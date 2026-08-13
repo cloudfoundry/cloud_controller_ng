@@ -1,0 +1,7 @@
+name: space_guid
+in: path
+required: true
+schema:
+  type: string
+  format: uuid
+description: The unique identifier for the space

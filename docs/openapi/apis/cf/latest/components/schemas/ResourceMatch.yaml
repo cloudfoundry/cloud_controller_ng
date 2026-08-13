@@ -1,0 +1,18 @@
+type: object
+properties:
+  resources:
+    type: array
+    items:
+      type: object
+      properties:
+        checksum:
+          type: object
+          properties:
+            value:
+              type: string
+        size_in_bytes:
+          type: integer
+        path:
+          type: string
+        mode:
+          type: string

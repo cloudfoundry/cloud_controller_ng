@@ -1,0 +1,37 @@
+type: object
+allOf:
+  - $ref: './BaseSchema.yaml'
+  - properties:
+      name:
+        type: string
+      command:
+        type: string
+      state:
+        type: string
+        enum:
+          - PENDING
+          - RUNNING
+          - SUCCEEDED
+          - FAILED
+          - CANCELING
+      sequence_id:
+        type: integer
+      memory_in_mb:
+        type: [integer, "null"]
+      disk_in_mb:
+        type: [integer, "null"]
+      droplet_guid:
+        type: string
+      result:
+        type: object
+        properties:
+          failure_reason:
+            type: [string, "null"]
+      metadata:
+        $ref: './Metadata.yaml'
+      links:
+        type: object
+        properties:
+          self:
+            $ref: './Link.yaml'
+description: A task is a one-off process that can be run in the Cloud Foundry environment.

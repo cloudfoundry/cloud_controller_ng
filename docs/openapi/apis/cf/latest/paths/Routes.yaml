@@ -1,0 +1,793 @@
+/v3/routes:
+  get:
+    summary: List routes
+    description: Retrieve all routes the user has access to.
+    operationId: listRoutes
+    tags:
+      - Routes
+    parameters:
+      - $ref: ../components/parameters/Page.yaml
+      - $ref: ../components/parameters/PerPage.yaml
+      - $ref: ../components/parameters/OrderBy.yaml
+      - $ref: ../components/parameters/CreatedAts.yaml
+      - $ref: ../components/parameters/UpdatedAts.yaml
+      - $ref: ../components/parameters/LabelSelector.yaml
+      - name: protocols
+        in: query
+        schema:
+          type: array
+          items:
+            type: string
+            enum:
+              - http
+              - tcp
+        description: Comma-delimited list of protocols to filter by
+      - name: hosts
+        in: query
+        schema:
+          type: array
+          items:
+            type: string
+        description: Comma-delimited list of hosts to filter by
+      - name: paths
+        in: query
+        schema:
+          type: array
+          items:
+            type: string
+        description: Comma-delimited list of paths to filter by
+      - name: ports
+        in: query
+        schema:
+          type: array
+          items:
+            type: integer
+        description: Comma-delimited list of ports to filter by
+      - name: domain_guids
+        in: query
+        schema:
+          type: array
+          items:
+            type: string
+        description: Comma-delimited list of domain GUIDs to filter by
+      - name: space_guids
+        in: query
+        schema:
+          type: array
+          items:
+            type: string
+        description: Comma-delimited list of space GUIDs to filter by
+      - name: app_guids
+        in: query
+        schema:
+          type: array
+          items:
+            type: string
+        description: Comma-delimited list of app GUIDs to filter by
+      - name: organization_guids
+        in: query
+        schema:
+          type: array
+          items:
+            type: string
+        description: Comma-delimited list of organization GUIDs to filter by
+      - name: service_instance_guids
+        in: query
+        schema:
+          type: array
+          items:
+            type: string
+        description: Comma-delimited list of service instance GUIDs to filter by
+      - name: include
+        in: query
+        schema:
+          type: array
+          items:
+            type: string
+            enum:
+              - domain
+              - space.organization
+              - space
+        description: Optionally include a list of unique related resources in the response
+    responses:
+      '200':
+        $ref: ../components/responses/RouteListResponse.yaml
+      '400':
+        $ref: ../components/responses/BadRequest.yaml
+      '401':
+        $ref: ../components/responses/Unauthorized.yaml
+      '403':
+        $ref: ../components/responses/Forbidden.yaml
+      '409':
+        $ref: ../components/responses/Conflict.yaml
+      '422':
+        $ref: ../components/responses/UnprocessableEntity.yaml
+      '500':
+        $ref: ../components/responses/500.yaml
+      '502':
+        $ref: ../components/responses/BadGateway.yaml
+      '503':
+        $ref: ../components/responses/ServiceUnavailable.yaml
+  post:
+    summary: Create a route
+    description: Create a route.
+    operationId: createRoute
+    tags:
+      - Routes
+    requestBody:
+      $ref: ../components/requestBodies/RouteCreateRequestBody.yaml
+    responses:
+      '201':
+        description: Route created
+        content:
+          application/json:
+            schema:
+              $ref: ../components/schemas/Route.yaml
+        links:
+          space:
+            operationId: getSpace
+            parameters:
+              guid: $response.body#/relationships/space/data/guid
+            description: Retrieve the space for this route
+          domain:
+            operationId: getDomain
+            parameters:
+              guid: $response.body#/relationships/domain/data/guid
+            description: Retrieve the domain for this route
+      '400':
+        $ref: ../components/responses/BadRequest.yaml
+      '401':
+        $ref: ../components/responses/Unauthorized.yaml
+      '403':
+        $ref: ../components/responses/Forbidden.yaml
+      '409':
+        $ref: ../components/responses/Conflict.yaml
+      '422':
+        $ref: ../components/responses/UnprocessableEntity.yaml
+      '500':
+        $ref: ../components/responses/500.yaml
+      '503':
+        $ref: ../components/responses/ServiceUnavailable.yaml
+/v3/routes/{guid}:
+  get:
+    summary: Get a route
+    description: Retrieve a route.
+    operationId: getRoute
+    tags:
+      - Routes
+    parameters:
+      - $ref: ../components/parameters/Guid.yaml
+      - name: include
+        in: query
+        schema:
+          type: array
+          items:
+            type: string
+            enum:
+              - domain
+              - space
+              - space.organization
+        description: Optionally include a list of unique related resources in the response
+    responses:
+      '200':
+        description: Successfully retrieved route
+        content:
+          application/json:
+            schema:
+              $ref: ../components/schemas/Route.yaml
+        links:
+          space:
+            operationId: getSpace
+            parameters:
+              guid: $response.body#/relationships/space/data/guid
+            description: Retrieve the space for this route
+          domain:
+            operationId: getDomain
+            parameters:
+              guid: $response.body#/relationships/domain/data/guid
+            description: Retrieve the domain for this route
+      '401':
+        $ref: ../components/responses/Unauthorized.yaml
+      '403':
+        $ref: ../components/responses/Forbidden.yaml
+      '404':
+        $ref: ../components/responses/NotFound.yaml
+  patch:
+    summary: Update a route
+    description: Update a route.
+    operationId: updateRoute
+    tags:
+      - Routes
+    parameters:
+      - $ref: ../components/parameters/Guid.yaml
+    requestBody:
+      description: Route object that needs to be updated
+      required: true
+      content:
+        application/json:
+          schema:
+            type: object
+            properties:
+              metadata:
+                $ref: ../components/schemas/Metadata.yaml
+            description: Request schema for updating a route
+    responses:
+      '200':
+        description: Successfully updated route
+        content:
+          application/json:
+            schema:
+              $ref: ../components/schemas/Route.yaml
+        links:
+          space:
+            operationId: getSpace
+            parameters:
+              guid: $response.body#/relationships/space/data/guid
+            description: Retrieve the space for this route
+          domain:
+            operationId: getDomain
+            parameters:
+              guid: $response.body#/relationships/domain/data/guid
+            description: Retrieve the domain for this route
+      '400':
+        $ref: ../components/responses/BadRequest.yaml
+      '401':
+        $ref: ../components/responses/Unauthorized.yaml
+      '403':
+        $ref: ../components/responses/Forbidden.yaml
+      '404':
+        $ref: ../components/responses/NotFound.yaml
+      '409':
+        $ref: ../components/responses/Conflict.yaml
+      '422':
+        $ref: ../components/responses/UnprocessableEntity.yaml
+      '500':
+        $ref: ../components/responses/500.yaml
+      '503':
+        $ref: ../components/responses/ServiceUnavailable.yaml
+  delete:
+    summary: Delete a route
+    description: Delete a route.
+    operationId: deleteRoute
+    tags:
+      - Routes
+    parameters:
+      - $ref: ../components/parameters/Guid.yaml
+    responses:
+      '202':
+        description: Successfully deleted route
+        headers:
+          Location:
+            description: URL of the job that is deleting the route
+            schema:
+              type: string
+              format: uri
+      '401':
+        $ref: ../components/responses/Unauthorized.yaml
+      '403':
+        $ref: ../components/responses/Forbidden.yaml
+      '404':
+        $ref: ../components/responses/NotFound.yaml
+      '422':
+        $ref: ../components/responses/UnprocessableEntity.yaml
+      '500':
+        $ref: ../components/responses/500.yaml
+/v3/apps/{guid}/routes:
+  get:
+    summary: List routes for an app
+    description: Retrieve all routes that have destinations that point to the given app.
+    operationId: listAppRoutes
+    tags:
+      - Routes
+    parameters:
+      - $ref: ../components/parameters/Guid.yaml
+      - $ref: ../components/parameters/Page.yaml
+      - $ref: ../components/parameters/PerPage.yaml
+      - $ref: ../components/parameters/OrderBy.yaml
+      - name: domain_guids
+        in: query
+        schema:
+          type: array
+          items:
+            type: string
+        description: Comma-delimited list of domain guids to filter by
+      - name: hosts
+        in: query
+        schema:
+          type: array
+          items:
+            type: string
+        description: Comma-delimited list of hostnames to filter by
+      - name: paths
+        in: query
+        schema:
+          type: array
+          items:
+            type: string
+        description: Comma-delimited list of paths to filter by
+      - name: ports
+        in: query
+        schema:
+          type: array
+          items:
+            type: integer
+        description: Comma-delimited list of ports to filter by
+    responses:
+      '200':
+        description: OK
+        content:
+          application/json:
+            schema:
+              $ref: ../components/schemas/RouteList.yaml
+            examples:
+              default:
+                summary: default
+                value:
+                  pagination:
+                    total_results: 3
+                    total_pages: 2
+                    first:
+                      href: https://api.example.org<%= path %>?page=1&per_page=2
+                    last:
+                      href: https://api.example.org<%= path %>?page=2&per_page=2
+                    next:
+                      href: https://api.example.org<%= path %>?page=2&per_page=2
+                    previous: null
+                  resources:
+                    - guid: 123e4567-e89b-12d3-a456-426614174000
+                      protocol: http
+                      created_at: '2019-05-10T17:17:48Z'
+                      updated_at: '2019-05-10T17:17:48Z'
+                      host: a-hostname
+                      path: /some_path
+                      url: a-hostname.a-domain.com/some_path
+                      destinations:
+                        - guid: 123e4567-e89b-12d3-a456-426614174000
+                          app:
+                            guid: 123e4567-e89b-12d3-a456-426614174000
+                            process:
+                              type: web
+                          weight: null
+                          port: 8080
+                          protocol: http1
+                          created_at: '2019-05-10T17:17:48Z'
+                          updated_at: '2019-05-10T17:17:48Z'
+                        - guid: 123e4567-e89b-12d3-a456-426614174000
+                          app:
+                            guid: 123e4567-e89b-12d3-a456-426614174000
+                            process:
+                              type: web
+                          weight: null
+                          port: 8080
+                          protocol: http1
+                          created_at: '2019-05-10T17:17:48Z'
+                          updated_at: '2019-05-10T17:17:48Z'
+                      options:
+                        loadbalancing: round-robin
+                      metadata:
+                        labels: {}
+                        annotations: {}
+                      relationships:
+                        space:
+                          data:
+                            guid: 123e4567-e89b-12d3-a456-426614174000
+                        domain:
+                          data:
+                            guid: 123e4567-e89b-12d3-a456-426614174000
+                      links:
+                        self:
+                          href: https://api.example.org/v3/routes/cbad697f-cac1-48f4-9017-ac08f39dfb31
+                        space:
+                          href: https://api.example.org/v3/spaces/885a8cb3-c07b-4856-b448-eeb10bf36236
+                        domain:
+                          href: https://api.example.org/v3/domains/0b5f3633-194c-42d2-9408-972366617e0e
+                        destinations:
+                          href: https://api.example.org/v3/routes/cbad697f-cac1-48f4-9017-ac08f39dfb31/destinations
+      '401':
+        $ref: ../components/responses/Unauthorized.yaml
+      '403':
+        $ref: ../components/responses/Forbidden.yaml
+      '404':
+        $ref: ../components/responses/NotFound.yaml
+/v3/routes/{guid}/relationships/shared_spaces:
+  get:
+    summary: List shared spaces relationship
+    description: Lists the spaces that the route has been shared to.
+    operationId: listSharedSpacesRelationship
+    tags:
+      - Routes
+    parameters:
+      - $ref: ../components/parameters/Guid.yaml
+    responses:
+      '200':
+        description: OK
+        content:
+          application/json:
+            schema:
+              $ref: ../components/schemas/RelationshipToMany.yaml
+      '401':
+        $ref: ../components/responses/Unauthorized.yaml
+      '403':
+        $ref: ../components/responses/Forbidden.yaml
+      '404':
+        $ref: ../components/responses/NotFound.yaml
+  post:
+    summary: Share a route with other spaces (experimental)
+    description: This endpoint shares the route with the specified spaces. This allows users with read and write access in both the route’s space and a shared space to bind a route to an app in the shared space. In order to share into a space the requesting user must have write permission in the target space.
+    operationId: shareRoute
+    tags:
+      - Routes
+    parameters:
+      - $ref: ../components/parameters/Guid.yaml
+    requestBody:
+      description: List of spaces to share the route with
+      required: true
+      content:
+        application/json:
+          schema:
+            $ref: ../components/schemas/RelationshipToMany.yaml
+          examples:
+            default:
+              summary: default
+              value:
+                data:
+                  - guid: 123e4567-e89b-12d3-a456-426614174000
+                  - guid: 123e4567-e89b-12d3-a456-426614174000
+    responses:
+      '200':
+        description: OK
+        content:
+          application/json:
+            schema:
+              $ref: ../components/schemas/RelationshipToMany.yaml
+      '401':
+        $ref: ../components/responses/Unauthorized.yaml
+      '403':
+        $ref: ../components/responses/Forbidden.yaml
+      '404':
+        $ref: ../components/responses/NotFound.yaml
+      '422':
+        $ref: ../components/responses/UnprocessableEntity.yaml
+/v3/routes/{guid}/relationships/shared_spaces/{space_guid}:
+  delete:
+    summary: Unshare a route that was shared with another space (experimental)
+    description: Unshares a route that was shared with another space.
+    operationId: unshareRoute
+    tags:
+      - Routes
+    parameters:
+      - $ref: ../components/parameters/Guid.yaml
+      - name: space_guid
+        in: path
+        required: true
+        schema:
+          type: string
+          format: uuid
+        description: The GUID of the space to unshare the route from
+    responses:
+      '204':
+        description: No Content
+      '401':
+        $ref: ../components/responses/Unauthorized.yaml
+      '403':
+        $ref: ../components/responses/Forbidden.yaml
+      '404':
+        $ref: ../components/responses/NotFound.yaml
+      '422':
+        $ref: ../components/responses/UnprocessableEntity.yaml
+/v3/routes/{guid}/relationships/space:
+  patch:
+    summary: Transfer ownership (experimental)
+    description: Transfers a the ownership of a route to a another space. Users must have write access for both spaces to perform this action. The original owning space will still retain access to the route as a [shared space](#share-a-route-with-other-spaces-experimental). To completely remove a space from a route, users will have to use [unshare route](#unshare-a-route-that-was-shared-with-another-space-experimental).
+    operationId: transferRouteOwnership
+    tags:
+      - Routes
+    parameters:
+      - $ref: ../components/parameters/Guid.yaml
+    requestBody:
+      description: The space to transfer ownership to
+      required: true
+      content:
+        application/json:
+          schema:
+            $ref: ../components/schemas/RelationshipToOne.yaml
+    responses:
+      '204':
+        description: No Content
+      '401':
+        $ref: ../components/responses/Unauthorized.yaml
+      '403':
+        $ref: ../components/responses/Forbidden.yaml
+      '404':
+        $ref: ../components/responses/NotFound.yaml
+      '422':
+        $ref: ../components/responses/UnprocessableEntity.yaml
+/v3/routes/{guid}/destinations:
+  get:
+    summary: List destinations for a route
+    description: Retrieve all destinations associated with a route.
+    operationId: listDestinationsForRoute
+    tags:
+      - Routes
+    parameters:
+      - $ref: ../components/parameters/Guid.yaml
+      - $ref: ../components/parameters/Page.yaml
+      - $ref: ../components/parameters/PerPage.yaml
+    responses:
+      '200':
+        description: List of destinations for the route
+        content:
+          application/json:
+            schema:
+              $ref: ../components/schemas/RouteDestinationList.yaml
+            examples:
+              default:
+                summary: default
+                value:
+                  destinations:
+                    - guid: 123e4567-e89b-12d3-a456-426614174000
+                      app:
+                        guid: 123e4567-e89b-12d3-a456-426614174000
+                        process:
+                          type: web
+                      weight: null
+                      port: 8080
+                      protocol: http2
+                      created_at: '2019-05-10T17:17:48Z'
+                      updated_at: '2019-05-10T17:17:48Z'
+                    - guid: 123e4567-e89b-12d3-a456-426614174000
+                      app:
+                        guid: 123e4567-e89b-12d3-a456-426614174000
+                        process:
+                          type: api
+                      weight: null
+                      port: 9000
+                      protocol: http1
+                      created_at: '2019-05-10T17:17:48Z'
+                      updated_at: '2019-05-10T17:17:48Z'
+                  links:
+                    self:
+                      href: https://api.example.org/v3/routes/cbad697f-cac1-48f4-9017-ac08f39dfb31/destinations
+                    route:
+                      href: https://api.example.org/v3/routes/cbad697f-cac1-48f4-9017-ac08f39dfb31
+      '400':
+        $ref: ../components/responses/BadRequest.yaml
+      '401':
+        $ref: ../components/responses/Unauthorized.yaml
+      '403':
+        $ref: ../components/responses/Forbidden.yaml
+      '404':
+        $ref: ../components/responses/NotFound.yaml
+  post:
+    summary: Insert destinations for a route
+    description: |-
+      Add one or more destinations to a route, preserving any existing destinations.
+
+      Weighted destinations (deprecated) cannot be added with this endpoint.
+    operationId: insertDestinationsForRoute
+    tags:
+      - Routes
+    parameters:
+      - $ref: ../components/parameters/Guid.yaml
+    requestBody:
+      $ref: ../components/requestBodies/RouteDestinations.yaml
+    responses:
+      '200':
+        description: List of destinations for the route
+        content:
+          application/json:
+            schema:
+              $ref: ../components/schemas/RouteDestinationList.yaml
+            examples:
+              default:
+                summary: default
+                value:
+                  destinations:
+                    - guid: 123e4567-e89b-12d3-a456-426614174000
+                      app:
+                        guid: 123e4567-e89b-12d3-a456-426614174000
+                        process:
+                          type: web
+                      weight: null
+                      port: 8080
+                      protocol: http2
+                      created_at: '2019-05-10T17:17:48Z'
+                      updated_at: '2019-05-10T17:17:48Z'
+                    - guid: 123e4567-e89b-12d3-a456-426614174000
+                      app:
+                        guid: 123e4567-e89b-12d3-a456-426614174000
+                        process:
+                          type: api
+                      weight: null
+                      port: 9000
+                      protocol: http1
+                      created_at: '2019-05-10T17:17:48Z'
+                      updated_at: '2019-05-10T17:17:48Z'
+                  links:
+                    self:
+                      href: https://api.example.org/v3/routes/cbad697f-cac1-48f4-9017-ac08f39dfb31/destinations
+                    route:
+                      href: https://api.example.org/v3/routes/cbad697f-cac1-48f4-9017-ac08f39dfb31
+      '400':
+        $ref: ../components/responses/BadRequest.yaml
+      '401':
+        $ref: ../components/responses/Unauthorized.yaml
+      '403':
+        $ref: ../components/responses/Forbidden.yaml
+      '404':
+        $ref: ../components/responses/NotFound.yaml
+      '422':
+        $ref: ../components/responses/UnprocessableEntity.yaml
+  patch:
+    summary: Replace all destinations for a route
+    description: |-
+      Replaces all destinations for a route, removing any destinations not included in the provided list.
+
+      Weighted destinations are **deprecated**. Development of the experimental Istio Service Mesh routing layer was discontinued in 2020 and is no longer supported by the platform. Specifying a `weight` for a destination will take no effect.
+
+      If weighted destinations are provided, however, all destinations provided here must have a `weight` specified, and all weights for this route must sum to 100. If not, all provided destinations must not have a `weight`. Mixing weighted and unweighted destinations for a route is not allowed.
+    operationId: replaceDestinationsForRouteWithPatch
+    tags:
+      - Routes
+    parameters:
+      - $ref: ../components/parameters/Guid.yaml
+    requestBody:
+      $ref: ../components/requestBodies/RouteDestinations.yaml
+    responses:
+      '200':
+        description: List of destinations for the route
+        content:
+          application/json:
+            schema:
+              $ref: ../components/schemas/RouteDestinationList.yaml
+            examples:
+              default:
+                summary: default
+                value:
+                  destinations:
+                    - guid: 123e4567-e89b-12d3-a456-426614174000
+                      app:
+                        guid: 123e4567-e89b-12d3-a456-426614174000
+                        process:
+                          type: web
+                      weight: 61
+                      port: 8080
+                      protocol: http2
+                    - guid: 123e4567-e89b-12d3-a456-426614174000
+                      app:
+                        guid: 123e4567-e89b-12d3-a456-426614174000
+                        process:
+                          type: api
+                      weight: 39
+                      port: 9000
+                      protocol: http1
+                  links:
+                    self:
+                      href: https://api.example.org/v3/routes/cbad697f-cac1-48f4-9017-ac08f39dfb31/destinations
+                    route:
+                      href: https://api.example.org/v3/routes/cbad697f-cac1-48f4-9017-ac08f39dfb31
+      '400':
+        $ref: ../components/responses/BadRequest.yaml
+      '401':
+        $ref: ../components/responses/Unauthorized.yaml
+      '403':
+        $ref: ../components/responses/Forbidden.yaml
+      '404':
+        $ref: ../components/responses/NotFound.yaml
+      '422':
+        $ref: ../components/responses/UnprocessableEntity.yaml
+/v3/routes/{guid}/destinations/{destination_guid}:
+  patch:
+    summary: Update a destination protocol for a route
+    description: This endpoint updates the protocol of a route destination (app, port and weight cannot be updated)
+    operationId: updateDestinationProtocolForRoute
+    tags:
+      - Routes
+    parameters:
+      - $ref: ../components/parameters/Guid.yaml
+      - name: destination_guid
+        in: path
+        required: true
+        schema:
+          type: string
+          format: uuid
+        description: The GUID of the route destination
+    requestBody:
+      description: Protocol of the destination
+      required: true
+      content:
+        application/json:
+          schema:
+            type: object
+            properties:
+              protocol:
+                type: string
+                description: Protocol of the destination
+                enum:
+                  - http1
+                  - http2
+            required:
+              - protocol
+          examples:
+            default:
+              summary: default
+              value:
+                protocol: http2
+    responses:
+      '200':
+        description: Successfully updated protocol of the destination
+        content:
+          application/json:
+            schema:
+              $ref: ../components/schemas/RouteDestination.yaml
+            examples:
+              default:
+                summary: default
+                value:
+                  guid: 123e4567-e89b-12d3-a456-426614174000
+                  app:
+                    guid: 123e4567-e89b-12d3-a456-426614174000
+                    process:
+                      type: web
+                  weight: 61
+                  port: 8080
+                  protocol: http2
+                  links:
+                    destinations:
+                      href: https://api.example.org/v3/routes/cbad697f-cac1-48f4-9017-ac08f39dfb31/destinations
+                    route:
+                      href: https://api.example.org/v3/routes/cbad697f-cac1-48f4-9017-ac08f39dfb31
+      '401':
+        $ref: ../components/responses/Unauthorized.yaml
+      '403':
+        $ref: ../components/responses/Forbidden.yaml
+      '404':
+        $ref: ../components/responses/NotFound.yaml
+      '422':
+        $ref: ../components/responses/UnprocessableEntity.yaml
+  delete:
+    summary: Remove destination for a route
+    description: Remove a destination from a route.
+    operationId: removeDestinationForRoute
+    tags:
+      - Routes
+    parameters:
+      - $ref: ../components/parameters/Guid.yaml
+      - name: destination_guid
+        in: path
+        required: true
+        schema:
+          type: string
+          format: uuid
+        description: The GUID of the route destination to remove
+    responses:
+      '204':
+        description: Successfully removed destination from the route
+      '401':
+        $ref: ../components/responses/Unauthorized.yaml
+      '403':
+        $ref: ../components/responses/Forbidden.yaml
+      '404':
+        $ref: ../components/responses/NotFound.yaml
+      '422':
+        $ref: ../components/responses/UnprocessableEntity.yaml
+/v3/spaces/{guid}/routes:
+  delete:
+    summary: Delete unmapped routes for a space
+    description: Deletes all routes in a space that are not mapped to any applications and not bound to any service instances.
+    operationId: deleteUnmappedRoutesForSpace
+    tags:
+      - Routes
+    parameters:
+      - $ref: ../components/parameters/Guid.yaml
+    responses:
+      '204':
+        description: Successfully deleted unmapped routes from the space
+      '401':
+        $ref: ../components/responses/Unauthorized.yaml
+      '403':
+        $ref: ../components/responses/Forbidden.yaml
+      '404':
+        $ref: ../components/responses/NotFound.yaml
+      '422':
+        $ref: ../components/responses/UnprocessableEntity.yaml

@@ -1,0 +1,10 @@
+type: object
+allOf:
+  - $ref: './BaseSchema.yaml'
+  - properties:
+      links:
+        type: object
+        properties:
+          self:
+            $ref: './Link.yaml'
+            description: The URL to get this service usage event

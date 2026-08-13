@@ -1,0 +1,39 @@
+description: Buildpack object that needs to be added
+required: true
+content:
+  application/json:
+    schema:
+      type: object
+      properties:
+        name:
+          type: string
+          description: The name of the buildpack
+        stack:
+          type: string
+          description: The name of the stack that the buildpack will use
+        position:
+          type: integer
+          description: The order in which the buildpacks are checked during buildpack auto-detection
+        lifecycle:
+          type: string
+          description: The version of buildpack the buildpack will use. `buildpack` indicates [Classic Buildpacks](https://docs.cloudfoundry.org/buildpacks/classic.html). `cnb` indicates [Cloud Native Buildpacks](https://docs.cloudfoundry.org/buildpacks/cnb/)
+        enabled:
+          type: boolean
+          description: Whether or not the buildpack will be used for staging
+        locked:
+          type: boolean
+          description: Whether or not the buildpack is locked to prevent updating the bits
+        metadata:
+          $ref: ../schemas/Metadata.yaml
+      required:
+        - name
+      description: Request schema for creating a buildpack
+    examples:
+      default:
+        summary: default
+        value:
+          name: ruby_buildpack
+          position: 42
+          enabled: true
+          locked: false
+          stack: windows64

@@ -1,0 +1,5 @@
+description: Route created
+content:
+  application/json:
+    schema:
+      $ref: '../schemas/Route.yaml'

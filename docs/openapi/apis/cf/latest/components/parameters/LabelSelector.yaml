@@ -1,0 +1,7 @@
+name: label_selector
+in: query
+description: A query string containing a list of [label selector](#labels-and-selectors) requirements
+required: false
+schema:
+  type: string
+example: "environment=production"

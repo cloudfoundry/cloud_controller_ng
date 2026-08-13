@@ -1,0 +1,24 @@
+type: object
+properties:
+  staging_env_json:
+    type: object
+    description: Environment variables used during staging
+    additionalProperties: true
+  running_env_json:
+    type: object
+    description: Environment variables used during runtime
+    additionalProperties: true
+  environment_variables:
+    type: object
+    description: User-defined environment variables
+    additionalProperties:
+      type: [string, "null"]
+  system_env_json:
+    type: object
+    description: System environment variables including VCAP_SERVICES
+    additionalProperties: true
+  application_env_json:
+    type: object
+    description: Application environment variables including VCAP_APPLICATION
+    additionalProperties: true
+description: 'Environment variables that will be provided to an app at runtime'

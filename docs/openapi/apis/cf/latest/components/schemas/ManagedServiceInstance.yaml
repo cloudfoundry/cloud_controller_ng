@@ -1,0 +1,75 @@
+type: object
+allOf:
+  - $ref: './BaseSchema.yaml'
+  - properties:
+      type:
+        type: string
+        enum:
+          - managed
+        description: Type of service instance
+      name:
+        type: string
+        description: Name of the service instance
+      tags:
+        type: array
+        items:
+          type: string
+        description: Tags for the service instance
+      syslog_drain_url:
+        type: [string, "null"]
+        format: uri
+        description: URL for syslog drain
+      route_service_url:
+        type: [string, "null"]
+        format: uri
+        description: URL for route service
+      dashboard_url:
+        type: [string, "null"]
+        format: uri
+        description: URL for service dashboard
+      maintenance_info:
+        type: object
+        properties:
+          version:
+            type: string
+            description: Version of maintenance info
+          description:
+            type: [string, "null"]
+            description: Description of maintenance info
+      upgrade_available:
+        type: boolean
+        description: Whether an upgrade is available
+      last_operation:
+        $ref: './ServiceInstanceLastOperation.yaml'
+      relationships:
+        type: object
+        properties:
+          space:
+            $ref: './RelationshipToOne.yaml'
+          service_plan:
+            $ref: './RelationshipToOne.yaml'
+        description: Relationships for the service instance
+      links:
+        type: object
+        properties:
+          self:
+            $ref: './Link.yaml'
+          space:
+            $ref: './Link.yaml'
+          service_plan:
+            $ref: './Link.yaml'
+          parameters:
+            $ref: './Link.yaml'
+          service_credential_bindings:
+            $ref: './Link.yaml'
+          service_route_bindings:
+            $ref: './Link.yaml'
+          shared_spaces:
+            $ref: './Link.yaml'
+      metadata:
+        $ref: './Metadata.yaml'
+    required:
+    - type
+    - name
+    - relationships
+    - links

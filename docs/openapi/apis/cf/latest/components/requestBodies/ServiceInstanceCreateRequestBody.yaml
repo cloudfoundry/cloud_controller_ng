@@ -1,0 +1,121 @@
+description: A request to create a service instance
+content:
+  application/json:
+    schema:
+      type: object
+      required:
+        - type
+        - name
+        - relationships
+      properties:
+        type:
+          type: string
+          enum:
+            - managed
+            - user-provided
+          description: The type of service instance
+        name:
+          type: string
+          description: Name of the service instance
+        parameters:
+          type: object
+          description: A JSON object that is passed to the service broker
+        credentials:
+          type: object
+          description: A JSON object that is made available to apps bound to this service instance (user-provided services only)
+        tags:
+          type: array
+          items:
+            type: string
+          description: Tags are used by apps to identify service instances; they are shown in the app VCAP_SERVICES env
+        syslog_drain_url:
+          type: string
+          description: URL to which logs for bound applications will be streamed (user-provided services only)
+        route_service_url:
+          type: string
+          description: URL to which requests for bound routes will be forwarded; must use the https protocol (user-provided services only)
+        relationships:
+          type: object
+          required:
+            - space
+          properties:
+            space:
+              $ref: ../schemas/RelationshipToOne.yaml
+              description: The space in which to create the service instance
+            service_plan:
+              $ref: ../schemas/RelationshipToOne.yaml
+              description: The service plan from which to create the service instance
+          description: Relationships for the service instance
+        metadata:
+          $ref: ../schemas/Metadata.yaml
+    examples:
+      managed_service_instance:
+        summary: Managed service instance
+        value:
+          type: managed
+          name: my_service_instance
+          parameters:
+            foo: bar
+            baz: qux
+          tags:
+            - foo
+            - bar
+            - baz
+          metadata:
+            annotations:
+              foo: bar
+            labels:
+              baz: qux
+          relationships:
+            space:
+              data:
+                guid: 7304bc3c-7010-11ea-8840-48bf6bec2d78
+            service_plan:
+              data:
+                guid: e0e4417c-74ee-11ea-a604-48bf6bec2d78
+      user_provided_service_instance:
+        summary: User-provided service instance
+        value:
+          type: user-provided
+          name: my_service_instance
+          credentials:
+            foo: bar
+            baz: qux
+          tags:
+            - foo
+            - bar
+            - baz
+          syslog_drain_url: https://syslog.com/drain
+          route_service_url: https://route.com/service
+          metadata:
+            annotations:
+              foo: bar
+            labels:
+              baz: qux
+          relationships:
+            space:
+              data:
+                guid: 7304bc3c-7010-11ea-8840-48bf6bec2d78
+      default:
+        summary: default
+        value:
+          type: user-provided
+          name: my_service_instance
+          credentials:
+            foo: bar
+            baz: qux
+          tags:
+            - foo
+            - bar
+            - baz
+          syslog_drain_url: https://syslog.com/drain
+          route_service_url: https://route.com/service
+          metadata:
+            annotations:
+              foo: bar
+            labels:
+              baz: qux
+          relationships:
+            space:
+              data:
+                guid: 123e4567-e89b-12d3-a456-426614174000

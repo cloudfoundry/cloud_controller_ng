@@ -1,0 +1,5 @@
+description: Bad Gateway
+content:
+  application/json:
+    schema:
+      $ref: '../schemas/Error.yaml'

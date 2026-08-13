@@ -1,0 +1,55 @@
+get:
+  summary: Global API Root
+  description: |-
+    This endpoint returns links to the APIs available on a given Cloud Foundry deployment.
+  operationId: getApiRoot
+  tags:
+    - Root
+  responses:
+    '200':
+      description: OK
+      content:
+        application/json:
+          schema:
+            type: object
+            properties:
+              links:
+                type: object
+                description: Links to related resources
+                properties:
+                  self:
+                    allOf:
+                      - $ref: '../components/schemas/IndexLink.yaml'
+                      - description: Link to the current endpoint
+                  cloud_controller_v2:
+                    allOf:
+                      - $ref: '../components/schemas/IndexLink.yaml'
+                      - description: Link to the Cloud Controller V2 API
+                  cloud_controller_v3:
+                    allOf:
+                      - $ref: '../components/schemas/IndexLink.yaml'
+                      - description: Link to the Cloud Controller V3 API
+                  network_policy_v1:
+                    allOf:
+                      - $ref: '../components/schemas/IndexLink.yaml'
+                      - description: Link to the Network Policy V1 API
+                  uaa:
+                    allOf:
+                      - $ref: '../components/schemas/IndexLink.yaml'
+                      - description: Link to the UAA API
+                  logging:
+                    allOf:
+                      - $ref: '../components/schemas/IndexLink.yaml'
+                      - description: Link to the Logging API
+                  log_cache:
+                    allOf:
+                      - $ref: '../components/schemas/IndexLink.yaml'
+                      - description: Link to the Log Cache API
+                  log_stream:
+                    allOf:
+                      - $ref: '../components/schemas/IndexLink.yaml'
+                      - description: Link to the Log Stream API
+    '404':
+      $ref: '../components/responses/NotFound.yaml'
+    '500':
+      $ref: '../components/responses/500.yaml'

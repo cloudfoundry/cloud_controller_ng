@@ -1,0 +1,812 @@
+/v3/spaces:
+  get:
+    summary: List spaces
+    description: Retrieve all spaces the user has access to.
+    operationId: listSpaces
+    tags:
+      - Spaces
+    parameters:
+      - $ref: ../components/parameters/Page.yaml
+      - $ref: ../components/parameters/PerPage.yaml
+      - $ref: ../components/parameters/OrderBy.yaml
+      - $ref: ../components/parameters/CreatedAts.yaml
+      - $ref: ../components/parameters/UpdatedAts.yaml
+      - $ref: ../components/parameters/LabelSelector.yaml
+      - name: names
+        in: query
+        schema:
+          type: array
+          items:
+            type: string
+        description: Comma-delimited list of space names to filter by
+      - name: guids
+        in: query
+        schema:
+          type: array
+          items:
+            type: string
+        description: Comma-delimited list of space guids to filter by
+      - name: organization_guids
+        in: query
+        schema:
+          type: array
+          items:
+            type: string
+        description: Comma-delimited list of organization guids to filter by
+      - name: include
+        in: query
+        schema:
+          type: array
+          items:
+            type: string
+            enum:
+              - organization
+        description: Optionally include a list of unique related resources in the response
+    responses:
+      '200':
+        description: OK
+        content:
+          application/json:
+            schema:
+              $ref: ../components/schemas/SpaceList.yaml
+            examples:
+              default:
+                summary: default
+                value:
+                  pagination:
+                    total_results: 2
+                    total_pages: 1
+                    first:
+                      href: https://api.example.org/v3/spaces?page=1&per_page=50
+                    last:
+                      href: https://api.example.org/v3/spaces?page=1&per_page=50
+                    next: null
+                    previous: null
+                  resources:
+                    - guid: 123e4567-e89b-12d3-a456-426614174000
+                      created_at: '2017-02-01T01:33:58Z'
+                      updated_at: '2017-02-01T01:33:58Z'
+                      name: space1
+                      relationships:
+                        organization:
+                          data:
+                            guid: 123e4567-e89b-12d3-a456-426614174000
+                        quota:
+                          data: null
+                      links:
+                        self:
+                          href: https://api.example.org/v3/spaces/885735b5-aea4-4cf5-8e44-961af0e41920
+                        features:
+                          href: https://api.example.org/v3/spaces/885735b5-aea4-4cf5-8e44-961af0e41920/features
+                        organization:
+                          href: https://api.example.org/v3/organizations/e00705b9-7b42-4561-ae97-2520399d2133
+                        apply_manifest:
+                          href: https://api.example.org/v3/spaces/885735b5-aea4-4cf5-8e44-961af0e41920/actions/apply_manifest
+                          method: POST
+                      metadata:
+                        labels: {}
+                        annotations: {}
+                    - guid: 123e4567-e89b-12d3-a456-426614174000
+                      created_at: '2017-02-02T00:14:30Z'
+                      updated_at: '2017-02-02T00:14:30Z'
+                      name: space2
+                      relationships:
+                        organization:
+                          data:
+                            guid: 123e4567-e89b-12d3-a456-426614174000
+                        quota:
+                          data:
+                            guid: 123e4567-e89b-12d3-a456-426614174000
+                      links:
+                        self:
+                          href: https://api.example.org/v3/spaces/d4c91047-7b29-4fda-b7f9-04033e5c9c9f
+                        features:
+                          href: https://api.example.org/v3/spaces/d4c91047-7b29-4fda-b7f9-04033e5c9c9f/features
+                        organization:
+                          href: https://api.example.org/v3/organizations/b4ce91bd-31df-4b7d-8fd4-21a6b533276b
+                        quota:
+                          href: https://api.example.org/v3/space_quotas/6da62599-4890-4a08-8b6f-180a4f47e46b
+                        apply_manifest:
+                          href: https://api.example.org/v3/spaces/d4c91047-7b29-4fda-b7f9-04033e5c9c9/actions/apply_manifest
+                          method: POST
+                      metadata:
+                        labels: {}
+                        annotations: {}
+      '400':
+        $ref: ../components/responses/BadRequest.yaml
+      '401':
+        $ref: ../components/responses/Unauthorized.yaml
+      '403':
+        $ref: ../components/responses/Forbidden.yaml
+      '409':
+        $ref: ../components/responses/Conflict.yaml
+      '422':
+        $ref: ../components/responses/UnprocessableEntity.yaml
+      '429':
+        $ref: ../components/responses/TooManyRequests.yaml
+      '500':
+        $ref: ../components/responses/500.yaml
+      '502':
+        $ref: ../components/responses/BadGateway.yaml
+      '503':
+        $ref: ../components/responses/ServiceUnavailable.yaml
+  post:
+    summary: Create a space
+    description: Create a space.
+    operationId: createSpace
+    tags:
+      - Spaces
+    requestBody:
+      $ref: ../components/requestBodies/SpaceCreateRequestBody.yaml
+    responses:
+      '201':
+        description: Created
+        content:
+          application/json:
+            schema:
+              $ref: ../components/schemas/Space.yaml
+            examples:
+              default:
+                summary: default
+                value:
+                  guid: 123e4567-e89b-12d3-a456-426614174000
+                  created_at: '2017-02-01T01:33:58Z'
+                  updated_at: '2017-02-01T01:33:58Z'
+                  name: my-space
+                  relationships:
+                    organization:
+                      data:
+                        guid: 123e4567-e89b-12d3-a456-426614174000
+                    quota:
+                      data: null
+                  links:
+                    self:
+                      href: https://api.example.org/v3/spaces/885735b5-aea4-4cf5-8e44-961af0e41920
+                    features:
+                      href: https://api.example.org/v3/spaces/885735b5-aea4-4cf5-8e44-961af0e41920/features
+                    organization:
+                      href: https://api.example.org/v3/organizations/e00705b9-7b42-4561-ae97-2520399d2133
+                    apply_manifest:
+                      href: https://api.example.org/v3/spaces/885735b5-aea4-4cf5-8e44-961af0e41920/actions/apply_manifest
+                      method: POST
+                  metadata:
+                    labels: {}
+                    annotations: {}
+        links:
+          organization:
+            operationId: getOrganization
+            parameters:
+              guid: $response.body#/relationships/organization/data/guid
+            description: Retrieve the organization for this space
+          quota:
+            operationId: getSpaceQuota
+            parameters:
+              guid: $response.body#/relationships/quota/data/guid
+            description: Retrieve the quota associated with this space
+      '400':
+        $ref: ../components/responses/BadRequest.yaml
+      '401':
+        $ref: ../components/responses/Unauthorized.yaml
+      '403':
+        $ref: ../components/responses/Forbidden.yaml
+      '409':
+        $ref: ../components/responses/Conflict.yaml
+      '422':
+        $ref: ../components/responses/UnprocessableEntity.yaml
+      '500':
+        $ref: ../components/responses/500.yaml
+      '503':
+        $ref: ../components/responses/ServiceUnavailable.yaml
+/v3/spaces/{guid}:
+  get:
+    summary: Get a space
+    description: This endpoint retrieves the specified space object.
+    operationId: getSpace
+    tags:
+      - Spaces
+    parameters:
+      - $ref: ../components/parameters/Guid.yaml
+      - name: include
+        in: query
+        schema:
+          type: array
+          items:
+            type: string
+            enum:
+              - organization
+        description: Optionally include additional related resources in the response
+    responses:
+      '200':
+        description: OK
+        content:
+          application/json:
+            schema:
+              $ref: ../components/schemas/Space.yaml
+            examples:
+              default:
+                summary: default
+                value:
+                  guid: 123e4567-e89b-12d3-a456-426614174000
+                  created_at: '2017-02-01T01:33:58Z'
+                  updated_at: '2017-02-01T01:33:58Z'
+                  name: my-space
+                  relationships:
+                    organization:
+                      data:
+                        guid: 123e4567-e89b-12d3-a456-426614174000
+                    quota:
+                      data: null
+                  links:
+                    self:
+                      href: https://api.example.org/v3/spaces/885735b5-aea4-4cf5-8e44-961af0e41920
+                    features:
+                      href: https://api.example.org/v3/spaces/885735b5-aea4-4cf5-8e44-961af0e41920/features
+                    organization:
+                      href: https://api.example.org/v3/organizations/e00705b9-7b42-4561-ae97-2520399d2133
+                    apply_manifest:
+                      href: https://api.example.org/v3/spaces/885735b5-aea4-4cf5-8e44-961af0e41920/actions/apply_manifest
+                      method: POST
+                  metadata:
+                    labels: {}
+                    annotations: {}
+        links:
+          organization:
+            operationId: getOrganization
+            parameters:
+              guid: $response.body#/relationships/organization/data/guid
+            description: Retrieve the organization for this space
+          quota:
+            operationId: getSpaceQuota
+            parameters:
+              guid: $response.body#/relationships/quota/data/guid
+            description: Retrieve the quota associated with this space
+      '401':
+        $ref: ../components/responses/Unauthorized.yaml
+      '403':
+        $ref: ../components/responses/Forbidden.yaml
+      '404':
+        $ref: ../components/responses/NotFound.yaml
+  patch:
+    summary: Update a space
+    description: Update a space
+    operationId: updateSpace
+    tags:
+      - Spaces
+    parameters:
+      - $ref: ../components/parameters/Guid.yaml
+    requestBody:
+      $ref: ../components/requestBodies/SpaceUpdateRequestBody.yaml
+    responses:
+      '200':
+        description: OK
+        content:
+          application/json:
+            schema:
+              $ref: ../components/schemas/Space.yaml
+            examples:
+              default:
+                summary: default
+                value:
+                  guid: 123e4567-e89b-12d3-a456-426614174000
+                  created_at: '2017-02-01T01:33:58Z'
+                  updated_at: '2017-02-01T01:33:58Z'
+                  name: my-space
+                  relationships:
+                    organization:
+                      data:
+                        guid: 123e4567-e89b-12d3-a456-426614174000
+                    quota:
+                      data: null
+                  links:
+                    self:
+                      href: https://api.example.org/v3/spaces/885735b5-aea4-4cf5-8e44-961af0e41920
+                    features:
+                      href: https://api.example.org/v3/spaces/885735b5-aea4-4cf5-8e44-961af0e41920/features
+                    organization:
+                      href: https://api.example.org/v3/organizations/e00705b9-7b42-4561-ae97-2520399d2133
+                    apply_manifest:
+                      href: https://api.example.org/v3/spaces/885735b5-aea4-4cf5-8e44-961af0e41920/actions/apply_manifest
+                      method: POST
+                  metadata:
+                    labels: {}
+                    annotations: {}
+        links:
+          organization:
+            operationId: getOrganization
+            parameters:
+              guid: $response.body#/relationships/organization/data/guid
+            description: Retrieve the organization for this space
+          quota:
+            operationId: getSpaceQuota
+            parameters:
+              guid: $response.body#/relationships/quota/data/guid
+            description: Retrieve the quota associated with this space
+      '400':
+        $ref: ../components/responses/BadRequest.yaml
+      '401':
+        $ref: ../components/responses/Unauthorized.yaml
+      '403':
+        $ref: ../components/responses/Forbidden.yaml
+      '404':
+        $ref: ../components/responses/NotFound.yaml
+      '409':
+        $ref: ../components/responses/Conflict.yaml
+      '422':
+        $ref: ../components/responses/UnprocessableEntity.yaml
+      '500':
+        $ref: ../components/responses/500.yaml
+      '503':
+        $ref: ../components/responses/ServiceUnavailable.yaml
+  delete:
+    summary: Delete a space
+    description: When a space is deleted, the user roles associated with the space will be deleted.
+    operationId: deleteSpace
+    tags:
+      - Spaces
+    parameters:
+      - $ref: ../components/parameters/Guid.yaml
+    responses:
+      '202':
+        description: Accepted
+        headers:
+          location:
+            description: URL of the job to query the asynchronous operation
+            schema:
+              type: string
+              format: uri
+      '400':
+        $ref: ../components/responses/BadRequest.yaml
+      '401':
+        $ref: ../components/responses/Unauthorized.yaml
+      '403':
+        $ref: ../components/responses/Forbidden.yaml
+      '404':
+        $ref: ../components/responses/NotFound.yaml
+      '422':
+        $ref: ../components/responses/UnprocessableEntity.yaml
+      '500':
+        $ref: ../components/responses/500.yaml
+/v3/spaces/{guid}/actions/apply_manifest:
+  post:
+    summary: Apply a manifest to a space
+    description: |-
+      Apply changes specified in a manifest to the named apps and their underlying processes. The apps must reside in the space. These changes are additive and will not modify any unspecified properties or remove any existing environment variables, app features, routes, or services.
+
+      Apply manifest will only trigger an immediate update for the “instances” property or routing changes. All other properties require an app restart to take effect.
+    operationId: applyManifestToSpace
+    tags:
+      - Spaces
+    parameters:
+      - $ref: ../components/parameters/Guid.yaml
+    requestBody:
+      content:
+        application/x-yaml:
+          schema:
+            type: string
+    responses:
+      '202':
+        description: Accepted
+        headers:
+          Location:
+            description: URL of the job that is applying the manifest
+            schema:
+              type: string
+              format: uri
+      '401':
+        $ref: ../components/responses/Unauthorized.yaml
+      '403':
+        $ref: ../components/responses/Forbidden.yaml
+      '404':
+        $ref: ../components/responses/NotFound.yaml
+      '422':
+        $ref: ../components/responses/UnprocessableEntity.yaml
+/v3/spaces/{guid}/features:
+  get:
+    summary: List space features
+    description: This endpoint retrieves the list of features for the specified space. Currently, the only feature on spaces is the SSH feature.
+    operationId: listSpaceFeatures
+    tags:
+      - Spaces
+    parameters:
+      - $ref: ../components/parameters/Guid.yaml
+    responses:
+      '200':
+        description: OK
+        content:
+          application/json:
+            schema:
+              $ref: ../components/schemas/SpaceFeature.yaml
+            examples:
+              default:
+                summary: default
+                value:
+                  resources:
+                    - name: ssh
+                      description: Enable SSHing into apps in the space.
+                      enabled: true
+                    - name: diego_docker
+                      description: Allow Docker image support for the space.
+                      enabled: false
+      '401':
+        $ref: ../components/responses/Unauthorized.yaml
+      '403':
+        $ref: ../components/responses/Forbidden.yaml
+      '404':
+        $ref: ../components/responses/NotFound.yaml
+/v3/spaces/{guid}/features/{name}:
+  get:
+    summary: Get a space feature
+    description: Get a space feature
+    operationId: getSpaceFeature
+    tags:
+      - Spaces
+    parameters:
+      - $ref: ../components/parameters/Guid.yaml
+      - name: name
+        in: path
+        required: true
+        schema:
+          type: string
+          enum:
+            - ssh
+    responses:
+      '200':
+        description: OK
+        content:
+          application/json:
+            schema:
+              $ref: ../components/schemas/SpaceFeature.yaml
+            examples:
+              default:
+                summary: default
+                value:
+                  name: ssh
+                  description: Enable SSHing into apps in the space.
+                  enabled: true
+      '401':
+        $ref: ../components/responses/Unauthorized.yaml
+      '403':
+        $ref: ../components/responses/Forbidden.yaml
+      '404':
+        $ref: ../components/responses/NotFound.yaml
+  patch:
+    summary: Update a space feature
+    description: Update a space feature.
+    operationId: updateSpaceFeature
+    tags:
+      - Spaces
+    parameters:
+      - $ref: ../components/parameters/Guid.yaml
+      - name: name
+        in: path
+        required: true
+        schema:
+          type: string
+          enum:
+            - ssh
+    requestBody:
+      content:
+        application/json:
+          schema:
+            properties:
+              enabled:
+                type: boolean
+          examples:
+            default:
+              summary: default
+              value:
+                enabled: true
+    responses:
+      '200':
+        description: OK
+        content:
+          application/json:
+            schema:
+              $ref: ../components/schemas/SpaceFeature.yaml
+            examples:
+              default:
+                summary: default
+                value:
+                  name: ssh
+                  description: Enable SSHing into apps in the space.
+                  enabled: true
+      '401':
+        $ref: ../components/responses/Unauthorized.yaml
+      '403':
+        $ref: ../components/responses/Forbidden.yaml
+      '404':
+        $ref: ../components/responses/NotFound.yaml
+      '422':
+        $ref: ../components/responses/UnprocessableEntity.yaml
+/v3/spaces/{guid}/manifest_diff:
+  post:
+    summary: Create a manifest diff for a space (experimental)
+    description: |-
+      This endpoint returns a JSON representation of the difference between the provided manifest and the current state of a space.
+
+      Currently, this endpoint can only diff [version 1](#the-manifest-schema) manifests.
+    operationId: createManifestDiffForSpace
+    tags:
+      - Spaces
+    parameters:
+      - $ref: ../components/parameters/Guid.yaml
+    requestBody:
+      content:
+        application/x-yaml:
+          schema:
+            type: string
+    responses:
+      '201':
+        description: Accepted
+        headers:
+          Location:
+            description: URL of the job that is creating the manifest diff
+            schema:
+              type: string
+              format: uri
+      '202':
+        description: Accepted
+        headers:
+          Location:
+            description: URL of the job that is creating the manifest diff
+            schema:
+              type: string
+              format: uri
+      '401':
+        $ref: ../components/responses/Unauthorized.yaml
+      '403':
+        $ref: ../components/responses/Forbidden.yaml
+      '404':
+        $ref: ../components/responses/NotFound.yaml
+      '422':
+        $ref: ../components/responses/UnprocessableEntity.yaml
+/v3/spaces/{guid}/relationships/isolation_segment:
+  get:
+    summary: Get assigned isolation segment
+    description: Get assigned isolation segment
+    operationId: getAssignedIsolationSegmentForSpace
+    tags:
+      - Spaces
+    parameters:
+      - $ref: ../components/parameters/Guid.yaml
+    responses:
+      '200':
+        description: OK
+        content:
+          application/json:
+            schema:
+              $ref: ../components/schemas/RelationshipToOne.yaml
+            examples:
+              default:
+                summary: default
+                value:
+                  data:
+                    guid: 123e4567-e89b-12d3-a456-426614174000
+                  links:
+                    self:
+                      href: https://api.example.org/v3/spaces/885735b5-aea4-4cf5-8e44-961af0e41920/relationships/isolation_segment
+                    related:
+                      href: https://api.example.org/v3/isolation_segments/e4c91047-3b29-4fda-b7f9-04033e5a9c9f
+      '401':
+        $ref: ../components/responses/Unauthorized.yaml
+      '403':
+        $ref: ../components/responses/Forbidden.yaml
+      '404':
+        $ref: ../components/responses/NotFound.yaml
+  patch:
+    summary: Manage isolation segment
+    description: |-
+      This endpoint assigns an isolation segment to the space. The isolation segment must be [entitled](#entitle-organizations-for-an-isolation-segment) to the space’s parent organization.
+
+      Apps will not run in the newly assigned isolation segment until they are restarted.
+    operationId: manageIsolationSegmentForSpace
+    tags:
+      - Spaces
+    parameters:
+      - $ref: ../components/parameters/Guid.yaml
+    requestBody:
+      content:
+        application/json:
+          schema:
+            $ref: ../components/schemas/RelationshipToOne.yaml
+          examples:
+            default:
+              summary: default
+              value:
+                data:
+                  guid: 123e4567-e89b-12d3-a456-426614174000
+    responses:
+      '200':
+        description: OK
+        content:
+          application/json:
+            schema:
+              $ref: ../components/schemas/RelationshipToOne.yaml
+            examples:
+              default:
+                summary: default
+                value:
+                  data:
+                    guid: 123e4567-e89b-12d3-a456-426614174000
+                  links:
+                    self:
+                      href: https://api.example.org/v3/spaces/885735b5-aea4-4cf5-8e44-961af0e41920/relationships/isolation_segment
+                    related:
+                      href: https://api.example.org/v3/isolation_segments/e4c91047-3b29-4fda-b7f9-04033e5a9c9f
+      '401':
+        $ref: ../components/responses/Unauthorized.yaml
+      '403':
+        $ref: ../components/responses/Forbidden.yaml
+      '404':
+        $ref: ../components/responses/NotFound.yaml
+      '422':
+        $ref: ../components/responses/UnprocessableEntity.yaml
+/v3/spaces/{guid}/routes:
+  delete:
+    summary: Delete unmapped routes for a space
+    description: Deletes all routes in a space that are not mapped to any applications and not bound to any service instances.
+    operationId: deleteUnmappedRoutesForSpace
+    tags:
+      - Spaces
+    parameters:
+      - $ref: ../components/parameters/Guid.yaml
+      - name: unmapped
+        in: query
+        required: true
+        schema:
+          type: boolean
+          enum:
+            - true
+        description: Filter to only delete unmapped routes
+    responses:
+      '202':
+        description: Accepted
+        headers:
+          Location:
+            description: URL of the job that is deleting unmapped routes
+            schema:
+              type: string
+              format: uri
+      '401':
+        $ref: ../components/responses/Unauthorized.yaml
+      '403':
+        $ref: ../components/responses/Forbidden.yaml
+      '404':
+        $ref: ../components/responses/NotFound.yaml
+      '422':
+        $ref: ../components/responses/UnprocessableEntity.yaml
+/v3/spaces/{guid}/usage_summary:
+  get:
+    summary: Get usage summary for a space
+    description: This endpoint retrieves the specified space's memory and app instance usage summary.
+    operationId: getUsageSummaryForSpace
+    tags:
+      - Spaces
+    parameters:
+      - $ref: ../components/parameters/Guid.yaml
+    responses:
+      '200':
+        description: OK
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                usage_summary:
+                  type: object
+                  properties:
+                    started_instances:
+                      type: integer
+                    memory_in_mb:
+                      type: integer
+                    routes:
+                      type: integer
+                    service_instances:
+                      type: integer
+                    reserved_ports:
+                      type: integer
+                    domains:
+                      type: integer
+                    per_app_tasks:
+                      type: integer
+                    service_keys:
+                      type: integer
+                links:
+                  type: object
+                  properties:
+                    self:
+                      $ref: ../components/schemas/Link.yaml
+                      description: The URL to get this usage summary
+                    space:
+                      $ref: ../components/schemas/Link.yaml
+                      description: The URL to get the space for this usage summary
+            examples:
+              default:
+                summary: default
+                value:
+                  usage_summary:
+                    started_instances: 3
+                    memory_in_mb: 3072
+                    routes: 3
+                    service_instances: 2
+                    reserved_ports: 1
+                    domains: 1
+                    per_app_tasks: 0
+                    service_keys: 1
+                  links:
+                    self:
+                      href: https://api.example.org/v3/spaces/f47ac10b-58cc-4372-a567-0e02b2c3d479/usage_summary
+                    organization:
+                      href: https://api.example.org/v3/spaces/f47ac10b-58cc-4372-a567-0e02b2c3d479
+      '401':
+        $ref: ../components/responses/Unauthorized.yaml
+      '403':
+        $ref: ../components/responses/Forbidden.yaml
+      '404':
+        $ref: ../components/responses/NotFound.yaml
+/v3/spaces/{guid}/running_security_groups:
+  get:
+    summary: List running security groups for a space
+    description: This endpoint returns security groups that are enabled for running globally or at the space level for the given space.
+    operationId: listRunningSecurityGroupsForSpace
+    tags:
+      - Spaces
+    parameters:
+      - $ref: ../components/parameters/Guid.yaml
+    responses:
+      '200':
+        description: OK
+        content:
+          application/json:
+            schema:
+              $ref: ../components/schemas/SecurityGroupList.yaml
+      '401':
+        $ref: ../components/responses/Unauthorized.yaml
+      '403':
+        $ref: ../components/responses/Forbidden.yaml
+      '404':
+        $ref: ../components/responses/NotFound.yaml
+/v3/spaces/{guid}/staging_security_groups:
+  get:
+    summary: List staging security groups for a space
+    description: This endpoint returns security groups that are enabled for staging globally or at the space level for the given space.
+    operationId: listStagingSecurityGroupsForSpace
+    tags:
+      - Spaces
+    parameters:
+      - $ref: ../components/parameters/Guid.yaml
+    responses:
+      '200':
+        description: OK
+        content:
+          application/json:
+            schema:
+              $ref: ../components/schemas/SecurityGroupList.yaml
+      '401':
+        $ref: ../components/responses/Unauthorized.yaml
+      '403':
+        $ref: ../components/responses/Forbidden.yaml
+      '404':
+        $ref: ../components/responses/NotFound.yaml
+/v3/spaces/{guid}/users:
+  get:
+    summary: List users for a space
+    description: Retrieve all users with a role in the specified space.
+    operationId: listUsersForSpace
+    tags:
+      - Spaces
+    parameters:
+      - $ref: ../components/parameters/Guid.yaml
+    responses:
+      '200':
+        description: OK
+        content:
+          application/json:
+            schema:
+              $ref: ../components/schemas/UserList.yaml
+      '401':
+        $ref: ../components/responses/Unauthorized.yaml
+      '403':
+        $ref: ../components/responses/Forbidden.yaml
+      '404':
+        $ref: ../components/responses/NotFound.yaml

@@ -1,0 +1,51 @@
+type: object
+allOf:
+  - $ref: './BaseSchema.yaml'
+  - properties:
+      name:
+        type: string
+        description: The name of the domain; must be between 3 ~ 253 characters and follow [RFC 1035](https://tools.ietf.org/html/rfc1035)
+      internal:
+        type: boolean
+        description: Whether the domain is used for internal (container-to-container) traffic
+      router_group:
+        type: 
+          - object
+          - 'null'
+        properties:
+          guid:
+            type: string
+            format: uuid
+        description: The guid of the desired router group to route `tcp` traffic through; if set, the domain will only be available for `tcp` traffic
+      supported_protocols:
+        type: array
+        items:
+          type: string
+          enum:
+            - http
+            - tcp
+        description: Available protocols for routes using the domain, currently `http` and `tcp`
+      relationships:
+        $ref: './Relationships.yaml'
+      metadata:
+        $ref: './Metadata.yaml'
+      links:
+        type: object
+        properties:
+          self:
+            $ref: './Link.yaml'
+            description: The URL to get this domain
+          organization:
+            $ref: './Link.yaml'
+            description: The URL to get the organization for this domain
+          route_reservations:
+            $ref: './Link.yaml'
+            description: The URL to get the route reservations for this domain
+          shared_organizations:
+            $ref: './Link.yaml'
+            description: The URL to get the shared organizations for this domain
+          router_group:
+            $ref: './Link.yaml'
+            description: The URL to get the router group for this domain
+description: |
+  A domain is a fully qualified domain name that is used for application routes. A domain can be scoped to an organization, meaning it can be used to create routes for spaces inside that organization, or be left unscoped to allow all organizations access.

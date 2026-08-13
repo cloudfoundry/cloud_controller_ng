@@ -1,0 +1,183 @@
+/v3/users:
+  get:
+    summary: List users
+    description: Retrieve all users that the current user can see.
+    operationId: listUsers
+    tags:
+    - Users
+    parameters:
+    - $ref: '../components/parameters/Page.yaml'
+    - $ref: '../components/parameters/PerPage.yaml'
+    - $ref: '../components/parameters/OrderBy.yaml'
+    - $ref: '../components/parameters/CreatedAts.yaml'
+    - $ref: '../components/parameters/UpdatedAts.yaml'
+    - $ref: '../components/parameters/LabelSelector.yaml'
+    - name: guids
+      in: query
+      schema:
+        type: array
+        items:
+          type: string
+      description: Comma-delimited list of user guids to filter by (can include UAA user IDs or client IDs)
+    - name: usernames
+      in: query
+      schema:
+        type: array
+        items:
+          type: string
+      description: Comma-delimited list of usernames to filter by
+    - name: origins
+      in: query
+      schema:
+        type: array
+        items:
+          type: string
+      description: Comma-delimited list of user origins to filter by
+    - name: partial_usernames
+      in: query
+      schema:
+        type: array
+        items:
+          type: string
+      description: Comma-delimited list of partial usernames to filter by
+    responses:
+      '200':
+        description: OK
+        content:
+          application/json:
+            schema:
+              $ref: '../components/schemas/UserList.yaml'
+      '400':
+        $ref: '../components/responses/BadRequest.yaml'
+      '401':
+        $ref: '../components/responses/Unauthorized.yaml'
+      '403':
+        $ref: '../components/responses/Forbidden.yaml'
+      '500':
+        $ref: '../components/responses/500.yaml'
+      '503':
+        $ref: '../components/responses/ServiceUnavailable.yaml'
+      '422':
+        $ref: '../components/responses/UnprocessableEntity.yaml'
+      '502':
+        $ref: '../components/responses/BadGateway.yaml'
+      '409':
+        $ref: '../components/responses/Conflict.yaml'
+  post:
+    summary: Create a user
+    description: 'Creating a user requires one value, a GUID. This creates a user
+      in the Cloud Controller database.
+
+
+      Generally, the GUID should match the GUID of an already-created user in the
+      UAA database, though this is not required. Creating a user by guid is only permitted
+      by admins.
+
+
+      If CAPI property `cc.allow_user_creation_by_org_manager` is enabled, a UAA user
+      will be automatically created if it does not exist yet. The UAA user will be
+      only created when `username` and `origin` have been provided instead of a guid.
+      Additionally `origin` must be different from `uaa`. Admins and OrgManagers can
+      make use of the UAA user creation.'
+    operationId: createUser
+    tags:
+    - Users
+    requestBody:
+      $ref: '../components/requestBodies/UserCreate.yaml'
+    responses:
+      '201':
+        $ref: '../components/responses/UserCreateResponse.yaml'
+      '400':
+        $ref: '../components/responses/BadRequest.yaml'
+      '401':
+        $ref: '../components/responses/Unauthorized.yaml'
+      '403':
+        $ref: '../components/responses/Forbidden.yaml'
+      '500':
+        $ref: '../components/responses/500.yaml'
+      '422':
+        $ref: '../components/responses/UnprocessableEntity.yaml'
+      '429':
+        $ref: '../components/responses/TooManyRequests.yaml'
+      '503':
+        $ref: '../components/responses/ServiceUnavailable.yaml'
+      '409':
+        $ref: '../components/responses/Conflict.yaml'
+/v3/users/{guid}:
+  get:
+    summary: Get a user
+    description: Retrieve a user.
+    operationId: getUser
+    tags:
+    - Users
+    parameters:
+    - $ref: '../components/parameters/UserGuid.yaml'
+    responses:
+      '200':
+        description: OK
+        content:
+          application/json:
+            schema:
+              $ref: '../components/schemas/User.yaml'
+      '401':
+        $ref: '../components/responses/Unauthorized.yaml'
+      '404':
+        $ref: '../components/responses/NotFound.yaml'
+      '403':
+        $ref: '../components/responses/Forbidden.yaml'
+  patch:
+    summary: Update a user
+    description: Update a user's metadata.
+    operationId: updateUser
+    tags:
+    - Users
+    parameters:
+    - $ref: '../components/parameters/UserGuid.yaml'
+    requestBody:
+      $ref: '../components/requestBodies/UserUpdate.yaml'
+    responses:
+      '200':
+        $ref: '../components/responses/UserUpdateResponse.yaml'
+      '401':
+        $ref: '../components/responses/Unauthorized.yaml'
+      '404':
+        $ref: '../components/responses/NotFound.yaml'
+      '403':
+        $ref: '../components/responses/Forbidden.yaml'
+      '422':
+        $ref: '../components/responses/UnprocessableEntity.yaml'
+      '400':
+        $ref: '../components/responses/BadRequest.yaml'
+      '500':
+        $ref: '../components/responses/500.yaml'
+      '503':
+        $ref: '../components/responses/ServiceUnavailable.yaml'
+      '409':
+        $ref: '../components/responses/Conflict.yaml'
+  delete:
+    summary: Delete a user
+    description: All roles associated with a user will be deleted if the user is deleted.
+    operationId: deleteUser
+    tags:
+    - Users
+    parameters:
+    - $ref: '../components/parameters/UserGuid.yaml'
+    responses:
+      '202':
+        description: Accepted
+        headers:
+          Location:
+            description: URL of the job that is deleting the user
+            schema:
+              type: string
+              format: uri
+      '401':
+        $ref: '../components/responses/Unauthorized.yaml'
+      '404':
+        $ref: '../components/responses/NotFound.yaml'
+      '403':
+        $ref: '../components/responses/Forbidden.yaml'
+      '422':
+        $ref: '../components/responses/UnprocessableEntity.yaml'
+      '500':
+        $ref: '../components/responses/500.yaml'

@@ -1,0 +1,5 @@
+description: User created
+content:
+  application/json:
+    schema:
+      $ref: '../schemas/User.yaml'

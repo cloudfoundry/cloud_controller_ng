@@ -1,0 +1,372 @@
+/v3/builds:
+  get:
+    summary: List builds
+    description: Retrieve all builds.
+    operationId: listBuilds
+    tags:
+      - Builds
+    parameters:
+      - $ref: ../components/parameters/Page.yaml
+      - $ref: ../components/parameters/PerPage.yaml
+      - $ref: ../components/parameters/OrderBy.yaml
+      - $ref: ../components/parameters/CreatedAts.yaml
+      - $ref: ../components/parameters/UpdatedAts.yaml
+      - $ref: ../components/parameters/LabelSelector.yaml
+      - name: states
+        in: query
+        schema:
+          type: array
+          items:
+            type: string
+            enum:
+              - STAGING
+              - STAGED
+              - FAILED
+        description: Comma-delimited list of build states to filter by
+      - name: app_guids
+        in: query
+        schema:
+          type: array
+          items:
+            type: string
+        description: Comma-delimited list of app GUIDs to filter by
+      - name: package_guids
+        in: query
+        schema:
+          type: array
+          items:
+            type: string
+        description: Comma-delimited list of package GUIDs to filter by
+    responses:
+      '200':
+        description: OK
+        content:
+          application/json:
+            schema:
+              $ref: ../components/schemas/BuildList.yaml
+            examples:
+              default:
+                summary: default
+                value:
+                  pagination:
+                    total_results: 1
+                    total_pages: 1
+                    first:
+                      href: https://api.example.org?states=STAGING&page=1&per_page=2
+                    last:
+                      href: https://api.example.org?states=STAGING&page=1&per_page=2
+                    next: null
+                    previous: null
+                  resources:
+                    - guid: 123e4567-e89b-12d3-a456-426614174000
+                      created_at: '2016-03-28T23:39:34Z'
+                      updated_at: '2016-06-08T16:41:26Z'
+                      created_by:
+                        guid: 123e4567-e89b-12d3-a456-426614174000
+                        name: bill
+                        email: bill@example.com
+                      state: STAGING
+                      staging_memory_in_mb: 1024
+                      staging_disk_in_mb: 1024
+                      staging_log_rate_limit_bytes_per_second: 1024
+                      error: null
+                      lifecycle:
+                        type: buildpack
+                        data:
+                          buildpacks:
+                            - ruby_buildpack
+                          stack: cflinuxfs4
+                      package:
+                        guid: 123e4567-e89b-12d3-a456-426614174000
+                      droplet: null
+                      relationships:
+                        app:
+                          data:
+                            guid: 123e4567-e89b-12d3-a456-426614174000
+                      metadata:
+                        labels: {}
+                        annotations: {}
+                      links:
+                        self:
+                          href: https://api.example.org/v3/builds/585bc3c1-3743-497d-88b0-403ad6b56d16
+                        app:
+                          href: https://api.example.org/v3/apps/7b34f1cf-7e73-428a-bb5a-8a17a8058396
+      '400':
+        $ref: ../components/responses/BadRequest.yaml
+      '401':
+        $ref: ../components/responses/Unauthorized.yaml
+      '403':
+        $ref: ../components/responses/Forbidden.yaml
+      '409':
+        $ref: ../components/responses/Conflict.yaml
+      '422':
+        $ref: ../components/responses/UnprocessableEntity.yaml
+      '500':
+        $ref: ../components/responses/500.yaml
+      '502':
+        $ref: ../components/responses/BadGateway.yaml
+      '503':
+        $ref: ../components/responses/ServiceUnavailable.yaml
+  post:
+    summary: Create a build
+    description: Create a build.
+    operationId: createBuild
+    tags:
+      - Builds
+    requestBody:
+      description: Build object that needs to be created
+      required: true
+      content:
+        application/json:
+          schema:
+            type: object
+            properties:
+              package:
+                $ref: ../components/schemas/Relationship.yaml
+              lifecycle:
+                $ref: ../components/schemas/Lifecycle.yaml
+              staging_memory_in_mb:
+                type: integer
+                description: Memory in MB allocated for staging of the build
+              staging_disk_in_mb:
+                type: integer
+                description: Disk space in MB allocated for staging of the build
+              staging_log_rate_limit_bytes_per_second:
+                type: integer
+                description: Log rate limit in bytes per second allocated for staging of the build
+              metadata:
+                $ref: ../components/schemas/Metadata.yaml
+            required:
+              - package
+            description: Request schema for creating a build
+          examples:
+            default:
+              summary: default
+              value:
+                package:
+                  guid: 123e4567-e89b-12d3-a456-426614174000
+    responses:
+      '201':
+        description: Successfully created build
+        content:
+          application/json:
+            schema:
+              $ref: ../components/schemas/Build.yaml
+        links:
+          app:
+            operationId: getApp
+            parameters:
+              guid: $response.body#/relationships/app/data/guid
+            description: Retrieve the app for this build
+      '400':
+        $ref: ../components/responses/BadRequest.yaml
+      '401':
+        $ref: ../components/responses/Unauthorized.yaml
+      '403':
+        $ref: ../components/responses/Forbidden.yaml
+      '409':
+        $ref: ../components/responses/Conflict.yaml
+      '422':
+        $ref: ../components/responses/UnprocessableEntity.yaml
+      '500':
+        $ref: ../components/responses/500.yaml
+      '503':
+        $ref: ../components/responses/ServiceUnavailable.yaml
+/v3/builds/{guid}:
+  get:
+    summary: Get a build
+    description: Retrieve a build.
+    operationId: getBuild
+    tags:
+      - Builds
+    parameters:
+      - $ref: ../components/parameters/Guid.yaml
+    responses:
+      '200':
+        description: Successfully retrieved build
+        content:
+          application/json:
+            schema:
+              $ref: ../components/schemas/Build.yaml
+        links:
+          app:
+            operationId: getApp
+            parameters:
+              guid: $response.body#/relationships/app/data/guid
+            description: Retrieve the app for this build
+          droplet:
+            operationId: getDroplet
+            parameters:
+              guid: $response.body#/droplet/guid
+            description: Retrieve the droplet for this build
+      '401':
+        $ref: ../components/responses/Unauthorized.yaml
+      '403':
+        $ref: ../components/responses/Forbidden.yaml
+      '404':
+        $ref: ../components/responses/NotFound.yaml
+  patch:
+    summary: Update a build
+    description: Update a build.
+    operationId: updateBuild
+    tags:
+      - Builds
+    parameters:
+      - $ref: ../components/parameters/Guid.yaml
+    requestBody:
+      content:
+        application/json:
+          schema:
+            $ref: ../components/schemas/BuildUpdate.yaml
+          examples:
+            default:
+              summary: default
+              value:
+                metadata:
+                  labels:
+                    key: value
+                  annotations:
+                    note: detailed information
+    responses:
+      '200':
+        description: OK
+        content:
+          application/json:
+            schema:
+              $ref: ../components/schemas/Build.yaml
+      '400':
+        $ref: ../components/responses/BadRequest.yaml
+      '401':
+        $ref: ../components/responses/Unauthorized.yaml
+      '403':
+        $ref: ../components/responses/Forbidden.yaml
+      '404':
+        $ref: ../components/responses/NotFound.yaml
+      '409':
+        $ref: ../components/responses/Conflict.yaml
+      '422':
+        $ref: ../components/responses/UnprocessableEntity.yaml
+      '500':
+        $ref: ../components/responses/500.yaml
+      '503':
+        $ref: ../components/responses/ServiceUnavailable.yaml
+/v3/apps/{guid}/builds:
+  get:
+    summary: List builds for an app
+    description: Retrieve all builds for an app.
+    operationId: listAppBuilds
+    tags:
+      - Builds
+    parameters:
+      - $ref: ../components/parameters/Guid.yaml
+      - $ref: ../components/parameters/Page.yaml
+      - $ref: ../components/parameters/PerPage.yaml
+      - $ref: ../components/parameters/OrderBy.yaml
+      - name: states
+        in: query
+        schema:
+          type: array
+          items:
+            type: string
+            enum:
+              - STAGING
+              - STAGED
+              - FAILED
+        description: Comma-delimited list of build states to filter by
+      - $ref: ../components/parameters/LabelSelector.yaml
+      - $ref: ../components/parameters/CreatedAts.yaml
+      - $ref: ../components/parameters/UpdatedAts.yaml
+    responses:
+      '200':
+        description: OK
+        content:
+          application/json:
+            schema:
+              $ref: ../components/schemas/BuildList.yaml
+            examples:
+              default:
+                summary: default
+                value:
+                  pagination:
+                    total_results: 1
+                    total_pages: 1
+                    first:
+                      href: https://api.example.org?states=STAGING&page=1&per_page=2
+                    last:
+                      href: https://api.example.org?states=STAGING&page=1&per_page=2
+                    next: null
+                    previous: null
+                  resources:
+                    - guid: 123e4567-e89b-12d3-a456-426614174000
+                      created_at: '2016-03-28T23:39:34Z'
+                      updated_at: '2016-06-08T16:41:26Z'
+                      created_by:
+                        guid: 123e4567-e89b-12d3-a456-426614174000
+                        name: bill
+                        email: bill@example.com
+                      state: STAGING
+                      staging_memory_in_mb: 1024
+                      staging_disk_in_mb: 1024
+                      staging_log_rate_limit_bytes_per_second: 1024
+                      error: null
+                      lifecycle:
+                        type: buildpack
+                        data:
+                          buildpacks:
+                            - ruby_buildpack
+                          stack: cflinuxfs4
+                      package:
+                        guid: 123e4567-e89b-12d3-a456-426614174000
+                      droplet: null
+                      relationships:
+                        app:
+                          data:
+                            guid: 123e4567-e89b-12d3-a456-426614174000
+                      metadata:
+                        labels: {}
+                        annotations: {}
+                      links:
+                        self:
+                          href: https://api.example.org/v3/builds/585bc3c1-3743-497d-88b0-403ad6b56d16
+                        app:
+                          href: https://api.example.org/v3/apps/7b34f1cf-7e73-428a-bb5a-8a17a8058396
+      '401':
+        $ref: ../components/responses/Unauthorized.yaml
+      '403':
+        $ref: ../components/responses/Forbidden.yaml
+      '404':
+        $ref: ../components/responses/NotFound.yaml
+  patch:
+    summary: Update a build
+    description: Update a build.
+    operationId: updateBuildViaApp
+    tags:
+      - Builds
+    parameters:
+      - $ref: ../components/parameters/Guid.yaml
+    requestBody:
+      description: Build object that needs to be updated
+      required: true
+      content:
+        application/json:
+          schema:
+            type: object
+            properties:
+              metadata:
+                $ref: ../components/schemas/Metadata.yaml
+            description: Request schema for updating a build
+    responses:
+      '200':
+        description: Successfully updated build
+        content:
+          application/json:
+            schema:
+              $ref: ../components/schemas/Build.yaml
+      '401':
+        $ref: ../components/responses/Unauthorized.yaml
+      '403':
+        $ref: ../components/responses/Forbidden.yaml
+      '404':
+        $ref: ../components/responses/NotFound.yaml
+      '422':
+        $ref: ../components/responses/UnprocessableEntity.yaml

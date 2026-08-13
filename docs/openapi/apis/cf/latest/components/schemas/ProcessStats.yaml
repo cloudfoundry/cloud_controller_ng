@@ -1,0 +1,39 @@
+type: object
+properties:
+  resources:
+    type: array
+    items:
+      type: object
+      properties:
+        type:
+          type: string
+        index:
+          type: integer
+        state:
+          type: string
+          enum: ["RUNNING", "CRASHED", "STARTING", "DOWN", "STOPPING"]
+        host:
+          type: string
+        uptime:
+          type: integer
+        mem_quota:
+          type: [integer, 'null']
+        disk_quota:
+          type: [integer, 'null']
+        log_rate_limit:
+          type: [integer, 'null']
+        usage:
+          type: object
+          properties:
+            time:
+              type: string
+              format: date-time
+            cpu:
+              type: number
+            mem:
+              type: integer
+            disk:
+              type: integer
+            log_rate:
+              type: integer
+description: 'Statistics for a process'

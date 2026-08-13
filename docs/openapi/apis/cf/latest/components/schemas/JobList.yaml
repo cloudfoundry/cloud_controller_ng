@@ -1,0 +1,8 @@
+type: object
+properties:
+  pagination:
+    $ref: '#/components/schemas/Pagination'
+  resources:
+    type: array
+    items:
+      $ref: '#/components/schemas/Job'

@@ -1,0 +1,6 @@
+name: guid
+in: path
+required: true
+schema:
+  type: string
+description: The unique identifier for the user, matching either a UAA user id or client id. A client id may not be a uuid.

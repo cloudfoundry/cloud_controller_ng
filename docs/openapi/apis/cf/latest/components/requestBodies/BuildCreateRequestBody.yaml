@@ -1,0 +1,24 @@
+description: Build object that needs to be created
+required: true
+content:
+  application/json:
+    schema:
+      type: object
+      properties:
+        package:
+          type: object
+          properties:
+            guid:
+              type: string
+              format: uuid
+          required:
+            - guid
+          description: App package to stage
+        lifecycle:
+          $ref: '../schemas/Lifecycle.yaml'
+          description: Lifecycle information for a build
+        metadata:
+          $ref: '../schemas/Metadata.yaml'
+      required:
+        - package
+      description: Request schema for creating a build

@@ -1,0 +1,30 @@
+type: object
+allOf:
+  - $ref: './BaseSchema.yaml'
+  - properties:
+      name:
+        type: string
+        description: Name of the stack
+      description:
+        type: [string, "null"]
+        description: Description of the stack
+      build_rootfs_image:
+        type: string
+        description: The filesystem root image for building
+      run_rootfs_image:
+        type: string
+        description: The filesystem root image for running
+      default:
+        type: boolean
+        description: Whether this is the default stack
+      links:
+        type: object
+        properties:
+          self:
+            $ref: './Link.yaml'
+      metadata:
+        $ref: './Metadata.yaml'
+    required:
+      - name
+      - description
+      - links

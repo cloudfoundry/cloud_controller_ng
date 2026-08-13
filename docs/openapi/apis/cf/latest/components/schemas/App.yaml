@@ -1,0 +1,67 @@
+type: object
+allOf:
+  - $ref: './BaseSchema.yaml'
+  - properties:
+      name:
+        type: string
+        description: The name of the app
+      state:
+        type: string
+        description: Current desired state of the app
+        enum:
+          - STOPPED
+          - STARTED
+      lifecycle:
+        $ref: './Lifecycle.yaml'
+        description: Provides the default lifecycle object for the application. This lifecycle will be used when staging and running the application. The staging lifecycle can be overridden on builds
+      relationships:
+        $ref: './Relationships.yaml'
+      metadata:
+        $ref: './Metadata.yaml'
+      links:
+        type: object
+        properties:
+          self:
+            $ref: './Link.yaml'
+            description: The URL to get this app
+          space:
+            $ref: './Link.yaml'
+            description: The URL to get the space for this app
+          processes:
+            $ref: './Link.yaml'
+            description: The URL to get the processes for this app
+          packages:
+            $ref: './Link.yaml'
+            description: The URL to get the packages for this app
+          environment_variables:
+            $ref: './Link.yaml'
+            description: The URL to get the environment variables for this app
+          current_droplet:
+            $ref: './Link.yaml'
+            description: The URL to get the current droplet for this app
+          droplets:
+            $ref: './Link.yaml'
+            description: The URL to get the droplets for this app
+          tasks:
+            $ref: './Link.yaml'
+            description: The URL to get the tasks for this app
+          start:
+            $ref: './Link.yaml'
+            description: The URL to start the app
+          stop:
+            $ref: './Link.yaml'
+            description: The URL to stop the app
+          revisions:
+            $ref: './Link.yaml'
+            description: The URL to get the revisions for this app
+          deployed_revisions:
+            $ref: './Link.yaml'
+            description: The URL to get the deployed revisions for this app
+          features:
+            $ref: './Link.yaml'
+            description: The URL to get the features for this app
+      included:
+        $ref: './IncludedResources.yaml'
+        description: Additional related resources included in the response when using the include parameter
+description: >
+  Apps represent the core entities in the Cloud Foundry environment. They are the deployable units that run your code. Each app can have multiple processes, routes, and services associated with it. Apps can be scaled horizontally by increasing the number of instances. They can also be updated and restarted as needed.

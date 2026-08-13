@@ -1,0 +1,531 @@
+/v3/security_groups:
+  get:
+    summary: List security groups
+    description: List security groups.
+    operationId: listSecurityGroups
+    tags:
+      - Security Groups
+    parameters:
+      - $ref: ../components/parameters/Page.yaml
+      - $ref: ../components/parameters/PerPage.yaml
+      - $ref: ../components/parameters/OrderBy.yaml
+      - $ref: ../components/parameters/CreatedAts.yaml
+      - $ref: ../components/parameters/UpdatedAts.yaml
+      - name: guids
+        in: query
+        schema:
+          type: array
+          items:
+            type: string
+        description: Comma-separated list of resource GUIDs to filter by
+      - name: names
+        in: query
+        schema:
+          type: array
+          items:
+            type: string
+        description: Comma-separated list of names to filter by (case insensitive)
+      - name: globally_enabled_running
+        in: query
+        schema:
+          type: boolean
+        description: If true, only include the security groups that are enabled for running
+      - name: globally_enabled_staging
+        in: query
+        schema:
+          type: boolean
+        description: If true, only include the security groups that are enabled for staging
+      - name: running_space_guids
+        in: query
+        schema:
+          type: array
+          items:
+            type: string
+        description: Comma-delimited list of space guids to filter by
+      - name: staging_space_guids
+        in: query
+        schema:
+          type: array
+          items:
+            type: string
+        description: Comma-delimited list of space guids to filter by
+    responses:
+      '200':
+        description: OK
+        content:
+          application/json:
+            schema:
+              $ref: ../components/schemas/SecurityGroupList.yaml
+      '400':
+        $ref: ../components/responses/BadRequest.yaml
+      '401':
+        $ref: ../components/responses/Unauthorized.yaml
+      '403':
+        $ref: ../components/responses/Forbidden.yaml
+      '409':
+        $ref: ../components/responses/Conflict.yaml
+      '422':
+        $ref: ../components/responses/UnprocessableEntity.yaml
+      '500':
+        $ref: ../components/responses/500.yaml
+      '502':
+        $ref: ../components/responses/BadGateway.yaml
+      '503':
+        $ref: ../components/responses/ServiceUnavailable.yaml
+  post:
+    summary: Create a security group
+    description: Create a security group.
+    operationId: createSecurityGroup
+    tags:
+      - Security Groups
+    requestBody:
+      content:
+        application/json:
+          schema:
+            $ref: ../components/schemas/SecurityGroupCreate.yaml
+          examples:
+            default:
+              summary: default
+              value:
+                name: my-group0
+                rules:
+                  - protocol: tcp
+                    destination: 10.10.10.0/24
+                    ports: 443,80,8080
+                  - protocol: icmp
+                    destination: 10.10.10.0/24
+                    type: 8
+                    code: 0
+                    description: Allow ping requests to private services
+    responses:
+      '201':
+        description: Created
+        content:
+          application/json:
+            schema:
+              $ref: ../components/schemas/SecurityGroup.yaml
+            examples:
+              default:
+                summary: default
+                value:
+                  guid: 123e4567-e89b-12d3-a456-426614174000
+                  created_at: '2020-02-20T17:42:08Z'
+                  updated_at: '2020-02-20T17:42:08Z'
+                  name: my-group0
+                  globally_enabled:
+                    running: true
+                    staging: false
+                  rules:
+                    - protocol: tcp
+                      destination: 10.10.10.0/24
+                      ports: 443,80,8080
+                    - protocol: icmp
+                      destination: 10.10.10.0/24
+                      type: 8
+                      code: 0
+                      description: Allow ping requests to private services
+                    - protocol: icmpv6
+                      destination: '::/0'
+                      type: -1
+                      code: -1
+                      description: Allow all ICMPv6 traffic
+                    - protocol: tcp
+                      destination: 1.1.1.1,2.2.2.2/24,10.0.0.0-10.0.0.255
+                      ports: 80,443,8080
+                      description: Only valid if cc.security_groups.enable_comma_delimited_destinations is true
+                  relationships:
+                    staging_spaces:
+                      data:
+                        - guid: 123e4567-e89b-12d3-a456-426614174000
+                        - guid: 123e4567-e89b-12d3-a456-426614174000
+                    running_spaces:
+                      data: []
+                  links:
+                    self:
+                      href: https://api.example.org/v3/security_groups/b85a788e-671f-4549-814d-e34cdb2f539a
+      '400':
+        $ref: ../components/responses/BadRequest.yaml
+      '401':
+        $ref: ../components/responses/Unauthorized.yaml
+      '403':
+        $ref: ../components/responses/Forbidden.yaml
+      '409':
+        $ref: ../components/responses/Conflict.yaml
+      '422':
+        $ref: ../components/responses/UnprocessableEntity.yaml
+      '500':
+        $ref: ../components/responses/500.yaml
+      '503':
+        $ref: ../components/responses/ServiceUnavailable.yaml
+/v3/security_groups/{guid}:
+  get:
+    summary: Get a security group
+    description: Get a security group.
+    operationId: getSecurityGroup
+    tags:
+      - Security Groups
+    parameters:
+      - $ref: ../components/parameters/Guid.yaml
+    responses:
+      '200':
+        description: OK
+        content:
+          application/json:
+            schema:
+              $ref: ../components/schemas/SecurityGroup.yaml
+            examples:
+              default:
+                summary: default
+                value:
+                  guid: 123e4567-e89b-12d3-a456-426614174000
+                  created_at: '2020-02-20T17:42:08Z'
+                  updated_at: '2020-02-20T17:42:08Z'
+                  name: my-group0
+                  globally_enabled:
+                    running: true
+                    staging: false
+                  rules:
+                    - protocol: tcp
+                      destination: 10.10.10.0/24
+                      ports: 443,80,8080
+                    - protocol: icmp
+                      destination: 10.10.10.0/24
+                      type: 8
+                      code: 0
+                      description: Allow ping requests to private services
+                    - protocol: icmpv6
+                      destination: '::/0'
+                      type: -1
+                      code: -1
+                      description: Allow all ICMPv6 traffic
+                    - protocol: tcp
+                      destination: 1.1.1.1,2.2.2.2/24,10.0.0.0-10.0.0.255
+                      ports: 80,443,8080
+                      description: Only valid if cc.security_groups.enable_comma_delimited_destinations is true
+                  relationships:
+                    staging_spaces:
+                      data:
+                        - guid: 123e4567-e89b-12d3-a456-426614174000
+                        - guid: 123e4567-e89b-12d3-a456-426614174000
+                    running_spaces:
+                      data: []
+                  links:
+                    self:
+                      href: https://api.example.org/v3/security_groups/b85a788e-671f-4549-814d-e34cdb2f539a
+      '401':
+        $ref: ../components/responses/Unauthorized.yaml
+      '403':
+        $ref: ../components/responses/Forbidden.yaml
+      '404':
+        $ref: ../components/responses/NotFound.yaml
+  patch:
+    summary: Update a security group
+    description: Update a security group.
+    operationId: updateSecurityGroup
+    tags:
+      - Security Groups
+    parameters:
+      - $ref: ../components/parameters/Guid.yaml
+    requestBody:
+      content:
+        application/json:
+          schema:
+            $ref: ../components/schemas/SecurityGroupUpdate.yaml
+    responses:
+      '200':
+        description: OK
+        content:
+          application/json:
+            schema:
+              $ref: ../components/schemas/SecurityGroup.yaml
+            examples:
+              default:
+                summary: default
+                value:
+                  guid: 123e4567-e89b-12d3-a456-426614174000
+                  created_at: '2020-02-20T17:42:08Z'
+                  updated_at: '2020-02-20T17:42:08Z'
+                  name: my-group0
+                  globally_enabled:
+                    running: true
+                    staging: false
+                  rules:
+                    - protocol: tcp
+                      destination: 10.10.10.0/24
+                      ports: 443,80,8080
+                    - protocol: icmp
+                      destination: 10.10.10.0/24
+                      type: 8
+                      code: 0
+                      description: Allow ping requests to private services
+                    - protocol: icmpv6
+                      destination: '::/0'
+                      type: -1
+                      code: -1
+                      description: Allow all ICMPv6 traffic
+                    - protocol: tcp
+                      destination: 1.1.1.1,2.2.2.2/24,10.0.0.0-10.0.0.255
+                      ports: 80,443,8080
+                      description: Only valid if cc.security_groups.enable_comma_delimited_destinations is true
+                  relationships:
+                    staging_spaces:
+                      data:
+                        - guid: 123e4567-e89b-12d3-a456-426614174000
+                        - guid: 123e4567-e89b-12d3-a456-426614174000
+                    running_spaces:
+                      data: []
+                  links:
+                    self:
+                      href: https://api.example.org/v3/security_groups/b85a788e-671f-4549-814d-e34cdb2f539a
+      '400':
+        $ref: ../components/responses/BadRequest.yaml
+      '401':
+        $ref: ../components/responses/Unauthorized.yaml
+      '403':
+        $ref: ../components/responses/Forbidden.yaml
+      '404':
+        $ref: ../components/responses/NotFound.yaml
+      '409':
+        $ref: ../components/responses/Conflict.yaml
+      '422':
+        $ref: ../components/responses/UnprocessableEntity.yaml
+      '500':
+        $ref: ../components/responses/500.yaml
+      '503':
+        $ref: ../components/responses/ServiceUnavailable.yaml
+  delete:
+    summary: Delete a security group
+    description: Delete a security group.
+    operationId: deleteSecurityGroup
+    tags:
+      - Security Groups
+    parameters:
+      - $ref: ../components/parameters/Guid.yaml
+    responses:
+      '202':
+        description: Accepted
+        headers:
+          Location:
+            description: URL of the job that is deleting the security group
+            schema:
+              type: string
+              format: uri
+      '401':
+        $ref: ../components/responses/Unauthorized.yaml
+      '403':
+        $ref: ../components/responses/Forbidden.yaml
+      '404':
+        $ref: ../components/responses/NotFound.yaml
+      '500':
+        $ref: ../components/responses/500.yaml
+/v3/spaces/{guid}/running_security_groups:
+  get:
+    summary: List running security groups for a space
+    description: This endpoint returns security groups that are enabled for running globally or at the space level for the given space.
+    operationId: listRunningSecurityGroupsForSpaceBySpaceGuid
+    tags:
+      - Security Groups
+    parameters:
+      - $ref: ../components/parameters/Guid.yaml
+    responses:
+      '200':
+        description: OK
+        content:
+          application/json:
+            schema:
+              $ref: ../components/schemas/SecurityGroupList.yaml
+      '401':
+        $ref: ../components/responses/Unauthorized.yaml
+      '403':
+        $ref: ../components/responses/Forbidden.yaml
+      '404':
+        $ref: ../components/responses/NotFound.yaml
+/v3/spaces/{guid}/staging_security_groups:
+  get:
+    summary: List staging security groups for a space
+    description: This endpoint returns security groups that are enabled for staging globally or at the space level for the given space.
+    operationId: listStagingSecurityGroupsForSpaceBySpaceGuid
+    tags:
+      - Security Groups
+    parameters:
+      - $ref: ../components/parameters/Guid.yaml
+    responses:
+      '200':
+        description: OK
+        content:
+          application/json:
+            schema:
+              $ref: ../components/schemas/SecurityGroupList.yaml
+      '401':
+        $ref: ../components/responses/Unauthorized.yaml
+      '403':
+        $ref: ../components/responses/Forbidden.yaml
+      '404':
+        $ref: ../components/responses/NotFound.yaml
+  patch:
+    summary: Update a security group
+    description: This endpoint will only update the parameters specified in the request body. Any unspecified parameters will retain their existing values. Updates to the `rules` parameter will fully replace the current set of `rules` for the security group. Updates to the `globally_enabled` parameter will be merged with the existing configuration. For example, an update to the `globally_enabled.running` parameter will not affect the `globally_enabled.staging` configuration.
+    operationId: updateSecurityGroup
+    tags:
+      - Security Groups
+    parameters:
+      - $ref: ../components/parameters/Guid.yaml
+    requestBody:
+      content:
+        application/json:
+          schema:
+            $ref: ../components/schemas/SecurityGroup.yaml
+    responses:
+      '200':
+        description: OK
+        content:
+          application/json:
+            schema:
+              $ref: ../components/schemas/SecurityGroup.yaml
+      '401':
+        $ref: ../components/responses/Unauthorized.yaml
+      '403':
+        $ref: ../components/responses/Forbidden.yaml
+      '404':
+        $ref: ../components/responses/NotFound.yaml
+      '422':
+        $ref: ../components/responses/UnprocessableEntity.yaml
+  delete:
+    summary: Delete a security group
+    description: Delete a security group.
+    operationId: deleteSecurityGroup
+    tags:
+      - Security Groups
+    parameters:
+      - $ref: ../components/parameters/Guid.yaml
+    responses:
+      '202':
+        description: Accepted
+        headers:
+          Location:
+            description: URL of the job that is deleting the security group
+            schema:
+              type: string
+              format: uri
+      '401':
+        $ref: ../components/responses/Unauthorized.yaml
+      '403':
+        $ref: ../components/responses/Forbidden.yaml
+      '404':
+        $ref: ../components/responses/NotFound.yaml
+      '422':
+        $ref: ../components/responses/UnprocessableEntity.yaml
+/v3/security_groups/{guid}/relationships/running_spaces:
+  post:
+    summary: Bind a running security group to spaces
+    description: This endpoint binds one or more spaces to a security group with the running lifecycle. Running app containers within these spaces will inherit the rules specified by this security group. Apps within these spaces must be restarted for these changes to take effect. Unless a security group is globally-enabled, an admin must add it to a space for it to be visible for the org and space managers. Once it's visible, org and space managers can add it to additional spaces.
+    operationId: bindRunningSecurityGroup
+    tags:
+      - Security Groups
+    parameters:
+      - $ref: ../components/parameters/Guid.yaml
+    requestBody:
+      content:
+        application/json:
+          schema:
+            $ref: ../components/schemas/RelationshipToMany.yaml
+          examples:
+            default:
+              summary: default
+              value:
+                data:
+                  - guid: 123e4567-e89b-12d3-a456-426614174000
+                  - guid: 123e4567-e89b-12d3-a456-426614174000
+    responses:
+      '200':
+        description: OK
+        content:
+          application/json:
+            schema:
+              $ref: ../components/schemas/RelationshipToMany.yaml
+      '401':
+        $ref: ../components/responses/Unauthorized.yaml
+      '403':
+        $ref: ../components/responses/Forbidden.yaml
+      '404':
+        $ref: ../components/responses/NotFound.yaml
+      '422':
+        $ref: ../components/responses/UnprocessableEntity.yaml
+/v3/security_groups/{guid}/relationships/running_spaces/{space_guid}:
+  delete:
+    summary: Unbind a running security group from a space
+    description: This endpoint removes a space from a security group with the running lifecycle. Apps within this space must be restarted for these changes to take effect.
+    operationId: unbindRunningSecurityGroup
+    tags:
+      - Security Groups
+    parameters:
+      - $ref: ../components/parameters/Guid.yaml
+      - $ref: ../components/parameters/SpaceGuid.yaml
+    responses:
+      '204':
+        description: No Content
+      '401':
+        $ref: ../components/responses/Unauthorized.yaml
+      '403':
+        $ref: ../components/responses/Forbidden.yaml
+      '404':
+        $ref: ../components/responses/NotFound.yaml
+      '422':
+        $ref: ../components/responses/UnprocessableEntity.yaml
+/v3/security_groups/{guid}/relationships/staging_spaces:
+  post:
+    summary: Bind a staging security group to spaces
+    description: This endpoint binds one or more spaces to a security group with the staging lifecycle. Staging app containers within these spaces will inherit the rules specified by this security group. Apps within these spaces must be restaged for these changes to take effect. Unless a security group is globally-enabled, an admin must add it to a space for it to be visible for the org and space managers. Once it's visible, org and space managers can add it to additional spaces.
+    operationId: bindStagingSecurityGroup
+    tags:
+      - Security Groups
+    parameters:
+      - $ref: ../components/parameters/Guid.yaml
+    requestBody:
+      content:
+        application/json:
+          schema:
+            $ref: ../components/schemas/RelationshipToMany.yaml
+          examples:
+            default:
+              summary: default
+              value:
+                data:
+                  - guid: 123e4567-e89b-12d3-a456-426614174000
+                  - guid: 123e4567-e89b-12d3-a456-426614174000
+    responses:
+      '200':
+        description: OK
+        content:
+          application/json:
+            schema:
+              $ref: ../components/schemas/RelationshipToMany.yaml
+      '401':
+        $ref: ../components/responses/Unauthorized.yaml
+      '403':
+        $ref: ../components/responses/Forbidden.yaml
+      '404':
+        $ref: ../components/responses/NotFound.yaml
+      '422':
+        $ref: ../components/responses/UnprocessableEntity.yaml
+/v3/security_groups/{guid}/relationships/staging_spaces/{space_guid}:
+  delete:
+    summary: Unbind a staging security group from a space
+    description: This endpoint removes a space from a security group with the staging lifecycle. Apps within this space must be restaged for these changes to take effect.
+    operationId: unbindStagingSecurityGroup
+    tags:
+      - Security Groups
+    parameters:
+      - $ref: ../components/parameters/Guid.yaml
+      - $ref: ../components/parameters/SpaceGuid.yaml
+    responses:
+      '204':
+        description: No Content
+      '401':
+        $ref: ../components/responses/Unauthorized.yaml
+      '403':
+        $ref: ../components/responses/Forbidden.yaml
+      '404':
+        $ref: ../components/responses/NotFound.yaml
+      '422':
+        $ref: ../components/responses/UnprocessableEntity.yaml

@@ -1,0 +1,18 @@
+description: Space object that needs to be updated
+required: true
+content:
+  application/json:
+    schema:
+      type: object
+      properties:
+        name:
+          type: string
+          description: New space name
+        metadata:
+          $ref: ../schemas/Metadata.yaml
+      description: Request schema for updating a space
+    examples:
+      default:
+        summary: default
+        value:
+          name: new-space-name

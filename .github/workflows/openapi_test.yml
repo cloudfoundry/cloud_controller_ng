@@ -1,0 +1,38 @@
+name: OpenAPI Docs Test
+
+on:
+  workflow_dispatch:
+  pull_request:
+    branches: [ main ]
+    paths:
+      - 'docs/openapi/**'
+      - '.github/workflows/openapi_test.yml'
+
+concurrency:
+  group: '${{ github.workflow }}-${{ github.head_ref || github.run_id }}'
+  cancel-in-progress: true
+
+jobs:
+  test:
+    name: Test
+    runs-on: ubuntu-latest
+    container:
+      image: node:24-alpine
+    defaults:
+      run:
+        working-directory: docs/openapi
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+      - name: Setup
+        run: |
+          apk add python3 make g++
+          yarn install
+      - name: Stats
+        run: yarn redocly stats --format markdown >> $GITHUB_STEP_SUMMARY
+      - name: Lint
+        run: |
+          yarn redocly lint --max-problems 9999 --format markdown >> $GITHUB_STEP_SUMMARY || true
+          yarn redocly lint --max-problems 9999 --format github-actions
+      - name: Build
+        run: yarn build

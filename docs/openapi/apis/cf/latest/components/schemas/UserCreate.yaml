@@ -1,0 +1,20 @@
+anyOf:
+  - type: object
+    properties:
+      guid:
+        type: string
+        description: Unique identifier for the user. For UAA users this will match the user ID of an existing UAA user's GUID; in the case of UAA clients, this will match the UAA client ID
+      metadata:
+        $ref: './Metadata.yaml'
+    required: [guid]
+  - type: object
+    properties:
+      username:
+        type: [string, "null"]
+        description: Username of the user to be created. This can only be provided together with origin
+      origin:
+        type: [string, "null"]
+        description: Origin of the user to be created. This can only be provided together with username and cannot be uaa
+      metadata:
+        $ref: './Metadata.yaml'
+    required: [username, origin]

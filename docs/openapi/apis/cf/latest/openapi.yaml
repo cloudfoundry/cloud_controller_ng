@@ -1,0 +1,678 @@
+openapi: 3.1.0
+info:
+  title: Cloud Foundry V3 API
+  description: "# Welcome to the Experimental Cloud Foundry V3 API Docs! \n\n# Expermiental Warning\n This OpenAPI specification is a experiment and not ready for productive use.\n# Getting help\nThe CAPI team can most easily be reached on our Slack channel for questions and issues regarding the API. To report an issue with the docs or API, please feel free to file a GitHub issue on our API repo, cloud_controller_ng.\nWe recommend reaching out to Slack first as we will be most responsive there.\n    \n# More resources\n- The Cloud Foundry V2 API is still deprecated but still available for interacting with Cloud Foundry.\n- Running Tasks\n- V3 API Documentation OpenAPI Spec Source Code. "
+  version: latest
+  license:
+    name: Apache 2.0
+    url: https://www.apache.org/licenses/LICENSE-2.0.html
+  contact:
+    name: Cloud Foundry
+    url: https://www.cloudfoundry.org/
+tags:
+  - name: Admin
+    description: "Administrative operations for Cloud Foundry platform management."
+  - name: Apps
+    description: "Apps are top-level objects that link together and contain configuration information for your packages, droplets, processes, tasks, and more."
+  - name: App Usage Events
+    description: "App usage events are a record of changes in the usage of apps and tasks."
+  - name: Audit Events
+    description: "Audit events help Cloud Foundry operators monitor actions taken against resources (such as apps) via user or system actions."
+  - name: Builds
+    description: "Builds represent the process of staging an application package."
+  - name: Buildpacks
+    description: "Buildpacks are used during a build to download external dependencies and transform a package into an executable droplet."
+  - name: Deployments
+    description: "Deployments are objects that manage updates to applications with zero downtime."
+  - name: Domains
+    description: "Domains represent a fully qualified domain name that is used for application routes."
+  - name: Droplets
+    description: "Droplets are the result of staging an application package."
+  - name: Environment Variable Groups
+    description: "There are two types of environment variable groups: running and staging."
+  - name: Feature Flags
+    description: "Feature flags are runtime flags that enable or disable functionality on the API."
+  - name: Info
+    description: "Info endpoints expose Cloud Controller configuration information."
+  - name: Internal
+    description: "Internal endpoints for system monitoring and metrics."
+  - name: Isolation Segments
+    description: "Isolation Segments provide dedicated pools of resources to which apps can be deployed to isolate workloads."
+  - name: Jobs
+    description: "Jobs are created by the platform when performing certain asynchronous actions."
+  - name: Manifests
+    description: "A manifest is a method for applying bulk configurations to apps and their underlying processes."
+  - name: Organizations
+    description: "An org is a development account that an individual or multiple collaborators can own and use."
+  - name: Organization Quotas
+    description: "Organization quotas are named sets of memory, log rate, service, and instance usage quotas."
+  - name: Packages
+    description: "A package is an application’s ‘source code’; either raw bits for your application or a pointer to these bits."
+  - name: Processes
+    description: "Processes define the runnable units of an app."
+  - name: Resource Matches
+    description: "Resource Matches are used to determine if a resource has been previously uploaded to the Cloud Controller."
+  - name: Revisions
+    description: "Revisions represent code used by an application at a specific time."
+  - name: Roles
+    description: "Roles are used to control access to resources."
+  - name: Root
+    description: "Root API endpoints that provide entry points and API information."
+  - name: Routes
+    description: "Routes are used to map a URL to an app."
+  - name: Security Groups
+    description: "Security groups are used to control access to apps."
+  - name: Service Brokers
+    description: "Service brokers are used to manage services."
+  - name: Service Credential Bindings
+    description: "Service credential bindings are used to bind a service instance to an app."
+  - name: Service Instances
+    description: "Service instances are instances of a service."
+  - name: Service Offerings
+    description: "Service offerings are services that are available to be used."
+  - name: Service Plans
+    description: "Service plans are plans for a service."
+  - name: Service Route Bindings
+    description: "Service route bindings are used to bind a route to a service instance."
+  - name: Service Usage Events
+    description: "Service usage events are a record of changes in the usage of services."
+  - name: Sidecars
+    description: "Sidecars are used to run a process alongside an app."
+  - name: Spaces
+    description: "Spaces are used to group apps and services."
+  - name: Space Quotas
+    description: "Space quotas are named sets of memory, log rate, service, and instance usage quotas."
+  - name: Stacks
+    description: "Stacks are used to specify the operating system and runtime environment for an app."
+  - name: Tasks
+    description: "Tasks are one-off commands that can be run against an app."
+  - name: Users
+    description: "Users are the users of the Cloud Foundry platform."
+security:
+  - oauth:
+      - cloud_controller.read
+      - cloud_controller.write
+servers:
+  - url: https://api.example.local
+    description: Cloud Foundry V3 API server
+components:
+  schemas:
+    BaseSchema:
+      $ref: './components/schemas/BaseSchema.yaml'
+    Relationships:
+      $ref: './components/schemas/Relationships.yaml'
+    Relationship:
+      $ref: './components/schemas/Relationship.yaml'
+    RelationshipToOne:
+      $ref: './components/schemas/RelationshipToOne.yaml'
+    RelationshipToMany:
+      $ref: './components/schemas/RelationshipToMany.yaml'
+    UserRelationshipToOne:
+      $ref: './components/schemas/UserRelationshipToOne.yaml'
+    IncludedResources:
+      $ref: './components/schemas/IncludedResources.yaml'
+    Link:
+      $ref: './components/schemas/Link.yaml'
+    Pagination:
+      $ref: './components/schemas/Pagination.yaml'
+    Metadata:
+      $ref: './components/schemas/Metadata.yaml'
+    Buildpack:
+      $ref: './components/schemas/Buildpack.yaml'
+    BuildpackList:
+      $ref: './components/schemas/BuildpackList.yaml'
+    User:
+      $ref: './components/schemas/User.yaml'
+    Droplet:
+      $ref: './components/schemas/Droplet.yaml'
+    DropletList:
+      $ref: './components/schemas/DropletList.yaml'
+    Lifecycle:
+      $ref: './components/schemas/Lifecycle.yaml'
+    Domain:
+      $ref: './components/schemas/Domain.yaml'
+    DomainList:
+      $ref: './components/schemas/DomainList.yaml'
+    EnvironmentVariableGroup:
+      $ref: './components/schemas/EnvironmentVariableGroup.yaml'
+    Deployment:
+      $ref: './components/schemas/Deployment.yaml'
+    DeploymentList:
+      $ref: './components/schemas/DeploymentList.yaml'
+    FeatureFlag:
+      $ref: './components/schemas/FeatureFlag.yaml'
+    FeatureFlagList:
+      $ref: './components/schemas/FeatureFlagList.yaml'
+    Build:
+      $ref: './components/schemas/Build.yaml'
+    BuildList:
+      $ref: './components/schemas/BuildList.yaml'
+    AuditEvent:
+      $ref: './components/schemas/AuditEvent.yaml'
+    AuditEventList:
+      $ref: './components/schemas/AuditEventList.yaml'
+    App:
+      $ref: './components/schemas/App.yaml'
+    AppList:
+      $ref: './components/schemas/AppList.yaml'
+    AppEnvironment:
+      $ref: './components/schemas/AppEnvironment.yaml'
+    AppEnvironmentVariables:
+      $ref: './components/schemas/AppEnvironmentVariables.yaml'
+    AppPermissions:
+      $ref: './components/schemas/AppPermissions.yaml'
+    AppSshEnabled:
+      $ref: './components/schemas/AppSshEnabled.yaml'
+    Route:
+      $ref: './components/schemas/Route.yaml'
+    RouteDestination:
+      $ref: './components/schemas/RouteDestination.yaml'
+    RouteDestinationList:
+      $ref: './components/schemas/RouteDestinationList.yaml'
+    Job:
+      $ref: './components/schemas/Job.yaml'
+    Error:
+      $ref: './components/schemas/Error.yaml'
+    Warning:
+      $ref: './components/schemas/Warning.yaml'
+    AppUsageEvent:
+      $ref: './components/schemas/AppUsageEvent.yaml'
+    AppUsageEventList:
+      $ref: './components/schemas/AppUsageEventList.yaml'
+    IsolationSegment:
+      $ref: './components/schemas/IsolationSegment.yaml'
+    IsolationSegmentList:
+      $ref: './components/schemas/IsolationSegmentList.yaml'
+    Organization:
+      $ref: './components/schemas/Organization.yaml'
+    OrganizationList:
+      $ref: './components/schemas/OrganizationList.yaml'
+    OrganizationQuota:
+      $ref: './components/schemas/OrganizationQuota.yaml'
+    OrganizationQuotaList:
+      $ref: './components/schemas/OrganizationQuotaList.yaml'
+    Package:
+      $ref: './components/schemas/Package.yaml'
+    PackageList:
+      $ref: './components/schemas/PackageList.yaml'
+    Process:
+      $ref: './components/schemas/Process.yaml'
+    ProcessList:
+      $ref: './components/schemas/ProcessList.yaml'
+    ProcessStats:
+      $ref: './components/schemas/ProcessStats.yaml'
+    SecurityGroup:
+      $ref: './components/schemas/SecurityGroup.yaml'
+    ServiceBroker:
+      $ref: './components/schemas/ServiceBroker.yaml'
+    AppCredentialBinding:
+      $ref: './components/schemas/AppCredentialBinding.yaml'
+    KeyCredentialBinding:
+      $ref: './components/schemas/KeyCredentialBinding.yaml'
+    ManagedServiceInstance:
+      $ref: './components/schemas/ManagedServiceInstance.yaml'
+    UserProvidedServiceInstance:
+      $ref: './components/schemas/UserProvidedServiceInstance.yaml'
+    ServicePlanVisibility:
+      $ref: './components/schemas/ServicePlanVisibility.yaml'
+    ServiceRouteBinding:
+      $ref: './components/schemas/ServiceRouteBinding.yaml'
+    Sidecar:
+      $ref: './components/schemas/Sidecar.yaml'
+    SpaceQuota:
+      $ref: './components/schemas/SpaceQuota.yaml'
+    Space:
+      $ref: './components/schemas/Space.yaml'
+    Stack:
+      $ref: './components/schemas/Stack.yaml'
+  securitySchemes:
+    oauth:
+      type: oauth2
+      flows:
+        implicit:
+          authorizationUrl: https://uaa.cloudfoundry.local/api-oauth/dialog
+          scopes:
+            cloud_controller.admin: This scope provides read and write access to all resources
+            cloud_controller.admin_read_only: This scope provides read only access to all resources
+            cloud_controller.global_auditor: This scope provides read access to all resources
+            cloud_controller.read: Read access to the Cloud Controller
+            cloud_controller.write: Write access to the Cloud Controller
+            cloud_controller.update_build_state: This scope allows its bearer to update the state of a build; currently only used when updating builds
+            cloud_controller_service_permissions.read: This scope provides read only access for service instance permissions
+    bearer:
+      type: http
+      scheme: bearer
+      bearerFormat: JWT
+      description: Bearer JWT token authentication
+  parameters:
+    GUID:
+      $ref: './components/parameters/Guid.yaml'
+    guid:
+      $ref: './components/parameters/Guid.yaml'
+    Page:
+      $ref: './components/parameters/Page.yaml'
+    PerPage:
+      $ref: './components/parameters/PerPage.yaml'
+    OrderBy:
+      $ref: './components/parameters/OrderBy.yaml'
+    CreatedAts:
+      $ref: './components/parameters/CreatedAts.yaml'
+    UpdatedAts:
+      $ref: './components/parameters/UpdatedAts.yaml'
+    LabelSelector:
+      $ref: './components/parameters/LabelSelector.yaml'
+  responses:
+    Unauthorized:
+      $ref: './components/responses/Unauthorized.yaml'
+    Forbidden:
+      $ref: './components/responses/Forbidden.yaml'
+    BadRequest:
+      $ref: './components/responses/BadRequest.yaml'
+    NotFound:
+      $ref: './components/responses/NotFound.yaml'
+    500:
+      $ref: './components/responses/500.yaml'
+    UnprocessableEntity:
+      $ref: './components/responses/UnprocessableEntity.yaml'
+    BuildpackCreateResponse:
+      $ref: './components/responses/BuildpackCreateResponse.yaml'
+    BuildpackGetResponse:
+      $ref: './components/responses/BuildpackGetResponse.yaml'
+    UserCreateResponse:
+      $ref: './components/responses/UserCreateResponse.yaml'
+    UserUpdateResponse:
+      $ref: './components/responses/UserUpdateResponse.yaml'
+    DropletCreateResponse:
+      $ref: './components/responses/DropletCreateResponse.yaml'
+    DropletGetResponse:
+      $ref: './components/responses/DropletGetResponse.yaml'
+    RouteCreateResponse:
+      $ref: './components/responses/RouteCreateResponse.yaml'
+    RouteListResponse:
+      $ref: './components/responses/RouteListResponse.yaml'
+    RoleCreateResponse:
+      $ref: './components/responses/RoleCreateResponse.yaml'
+    RoleGetResponse:
+      $ref: './components/responses/RoleGetResponse.yaml'
+    RoleListResponse:
+      $ref: './components/responses/RoleListResponse.yaml'
+  requestBodies:
+    AppCreateRequestBody:
+      $ref: './components/requestBodies/AppCreateRequestBody.yaml'
+    AppUpdateRequestBody:
+      $ref: './components/requestBodies/AppUpdateRequestBody.yaml'
+    BuildCreateRequestBody:
+      $ref: './components/requestBodies/BuildCreateRequestBody.yaml'
+    BuildpackCreateRequestBody:
+      $ref: './components/requestBodies/BuildpackCreateRequestBody.yaml'
+    BuildpackUpdateRequestBody:
+      $ref: './components/requestBodies/BuildpackUpdateRequestBody.yaml'
+    DomainCreateRequestBody:
+      $ref: './components/requestBodies/DomainCreateRequestBody.yaml'
+    DomainUpdateRequestBody:
+      $ref: './components/requestBodies/DomainUpdateRequestBody.yaml'
+    DropletCreateRequestBody:
+      $ref: './components/requestBodies/DropletCreateRequestBody.yaml'
+    IsolationSegmentCreate:
+      $ref: './components/requestBodies/IsolationSegmentCreate.yaml'
+    OrganizationCreateRequestBody:
+      $ref: './components/requestBodies/OrganizationCreateRequestBody.yaml'
+    OrganizationUpdateRequestBody:
+      $ref: './components/requestBodies/OrganizationUpdateRequestBody.yaml'
+    OrganizationQuotaCreateRequestBody:
+      $ref: './components/requestBodies/OrganizationQuotaCreateRequestBody.yaml'
+    OrganizationQuotaUpdateRequestBody:
+      $ref: './components/requestBodies/OrganizationQuotaUpdateRequestBody.yaml'
+    PackageCreateRequestBody:
+      $ref: './components/requestBodies/PackageCreateRequestBody.yaml'
+    PackageUpdateRequestBody:
+      $ref: './components/requestBodies/PackageUpdateRequestBody.yaml'
+    PackageUploadRequestBody:
+      $ref: './components/requestBodies/PackageUploadRequestBody.yaml'
+    ProcessUpdateRequestBody:
+      $ref: './components/requestBodies/ProcessUpdateRequestBody.yaml'
+    RoleCreate:
+      $ref: './components/requestBodies/RoleCreate.yaml'
+    RouteCreateRequestBody:
+      $ref: './components/requestBodies/RouteCreateRequestBody.yaml'
+    RouteDestinations:
+      $ref: './components/requestBodies/RouteDestinations.yaml'
+    SpaceCreateRequestBody:
+      $ref: './components/requestBodies/SpaceCreateRequestBody.yaml'
+    SpaceUpdateRequestBody:
+      $ref: './components/requestBodies/SpaceUpdateRequestBody.yaml'
+    TaskCreateRequestBody:
+      $ref: './components/requestBodies/TaskCreateRequestBody.yaml'
+    UserCreate:
+      $ref: './components/requestBodies/UserCreate.yaml'
+    UserUpdate:
+      $ref: './components/requestBodies/UserUpdate.yaml'
+    ServiceBrokerCreate:
+      $ref: './components/requestBodies/ServiceBrokerCreate.yaml'
+    SpaceQuotaCreate:
+      $ref: './components/requestBodies/SpaceQuotaCreate.yaml'
+    SpaceQuotaUpdate:
+      $ref: './components/requestBodies/SpaceQuotaUpdate.yaml'
+    UserProvidedServiceInstanceUpdate:
+      $ref: './components/requestBodies/UserProvidedServiceInstanceUpdate.yaml'
+    ManagedServiceInstanceUpdate:
+      $ref: './components/requestBodies/ManagedServiceInstanceUpdate.yaml'
+    SidecarCreate:
+      $ref: './components/requestBodies/SidecarCreate.yaml'
+paths:
+  /:
+    $ref: './paths/Root.yaml#/'
+  /v3:
+    $ref: './paths/V3.yaml#/'
+  /v3/admin/actions/clear_buildpack_cache:
+    $ref: './paths/AdminClearBuildpackCache.yaml#/'
+  /v3/apps:
+    $ref: './paths/Apps.yaml#/~1v3~1apps'
+  /v3/apps/{guid}:
+    $ref: './paths/Apps.yaml#/~1v3~1apps~1{guid}'
+  /v3/apps/{guid}/actions/start:
+    $ref: './paths/Apps.yaml#/~1v3~1apps~1{guid}~1actions~1start'
+  /v3/apps/{guid}/actions/stop:
+    $ref: './paths/Apps.yaml#/~1v3~1apps~1{guid}~1actions~1stop'
+  /v3/apps/{guid}/actions/restart:
+    $ref: './paths/Apps.yaml#/~1v3~1apps~1{guid}~1actions~1restart'
+  /v3/apps/{guid}/droplets:
+    $ref: './paths/Apps.yaml#/~1v3~1apps~1{guid}~1droplets'
+  /v3/apps/{guid}/droplets/current:
+    $ref: './paths/Apps.yaml#/~1v3~1apps~1{guid}~1droplets~1current'
+  /v3/apps/{guid}/relationships/current_droplet:
+    $ref: './paths/Apps.yaml#/~1v3~1apps~1{guid}~1relationships~1current_droplet'
+  /v3/app_usage_events:
+    $ref: './paths/AppUsageEvents.yaml#/~1v3~1app_usage_events'
+  /v3/app_usage_events/{guid}:
+    $ref: './paths/AppUsageEvents.yaml#/~1v3~1app_usage_events~1{guid}'
+  /v3/app_usage_events/actions/destructively_purge_all_and_reseed:
+    $ref: './paths/AppUsageEvents.yaml#/~1v3~1app_usage_events~1actions~1destructively_purge_all_and_reseed'
+  /v3/audit_events:
+    $ref: './paths/AuditEvents.yaml#/~1v3~1audit_events'
+  /v3/audit_events/{guid}:
+    $ref: './paths/AuditEvents.yaml#/~1v3~1audit_events~1{guid}'
+  /v3/builds:
+    $ref: './paths/Builds.yaml#/~1v3~1builds'
+  /v3/builds/{guid}:
+    $ref: './paths/Builds.yaml#/~1v3~1builds~1{guid}'
+  /v3/buildpacks:
+    $ref: './paths/Buildpacks.yaml#/~1v3~1buildpacks'
+  /v3/buildpacks/{guid}:
+    $ref: './paths/Buildpacks.yaml#/~1v3~1buildpacks~1{guid}'
+  /v3/buildpacks/{guid}/upload:
+    $ref: './paths/Buildpacks.yaml#/~1v3~1buildpacks~1{guid}~1upload'
+  /v3/deployments:
+    $ref: './paths/Deployments.yaml#/~1v3~1deployments'
+  /v3/deployments/{guid}:
+    $ref: './paths/Deployments.yaml#/~1v3~1deployments~1{guid}'
+  /v3/deployments/{guid}/actions/cancel:
+    $ref: './paths/Deployments.yaml#/~1v3~1deployments~1{guid}~1actions~1cancel'
+  /v3/deployments/{guid}/actions/continue:
+    $ref: './paths/Deployments.yaml#/~1v3~1deployments~1{guid}~1actions~1continue'
+  /v3/domains:
+    $ref: './paths/Domains.yaml#/~1v3~1domains'
+  /v3/domains/{guid}:
+    $ref: './paths/Domains.yaml#/~1v3~1domains~1{guid}'
+  /v3/domains/{guid}/relationships/shared_organizations:
+    $ref: './paths/Domains.yaml#/~1v3~1domains~1{guid}~1relationships~1shared_organizations'
+  /v3/domains/{guid}/relationships/shared_organizations/{org_guid}:
+    $ref: './paths/Domains.yaml#/~1v3~1domains~1{guid}~1relationships~1shared_organizations~1{org_guid}'
+  /v3/droplets:
+    $ref: './paths/Droplets.yaml#/~1v3~1droplets'
+  /v3/droplets/{guid}:
+    $ref: './paths/Droplets.yaml#/~1v3~1droplets~1{guid}'
+  /v3/droplets/{guid}/download:
+    $ref: './paths/Droplets.yaml#/~1v3~1droplets~1{guid}~1download'
+  /v3/droplets/{guid}/upload:
+    $ref: './paths/Droplets.yaml#/~1v3~1droplets~1{guid}~1upload'
+  /v3/environment_variable_groups/{name}:
+    $ref: './paths/EnvironmentVariableGroups.yaml#/~1v3~1environment_variable_groups~1{name}'
+  /v3/feature_flags:
+    $ref: './paths/FeatureFlags.yaml#/~1v3~1feature_flags'
+  /v3/feature_flags/{name}:
+    $ref: './paths/FeatureFlags.yaml#/~1v3~1feature_flags~1{name}'
+  /v3/info:
+    $ref: './paths/Info.yaml#/~1v3~1info'
+  /v3/info/usage_summary:
+    $ref: './paths/Info.yaml#/~1v3~1info~1usage_summary'
+  /v3/isolation_segments:
+    $ref: './paths/IsolationSegments.yaml#/~1v3~1isolation_segments'
+  /v3/isolation_segments/{guid}:
+    $ref: './paths/IsolationSegments.yaml#/~1v3~1isolation_segments~1{guid}'
+  /v3/isolation_segments/{guid}/relationships/organizations:
+    $ref: './paths/IsolationSegments.yaml#/~1v3~1isolation_segments~1{guid}~1relationships~1organizations'
+  /v3/isolation_segments/{guid}/relationships/organizations/{org_guid}:
+    $ref: './paths/IsolationSegments.yaml#/~1v3~1isolation_segments~1{guid}~1relationships~1organizations~1{org_guid}'
+  /v3/isolation_segments/{guid}/relationships/spaces:
+    $ref: './paths/IsolationSegments.yaml#/~1v3~1isolation_segments~1{guid}~1relationships~1spaces'
+  /v3/isolation_segments/{guid}/organizations:
+    $ref: './paths/IsolationSegments.yaml#/~1v3~1isolation_segments~1{guid}~1organizations'
+  /v3/jobs/{guid}:
+    $ref: './paths/Jobs.yaml#/~1v3~1jobs~1{guid}'
+  /v3/resource_matches:
+    $ref: './paths/ResourceMatches.yaml#/~1v3~1resource_matches'
+  /v3/revisions/{guid}:
+    $ref: './paths/Revisions.yaml#/~1v3~1revisions~1{guid}'
+  /v3/revisions/{guid}/environment_variables:
+    $ref: './paths/Revisions.yaml#/~1v3~1revisions~1{guid}~1environment_variables'
+  /v3/apps/{guid}/revisions:
+    $ref: './paths/Revisions.yaml#/~1v3~1apps~1{guid}~1revisions'
+  /v3/apps/{guid}/revisions/deployed:
+    $ref: './paths/Revisions.yaml#/~1v3~1apps~1{guid}~1revisions~1deployed'
+  /v3/roles:
+    $ref: './paths/Roles.yaml#/~1v3~1roles'
+  /v3/roles/{guid}:
+    $ref: './paths/Roles.yaml#/~1v3~1roles~1{guid}'
+  /v3/routes:
+    $ref: './paths/Routes.yaml#/~1v3~1routes'
+  /v3/routes/{guid}/destinations:
+    $ref: './paths/Routes.yaml#/~1v3~1routes~1{guid}~1destinations'
+  /v3/routes/{guid}/destinations/{destination_guid}:
+    $ref: './paths/Routes.yaml#/~1v3~1routes~1{guid}~1destinations~1{destination_guid}'
+  /v3/security_groups:
+    $ref: './paths/SecurityGroups.yaml#/~1v3~1security_groups'
+  /v3/security_groups/{guid}:
+    $ref: './paths/SecurityGroups.yaml#/~1v3~1security_groups~1{guid}'
+  /v3/security_groups/{guid}/relationships/running_spaces:
+    $ref: './paths/SecurityGroups.yaml#/~1v3~1security_groups~1{guid}~1relationships~1running_spaces'
+  /v3/security_groups/{guid}/relationships/running_spaces/{space_guid}:
+    $ref: './paths/SecurityGroups.yaml#/~1v3~1security_groups~1{guid}~1relationships~1running_spaces~1{space_guid}'
+  /v3/security_groups/{guid}/relationships/staging_spaces:
+    $ref: './paths/SecurityGroups.yaml#/~1v3~1security_groups~1{guid}~1relationships~1staging_spaces'
+  /v3/security_groups/{guid}/relationships/staging_spaces/{space_guid}:
+    $ref: './paths/SecurityGroups.yaml#/~1v3~1security_groups~1{guid}~1relationships~1staging_spaces~1{space_guid}'
+  /v3/service_brokers:
+    $ref: './paths/ServiceBrokers.yaml#/~1v3~1service_brokers'
+  /v3/service_brokers/{guid}:
+    $ref: './paths/ServiceBrokers.yaml#/~1v3~1service_brokers~1{guid}'
+  /v3/service_credential_bindings:
+    $ref: './paths/ServiceCredentialBindings.yaml#/~1v3~1service_credential_bindings'
+  /v3/service_credential_bindings/{guid}:
+    $ref: './paths/ServiceCredentialBindings.yaml#/~1v3~1service_credential_bindings~1{guid}'
+  /v3/service_credential_bindings/{guid}/details:
+    $ref: './paths/ServiceCredentialBindings.yaml#/~1v3~1service_credential_bindings~1{guid}~1details'
+  /v3/service_credential_bindings/{guid}/parameters:
+    $ref: './paths/ServiceCredentialBindings.yaml#/~1v3~1service_credential_bindings~1{guid}~1parameters'
+  /v3/service_instances:
+    $ref: './paths/ServiceInstances.yaml#/~1v3~1service_instances'
+  /v3/service_instances/{guid}:
+    $ref: './paths/ServiceInstances.yaml#/~1v3~1service_instances~1{guid}'
+  /v3/service_offerings:
+    $ref: './paths/ServiceOfferings.yaml#/~1v3~1service_offerings'
+  /v3/service_offerings/{guid}:
+    $ref: './paths/ServiceOfferings.yaml#/~1v3~1service_offerings~1{guid}'
+  /v3/service_plans:
+    $ref: './paths/ServicePlans.yaml#/~1v3~1service_plans'
+  /v3/service_plans/{guid}:
+    $ref: './paths/ServicePlans.yaml#/~1v3~1service_plans~1{guid}'
+  /v3/service_plans/{guid}/visibility:
+    $ref: './paths/ServicePlans.yaml#/~1v3~1service_plans~1{guid}~1visibility'
+  /v3/service_plans/{guid}/visibility/{organization_guid}:
+    $ref: './paths/ServicePlans.yaml#/~1v3~1service_plans~1{guid}~1visibility~1{organization_guid}'
+  /v3/service_route_bindings:
+    $ref: './paths/ServiceRouteBindings.yaml#/~1v3~1service_route_bindings'
+  /v3/service_route_bindings/{guid}:
+    $ref: './paths/ServiceRouteBindings.yaml#/~1v3~1service_route_bindings~1{guid}'
+  /v3/service_route_bindings/{guid}/parameters:
+    $ref: './paths/ServiceRouteBindings.yaml#/~1v3~1service_route_bindings~1{guid}~1parameters'
+  /v3/service_usage_events:
+    $ref: './paths/ServiceUsageEvents.yaml#/~1v3~1service_usage_events'
+  /v3/service_usage_events/{guid}:
+    $ref: './paths/ServiceUsageEvents.yaml#/~1v3~1service_usage_events~1{guid}'
+  /v3/service_usage_events/actions/destructively_purge_all_and_reseed:
+    $ref: './paths/ServiceUsageEvents.yaml#/~1v3~1service_usage_events~1actions~1destructively_purge_all_and_reseed'
+  /v3/sidecars/{guid}:
+    $ref: './paths/Sidecars.yaml#/~1v3~1sidecars~1{guid}'
+  /v3/apps/{guid}/sidecars:
+    $ref: './paths/Sidecars.yaml#/~1v3~1apps~1{guid}~1sidecars'
+  /v3/spaces:
+    $ref: './paths/Spaces.yaml#/~1v3~1spaces'
+  /v3/spaces/{guid}:
+    $ref: './paths/Spaces.yaml#/~1v3~1spaces~1{guid}'
+  /v3/spaces/{guid}/actions/apply_manifest:
+    $ref: './paths/Spaces.yaml#/~1v3~1spaces~1{guid}~1actions~1apply_manifest'
+  /v3/spaces/{guid}/features:
+    $ref: './paths/Spaces.yaml#/~1v3~1spaces~1{guid}~1features'
+  /v3/spaces/{guid}/features/{name}:
+    $ref: './paths/Spaces.yaml#/~1v3~1spaces~1{guid}~1features~1{name}'
+  /v3/spaces/{guid}/manifest_diff:
+    $ref: './paths/Spaces.yaml#/~1v3~1spaces~1{guid}~1manifest_diff'
+  /v3/spaces/{guid}/relationships/isolation_segment:
+    $ref: './paths/Spaces.yaml#/~1v3~1spaces~1{guid}~1relationships~1isolation_segment'
+  /v3/spaces/{guid}/routes:
+    $ref: './paths/Spaces.yaml#/~1v3~1spaces~1{guid}~1routes'
+  /v3/spaces/{guid}/usage_summary:
+    $ref: './paths/Spaces.yaml#/~1v3~1spaces~1{guid}~1usage_summary'
+  /v3/spaces/{guid}/running_security_groups:
+    $ref: './paths/Spaces.yaml#/~1v3~1spaces~1{guid}~1running_security_groups'
+  /v3/spaces/{guid}/staging_security_groups:
+    $ref: './paths/Spaces.yaml#/~1v3~1spaces~1{guid}~1staging_security_groups'
+  /v3/spaces/{guid}/users:
+    $ref: './paths/Spaces.yaml#/~1v3~1spaces~1{guid}~1users'
+  /v3/space_quotas:
+    $ref: './paths/SpaceQuotas.yaml#/~1v3~1space_quotas'
+  /v3/space_quotas/{guid}:
+    $ref: './paths/SpaceQuotas.yaml#/~1v3~1space_quotas~1{guid}'
+  /v3/space_quotas/{quota_guid}/relationships/spaces:
+    $ref: './paths/SpaceQuotas.yaml#/~1v3~1space_quotas~1{quota_guid}~1relationships~1spaces'
+  /v3/space_quotas/{guid}/relationships/spaces/{space_guid}:
+    $ref: './paths/SpaceQuotas.yaml#/~1v3~1space_quotas~1{guid}~1relationships~1spaces~1{space_guid}'
+  /v3/stacks:
+    $ref: './paths/Stacks.yaml#/~1v3~1stacks'
+  /v3/stacks/{guid}:
+    $ref: './paths/Stacks.yaml#/~1v3~1stacks~1{guid}'
+  /v3/stacks/{guid}/apps:
+    $ref: './paths/Stacks.yaml#/~1v3~1stacks~1{guid}~1apps'
+  /v3/tasks:
+    $ref: './paths/Tasks.yaml#/~1v3~1tasks'
+  /v3/tasks/{guid}:
+    $ref: './paths/Tasks.yaml#/~1v3~1tasks~1{guid}'
+  /v3/tasks/{guid}/actions/cancel:
+    $ref: './paths/Tasks.yaml#/~1v3~1tasks~1{guid}~1actions~1cancel'
+  /v3/tasks/{guid}/cancel:
+    $ref: './paths/Tasks.yaml#/~1v3~1tasks~1{guid}~1cancel'
+  /v3/users:
+    $ref: './paths/Users.yaml#/~1v3~1users'
+  /v3/users/{guid}:
+    $ref: './paths/Users.yaml#/~1v3~1users~1{guid}'
+  /v3/organizations:
+    $ref: './paths/Organizations.yaml#/~1v3~1organizations'
+  /v3/organizations/{guid}:
+    $ref: './paths/Organizations.yaml#/~1v3~1organizations~1{guid}'
+  /v3/organizations/{guid}/domains/default:
+    $ref: './paths/Organizations.yaml#/~1v3~1organizations~1{guid}~1domains~1default'
+  /v3/organizations/{guid}/usage_summary:
+    $ref: './paths/Organizations.yaml#/~1v3~1organizations~1{guid}~1usage_summary'
+  /v3/organizations/{guid}/users:
+    $ref: './paths/Organizations.yaml#/~1v3~1organizations~1{guid}~1users'
+  /v3/organizations/{guid}/relationships/default_isolation_segment:
+    $ref: './paths/Organizations.yaml#/~1v3~1organizations~1{guid}~1relationships~1default_isolation_segment'
+  /v3/organization_quotas:
+    $ref: './paths/OrganizationQuotas.yaml#/~1v3~1organization_quotas'
+  /v3/organization_quotas/{guid}:
+    $ref: './paths/OrganizationQuotas.yaml#/~1v3~1organization_quotas~1{guid}'
+  /v3/organization_quotas/{quota_guid}/relationships/organizations:
+    $ref: './paths/OrganizationQuotas.yaml#/~1v3~1organization_quotas~1{quota_guid}~1relationships~1organizations'
+  /v3/packages:
+    $ref: './paths/Packages.yaml#/~1v3~1packages'
+  /v3/packages/{guid}:
+    $ref: './paths/Packages.yaml#/~1v3~1packages~1{guid}'
+  /v3/packages/{guid}/droplets:
+    $ref: './paths/Packages.yaml#/~1v3~1packages~1{guid}~1droplets'
+  /v3/apps/{guid}/packages:
+    $ref: './paths/Packages.yaml#/~1v3~1apps~1{guid}~1packages'
+  /v3/packages/{guid}/upload:
+    $ref: './paths/Packages.yaml#/~1v3~1packages~1{guid}~1upload'
+  /v3/packages/{guid}/download:
+    $ref: './paths/Packages.yaml#/~1v3~1packages~1{guid}~1download'
+  /v3/processes:
+    $ref: './paths/Processes.yaml#/~1v3~1processes'
+  /v3/processes/{guid}:
+    $ref: './paths/Processes.yaml#/~1v3~1processes~1{guid}'
+  /v3/processes/{guid}/process_instances:
+    $ref: './paths/Processes.yaml#/~1v3~1processes~1{guid}~1process_instances'
+  /v3/processes/{guid}/stats:
+    $ref: './paths/Processes.yaml#/~1v3~1processes~1{guid}~1stats'
+  /v3/processes/{guid}/actions/scale:
+    $ref: './paths/Processes.yaml#/~1v3~1processes~1{guid}~1actions~1scale'
+  /v3/processes/{guid}/instances/{index}:
+    $ref: './paths/Processes.yaml#/~1v3~1processes~1{guid}~1instances~1{index}'
+  /v3/apps/{guid}/processes:
+    $ref: './paths/Processes.yaml#/~1v3~1apps~1{guid}~1processes'
+  /v3/apps/{guid}/processes/{type}:
+    $ref: './paths/Processes.yaml#/~1v3~1apps~1{guid}~1processes~1{type}'
+  /v3/apps/{guid}/processes/{type}/stats:
+    $ref: './paths/Processes.yaml#/~1v3~1apps~1{guid}~1processes~1{type}~1stats'
+  /v3/apps/{guid}/processes/{type}/actions/scale:
+    $ref: './paths/Processes.yaml#/~1v3~1apps~1{guid}~1processes~1{type}~1actions~1scale'
+  /v3/apps/{guid}/processes/{type}/instances/{index}:
+    $ref: './paths/Processes.yaml#/~1v3~1apps~1{guid}~1processes~1{type}~1instances~1{index}'
+  /v3/apps/{guid}/manifest:
+    $ref: './paths/Manifests.yaml#/~1v3~1apps~1{guid}~1manifest'
+  /v3/apps/{guid}/builds:
+    $ref: './paths/Builds.yaml#/~1v3~1apps~1{guid}~1builds'
+  /v3/apps/{guid}/tasks:
+    $ref: './paths/Tasks.yaml#/~1v3~1apps~1{guid}~1tasks'
+  /v3/apps/{guid}/actions/clear_buildpack_cache:
+    $ref: './paths/Apps.yaml#/~1v3~1apps~1{guid}~1actions~1clear_buildpack_cache'
+  /v3/apps/{guid}/env:
+    $ref: './paths/Apps.yaml#/~1v3~1apps~1{guid}~1env'
+  /v3/apps/{guid}/environment_variables:
+    $ref: './paths/Apps.yaml#/~1v3~1apps~1{guid}~1environment_variables'
+  /v3/apps/{guid}/features:
+    $ref: './paths/Apps.yaml#/~1v3~1apps~1{guid}~1features'
+  /v3/apps/{guid}/features/{name}:
+    $ref: './paths/Apps.yaml#/~1v3~1apps~1{guid}~1features~1{name}'
+  /v3/apps/{guid}/permissions:
+    $ref: './paths/Apps.yaml#/~1v3~1apps~1{guid}~1permissions'
+  /v3/apps/{guid}/routes:
+    $ref: './paths/Routes.yaml#/~1v3~1apps~1{guid}~1routes'
+  /v3/apps/{guid}/ssh_enabled:
+    $ref: './paths/Apps.yaml#/~1v3~1apps~1{guid}~1ssh_enabled'
+  /v3/domains/{guid}/route_reservations:
+    $ref: './paths/Domains.yaml#/~1v3~1domains~1{guid}~1route_reservations'
+  /v3/organizations/{guid}/domains:
+    $ref: './paths/Domains.yaml#/~1v3~1organizations~1{guid}~1domains'
+  /v3/processes/{guid}/sidecars:
+    $ref: './paths/Sidecars.yaml#/~1v3~1processes~1{guid}~1sidecars'
+  /v3/routes/{guid}:
+    $ref: './paths/Routes.yaml#/~1v3~1routes~1{guid}'
+  /v3/routes/{guid}/relationships/shared_spaces:
+    $ref: './paths/Routes.yaml#/~1v3~1routes~1{guid}~1relationships~1shared_spaces'
+  /v3/routes/{guid}/relationships/shared_spaces/{space_guid}:
+    $ref: './paths/Routes.yaml#/~1v3~1routes~1{guid}~1relationships~1shared_spaces~1{space_guid}'
+  /v3/routes/{guid}/relationships/space:
+    $ref: './paths/Routes.yaml#/~1v3~1routes~1{guid}~1relationships~1space'
+  /v3/service_instances/{guid}/credentials:
+    $ref: './paths/ServiceInstances.yaml#/~1v3~1service_instances~1{guid}~1credentials'
+  /v3/service_instances/{guid}/parameters:
+    $ref: './paths/ServiceInstances.yaml#/~1v3~1service_instances~1{guid}~1parameters'
+  /v3/service_instances/{guid}/permissions:
+    $ref: './paths/ServiceInstances.yaml#/~1v3~1service_instances~1{guid}~1permissions'
+  /v3/service_instances/{guid}/relationships/shared_spaces:
+    $ref: './paths/ServiceInstances.yaml#/~1v3~1service_instances~1{guid}~1relationships~1shared_spaces'
+  /v3/service_instances/{guid}/relationships/shared_spaces/usage_summary:
+    $ref: './paths/ServiceInstances.yaml#/~1v3~1service_instances~1{guid}~1relationships~1shared_spaces~1usage_summary'
+  /v3/service_instances/{guid}/relationships/shared_spaces/{space_guid}:
+    $ref: './paths/ServiceInstances.yaml#/~1v3~1service_instances~1{guid}~1relationships~1shared_spaces~1{space_guid}'
