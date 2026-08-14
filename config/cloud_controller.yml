@@ -64,6 +64,9 @@ service_operations_update_stuck_in_progress_failed:
 service_operations_delete_stuck_in_progress_retry:
   frequency_in_seconds: 3600 #1h
 
+service_operations_binding_delete_stuck_in_progress_retry:
+  frequency_in_seconds: 3600 #1h
+
 # One-off backfill - to be removed in a future version.
 lifecycle_type_backfill:
   frequency_in_seconds: 3600 #1h
