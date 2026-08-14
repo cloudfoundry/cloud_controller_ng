@@ -166,6 +166,34 @@ module VCAP::CloudController
             expect(results).to contain_exactly(staged_droplet_for_app1)
           end
         end
+
+        context 'when combined with space_guids filter' do
+          before do
+            app1.update(droplet: staged_droplet_for_app1)
+            app2.update(droplet: staged_droplet_for_app2)
+          end
+
+          let(:filters) { { current: 'true', space_guids: [app1.space.guid] } }
+
+          it 'returns only current droplets in the specified space' do
+            results = fetcher.fetch_all(message).all
+            expect(results).to contain_exactly(staged_droplet_for_app1)
+          end
+        end
+
+        context 'when combined with organization_guids filter' do
+          before do
+            app1.update(droplet: staged_droplet_for_app1)
+            app2.update(droplet: staged_droplet_for_app2)
+          end
+
+          let(:filters) { { current: 'true', organization_guids: [app1.organization.guid] } }
+
+          it 'returns only current droplets in the specified organization' do
+            results = fetcher.fetch_all(message).all
+            expect(results).to contain_exactly(staged_droplet_for_app1)
+          end
+        end
       end
     end
 
