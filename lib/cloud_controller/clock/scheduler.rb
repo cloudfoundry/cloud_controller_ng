@@ -27,6 +27,7 @@ module VCAP::CloudController
       { name: 'service_operations_initial_cleanup', class: Jobs::Runtime::ServiceOperationsInitialCleanup },
       { name: 'service_operations_create_in_progress_cleanup', class: Jobs::Runtime::ServiceOperationsCreateInProgressCleanup },
       { name: 'service_operations_update_stuck_in_progress_failed', class: Jobs::Runtime::ServiceOperationsUpdateStuckInProgressFailed },
+      { name: 'service_operations_delete_stuck_in_progress_retry', class: Jobs::Runtime::ServiceOperationsDeleteStuckInProgressRetry },
       # One-off backfill - to be removed in a future version.
       { name: 'lifecycle_type_backfill', class: Jobs::Runtime::LifecycleTypeBackfill }
     ].freeze
