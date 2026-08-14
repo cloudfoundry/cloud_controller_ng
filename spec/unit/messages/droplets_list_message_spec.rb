@@ -138,6 +138,16 @@ module VCAP::CloudController
           end
         end
 
+        context 'when the query is nested under a package' do
+          context 'when the request contains current field' do
+            it 'is invalid' do
+              message = DropletsListMessage.from_params({ package_guid: 'some-package-guid', current: 'true' })
+              expect(message).not_to be_valid
+              expect(message.errors[:base][0]).to include("Unknown query parameter(s): 'current'")
+            end
+          end
+        end
+
         it 'validates organization_guids is an array' do
           message = DropletsListMessage.from_params organization_guids: 'tricked you, not an array'
           expect(message).not_to be_valid

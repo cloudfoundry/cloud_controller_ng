@@ -20,6 +20,7 @@ module VCAP::CloudController
     validates :organization_guids, array: true, allow_nil: true
     validates :current, inclusion: { in: ['true'], message: 'only accepts the value \'true\'' }, allow_nil: true
     validate :app_nested_request, if: -> { app_guid.present? }
+    validate :package_nested_request, if: -> { package_guid.present? }
 
     def to_param_hash
       super(exclude: %i[app_guid package_guid])
@@ -36,6 +37,12 @@ module VCAP::CloudController
       invalid_attributes << :app_guids if app_guids
       invalid_attributes << :organization_guids if organization_guids
       invalid_attributes << :space_guids if space_guids
+      errors.add(:base, "Unknown query parameter(s): '#{invalid_attributes.join("', '")}'") if invalid_attributes.present?
+    end
+
+    def package_nested_request
+      invalid_attributes = []
+      invalid_attributes << :current if current
       errors.add(:base, "Unknown query parameter(s): '#{invalid_attributes.join("', '")}'") if invalid_attributes.present?
     end
   end

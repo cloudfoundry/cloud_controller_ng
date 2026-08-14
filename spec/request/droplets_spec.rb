@@ -659,6 +659,7 @@ RSpec.describe 'Droplets' do
           space_guids
           app_guids
           organization_guids
+          current
         ]
       end
       let(:params) do
@@ -668,7 +669,6 @@ RSpec.describe 'Droplets' do
           order_by: 'updated_at',
           guids: 'foo,bar',
           app_guid: app_model.guid,
-          current: true,
           package_guid: package_model.guid,
           states: %w[test foo],
           label_selector: 'foo,bar',
