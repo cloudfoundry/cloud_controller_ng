@@ -21,13 +21,13 @@ jobs:
     timeout-minutes: 10
     steps:
       - name: Checkout PR
-        uses: actions/checkout@v4
+        uses: actions/checkout@v7
         with:
           path: pr
           persist-credentials: false
 
       - name: Checkout Base Branch
-        uses: actions/checkout@v4
+        uses: actions/checkout@v7
         with:
           ref: ${{ github.base_ref }}
           path: base
