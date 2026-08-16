@@ -23,7 +23,7 @@ jobs:
         working-directory: docs/openapi
     steps:
       - name: Checkout
-        uses: actions/checkout@v4
+        uses: actions/checkout@v7
       - name: Setup
         run: |
           apk add python3 make g++
