@@ -43,6 +43,12 @@
             type: string
         description: |
           Comma-delimited list of app GUIDs to filter by
+      - name: current
+        in: query
+        schema:
+          type: boolean
+        description: |
+          If true, only include the current droplet for each app
       - name: space_guids
         in: query
         schema:
