@@ -6,14 +6,31 @@ module VCAP::CloudController
       end
 
       def configure(header_token)
+        configure_token_only(header_token)
+        return unless VCAP::CloudController::SecurityContext.valid_token?
+
+        configure_user
+      rescue VCAP::CloudController::UaaTokenDecoder::BadToken
+        VCAP::CloudController::SecurityContext.set(nil, :invalid_token, header_token)
+      end
+
+      def configure_token_only(header_token)
         VCAP::CloudController::SecurityContext.clear
         decoded_token = decode_token(header_token)
+        VCAP::CloudController::SecurityContext.set_token_only(decoded_token, header_token)
+      rescue VCAP::CloudController::UaaTokenDecoder::BadToken
+        VCAP::CloudController::SecurityContext.set(nil, :invalid_token, header_token)
+      end
+
+      def configure_user
+        decoded_token = VCAP::CloudController::SecurityContext.token
+        return unless decoded_token && decoded_token != :invalid_token
 
         user = user_from_token(decoded_token)
         set_is_oauth_client(user, decoded_token)
-        VCAP::CloudController::SecurityContext.set(user, decoded_token, header_token)
+        VCAP::CloudController::SecurityContext.set(user, decoded_token, VCAP::CloudController::SecurityContext.auth_token)
       rescue VCAP::CloudController::UaaTokenDecoder::BadToken
-        VCAP::CloudController::SecurityContext.set(nil, :invalid_token, header_token)
+        VCAP::CloudController::SecurityContext.set(nil, :invalid_token, VCAP::CloudController::SecurityContext.auth_token)
       end
 
       private
