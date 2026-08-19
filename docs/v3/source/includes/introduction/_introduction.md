@@ -11,7 +11,7 @@ key features:
 * Changing application source code without stopping the app via deployments
 
 ## Getting help
-The CAPI team can most easily be reached on our [Slack channel](https://cloudfoundry.slack.com/messages/capi/) for
+The CAPI team can most easily be reached on our [Slack channel](https://cloudfoundry.slack.com/archives/C07C04W4Q) for
 questions and issues regarding the API. To report an issue with the docs or API, please feel free to file a GitHub
 issue on our API repo, [cloud_controller_ng](https://github.com/cloudfoundry/cloud_controller_ng).
 
