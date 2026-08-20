@@ -22,6 +22,9 @@ module VCAP::CloudController
           pollable_jobs: { cutoff_age_in_days: 2 },
           service_operations_initial_cleanup: { frequency_in_seconds: 600 },
           service_operations_create_in_progress_cleanup: { frequency_in_seconds: 600 },
+          service_operations_update_stuck_in_progress_failed: { frequency_in_seconds: 600 },
+          service_operations_delete_stuck_in_progress_retry: { frequency_in_seconds: 600 },
+          service_operations_binding_delete_stuck_in_progress_retry: { frequency_in_seconds: 600 },
           lifecycle_type_backfill: { frequency_in_seconds: 500 },
           service_usage_events: { cutoff_age_in_days: 5 },
           completed_tasks: { cutoff_age_in_days: 6 },
@@ -167,6 +170,24 @@ module VCAP::CloudController
           expect(args).to eql(name: 'service_operations_create_in_progress_cleanup', interval: 600)
           expect(Jobs::Runtime::ServiceOperationsCreateInProgressCleanup).to receive(:new).and_call_original
           expect(block.call).to be_instance_of(Jobs::Runtime::ServiceOperationsCreateInProgressCleanup)
+        end
+
+        expect(clock).to receive(:schedule_frequent_worker_job) do |args, &block|
+          expect(args).to eql(name: 'service_operations_update_stuck_in_progress_failed', interval: 600)
+          expect(Jobs::Runtime::ServiceOperationsUpdateStuckInProgressFailed).to receive(:new).and_call_original
+          expect(block.call).to be_instance_of(Jobs::Runtime::ServiceOperationsUpdateStuckInProgressFailed)
+        end
+
+        expect(clock).to receive(:schedule_frequent_worker_job) do |args, &block|
+          expect(args).to eql(name: 'service_operations_delete_stuck_in_progress_retry', interval: 600)
+          expect(Jobs::Runtime::ServiceOperationsDeleteStuckInProgressRetry).to receive(:new).and_call_original
+          expect(block.call).to be_instance_of(Jobs::Runtime::ServiceOperationsDeleteStuckInProgressRetry)
+        end
+
+        expect(clock).to receive(:schedule_frequent_worker_job) do |args, &block|
+          expect(args).to eql(name: 'service_operations_binding_delete_stuck_in_progress_retry', interval: 600)
+          expect(Jobs::Runtime::ServiceOperationsBindingDeleteStuckInProgressRetry).to receive(:new).and_call_original
+          expect(block.call).to be_instance_of(Jobs::Runtime::ServiceOperationsBindingDeleteStuckInProgressRetry)
         end
 
         expect(clock).to receive(:schedule_frequent_worker_job) do |args, &block|
