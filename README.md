@@ -1,5 +1,5 @@
 [![Maintainability](https://qlty.sh/gh/cloudfoundry/projects/cloud_controller_ng/maintainability.svg)](https://qlty.sh/gh/cloudfoundry/projects/cloud_controller_ng)
-[![slack.cloudfoundry.org](https://slack.cloudfoundry.org/badge.svg)](https://cloudfoundry.slack.com/messages/capi/)
+[![slack.cloudfoundry.org](https://slack.cloudfoundry.org/badge.svg)](https://cloudfoundry.slack.com/archives/C07C04W4Q)
 
 # Welcome to the Cloud Controller
 
