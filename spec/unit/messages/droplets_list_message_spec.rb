@@ -125,8 +125,23 @@ module VCAP::CloudController
 
         context 'when the query is not nested under an app' do
           context 'when the request contains current field' do
-            it 'is invalid' do
+            it 'is valid' do
               message = DropletsListMessage.from_params({ current: 'true' })
+              expect(message).to be_valid
+            end
+
+            it 'validates current must be true' do
+              message = DropletsListMessage.from_params({ current: 'false' })
+              expect(message).not_to be_valid
+              expect(message.errors[:current]).to include("only accepts the value 'true'")
+            end
+          end
+        end
+
+        context 'when the query is nested under a package' do
+          context 'when the request contains current field' do
+            it 'is invalid' do
+              message = DropletsListMessage.from_params({ package_guid: 'some-package-guid', current: 'true' })
               expect(message).not_to be_valid
               expect(message.errors[:base][0]).to include("Unknown query parameter(s): 'current'")
             end

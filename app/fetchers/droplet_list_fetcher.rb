@@ -32,14 +32,19 @@ module VCAP::CloudController
       end
 
       def filter(message, app, space_guids, dataset)
-        if message.requested?(:current) && app
-          dataset = dataset.extension(:null_dataset)
-          return dataset.nullify unless app.droplet
+        if message.requested?(:current)
+          if app
+            dataset = dataset.extension(:null_dataset)
+            return dataset.nullify unless app.droplet
 
-          dataset = dataset.where(guid: app.droplet_guid)
+            dataset = dataset.where(guid: app.droplet_guid)
+          else
+            dataset = dataset.select_all(DropletModel.table_name).
+                      join_table(:inner, AppModel.table_name, { droplet_guid: Sequel[DropletModel.table_name][:guid] }, { table_alias: :apps_current })
+          end
         end
 
-        dataset = dataset.where(app_guid: message.app_guids) if message.requested?(:app_guids)
+        dataset = dataset.where(Sequel[DropletModel.table_name][:app_guid] => message.app_guids) if message.requested?(:app_guids)
 
         dataset = dataset.where(state: message.states) if message.requested?(:states)
 

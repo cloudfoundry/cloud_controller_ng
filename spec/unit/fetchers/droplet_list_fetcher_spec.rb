@@ -125,6 +125,76 @@ module VCAP::CloudController
           expect(results).to contain_exactly(staged_droplet_for_app1)
         end
       end
+
+      context 'filtering by current=true' do
+        let(:filters) { { current: 'true' } }
+
+        context 'when some apps have a current droplet set' do
+          before do
+            app1.update(droplet: staged_droplet_for_app1)
+            app2.update(droplet: staged_droplet_for_app2)
+          end
+
+          it 'returns only current droplets' do
+            results = fetcher.fetch_all(message).all
+            expect(results).to contain_exactly(staged_droplet_for_app1, staged_droplet_for_app2)
+          end
+
+          it 'does not return non-current droplets' do
+            results = fetcher.fetch_all(message).all
+            expect(results).not_to include(failed_droplet_for_app1)
+          end
+        end
+
+        context 'when no apps have a current droplet set' do
+          it 'returns an empty list' do
+            results = fetcher.fetch_all(message).all
+            expect(results).to be_empty
+          end
+        end
+
+        context 'when combined with app_guids filter' do
+          before do
+            app1.update(droplet: staged_droplet_for_app1)
+            app2.update(droplet: staged_droplet_for_app2)
+          end
+
+          let(:filters) { { current: 'true', app_guids: [app1.guid] } }
+
+          it 'returns only the current droplet for the specified app' do
+            results = fetcher.fetch_all(message).all
+            expect(results).to contain_exactly(staged_droplet_for_app1)
+          end
+        end
+
+        context 'when combined with space_guids filter' do
+          before do
+            app1.update(droplet: staged_droplet_for_app1)
+            app2.update(droplet: staged_droplet_for_app2)
+          end
+
+          let(:filters) { { current: 'true', space_guids: [app1.space.guid] } }
+
+          it 'returns only current droplets in the specified space' do
+            results = fetcher.fetch_all(message).all
+            expect(results).to contain_exactly(staged_droplet_for_app1)
+          end
+        end
+
+        context 'when combined with organization_guids filter' do
+          before do
+            app1.update(droplet: staged_droplet_for_app1)
+            app2.update(droplet: staged_droplet_for_app2)
+          end
+
+          let(:filters) { { current: 'true', organization_guids: [app1.organization.guid] } }
+
+          it 'returns only current droplets in the specified organization' do
+            results = fetcher.fetch_all(message).all
+            expect(results).to contain_exactly(staged_droplet_for_app1)
+          end
+        end
+      end
     end
 
     describe '#fetch_for_spaces' do
