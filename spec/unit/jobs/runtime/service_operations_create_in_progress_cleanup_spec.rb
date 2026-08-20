@@ -55,6 +55,24 @@ module VCAP::CloudController
         { service_instance: service_instance, pjob: pjob, delayed_job: dj }
       end
 
+      # Attach an additional live pollable job (POLLING/PROCESSING, delayed_job NOT failed)
+      # for the same instance + operation. Mirrors a second create actively polling while a
+      # stale, permanently-failed pollable from a previous attempt lingers.
+      def add_live_pollable(service_instance, operation: 'service_instance.create', state: PollableJobModel::POLLING_STATE)
+        dj = Delayed::Job.create!(
+          guid: SecureRandom.uuid,
+          handler: 'fake',
+          run_at: Time.now,
+          queue: 'cc-generic'
+        )
+        create(:pollable_job_model,
+               state: state,
+               operation: operation,
+               resource_guid: service_instance.guid,
+               resource_type: 'service_instances',
+               delayed_job_guid: dj.guid)
+      end
+
       shared_examples 'does not trigger orphan mitigation' do
         before { job.perform }
 
@@ -117,6 +135,34 @@ module VCAP::CloudController
           end
 
           it_behaves_like 'does not trigger orphan mitigation'
+        end
+
+        context 'when a live pollable job is still driving the same operation' do
+          # A previous create attempt left a stale, permanently-failed pollable behind; a
+          # second create on the same instance is now actively polling. The stale row must
+          # not cause the healthy current operation to be marked failed / mitigated.
+          it 'does not mitigate and leaves both pollables untouched' do
+            scenario = prepare_stuck_service_instance
+            live_pjob = add_live_pollable(scenario[:service_instance])
+
+            job.perform
+
+            expect(scenario[:service_instance].last_operation.reload.state).to eq('in progress')
+            expect(scenario[:pjob].reload.state).to eq(PollableJobModel::FAILED_STATE)
+            expect(live_pjob.reload.state).to eq(PollableJobModel::POLLING_STATE)
+            expect(fake_mitigator).not_to have_received(:cleanup_failed_provision)
+          end
+
+          it 'still mitigates once the live pollable is gone' do
+            scenario = prepare_stuck_service_instance
+            live_pjob = add_live_pollable(scenario[:service_instance])
+            live_pjob.destroy
+
+            job.perform
+
+            expect(scenario[:service_instance].last_operation.reload.state).to eq('failed')
+            expect(fake_mitigator).to have_received(:cleanup_failed_provision).with(scenario[:service_instance])
+          end
         end
 
         context 'when a service instance create job is stuck with state FAILED' do

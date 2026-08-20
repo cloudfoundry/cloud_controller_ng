@@ -47,6 +47,24 @@ module VCAP::CloudController
         { service_instance: service_instance, pjob: pjob, delayed_job: dj }
       end
 
+      # Attach an additional live pollable job (POLLING/PROCESSING, no failed delayed_job)
+      # for the same resource + operation. This mirrors a second update that is actively
+      # polling while a stale, permanently-failed pollable from a previous operation lingers.
+      def add_live_pollable(service_instance, operation: 'service_instance.update', state: PollableJobModel::POLLING_STATE)
+        dj = Delayed::Job.create!(
+          guid: SecureRandom.uuid,
+          handler: 'fake',
+          run_at: Time.now,
+          queue: 'cc-generic'
+        )
+        create(:pollable_job_model,
+               state: state,
+               operation: operation,
+               resource_guid: service_instance.guid,
+               resource_type: 'service_instances',
+               delayed_job_guid: dj.guid)
+      end
+
       shared_examples 'does not resolve the operation' do
         it 'leaves the operation in progress and the pollable job untouched' do
           scenario = subject_scenario
@@ -108,6 +126,50 @@ module VCAP::CloudController
           let(:subject_scenario) { prepare_stuck_service_instance(pollable_job_operation: 'service_instance.create') }
 
           it_behaves_like 'does not resolve the operation'
+        end
+
+        context 'when a live pollable job is still driving the same operation' do
+          # A previous update left a stale, permanently-failed pollable behind; a second
+          # update on the same instance is now actively polling. The stale row must not
+          # cause the healthy current operation to be marked failed.
+          it 'does not resolve the operation and leaves the live pollable untouched' do
+            scenario = prepare_stuck_service_instance
+            live_pjob = add_live_pollable(scenario[:service_instance])
+
+            job.perform
+
+            expect(scenario[:service_instance].last_operation.reload.state).to eq('in progress')
+            expect(scenario[:pjob].reload.state).to eq(PollableJobModel::FAILED_STATE)
+            expect(live_pjob.reload.state).to eq(PollableJobModel::POLLING_STATE)
+          end
+
+          it 'still resolves once the live pollable is gone' do
+            scenario = prepare_stuck_service_instance
+            live_pjob = add_live_pollable(scenario[:service_instance])
+            live_pjob.destroy
+
+            job.perform
+
+            expect(scenario[:service_instance].last_operation.reload.state).to eq('failed')
+          end
+
+          it 'is unaffected by an unrelated live pollable with a NULL resource_guid (NOT EXISTS, not NOT IN)' do
+            # A NOT IN subquery selecting jobs.resource_guid would evaluate to UNKNOWN for
+            # every row if any candidate row has a NULL resource_guid, silently disabling the
+            # whole job. The correlated NOT EXISTS form is immune. Guard against regressing.
+            scenario = prepare_stuck_service_instance
+            dj = Delayed::Job.create!(guid: SecureRandom.uuid, handler: 'fake', run_at: Time.now, queue: 'cc-generic')
+            create(:pollable_job_model,
+                   state: PollableJobModel::POLLING_STATE,
+                   operation: 'service_instance.update',
+                   resource_guid: nil,
+                   resource_type: 'service_instances',
+                   delayed_job_guid: dj.guid)
+
+            job.perform
+
+            expect(scenario[:service_instance].last_operation.reload.state).to eq('failed')
+          end
         end
 
         context 'when a service instance update job is stuck with state FAILED' do

@@ -49,6 +49,18 @@ module VCAP::CloudController
         { binding: binding, pjob: pjob, delayed_job: dj }
       end
 
+      # Attach an additional live pollable job (POLLING/PROCESSING, delayed_job NOT failed)
+      # for the same binding + operation. Mirrors a second delete that is actively polling
+      # while a stale, permanently-failed pollable from a previous attempt lingers.
+      def add_live_pollable(binding_type, binding, state: PollableJobModel::POLLING_STATE)
+        operation = binding_type == :credential ? 'service_bindings.delete' : 'service_keys.delete'
+        resource_type = binding_type == :credential ? 'service_bindings' : 'service_keys'
+        delete_job = V3::DeleteBindingJob.new(binding_type, binding.guid, user_audit_info: user_audit_info)
+        pjob = Jobs::Enqueuer.new(queue: Jobs::Queues.generic).enqueue_pollable(delete_job)
+        pjob.update(state: state, operation: operation, resource_type: resource_type)
+        pjob
+      end
+
       it { is_expected.to be_a_valid_job }
 
       %i[credential key].each do |binding_type|
@@ -120,6 +132,34 @@ module VCAP::CloudController
             end
 
             it_behaves_like 'does not retry the operation'
+          end
+
+          context 'when a live pollable job is still driving the same operation' do
+            # A previous delete attempt left a stale, permanently-failed pollable behind; a
+            # second delete on the same binding is now actively polling. The stale row must
+            # not trigger a spurious re-enqueue.
+            it 'does not retry and leaves both pollables untouched' do
+              scenario = prepare_stuck_binding(binding_type: binding_type)
+              live_pjob = add_live_pollable(binding_type, scenario[:binding])
+
+              job.perform
+
+              expect(scenario[:binding].last_operation.reload.state).to eq('in progress')
+              expect(scenario[:pjob].reload.state).to eq(PollableJobModel::FAILED_STATE)
+              expect(live_pjob.reload.state).to eq(PollableJobModel::POLLING_STATE)
+              expect(enqueuer).not_to have_received(:enqueue_pollable)
+            end
+
+            it 'still retries once the live pollable is gone' do
+              scenario = prepare_stuck_binding(binding_type: binding_type)
+              live_pjob = add_live_pollable(binding_type, scenario[:binding])
+              live_pjob.destroy
+
+              job.perform
+
+              expect(scenario[:pjob].reload.state).to eq(PollableJobModel::POLLING_STATE)
+              expect(enqueuer).to have_received(:enqueue_pollable)
+            end
           end
 
           context 'when a binding delete job is stuck with state FAILED' do
