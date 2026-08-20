@@ -182,7 +182,7 @@ gulp.task('checkV3docs', gulp.series('build', done => {
 
   try {
     checkPathAndExit('build', {
-      linksToSkip: ['http://localhost:8001/version/release-candidate'],
+      linksToSkip: ['http://localhost:8001/version/release-candidate', 'slack.com'],
       recurse: true,
       silent: true,
       markdown: true,
