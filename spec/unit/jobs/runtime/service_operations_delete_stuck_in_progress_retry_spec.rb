@@ -44,16 +44,6 @@ module VCAP::CloudController
         { service_instance: service_instance, pjob: pjob, delayed_job: dj }
       end
 
-      # Attach an additional live pollable job (POLLING/PROCESSING, delayed_job NOT failed)
-      # for the same instance + operation. Mirrors a second delete that is actively polling
-      # while a stale, permanently-failed pollable from a previous attempt lingers.
-      def add_live_pollable(service_instance, operation: 'service_instance.delete', state: PollableJobModel::POLLING_STATE)
-        delete_job = V3::DeleteServiceInstanceJob.new(service_instance.guid, user_audit_info)
-        pjob = Jobs::Enqueuer.new(queue: Jobs::Queues.generic).enqueue_pollable(delete_job)
-        pjob.update(state: state, operation: operation)
-        pjob
-      end
-
       shared_examples 'does not retry the operation' do
         it 'leaves the operation in progress, the pollable job untouched, and does not re-enqueue' do
           scenario = subject_scenario
@@ -118,34 +108,6 @@ module VCAP::CloudController
           let(:subject_scenario) { prepare_stuck_service_instance(pollable_job_operation: 'service_instance.create') }
 
           it_behaves_like 'does not retry the operation'
-        end
-
-        context 'when a live pollable job is still driving the same operation' do
-          # A previous delete attempt left a stale, permanently-failed pollable behind; a
-          # second delete on the same instance is now actively polling. The stale row must
-          # not trigger a spurious re-enqueue.
-          it 'does not retry and leaves both pollables untouched' do
-            scenario = prepare_stuck_service_instance
-            live_pjob = add_live_pollable(scenario[:service_instance])
-
-            job.perform
-
-            expect(scenario[:service_instance].last_operation.reload.state).to eq('in progress')
-            expect(scenario[:pjob].reload.state).to eq(PollableJobModel::FAILED_STATE)
-            expect(live_pjob.reload.state).to eq(PollableJobModel::POLLING_STATE)
-            expect(enqueuer).not_to have_received(:enqueue_pollable)
-          end
-
-          it 'still retries once the live pollable is gone' do
-            scenario = prepare_stuck_service_instance
-            live_pjob = add_live_pollable(scenario[:service_instance])
-            live_pjob.destroy
-
-            job.perform
-
-            expect(scenario[:pjob].reload.state).to eq(PollableJobModel::POLLING_STATE)
-            expect(enqueuer).to have_received(:enqueue_pollable)
-          end
         end
 
         context 'when a service instance delete job is stuck with state FAILED' do

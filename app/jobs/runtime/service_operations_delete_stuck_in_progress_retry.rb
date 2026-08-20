@@ -36,7 +36,6 @@ module VCAP::CloudController
                   where(Sequel[:jobs][:state] => [PollableJobModel::POLLING_STATE, PollableJobModel::FAILED_STATE]).
                   where(Sequel[:jobs][:operation] => jobs_operation).
                   exclude(Sequel[:delayed_jobs][:failed_at] => nil).
-                  exclude(live_pollable_exists(operation_model, instance_table, jobs_operation)).
                   select(
                     Sequel[:jobs][:guid].as(:pollable_guid),
                     Sequel[operation_table][:id].as(:op_id),
@@ -94,25 +93,6 @@ module VCAP::CloudController
 
         def default_maximum_duration_seconds
           Config.config.get(:broker_client_max_async_poll_duration_minutes).minutes
-        end
-
-        # NOT EXISTS guard: skip a resource if it still has a pollable job actively driving
-        # THIS operation — state POLLING or PROCESSING AND backed by a delayed_job that has
-        # NOT permanently failed (failed_at IS NULL, or no delayed_job row yet). A stale,
-        # permanently-failed pollable left behind by a previous operation on the same
-        # resource must NOT trigger a spurious re-enqueue. A POLLING pollable whose
-        # delayed_job IS failed is itself stuck (the DB flip happened before the failure
-        # hook could write FAILED) and must NOT count as live. Correlated
-        # (resource_guid = instance.guid) so a NULL jobs.resource_guid elsewhere cannot
-        # poison the result the way a NOT IN subquery would.
-        def live_pollable_exists(operation_model, instance_table, jobs_operation)
-          operation_model.db[:jobs].
-            left_join(:delayed_jobs, guid: Sequel[:jobs][:delayed_job_guid]).
-            where(Sequel[:jobs][:operation] => jobs_operation).
-            where(Sequel[:jobs][:state] => [PollableJobModel::POLLING_STATE, PollableJobModel::PROCESSING_STATE]).
-            where(Sequel[:delayed_jobs][:failed_at] => nil).
-            where(Sequel[:jobs][:resource_guid] => Sequel[instance_table][:guid]).
-            exists
         end
 
         def logger
