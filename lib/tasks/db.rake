@@ -213,6 +213,32 @@ namespace :db do
     end
   end
 
+  desc 'Seed WAS_RUNNING usage events for running apps, running tasks, and existing service instances, ' \
+       'and add the missing ending events for baselines whose resource is no longer running. Run it: after ' \
+       'the seed migrations were skipped via skip_was_running_backfill; once after the deploy that ships ' \
+       'the seed migrations, to repair anything that slipped through while old API servers were still ' \
+       'running; or after a destructive usage-event purge, which wipes the task start events that task ' \
+       'stop events depend on'
+  task :was_running_backfill, %i[batch_size] => :environment do |_t, args|
+    args.with_defaults(batch_size: 1000)
+    # Integer() rejects non-numeric input; to_i would quietly turn it into 0,
+    # and a batch size of 0 would seed nothing while reporting success.
+    batch_size = Integer(args.batch_size)
+
+    RakeConfig.context = :migrate
+
+    require 'database/was_running_backfill'
+    logging_output
+    logger = Steno.logger('cc.db.was_running_backfill')
+    RakeConfig.config.load_db_encryption_key
+    db = VCAP::CloudController::DB.connect(RakeConfig.config.get(:db), logger)
+    VCAP::WasRunningBackfill.with_advisory_lock(db) do
+      VCAP::WasRunningBackfill.seed_app_usage_events(db, logger, batch_size:)
+      VCAP::WasRunningBackfill.seed_task_usage_events(db, logger, batch_size:)
+      VCAP::WasRunningBackfill.seed_service_usage_events(db, logger, batch_size:)
+    end
+  end
+
   namespace :dev do
     desc 'Migrate the database set in spec/support/bootstrap/db_config'
     task migrate: :environment do
