@@ -7,13 +7,15 @@ RSpec.describe VCAP::CloudController::DbConnection::MysqlOptionsFactory do
   describe 'when the Cloud Controller Config specifies MySQL' do
     let(:ssl_verify_hostname) { true }
     let(:ca_cert_path) { nil }
+    let(:ssl_mode) { nil }
     let(:mysql_options) do
       VCAP::CloudController::DbConnection::MysqlOptionsFactory.build(
         database: {
           adapter: 'mysql2'
         },
         ca_cert_path: ca_cert_path,
-        ssl_verify_hostname: ssl_verify_hostname
+        ssl_verify_hostname: ssl_verify_hostname,
+        ssl_mode: ssl_mode
       )
     end
 
@@ -31,8 +33,35 @@ RSpec.describe VCAP::CloudController::DbConnection::MysqlOptionsFactory do
       it 'the options do not specify SSL' do
         expect(mysql_options[:ca_cert_path]).to be_nil
         expect(mysql_options[:sslca]).to be_nil
-        expect(mysql_options[:sslmode]).to be_nil
+        expect(mysql_options[:ssl_mode]).to be_nil
         expect(mysql_options[:sslverify]).to be_nil
+      end
+
+      describe 'when ssl_mode is set' do
+        context 'when ssl_mode is required' do
+          let(:ssl_mode) { 'required' }
+
+          it 'sets ssl_mode to :required without a CA' do
+            expect(mysql_options[:ssl_mode]).to eq(:required)
+            expect(mysql_options[:sslca]).to be_nil
+          end
+        end
+
+        context 'when ssl_mode is disabled' do
+          let(:ssl_mode) { 'disabled' }
+
+          it 'sets ssl_mode to :disabled' do
+            expect(mysql_options[:ssl_mode]).to eq(:disabled)
+          end
+        end
+
+        context 'when ssl_mode is an unsupported value' do
+          let(:ssl_mode) { 'prefer' }
+
+          it 'raises an ArgumentError' do
+            expect { mysql_options }.to raise_error(ArgumentError, /Unsupported ccdb.ssl_mode 'prefer' for mysql/)
+          end
+        end
       end
     end
 
@@ -43,12 +72,11 @@ RSpec.describe VCAP::CloudController::DbConnection::MysqlOptionsFactory do
         expect(mysql_options[:sslca]).to eq('/path/to/db_ca.crt')
       end
 
-      describe 'sslmode' do
+      describe 'ssl verification' do
         context 'when ssl_verify_hostname is truthy' do
           let(:ssl_verify_hostname) { true }
 
-          it 'sets the ssl verify options' do
-            expect(mysql_options[:sslmode]).to eq(:verify_identity)
+          it 'enables full server certificate verification' do
             expect(mysql_options[:sslverify]).to be(true)
           end
         end
@@ -56,9 +84,20 @@ RSpec.describe VCAP::CloudController::DbConnection::MysqlOptionsFactory do
         context 'when ssl_verify_hostname is falsey' do
           let(:ssl_verify_hostname) { false }
 
-          it 'sets the sslmode to :verify-ca' do
-            expect(mysql_options[:sslmode]).to eq(:verify_ca)
+          it 'sets the CA without enabling sslverify' do
+            expect(mysql_options[:sslca]).to eq('/path/to/db_ca.crt')
+            expect(mysql_options[:sslverify]).to be_nil
           end
+        end
+      end
+
+      context 'when ssl_mode is also set' do
+        let(:ssl_mode) { 'required' }
+
+        it 'ignores ssl_mode and uses the CA verification path' do
+          expect(mysql_options[:sslca]).to eq('/path/to/db_ca.crt')
+          expect(mysql_options[:sslverify]).to be(true)
+          expect(mysql_options[:ssl_mode]).to be_nil
         end
       end
     end

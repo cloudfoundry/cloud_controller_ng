@@ -7,13 +7,15 @@ RSpec.describe VCAP::CloudController::DbConnection::PostgresOptionsFactory do
   describe 'when the Cloud Controller Config specifies Postgres' do
     let(:ssl_verify_hostname) { true }
     let(:ca_cert_path) { nil }
+    let(:ssl_mode) { nil }
     let(:postgres_options) do
       VCAP::CloudController::DbConnection::PostgresOptionsFactory.build(
         database: {
           adapter: 'postgres'
         },
         ca_cert_path: ca_cert_path,
-        ssl_verify_hostname: ssl_verify_hostname
+        ssl_verify_hostname: ssl_verify_hostname,
+        ssl_mode: ssl_mode
       )
     end
 
@@ -27,6 +29,33 @@ RSpec.describe VCAP::CloudController::DbConnection::PostgresOptionsFactory do
         expect(postgres_options[:sslrootcert]).to be_nil
         expect(postgres_options[:sslmode]).to be_nil
         expect(postgres_options[:ssl_verify_hostname]).to be_nil
+      end
+
+      describe 'when ssl_mode is set' do
+        context 'when ssl_mode is require' do
+          let(:ssl_mode) { 'require' }
+
+          it 'sets the sslmode to "require" without a root cert' do
+            expect(postgres_options[:sslmode]).to eq('require')
+            expect(postgres_options[:sslrootcert]).to be_nil
+          end
+        end
+
+        context 'when ssl_mode is disable' do
+          let(:ssl_mode) { 'disable' }
+
+          it 'sets the sslmode to "disable"' do
+            expect(postgres_options[:sslmode]).to eq('disable')
+          end
+        end
+
+        context 'when ssl_mode is an unsupported value' do
+          let(:ssl_mode) { 'required' }
+
+          it 'raises an ArgumentError' do
+            expect { postgres_options }.to raise_error(ArgumentError, /Unsupported ccdb.ssl_mode 'required' for postgres/)
+          end
+        end
       end
     end
 
@@ -52,6 +81,15 @@ RSpec.describe VCAP::CloudController::DbConnection::PostgresOptionsFactory do
           it 'sets the sslmode to "verify-ca"' do
             expect(postgres_options[:sslmode]).to eq('verify-ca')
           end
+        end
+      end
+
+      context 'when ssl_mode is also set' do
+        let(:ssl_mode) { 'require' }
+
+        it 'ignores ssl_mode and uses the verifying CA path' do
+          expect(postgres_options[:sslrootcert]).to eq('/path/to/db_ca.crt')
+          expect(postgres_options[:sslmode]).to eq('verify-full')
         end
       end
     end

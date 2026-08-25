@@ -20,6 +20,7 @@ module VCAP::CloudController
             optional(:log_db_queries) => bool,
             optional(:ssl_verify_hostname) => bool,
             optional(:ca_cert_path) => String,
+            optional(:ssl_mode) => String,
             optional(:enable_paginate_window) => bool
           },
 

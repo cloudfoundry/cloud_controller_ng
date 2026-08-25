@@ -60,6 +60,7 @@ module VCAP::CloudController
             ssl_verify_hostname: bool,
             connection_validation_timeout: Integer,
             optional(:ca_cert_path) => String,
+            optional(:ssl_mode) => String,
             optional(:psql) => {
               optional(:statement_timeout) => Integer,
               optional(:idle_in_transaction_session_timeout) => Integer,
