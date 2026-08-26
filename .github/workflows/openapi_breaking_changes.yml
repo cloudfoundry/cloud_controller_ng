@@ -55,7 +55,7 @@ jobs:
           yarn build
 
       - name: Check for Breaking Changes
-        uses: oasdiff/oasdiff-action/breaking@v0.1.12
+        uses: oasdiff/oasdiff-action/breaking@v0.1.13
         with:
           base: 'base/docs/openapi/dist/latest/openapi.yaml'
           revision: 'pr/docs/openapi/dist/latest/openapi.yaml'
