@@ -401,7 +401,7 @@ GEM
     spring (4.7.0)
     spring-commands-rspec (1.0.4)
       spring (>= 0.9.1)
-    statsd-instrument (3.11.1)
+    statsd-instrument (4.0.0)
     stringio (3.2.0)
     talentbox-delayed_job_sequel (4.4.0)
       delayed_job (~> 4.1)
@@ -496,7 +496,7 @@ DEPENDENCIES
   solargraph
   spring
   spring-commands-rspec
-  statsd-instrument (~> 3.11)
+  statsd-instrument (~> 4.0)
   talentbox-delayed_job_sequel (~> 4.4.0)
   timecop
   uri (~> 1.1)
