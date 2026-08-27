@@ -19,11 +19,9 @@ module VCAP::CloudController
         def retry_stuck(operation_model, instance_model, foreign_key, jobs_operation)
           # Find stuck binding 'delete' operations where the broker may still be working
           # but CC's polling job has permanently failed due to a transient error (e.g. brief db connection flip).
-          #
-          # Unlike create we do not mark the operation failed and do not mitigate orphans: for a delete we
-          # re-enqueue the original polling job so the unbind is driven to completion. The original delayed_job's
+          # We re-enqueue the original polling job so the unbind is driven to completion. The original delayed_job's
           # serialized handler is reused, preserving @start_time so the ReoccurringJob max-duration expiry
-          # (which marks the operation failed via handle_timeout) still fires against the original polling window.
+          # still fires against the original polling window.
           operation_table = operation_model.table_name
           instance_table = instance_model.table_name
 
@@ -80,8 +78,7 @@ module VCAP::CloudController
         end
 
         # Reuse the original delete polling job by deserializing the failed delayed_job's handler and unwrapping
-        # the wrapper chain (LoggingContextJob → TimeoutJob → PollableJobWrapper → DeleteBindingJob).
-        # This preserves the original @user_audit_info, @start_time and the binding @type.
+        # the wrapper chain. This preserves the original @user_audit_info, @start_time and the binding @type.
         def deserialize_handler(pollable)
           delayed_job = Delayed::Job[guid: pollable.delayed_job_guid]
           return unless delayed_job
