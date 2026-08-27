@@ -93,8 +93,8 @@ RSpec.describe 'Processes' do
         expect(parsed_response['resources'].count).to eq(4)
 
         expect { get_processes.call }.to have_queried_db_times(/SELECT .* FROM .apps. /i, 1) # instead of 4 w/o eager loading
-        expect { get_processes.call }.to have_queried_db_times(/SELECT .* FROM .buildpack_lifecycle_data. /i, 1) # instead of 4 w/o eager loading
-        expect { get_processes.call }.to have_queried_db_times(/SELECT .* FROM .cnb_lifecycle_data. /i, 1) # instead of 2 w/o eager loading
+        expect { get_processes.call }.to have_queried_db_times(/SELECT .* FROM .buildpack_lifecycle_data. /i, 0) # lifecycle_type is now a column, no join needed
+        expect { get_processes.call }.to have_queried_db_times(/SELECT .* FROM .cnb_lifecycle_data. /i, 0) # lifecycle_type is now a column, no join needed
       end
     end
 

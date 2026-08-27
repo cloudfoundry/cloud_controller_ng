@@ -176,14 +176,7 @@ module VCAP::CloudController
     end
 
     def lifecycle_type
-      return self[:lifecycle_type] if self[:lifecycle_type].present?
-
-      # Fallback for records written before the lifecycle_type column
-      # existed. Remove once existing rows are backfilled (see #5067).
-      return BuildpackLifecycleDataModel::LIFECYCLE_TYPE if buildpack_lifecycle_data
-      return CNBLifecycleDataModel::LIFECYCLE_TYPE if cnb_lifecycle_data
-
-      DockerLifecycleDataModel::LIFECYCLE_TYPE
+      self[:lifecycle_type]
     end
 
     def lifecycle_data
