@@ -194,7 +194,7 @@ module VCAP::CloudController
 
       enqueued_job = nil
       DropletModel.db.transaction do
-        droplet = DropletModel.create(app: process.app, state: DropletModel::PROCESSING_UPLOAD_STATE)
+        droplet = DropletModel.create(app: process.app, state: DropletModel::PROCESSING_UPLOAD_STATE, lifecycle_type: BuildpackLifecycleDataModel::LIFECYCLE_TYPE)
         BuildpackLifecycleDataModel.create(droplet:)
 
         droplet_upload_job = Jobs::V2::UploadDropletFromUser.new(droplet_path, droplet.guid)
