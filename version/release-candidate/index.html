@@ -49,6 +49,16 @@
   background-color: #272822;
   font-weight: bold;
 }
+.highlight .ge {
+  font-style: italic;
+}
+.highlight .ges {
+  font-weight: bold;
+  font-style: italic;
+}
+.highlight .gs {
+  font-weight: bold;
+}
 .highlight .k, .highlight .kn, .highlight .kp, .highlight .kr, .highlight .kv {
   color: #ae81ff;
 }
@@ -11370,10 +11380,10 @@ In the case where the specified isolation segment is the system-wide shared segm
     <span class="na">VAR1</span><span class="pi">:</span> <span class="s">value1</span>
     <span class="na">VAR2</span><span class="pi">:</span> <span class="s">value2</span>
   <span class="na">features</span><span class="pi">:</span>
-    <span class="na">ssh</span><span class="pi">:</span> <span class="no">true</span>
-    <span class="na">revisions</span><span class="pi">:</span> <span class="no">true</span>
-    <span class="na">service-binding-k8s</span><span class="pi">:</span> <span class="no">false</span>
-    <span class="na">file-based-vcap-services</span><span class="pi">:</span> <span class="no">false</span>
+    <span class="na">ssh</span><span class="pi">:</span> <span class="kc">true</span>
+    <span class="na">revisions</span><span class="pi">:</span> <span class="kc">true</span>
+    <span class="na">service-binding-k8s</span><span class="pi">:</span> <span class="kc">false</span>
+    <span class="na">file-based-vcap-services</span><span class="pi">:</span> <span class="kc">false</span>
   <span class="na">routes</span><span class="pi">:</span>
   <span class="pi">-</span> <span class="na">route</span><span class="pi">:</span> <span class="s">route.example.com</span>
   <span class="pi">-</span> <span class="na">route</span><span class="pi">:</span> <span class="s">another-route.example.com</span>
@@ -11394,7 +11404,7 @@ In the case where the specified isolation segment is the system-wide shared segm
     <span class="na">annotations</span><span class="pi">:</span>
       <span class="na">contact</span><span class="pi">:</span> <span class="s2">"</span><span class="s">bob@example.com</span><span class="nv"> </span><span class="s">jane@example.com"</span>
     <span class="na">labels</span><span class="pi">:</span>
-      <span class="na">sensitive</span><span class="pi">:</span> <span class="no">true</span>
+      <span class="na">sensitive</span><span class="pi">:</span> <span class="kc">true</span>
   <span class="na">processes</span><span class="pi">:</span>
   <span class="pi">-</span> <span class="na">type</span><span class="pi">:</span> <span class="s">web</span>
     <span class="na">command</span><span class="pi">:</span> <span class="s">start-web.sh</span>
