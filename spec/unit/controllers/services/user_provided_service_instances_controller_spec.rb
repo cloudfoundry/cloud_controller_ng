@@ -598,8 +598,8 @@ module VCAP::CloudController
       context 'when the updated service instance name is taken' do
         let(:service_instance_attrs_foo) { { name: 'foo', space: space } }
         let(:service_instance_attrs_bar) { { name: 'bar', space: space } }
-        let(:service_instance_foo)  { create(:user_provided_service_instance, service_instance_attrs_foo) }
-        let(:service_instance_bar)  { create(:user_provided_service_instance, service_instance_attrs_bar) }
+        let(:service_instance_foo) { create(:user_provided_service_instance, service_instance_attrs_foo) }
+        let(:service_instance_bar) { create(:user_provided_service_instance, service_instance_attrs_bar) }
 
         it 'fails and returns service instance name is taken' do
           put "/v2/user_provided_service_instances/#{service_instance_foo.guid}",

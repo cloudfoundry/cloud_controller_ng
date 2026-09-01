@@ -60,7 +60,7 @@ module VCAP::CloudController
       end
 
       def user_guid
-        HashUtils.dig(user,  :data, :guid)
+        HashUtils.dig(user, :data, :guid)
       end
 
       def space_guid
