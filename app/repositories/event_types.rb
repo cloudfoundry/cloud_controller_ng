@@ -107,8 +107,8 @@ module VCAP::CloudController
         SERVICE_ROUTE_BINDING_CREATE = 'audit.service_route_binding.create'.freeze,
         SERVICE_ROUTE_BINDING_UPDATE = 'audit.service_route_binding.update'.freeze,
         SERVICE_ROUTE_BINDING_DELETE = 'audit.service_route_binding.delete'.freeze,
-        SERVICE_ROUTE_BINDING_START_CREATE =  'audit.service_route_binding.start_create'.freeze,
-        SERVICE_ROUTE_BINDING_START_DELETE =  'audit.service_route_binding.start_delete'.freeze,
+        SERVICE_ROUTE_BINDING_START_CREATE = 'audit.service_route_binding.start_create'.freeze,
+        SERVICE_ROUTE_BINDING_START_DELETE = 'audit.service_route_binding.start_delete'.freeze,
 
         USER_PROVIDED_SERVICE_INSTANCE_CREATE = 'audit.user_provided_service_instance.create'.freeze,
         USER_PROVIDED_SERVICE_INSTANCE_UPDATE = 'audit.user_provided_service_instance.update'.freeze,

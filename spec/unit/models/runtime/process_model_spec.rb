@@ -140,8 +140,8 @@ module VCAP::CloudController
 
       context 'with sidecars' do
         let(:process) { ProcessModelFactory.make }
-        let(:sidecar1)  { create(:sidecar_model, app: process.app) }
-        let(:sidecar2)  { create(:sidecar_model, app: process.app) }
+        let(:sidecar1) { create(:sidecar_model, app: process.app) }
+        let(:sidecar2) { create(:sidecar_model, app: process.app) }
         let(:other_sidecar) { create(:sidecar_model, app: process.app) }
 
         before do
