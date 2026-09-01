@@ -23,6 +23,9 @@ RSpec.shared_examples 'field query parameter' do |resource, keys|
     message = described_class.from_params({ 'fields' => { "#{resource}": "#{keys},foo" } })
     expect(message).not_to be_valid
     quoted_keys = keys_list.map { |k| "'#{k}'" }
+
+
+    
     expect(message.errors[:fields]).to include("valid keys for '#{resource}' are: #{quoted_keys.join(', ')}")
   end
 
