@@ -1,0 +1,64 @@
+name: Rubocop Autofix
+# Runs `bundle exec rake rubocop` (safe -a autocorrect only) on dependabot PRs that bump a rubocop gem.
+# Can also be triggered manually via workflow_dispatch on any branch to fix rubocop offenses without a local Ruby setup.
+
+concurrency:
+  group: '${{ github.workflow }}-${{ github.head_ref || github.run_id }}'
+  cancel-in-progress: true
+
+on:
+  pull_request:
+    paths:
+      - 'Gemfile'
+      - 'Gemfile.lock'
+  workflow_dispatch:
+
+permissions:
+  contents: write
+  pull-requests: read
+
+jobs:
+  rubocop-autofix:
+    runs-on: ubuntu-latest
+    if: github.actor == 'dependabot[bot]' || github.event_name == 'workflow_dispatch'
+    steps:
+      - uses: actions/checkout@v7
+        with:
+          ref: ${{ github.head_ref || github.ref_name }}
+          fetch-depth: 0
+
+      - name: Fetch dependabot metadata
+        id: dependabot-metadata
+        if: github.event_name == 'pull_request'
+        uses: dependabot/fetch-metadata@v2
+
+      - name: Determine if rubocop autocorrect should run
+        id: check
+        run: |
+          if [[ "${{ github.event_name }}" == "workflow_dispatch" ]]; then
+            echo "is_rubocop=true" >> "$GITHUB_OUTPUT"
+          elif [[ "${{ contains(steps.dependabot-metadata.outputs.dependency-names, 'rubocop') }}" == "true" ]]; then
+            echo "is_rubocop=true" >> "$GITHUB_OUTPUT"
+          else
+            echo "is_rubocop=false" >> "$GITHUB_OUTPUT"
+          fi
+
+      - uses: ./.github/workflows/composite/setup
+        if: steps.check.outputs.is_rubocop == 'true'
+
+      - name: Run rubocop autocorrect
+        if: steps.check.outputs.is_rubocop == 'true'
+        run: bundle exec rake rubocop || true
+
+      - name: Commit and push fixes
+        if: steps.check.outputs.is_rubocop == 'true'
+        run: |
+          if ! git diff --quiet; then
+            git config user.name "github-actions[bot]"
+            git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+            git add -A
+            git commit -m "rubocop -a auto-fixes"
+            git push
+          else
+            echo "No rubocop fixes needed."
+          fi
