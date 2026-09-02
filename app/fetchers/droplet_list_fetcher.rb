@@ -32,14 +32,22 @@ module VCAP::CloudController
       end
 
       def filter(message, app, space_guids, dataset)
-        if message.requested?(:current) && app
-          dataset = dataset.extension(:null_dataset)
-          return dataset.nullify unless app.droplet
+        if message.requested?(:current)
+          if app
+            dataset = dataset.extension(:null_dataset)
+            return dataset.nullify unless app.droplet
 
-          dataset = dataset.where(guid: app.droplet_guid)
+            dataset = dataset.where(guid: app.droplet_guid)
+          else
+            dataset = dataset.select_all(DropletModel.table_name).
+                      join_table(:inner, AppModel.table_name,
+                                 { droplet_guid: Sequel[DropletModel.table_name][:guid],
+                                   guid: Sequel[DropletModel.table_name][:app_guid] },
+                                 { table_alias: :apps_current })
+          end
         end
 
-        dataset = dataset.where(app_guid: message.app_guids) if message.requested?(:app_guids)
+        dataset = dataset.where(Sequel[DropletModel.table_name][:app_guid] => message.app_guids) if message.requested?(:app_guids)
 
         dataset = dataset.where(state: message.states) if message.requested?(:states)
 
@@ -50,13 +58,14 @@ module VCAP::CloudController
                                   where(organizations__guid: message.organization_guids).
                                   select(:spaces__guid)
           dataset = dataset.select_all(droplet_table_name).
-                    join_table(:inner, AppModel.table_name, { guid: Sequel[:droplets][:app_guid], space_guid: space_guids_from_orgs }, { table_alias: :apps_orgs })
+                    join_table(:inner, AppModel.table_name, { guid: Sequel[DropletModel.table_name][:app_guid], space_guid: space_guids_from_orgs }, { table_alias: :apps_orgs })
         end
 
         returned_scoped_space_guids = scoped_space_guids(permitted_space_guids: space_guids, filtered_space_guids: message.space_guids)
         unless returned_scoped_space_guids.nil?
           dataset = dataset.select_all(droplet_table_name).
-                    join_table(:inner, AppModel.table_name, { guid: Sequel[:droplets][:app_guid], space_guid: returned_scoped_space_guids }, { table_alias: :apps_spaces })
+                    join_table(:inner, AppModel.table_name, { guid: Sequel[DropletModel.table_name][:app_guid],
+                                                              space_guid: returned_scoped_space_guids }, { table_alias: :apps_spaces })
         end
 
         if message.requested? :label_selector

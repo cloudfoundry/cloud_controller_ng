@@ -659,6 +659,7 @@ RSpec.describe 'Droplets' do
           space_guids
           app_guids
           organization_guids
+          current
         ]
       end
       let(:params) do
@@ -668,7 +669,6 @@ RSpec.describe 'Droplets' do
           order_by: 'updated_at',
           guids: 'foo,bar',
           app_guid: app_model.guid,
-          current: true,
           package_guid: package_model.guid,
           states: %w[test foo],
           label_selector: 'foo,bar',
@@ -940,6 +940,57 @@ RSpec.describe 'Droplets' do
 
         returned_guids = parsed_response['resources'].pluck('guid')
         expect(returned_guids).to contain_exactly(droplet1.guid, droplet2.guid, droplet3.guid)
+      end
+
+      it 'filters by current=true as admin' do
+        current_droplet_app1 = create(:droplet_model, app: app_model, state: VCAP::CloudController::DropletModel::STAGED_STATE)
+        current_droplet_app2 = create(:droplet_model, app: app_model2, state: VCAP::CloudController::DropletModel::STAGED_STATE)
+        current_droplet_app3 = create(:droplet_model, app: app_model3, state: VCAP::CloudController::DropletModel::STAGED_STATE)
+        app_model.update(droplet: current_droplet_app1)
+        app_model2.update(droplet: current_droplet_app2)
+        app_model3.update(droplet: current_droplet_app3)
+
+        get '/v3/droplets?current=true', nil, admin_headers
+
+        expect(last_response.status).to eq(200)
+        returned_guids = parsed_response['resources'].pluck('guid')
+        expect(returned_guids).to contain_exactly(current_droplet_app1.guid, current_droplet_app2.guid, current_droplet_app3.guid)
+      end
+
+      it 'filters by current=true as a non-admin developer, returning only current droplets in readable spaces' do
+        current_droplet_app1 = create(:droplet_model, app: app_model, state: VCAP::CloudController::DropletModel::STAGED_STATE)
+        current_droplet_app2 = create(:droplet_model, app: app_model2, state: VCAP::CloudController::DropletModel::STAGED_STATE)
+        current_droplet_app3 = create(:droplet_model, app: app_model3, state: VCAP::CloudController::DropletModel::STAGED_STATE)
+        app_model.update(droplet: current_droplet_app1)
+        app_model2.update(droplet: current_droplet_app2)
+        app_model3.update(droplet: current_droplet_app3)
+
+        get '/v3/droplets?current=true', nil, developer_headers
+
+        expect(last_response.status).to eq(200)
+        returned_guids = parsed_response['resources'].pluck('guid')
+        expect(returned_guids).to contain_exactly(current_droplet_app1.guid, current_droplet_app2.guid)
+        expect(returned_guids).not_to include(current_droplet_app3.guid)
+      end
+
+      it 'filters by current=true combined with app_guids' do
+        current_droplet_app1 = create(:droplet_model, app: app_model, state: VCAP::CloudController::DropletModel::STAGED_STATE)
+        current_droplet_app2 = create(:droplet_model, app: app_model2, state: VCAP::CloudController::DropletModel::STAGED_STATE)
+        app_model.update(droplet: current_droplet_app1)
+        app_model2.update(droplet: current_droplet_app2)
+
+        get "/v3/droplets?current=true&app_guids=#{app_model.guid}", nil, developer_headers
+
+        expect(last_response.status).to eq(200)
+        returned_guids = parsed_response['resources'].pluck('guid')
+        expect(returned_guids).to contain_exactly(current_droplet_app1.guid)
+      end
+
+      it 'returns 400 when current=false is passed' do
+        get '/v3/droplets?current=false', nil, admin_headers
+
+        expect(last_response.status).to eq(400)
+        expect(parsed_response['errors'][0]['detail']).to include("only accepts the value 'true'")
       end
     end
 
