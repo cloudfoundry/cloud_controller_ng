@@ -18,7 +18,8 @@ module VCAP::CloudController
     validates :states, array: true, allow_nil: true
     validates :space_guids, array: true, allow_nil: true
     validates :organization_guids, array: true, allow_nil: true
-    validates :current, inclusion: { in: ['true'], message: 'only accepts the value \'true\'' }, allow_nil: true
+    validates :current, inclusion: { in: ['true'], message: 'only accepts the value \'true\'' }, allow_nil: true,
+                        unless: -> { package_guid.present? }
     validate :app_nested_request, if: -> { app_guid.present? }
     validate :package_nested_request, if: -> { package_guid.present? }
 

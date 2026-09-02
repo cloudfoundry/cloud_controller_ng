@@ -985,6 +985,13 @@ RSpec.describe 'Droplets' do
         returned_guids = parsed_response['resources'].pluck('guid')
         expect(returned_guids).to contain_exactly(current_droplet_app1.guid)
       end
+
+      it 'returns 400 when current=false is passed' do
+        get '/v3/droplets?current=false', nil, admin_headers
+
+        expect(last_response.status).to eq(400)
+        expect(parsed_response['errors'][0]['detail']).to include("only accepts the value 'true'")
+      end
     end
 
     context 'label_selector' do

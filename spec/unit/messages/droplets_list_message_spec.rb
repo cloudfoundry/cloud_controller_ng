@@ -145,6 +145,13 @@ module VCAP::CloudController
               expect(message).not_to be_valid
               expect(message.errors[:base][0]).to include("Unknown query parameter(s): 'current'")
             end
+
+            it 'returns only the unknown query parameter error when current is false' do
+              message = DropletsListMessage.from_params({ package_guid: 'some-package-guid', current: 'false' })
+              expect(message).not_to be_valid
+              expect(message.errors[:base][0]).to include("Unknown query parameter(s): 'current'")
+              expect(message.errors[:current]).to be_empty
+            end
           end
         end
 
