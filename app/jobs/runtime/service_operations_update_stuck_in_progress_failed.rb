@@ -81,6 +81,10 @@ module VCAP::CloudController
         # before the failure hook could write FAILED) and must NOT count as live.
         # Correlated (resource_guid = instance.guid) so a NULL jobs.resource_guid elsewhere
         # cannot poison the result the way a NOT IN subquery would.
+        # LEFT JOIN + failed_at IS NULL matches both "delayed_job present and not failed" (healthy)
+        # and "delayed_job row missing" (NULL from left join). The latter case is safe: delayed_jobs
+        # are only deleted on successful completion, at which point before_enqueue has already moved
+        # the pollable out of POLLING/PROCESSING, so it won't match the outer state filter.
         def live_pollable_exists(operation_model, instance_table, jobs_operation)
           operation_model.db[:jobs].
             left_join(:delayed_jobs, guid: Sequel[:jobs][:delayed_job_guid]).

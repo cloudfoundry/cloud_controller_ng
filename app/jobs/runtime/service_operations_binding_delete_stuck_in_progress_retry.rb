@@ -31,6 +31,8 @@ module VCAP::CloudController
                   join(:delayed_jobs, guid: Sequel[:jobs][:delayed_job_guid]).
                   where(Sequel[operation_table][:state] => 'in progress').
                   where(Sequel[operation_table][:type] => 'delete').
+                  # Operations older than the max poll window are excluded: ReoccurringJob#handle_timeout
+                  # fires at that boundary and marks the operation failed, so no retry is needed.
                   where(Sequel.lit("#{operation_table}.created_at > CURRENT_TIMESTAMP - INTERVAL '?' SECOND", default_maximum_duration_seconds.to_i)).
                   where(Sequel[:jobs][:state] => [PollableJobModel::POLLING_STATE, PollableJobModel::FAILED_STATE]).
                   where(Sequel[:jobs][:operation] => jobs_operation).
