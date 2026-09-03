@@ -63,44 +63,7 @@ module VCAP::CloudController
       end
     end
 
-    describe '#lifecycle_type' do
-      before do
-        # Remove lifecycle type to test fallback mechanism based on associated lifecycle data
-        droplet_model.update(lifecycle_type: '')
-      end
-
-      context 'when there is buildpack_lifecycle_data associated to the droplet' do
-        let(:droplet_model) { create(:droplet_model, app: nil) }
-
-        it 'returns the string "buildpack"' do
-          expect(droplet_model.lifecycle_type).to eq('buildpack')
-        end
-      end
-
-      context 'when there is cnb_lifecycle_data associated to the droplet' do
-        let(:droplet_model) { create(:droplet_model, :cnb, app: nil) }
-
-        it 'returns the string "cnb"' do
-          expect(droplet_model.lifecycle_type).to eq('cnb')
-        end
-      end
-
-      context 'when there is no lifecycle data associated to the droplet' do
-        let(:droplet_model) { create(:droplet_model, :docker, app: nil) }
-
-        it 'returns the string "docker"' do
-          expect(droplet_model.lifecycle_type).to eq('docker')
-        end
-      end
-    end
-
     describe '#before_create' do
-      it 'inherits lifecycle_type from app if not set' do
-        app = create(:app_model, :cnb)
-        droplet = DropletModel.create(app: app, state: DropletModel::STAGING_STATE)
-        expect(droplet[:lifecycle_type]).to eq('cnb')
-      end
-
       it 'uses explicit lifecycle_type if set' do
         app = create(:app_model)
         droplet = DropletModel.create(app: app, state: DropletModel::STAGING_STATE, lifecycle_type: 'docker')
