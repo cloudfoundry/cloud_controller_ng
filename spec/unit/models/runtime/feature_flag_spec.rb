@@ -305,7 +305,7 @@ module VCAP::CloudController
           feature_flag_overrides = { diego_docker: 'an invalid value', user_org_creation: false }
           expect do
             FeatureFlag.override_default_flags(feature_flag_overrides)
-          end.to raise_error('Invalid feature flag value(s): {:diego_docker=>"an invalid value"}')
+          end.to raise_error('Invalid feature flag value(s): {diego_docker: "an invalid value"}')
         end
       end
 
