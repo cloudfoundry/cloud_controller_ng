@@ -1,0 +1,564 @@
+---
+openapi: 3.0.3
+info:
+  title: Cloud Controller V3 API
+  version: v3
+  description: 'Revisions represent code used by an application at a specific time.
+    The most recent revision for a running application represents code and configuration
+    currently running in Cloud Foundry. Revisions are not created for Tasks. Revision
+    are created when the following is changed: * A new droplet is deployed for an
+    app * An app is deployed with new environment variables * The app is deployed
+    with a new or changed custom start command * An app rolls back to a prior revision
+    Each time a new revision is created the reason(s) for the revisions creation will
+    be appended to its description field. By default the cloud foundry API retains
+    at most 100 revisions per app.'
+servers: []
+paths:
+  "/v3/apps/{guid}/revisions":
+    get:
+      summary: List revisions for an app
+      tags:
+      - AppRevision
+      parameters:
+      - name: created_ats[lt]
+        in: query
+        required: false
+        schema:
+          type: string
+        example: '2020-05-26T18:47:03Z'
+      - name: guid
+        in: path
+        required: true
+        schema:
+          type: string
+        example: dada76a8-a7da-4583-8353-7d26dcc099f6
+        description: Unique identifier for the resource
+      - name: guids
+        in: query
+        required: false
+        schema:
+          type: string
+        example: 842aae3a-014d-4d90-b4b2-a1ae9bd7dc27,677bec6b-4ba2-4286-bffd-53cd502e326a
+      - name: label_selector
+        in: query
+        required: false
+        schema:
+          type: string
+        example: "!fruit,env=prod,animal in (dog,horse)"
+        description: A query string containing a list of label selector requirements
+      - name: per_page
+        in: query
+        required: false
+        schema:
+          type: integer
+        example: 2
+        description: Number of results per page;  valid values are 1 through 5000
+      - name: updated_ats[lt]
+        in: query
+        required: false
+        schema:
+          type: string
+        example: '2020-05-26T18:47:03Z'
+      - name: versions
+        in: query
+        required: false
+        schema:
+          type: string
+        example: '42,44'
+        description: Comma-delimited list of revision versions to filter by
+      responses:
+        '200':
+          description: returns the matching revisions
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  pagination:
+                    type: object
+                    properties:
+                      total_results:
+                        type: integer
+                      total_pages:
+                        type: integer
+                      first:
+                        type: object
+                        properties:
+                          href:
+                            type: string
+                        required:
+                        - href
+                      last:
+                        type: object
+                        properties:
+                          href:
+                            type: string
+                        required:
+                        - href
+                      next:
+                        nullable: true
+                      previous:
+                        nullable: true
+                    required:
+                    - total_results
+                    - total_pages
+                    - first
+                    - last
+                    - next
+                    - previous
+                  resources:
+                    type: array
+                    items:
+                      type: object
+                      properties:
+                        guid:
+                          type: string
+                        version:
+                          type: integer
+                        droplet:
+                          type: object
+                          properties:
+                            guid:
+                              type: string
+                          required:
+                          - guid
+                        processes:
+                          type: object
+                          properties:
+                            web:
+                              type: object
+                              properties:
+                                command:
+                                  nullable: true
+                              required:
+                              - command
+                        sidecars:
+                          type: array
+                          items: {}
+                        description:
+                          type: string
+                        relationships:
+                          type: object
+                          properties:
+                            app:
+                              type: object
+                              properties:
+                                data:
+                                  type: object
+                                  properties:
+                                    guid:
+                                      type: string
+                                  required:
+                                  - guid
+                              required:
+                              - data
+                          required:
+                          - app
+                        created_at:
+                          type: string
+                        updated_at:
+                          type: string
+                        links:
+                          type: object
+                          properties:
+                            self:
+                              type: object
+                              properties:
+                                href:
+                                  type: string
+                              required:
+                              - href
+                            app:
+                              type: object
+                              properties:
+                                href:
+                                  type: string
+                              required:
+                              - href
+                            environment_variables:
+                              type: object
+                              properties:
+                                href:
+                                  type: string
+                              required:
+                              - href
+                          required:
+                          - self
+                          - app
+                          - environment_variables
+                        metadata:
+                          type: object
+                          properties:
+                            labels:
+                              type: object
+                              properties:
+                                animal:
+                                  type: string
+                                env:
+                                  type: string
+                            annotations:
+                              type: object
+                              properties: {}
+                          required:
+                          - labels
+                          - annotations
+                        deployable:
+                          type: boolean
+                      required:
+                      - guid
+                      - version
+                      - droplet
+                      - processes
+                      - sidecars
+                      - description
+                      - relationships
+                      - created_at
+                      - updated_at
+                      - links
+                      - metadata
+                      - deployable
+                required:
+                - pagination
+                - resources
+              example:
+                pagination:
+                  total_results: 2
+                  total_pages: 1
+                  first:
+                    href: http://api2.vcap.me/v3/apps/dada76a8-a7da-4583-8353-7d26dcc099f6/revisions?label_selector=%21fruit%2Cenv%3Dprod%2Canimal+in+%28dog%2Chorse%29&page=1&per_page=50
+                  last:
+                    href: http://api2.vcap.me/v3/apps/dada76a8-a7da-4583-8353-7d26dcc099f6/revisions?label_selector=%21fruit%2Cenv%3Dprod%2Canimal+in+%28dog%2Chorse%29&page=1&per_page=50
+                  next:
+                  previous:
+                resources:
+                - guid: 1da79b75-3683-41e5-bce6-09f5f8280ce9
+                  version: 1
+                  droplet:
+                    guid: f5b95136-f789-40d5-95f3-375b021eafc3
+                  processes:
+                    web:
+                      command:
+                  sidecars: []
+                  description: Initial revision
+                  relationships:
+                    app:
+                      data:
+                        guid: dada76a8-a7da-4583-8353-7d26dcc099f6
+                  created_at: '2026-03-31T23:32:50Z'
+                  updated_at: '2026-03-31T23:32:50Z'
+                  links:
+                    self:
+                      href: http://api2.vcap.me/v3/revisions/1da79b75-3683-41e5-bce6-09f5f8280ce9
+                    app:
+                      href: http://api2.vcap.me/v3/apps/dada76a8-a7da-4583-8353-7d26dcc099f6
+                    environment_variables:
+                      href: http://api2.vcap.me/v3/revisions/1da79b75-3683-41e5-bce6-09f5f8280ce9/environment_variables
+                  metadata:
+                    labels:
+                      animal: dog
+                      env: prod
+                    annotations: {}
+                  deployable: true
+                - guid: 24ed55bd-21d1-47c7-9e76-5a21f41b5d0a
+                  version: 1
+                  droplet:
+                    guid: 67793891-8db4-4a2e-a39f-a3670ff984a5
+                  processes:
+                    web:
+                      command:
+                  sidecars: []
+                  description: Initial revision
+                  relationships:
+                    app:
+                      data:
+                        guid: dada76a8-a7da-4583-8353-7d26dcc099f6
+                  created_at: '2026-03-31T23:32:50Z'
+                  updated_at: '2026-03-31T23:32:50Z'
+                  links:
+                    self:
+                      href: http://api2.vcap.me/v3/revisions/24ed55bd-21d1-47c7-9e76-5a21f41b5d0a
+                    app:
+                      href: http://api2.vcap.me/v3/apps/dada76a8-a7da-4583-8353-7d26dcc099f6
+                    environment_variables:
+                      href: http://api2.vcap.me/v3/revisions/24ed55bd-21d1-47c7-9e76-5a21f41b5d0a/environment_variables
+                  metadata:
+                    labels:
+                      animal: horse
+                      env: prod
+                    annotations: {}
+                  deployable: true
+  "/v3/revisions/{revision_guid}":
+    patch:
+      summary: Update a revision
+      tags:
+      - Revision
+      parameters:
+      - name: revision_guid
+        in: path
+        required: true
+        schema:
+          type: string
+        example: eb3797a9-ce91-4b06-896b-41b9d714a79d
+        description: Unique identifier for the resource
+      requestBody:
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                metadata:
+                  type: object
+                  properties:
+                    labels:
+                      type: object
+                      properties:
+                        freaky:
+                          type: string
+                      required:
+                      - freaky
+                    annotations:
+                      type: object
+                      properties:
+                        quality:
+                          type: string
+                      required:
+                      - quality
+                  required:
+                  - labels
+                  - annotations
+              required:
+              - metadata
+            example:
+              metadata:
+                labels:
+                  freaky: thursday
+                annotations:
+                  quality: p sus
+      responses:
+        '200':
+          description: updates the revision with metadata
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  guid:
+                    type: string
+                  version:
+                    type: integer
+                  droplet:
+                    type: object
+                    properties:
+                      guid:
+                        type: string
+                    required:
+                    - guid
+                  processes:
+                    type: object
+                    properties:
+                      web:
+                        type: object
+                        properties:
+                          command:
+                            nullable: true
+                        required:
+                        - command
+                    required:
+                    - web
+                  sidecars:
+                    type: array
+                    items: {}
+                  description:
+                    type: string
+                  relationships:
+                    type: object
+                    properties:
+                      app:
+                        type: object
+                        properties:
+                          data:
+                            type: object
+                            properties:
+                              guid:
+                                type: string
+                            required:
+                            - guid
+                        required:
+                        - data
+                    required:
+                    - app
+                  created_at:
+                    type: string
+                  updated_at:
+                    type: string
+                  links:
+                    type: object
+                    properties:
+                      self:
+                        type: object
+                        properties:
+                          href:
+                            type: string
+                        required:
+                        - href
+                      app:
+                        type: object
+                        properties:
+                          href:
+                            type: string
+                        required:
+                        - href
+                      environment_variables:
+                        type: object
+                        properties:
+                          href:
+                            type: string
+                        required:
+                        - href
+                    required:
+                    - self
+                    - app
+                    - environment_variables
+                  metadata:
+                    type: object
+                    properties:
+                      labels:
+                        type: object
+                        properties:
+                          freaky:
+                            type: string
+                        required:
+                        - freaky
+                      annotations:
+                        type: object
+                        properties:
+                          quality:
+                            type: string
+                        required:
+                        - quality
+                    required:
+                    - labels
+                    - annotations
+                  deployable:
+                    type: boolean
+                required:
+                - guid
+                - version
+                - droplet
+                - processes
+                - sidecars
+                - description
+                - relationships
+                - created_at
+                - updated_at
+                - links
+                - metadata
+                - deployable
+              example:
+                guid: eb3797a9-ce91-4b06-896b-41b9d714a79d
+                version: 42
+                droplet:
+                  guid: b65c5baf-7034-40bb-9132-55cef141d9a7
+                processes:
+                  web:
+                    command:
+                sidecars: []
+                description: Initial revision
+                relationships:
+                  app:
+                    data:
+                      guid: c772e4ab-7435-4f67-9bbb-128bb883f223
+                created_at: '2026-03-31T23:32:49Z'
+                updated_at: '2026-03-31T23:32:49Z'
+                links:
+                  self:
+                    href: http://api2.vcap.me/v3/revisions/eb3797a9-ce91-4b06-896b-41b9d714a79d
+                  app:
+                    href: http://api2.vcap.me/v3/apps/c772e4ab-7435-4f67-9bbb-128bb883f223
+                  environment_variables:
+                    href: http://api2.vcap.me/v3/revisions/eb3797a9-ce91-4b06-896b-41b9d714a79d/environment_variables
+                metadata:
+                  labels:
+                    freaky: thursday
+                  annotations:
+                    quality: p sus
+                deployable: true
+  "/v3/revisions/{revision_guid}/environment_variables":
+    get:
+      summary: Get environment variables for a revision
+      tags:
+      - Revision
+      parameters:
+      - name: revision_guid
+        in: path
+        required: true
+        schema:
+          type: string
+        example: 87acb406-bb11-4273-92a3-9dacbde85265
+      responses:
+        '200':
+          description: gets the environment variables for the revision
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  var:
+                    type: object
+                    properties:
+                      key:
+                        type: string
+                    required:
+                    - key
+                  links:
+                    type: object
+                    properties:
+                      self:
+                        type: object
+                        properties:
+                          href:
+                            type: string
+                        required:
+                        - href
+                      revision:
+                        type: object
+                        properties:
+                          href:
+                            type: string
+                        required:
+                        - href
+                      app:
+                        type: object
+                        properties:
+                          href:
+                            type: string
+                        required:
+                        - href
+                    required:
+                    - self
+                    - revision
+                    - app
+                required:
+                - var
+                - links
+              example:
+                var:
+                  key: value
+                links:
+                  self:
+                    href: http://api2.vcap.me/v3/revisions/87acb406-bb11-4273-92a3-9dacbde85265/environment_variables
+                  revision:
+                    href: http://api2.vcap.me/v3/revisions/87acb406-bb11-4273-92a3-9dacbde85265
+                  app:
+                    href: http://api2.vcap.me/v3/apps/733f1bed-60f9-4f33-9099-dde68c7d01d9
+tags:
+- name: AppRevision
+  description: 'Revisions represent code used by an application at a specific time.
+    The most recent revision for a running application represents code and configuration
+    currently running in Cloud Foundry. Revisions are not created for Tasks. Revision
+    are created when the following is changed: * A new droplet is deployed for an
+    app * An app is deployed with new environment variables * The app is deployed
+    with a new or changed custom start command * An app rolls back to a prior revision
+    Each time a new revision is created the reason(s) for the revisions creation will
+    be appended to its description field. By default the cloud foundry API retains
+    at most 100 revisions per app.'
