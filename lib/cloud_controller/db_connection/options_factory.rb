@@ -22,6 +22,13 @@ module VCAP::CloudController
             compact
         end
 
+        def set_env(opts) # rubocop:disable Naming/AccessorMethodName
+          FACTORIES.values.uniq.each do |factory|
+            factory.reset_env(ENV)
+          end
+          adapter_set_env(opts, ENV)
+        end
+
         private
 
         FACTORIES = {
@@ -44,8 +51,15 @@ module VCAP::CloudController
         end
 
         def adapter_options(opts)
-          adapter = opts[:database][:adapter]
-          factory_for(adapter).build(opts)
+          factory_for(adapter(opts)).build(opts)
+        end
+
+        def adapter_set_env(opts, env)
+          factory_for(adapter(opts)).set_env(opts, env)
+        end
+
+        def adapter(opts)
+          opts[:database][:adapter]
         end
 
         def factory_for(adapter)
