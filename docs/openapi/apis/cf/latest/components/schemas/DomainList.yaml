@@ -2,7 +2,10 @@ type: object
 properties:
   pagination:
     $ref: './Pagination.yaml'
+    description: Pagination information for the list of domains
   resources:
     type: array
     items:
       $ref: './Domain.yaml'
+    description: List of domains
+description: A paginated list of domains

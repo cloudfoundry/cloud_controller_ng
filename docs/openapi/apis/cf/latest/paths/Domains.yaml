@@ -1,14 +1,27 @@
 /v3/domains:
   get:
     summary: List domains
-    description: Retrieve all domains the user has access to.
+    description: |-
+      Retrieve all domains the user has access to.
+
+      **Permitted roles:** All Roles
     operationId: listDomains
     tags:
       - Domains
     parameters:
       - $ref: ../components/parameters/Page.yaml
       - $ref: ../components/parameters/PerPage.yaml
-      - $ref: ../components/parameters/OrderBy.yaml
+      - name: order_by
+        in: query
+        required: false
+        schema:
+          type: string
+          enum:
+            - created_at
+            - -created_at
+            - updated_at
+            - -updated_at
+        description: Value to sort by. Defaults to ascending; prepend with `-` to sort descending. Valid values are `created_at`, `updated_at`
       - $ref: ../components/parameters/CreatedAts.yaml
       - $ref: ../components/parameters/UpdatedAts.yaml
       - $ref: ../components/parameters/LabelSelector.yaml
@@ -18,21 +31,21 @@
           type: array
           items:
             type: string
-        description: Comma-delimited list of GUIDs to filter by
+        description: Comma-delimited list of guids to filter by
       - name: names
         in: query
         schema:
           type: array
           items:
             type: string
-        description: Comma-delimited list of domain names to filter by
+        description: Comma-delimited list of domain names to filter by (case-insensitive)
       - name: organization_guids
         in: query
         schema:
           type: array
           items:
             type: string
-        description: Comma-delimited list of owning organization GUIDs to filter by
+        description: Comma-delimited list of owning organization guids to filter by
     responses:
       '200':
         description: OK
@@ -48,20 +61,20 @@
                     total_results: 3
                     total_pages: 2
                     first:
-                      href: https://api.example.org?page=1&per_page=2
+                      href: https://api.example.org/v3/domains?page=1&per_page=2
                     last:
-                      href: https://api.example.org?page=2&per_page=2
+                      href: https://api.example.org/v3/domains?page=2&per_page=2
                     next:
-                      href: https://api.example.org?page=2&per_page=2
+                      href: https://api.example.org/v3/domains?page=2&per_page=2
                     previous: null
                   resources:
-                    - guid: 123e4567-e89b-12d3-a456-426614174000
+                    - guid: 3a5d3d89-3f89-4f05-8188-8a2b298c79d5
                       created_at: '2019-03-08T01:06:19Z'
                       updated_at: '2019-03-08T01:06:19Z'
                       name: test-domain.com
                       internal: false
                       router_group:
-                        guid: 123e4567-e89b-12d3-a456-426614174000
+                        guid: 5806148f-cce6-4d86-7fbd-aa269e3f6f3f
                       supported_protocols:
                         - tcp
                       metadata:
@@ -79,6 +92,29 @@
                           href: https://api.example.org/v3/domains/3a5d3d89-3f89-4f05-8188-8a2b298c79d5/route_reservations
                         router_group:
                           href: https://api.example.org/routing/v1/router_groups/5806148f-cce6-4d86-7fbd-aa269e3f6f3f
+                    - guid: 9b2f3d89-3f89-4f05-8188-8a2b298c79d5
+                      created_at: '2026-04-21T10:15:30Z'
+                      updated_at: '2026-04-21T10:15:30Z'
+                      name: apps.identity
+                      internal: false
+                      router_group: null
+                      supported_protocols:
+                        - http
+                      enforce_route_policies: true
+                      route_policies_scope: org
+                      metadata:
+                        labels: {}
+                        annotations: {}
+                      relationships:
+                        organization:
+                          data: null
+                        shared_organizations:
+                          data: []
+                      links:
+                        self:
+                          href: https://api.example.org/v3/domains/9b2f3d89-3f89-4f05-8188-8a2b298c79d5
+                        route_reservations:
+                          href: https://api.example.org/v3/domains/9b2f3d89-3f89-4f05-8188-8a2b298c79d5/route_reservations
       '400':
         $ref: ../components/responses/BadRequest.yaml
       '401':
@@ -97,7 +133,10 @@
         $ref: ../components/responses/ServiceUnavailable.yaml
   post:
     summary: Create a domain
-    description: Create a domain.
+    description: |-
+      Create a domain.
+
+      **Permitted roles:** Admin, Org Manager *(when an `organization` relationship is provided)*
     operationId: createDomain
     tags:
       - Domains
@@ -110,6 +149,38 @@
           application/json:
             schema:
               $ref: ../components/schemas/Domain.yaml
+            examples:
+              default:
+                summary: default
+                value:
+                  guid: 3a5d3d89-3f89-4f05-8188-8a2b298c79d5
+                  created_at: '2019-03-08T01:06:19Z'
+                  updated_at: '2019-03-08T01:06:19Z'
+                  name: test-domain.com
+                  internal: false
+                  router_group: null
+                  supported_protocols:
+                    - http
+                  metadata:
+                    labels: {}
+                    annotations: {}
+                  relationships:
+                    organization:
+                      data:
+                        guid: 3a3f3d89-3f89-4f05-8188-751b298c79d5
+                    shared_organizations:
+                      data:
+                        - guid: 404f3d89-3f89-4a72-8188-751b298d88d5
+                        - guid: 416d3d89-3f89-4b67-a189-123b298d3592
+                  links:
+                    self:
+                      href: https://api.example.org/v3/domains/3a5d3d89-3f89-4f05-8188-8a2b298c79d5
+                    organization:
+                      href: https://api.example.org/v3/organizations/3a3f3d89-3f89-4f05-8188-751b298c79d5
+                    route_reservations:
+                      href: https://api.example.org/v3/domains/3a5d3d89-3f89-4f05-8188-8a2b298c79d5/route_reservations
+                    shared_organizations:
+                      href: https://api.example.org/v3/domains/3a5d3d89-3f89-4f05-8188-8a2b298c79d5/relationships/shared_organizations
         links:
           organization:
             operationId: getOrganization
@@ -133,7 +204,10 @@
 /v3/domains/{guid}:
   get:
     summary: Get a domain
-    description: Retrieve a domain.
+    description: |-
+      Retrieve a domain.
+
+      **Permitted roles:** Admin, Admin Read-Only, Global Auditor, Org Auditor, Org Billing Manager *(can only view domains without an organization relationship)*, Org Manager, Space Auditor, Space Developer, Space Manager, Space Supporter
     operationId: getDomain
     tags:
       - Domains
@@ -146,6 +220,38 @@
           application/json:
             schema:
               $ref: ../components/schemas/Domain.yaml
+            examples:
+              default:
+                summary: default
+                value:
+                  guid: 3a5d3d89-3f89-4f05-8188-8a2b298c79d5
+                  created_at: '2019-03-08T01:06:19Z'
+                  updated_at: '2019-03-08T01:06:19Z'
+                  name: test-domain.com
+                  internal: false
+                  router_group: null
+                  supported_protocols:
+                    - http
+                  metadata:
+                    labels: {}
+                    annotations: {}
+                  relationships:
+                    organization:
+                      data:
+                        guid: 3a3f3d89-3f89-4f05-8188-751b298c79d5
+                    shared_organizations:
+                      data:
+                        - guid: 404f3d89-3f89-4a72-8188-751b298d88d5
+                        - guid: 416d3d89-3f89-4b67-a189-123b298d3592
+                  links:
+                    self:
+                      href: https://api.example.org/v3/domains/3a5d3d89-3f89-4f05-8188-8a2b298c79d5
+                    organization:
+                      href: https://api.example.org/v3/organizations/3a3f3d89-3f89-4f05-8188-751b298c79d5
+                    route_reservations:
+                      href: https://api.example.org/v3/domains/3a5d3d89-3f89-4f05-8188-8a2b298c79d5/route_reservations
+                    shared_organizations:
+                      href: https://api.example.org/v3/domains/3a5d3d89-3f89-4f05-8188-8a2b298c79d5/relationships/shared_organizations
         links:
           organization:
             operationId: getOrganization
@@ -160,32 +266,17 @@
         $ref: ../components/responses/NotFound.yaml
   patch:
     summary: Update a domain
-    description: Update a domain.
+    description: |-
+      Update a domain.
+
+      **Permitted roles:** Admin, Org Manager *(if domain is scoped to organization managed by the org manager)*
     operationId: updateDomain
     tags:
       - Domains
     parameters:
       - $ref: ../components/parameters/Guid.yaml
     requestBody:
-      description: Domain object that needs to be updated
-      required: true
-      content:
-        application/json:
-          schema:
-            type: object
-            properties:
-              metadata:
-                $ref: ../components/schemas/Metadata.yaml
-            description: Request schema for updating a domain
-          examples:
-            default:
-              summary: default
-              value:
-                metadata:
-                  labels:
-                    key: value
-                  annotations:
-                    note: detailed information
+      $ref: ../components/requestBodies/DomainUpdateRequestBody.yaml
     responses:
       '200':
         description: Successfully updated domain
@@ -193,6 +284,40 @@
           application/json:
             schema:
               $ref: ../components/schemas/Domain.yaml
+            examples:
+              default:
+                summary: default
+                value:
+                  guid: 3a5d3d89-3f89-4f05-8188-8a2b298c79d5
+                  created_at: '2019-03-08T01:06:19Z'
+                  updated_at: '2019-03-08T01:06:19Z'
+                  name: test-domain.com
+                  internal: false
+                  router_group: null
+                  supported_protocols:
+                    - http
+                  metadata:
+                    labels:
+                      key: value
+                    annotations:
+                      note: detailed information
+                  relationships:
+                    organization:
+                      data:
+                        guid: 3a3f3d89-3f89-4f05-8188-751b298c79d5
+                    shared_organizations:
+                      data:
+                        - guid: 404f3d89-3f89-4a72-8188-751b298d88d5
+                        - guid: 416d3d89-3f89-4b67-a189-123b298d3592
+                  links:
+                    self:
+                      href: https://api.example.org/v3/domains/3a5d3d89-3f89-4f05-8188-8a2b298c79d5
+                    organization:
+                      href: https://api.example.org/v3/organizations/3a3f3d89-3f89-4f05-8188-751b298c79d5
+                    route_reservations:
+                      href: https://api.example.org/v3/domains/3a5d3d89-3f89-4f05-8188-8a2b298c79d5/route_reservations
+                    shared_organizations:
+                      href: https://api.example.org/v3/domains/3a5d3d89-3f89-4f05-8188-8a2b298c79d5/relationships/shared_organizations
       '400':
         $ref: ../components/responses/BadRequest.yaml
       '401':
@@ -211,7 +336,10 @@
         $ref: ../components/responses/ServiceUnavailable.yaml
   delete:
     summary: Delete a domain
-    description: Delete a domain.
+    description: |-
+      Delete a domain.
+
+      **Permitted roles:** Admin, Org Manager *(if domain is scoped to organization managed by the org manager)*
     operationId: deleteDomain
     tags:
       - Domains
@@ -239,32 +367,38 @@
 /v3/domains/{guid}/relationships/shared_organizations:
   post:
     summary: Share a domain
-    description: This endpoint shares an organization-scoped domain to other organizations specified by a list of organization guids. This will allow any of the other organizations to use the organization-scoped domain.
+    description: |-
+      This endpoint shares an organization-scoped domain to other organizations specified by a list of organization guids. This will allow any of the other organizations to use the organization-scoped domain.
+
+      **Permitted roles:** Admin, Org Manager
     operationId: shareDomain
     tags:
       - Domains
     parameters:
       - $ref: ../components/parameters/Guid.yaml
     requestBody:
-      description: List of organizations to share the domain with
+      description: The organization guids with which to share the domain
       required: true
       content:
         application/json:
           schema:
             type: object
+            required:
+              - data
             properties:
               data:
                 type: array
                 items:
                   $ref: ../components/schemas/Relationship.yaml
-            description: Organization relationships; each organization will be entitled to manage this isolation segment
+                description: The organization guids with which to share the domain
+            description: A to-many relationship containing the organization guids with which to share the domain
           examples:
             default:
               summary: default
               value:
                 data:
-                  - guid: 123e4567-e89b-12d3-a456-426614174000
-                  - guid: 123e4567-e89b-12d3-a456-426614174000
+                  - guid: 404f3d89-3f89-4a72-8188-751b298d88d5
+                  - guid: 416d3d89-3f89-4b67-a189-123b298d3592
     responses:
       '200':
         description: Successfully shared domain
@@ -275,19 +409,16 @@
               properties:
                 data:
                   type: array
-                items:
-                  type: object
-                  properties:
-                    guid:
-                      type: string
-                      format: uuid
+                  items:
+                    $ref: ../components/schemas/Relationship.yaml
+                  description: The organizations the domain is shared with
             examples:
               default:
                 summary: default
                 value:
                   data:
-                    - guid: 123e4567-e89b-12d3-a456-426614174000
-                    - guid: 123e4567-e89b-12d3-a456-426614174000
+                    - guid: 404f3d89-3f89-4a72-8188-751b298d88d5
+                    - guid: 416d3d89-3f89-4b67-a189-123b298d3592
       '401':
         $ref: ../components/responses/Unauthorized.yaml
       '403':
@@ -303,21 +434,56 @@
       Retrieve all domains available in an organization for the current user. This will return unscoped domains (those without an owning organization), domains that are scoped to the given organization (owned by the given organization), and domains that have been shared with the organization.
 
       To retrieve the default domain for an organization, use the [get default domain](#get-default-domain) endpoint.
+
+      **Permitted roles:** All Roles
     operationId: listDomainsForOrganization
     tags:
       - Domains
     parameters:
-      - $ref: ../components/parameters/Guid.yaml
-      - $ref: ../components/parameters/Page.yaml
-      - $ref: ../components/parameters/PerPage.yaml
-      - $ref: ../components/parameters/OrderBy.yaml
+      - name: guid
+        in: path
+        required: true
+        schema:
+          type: string
+          format: uuid
+        description: The guid of the organization
+      - name: guids
+        in: query
+        schema:
+          type: array
+          items:
+            type: string
+        description: Comma-delimited list of guids to filter by
       - name: names
         in: query
         schema:
           type: array
           items:
             type: string
-        description: Comma-delimited list of domain names to filter by
+        description: Comma-delimited list of domain names to filter by (case-insensitive)
+      - name: organization_guids
+        in: query
+        schema:
+          type: array
+          items:
+            type: string
+        description: Comma-delimited list of owning organization guids to filter by
+      - $ref: ../components/parameters/Page.yaml
+      - $ref: ../components/parameters/PerPage.yaml
+      - name: order_by
+        in: query
+        required: false
+        schema:
+          type: string
+          enum:
+            - created_at
+            - -created_at
+            - updated_at
+            - -updated_at
+        description: Value to sort by. Defaults to ascending; prepend with `-` to sort descending. Valid values are `created_at`, `updated_at`
+      - $ref: ../components/parameters/LabelSelector.yaml
+      - $ref: ../components/parameters/CreatedAts.yaml
+      - $ref: ../components/parameters/UpdatedAts.yaml
     responses:
       '200':
         description: OK
@@ -333,20 +499,20 @@
                     total_results: 3
                     total_pages: 2
                     first:
-                      href: https://api.example.org?page=1&per_page=2
+                      href: https://api.example.org/v3/organizations/3a3f3d89-3f89-4f05-8188-751b298c79d5/domains?page=1&per_page=2
                     last:
-                      href: https://api.example.org?page=2&per_page=2
+                      href: https://api.example.org/v3/organizations/3a3f3d89-3f89-4f05-8188-751b298c79d5/domains?page=2&per_page=2
                     next:
-                      href: https://api.example.org?page=2&per_page=2
+                      href: https://api.example.org/v3/organizations/3a3f3d89-3f89-4f05-8188-751b298c79d5/domains?page=2&per_page=2
                     previous: null
                   resources:
-                    - guid: 123e4567-e89b-12d3-a456-426614174000
+                    - guid: 3a5d3d89-3f89-4f05-8188-8a2b298c79d5
                       created_at: '2019-03-08T01:06:19Z'
                       updated_at: '2019-03-08T01:06:19Z'
                       name: test-domain.com
                       internal: false
                       router_group:
-                        guid: 123e4567-e89b-12d3-a456-426614174000
+                        guid: 5806148f-cce6-4d86-7fbd-aa269e3f6f3f
                       supported_protocols:
                         - tcp
                       metadata:
@@ -373,7 +539,10 @@
 /v3/domains/{guid}/route_reservations:
   get:
     summary: Check reserved routes for a domain
-    description: Check if a specific route for a domain exists, regardless of the user’s visibility for the route in case the route belongs to a space the user does not belong to.
+    description: |-
+      Check if a specific route for a domain exists, regardless of the user's visibility for the route in case the route belongs to a space the user does not belong to.
+
+      **Permitted roles:** Admin, Admin Read-Only, Global Auditor, Org Auditor, Org Billing Manager *(can only check if routes exist for a domain without an organization relationship)*, Org Manager, Space Auditor, Space Developer, Space Manager, Space Supporter
     operationId: checkReservedRoutesForDomain
     tags:
       - Domains
@@ -381,19 +550,22 @@
       - $ref: ../components/parameters/Guid.yaml
       - name: host
         in: query
+        required: false
         schema:
           type: string
-        description: Hostname to filter by
+        description: Hostname to filter by; defaults to empty string if not provided and only applicable to `http` routes
       - name: path
         in: query
+        required: false
         schema:
           type: string
-        description: Path to filter by
+        description: Path to filter by; defaults to empty string if not provided and only applicable to `http` routes
       - name: port
         in: query
+        required: false
         schema:
           type: integer
-        description: Port to filter by
+        description: Port to filter by; only applicable to `tcp` routes and required for `tcp` routes
     responses:
       '200':
         description: OK
@@ -404,6 +576,7 @@
               properties:
                 matching_route:
                   type: boolean
+                  description: Whether a route matching the given host, path, and port exists for the domain
             examples:
               default:
                 summary: default
@@ -418,7 +591,10 @@
 /v3/domains/{guid}/relationships/shared_organizations/{org_guid}:
   delete:
     summary: Unshare a domain
-    description: This endpoint removes an organization from the list of organizations an organization-scoped domain is shared with. This prevents the organization from using the organization-scoped domain.
+    description: |-
+      This endpoint removes an organization from the list of organizations an organization-scoped domain is shared with. This prevents the organization from using the organization-scoped domain.
+
+      **Permitted roles:** Admin, Org Manager *(can be in either the domain's owning organization or the organization it has been shared to)*
     operationId: unshareDomain
     tags:
       - Domains
@@ -430,7 +606,7 @@
         schema:
           type: string
           format: uuid
-        description: The GUID of the organization to unshare the domain from
+        description: The guid of the organization to unshare the domain from
     responses:
       '204':
         description: Successfully unshared domain

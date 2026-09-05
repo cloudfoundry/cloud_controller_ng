@@ -9,14 +9,15 @@ allOf:
         type: boolean
         description: Whether the domain is used for internal (container-to-container) traffic
       router_group:
-        type: 
+        type:
           - object
           - 'null'
         properties:
           guid:
             type: string
             format: uuid
-        description: The guid of the desired router group to route `tcp` traffic through; if set, the domain will only be available for `tcp` traffic
+            description: The guid of the desired router group to route `tcp` traffic through; if set, the domain will only be available for `tcp` traffic
+        description: The router group the domain routes `tcp` traffic through; if set, the domain will only be available for `tcp` traffic
       supported_protocols:
         type: array
         items:
@@ -25,10 +26,29 @@ allOf:
             - http
             - tcp
         description: Available protocols for routes using the domain, currently `http` and `tcp`
+      enforce_route_policies:
+        type: boolean
+        description: When `true`, GoRouter enforces route policies for routes on this domain. This field only appears in the response when set to `true`. Set at creation only; cannot be changed on update
+      route_policies_scope:
+        type: string
+        enum:
+          - any
+          - org
+          - space
+        description: 'Operator-defined boundary for allowed callers: `any`, `org`, or `space`. Required when `enforce_route_policies` is `true`. This field only appears when `enforce_route_policies` is `true`. Set at creation only; cannot be changed on update'
       relationships:
-        $ref: './Relationships.yaml'
+        type: object
+        properties:
+          organization:
+            $ref: './RelationshipToOne.yaml'
+            description: The organization the domain is scoped to; if set, the domain will only be available in that organization; otherwise, the domain will be globally available
+          shared_organizations:
+            $ref: './RelationshipToMany.yaml'
+            description: Organizations the domain is shared with; if set, the domain will be available in these organizations in addition to the organization the domain is scoped to
+        description: Relationships to the organization the domain is scoped to and the organizations the domain is shared with
       metadata:
         $ref: './Metadata.yaml'
+        description: Labels and annotations applied to the domain
       links:
         type: object
         properties:
@@ -37,15 +57,18 @@ allOf:
             description: The URL to get this domain
           organization:
             $ref: './Link.yaml'
-            description: The URL to get the organization for this domain
+            description: The URL to get the organization this domain is scoped to; only present for organization-scoped domains
           route_reservations:
             $ref: './Link.yaml'
-            description: The URL to get the route reservations for this domain
+            description: The URL to check which routes are reserved for this domain
           shared_organizations:
             $ref: './Link.yaml'
-            description: The URL to get the shared organizations for this domain
+            description: The URL to get the organizations this domain is shared with; only present for organization-scoped domains
           router_group:
             $ref: './Link.yaml'
-            description: The URL to get the router group for this domain
-description: |
-  A domain is a fully qualified domain name that is used for application routes. A domain can be scoped to an organization, meaning it can be used to create routes for spaces inside that organization, or be left unscoped to allow all organizations access.
+            description: The URL to get the router group for this domain; only present for domains associated with a router group
+        description: Links to related resources
+description: |-
+  Domains represent a [fully qualified domain name](https://en.wikipedia.org/wiki/Fully_qualified_domain_name) that is used for application routes.
+
+  A domain can be scoped to an organization, meaning it can be used to create routes for spaces inside that organization, or be left unscoped to allow all organizations access.
