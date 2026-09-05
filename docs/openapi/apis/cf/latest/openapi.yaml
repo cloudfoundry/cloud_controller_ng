@@ -11,85 +11,749 @@ info:
     url: https://www.cloudfoundry.org/
 tags:
   - name: Admin
-    description: "Administrative operations for Cloud Foundry platform management."
+    description: |-
+      These endpoints are only for admin users.
   - name: Apps
-    description: "Apps are top-level objects that link together and contain configuration information for your packages, droplets, processes, tasks, and more."
+    description: |-
+      Apps are top-level objects that link together and contain configuration
+      information for your packages, droplets, processes, tasks, and more.
+  - name: App Features
+    description: |-
+      App features are used to manage whether optional capabilities are enabled for a given application.
+
+      ### Supported app features
+
+      **Note**: SSH must also be [enabled globally](https://docs.cloudfoundry.org/running/config-ssh.html) and on the [space](#space-features).
+
+      Name | Description
+      ---- | -----------
+      **ssh** | Enable SSHing into the app
+      **revisions** | Enable [versioning](#revisions) of an application
+      **service-binding-k8s** | Enable k8s service bindings for the app
+      **file-based-vcap-services** | Enable file-based VCAP service bindings for the app
+
+      ### Service binding files
+
+      By default, service binding details are exposed to an app through the `VCAP_SERVICES` environment variable. Two mutually exclusive app features instead expose them as files on the container's file system. Only one of the two features may be enabled for an app at a time.
+
+      - **file-based-vcap-services** writes the full contents of `VCAP_SERVICES` verbatim to a single file named `vcap_services`.
+      - **service-binding-k8s** translates each service binding into its own directory of files, as described below.
+
+      #### Translation of VCAP_SERVICES to service binding files
+
+      When **service-binding-k8s** is enabled, the service binding details in `VCAP_SERVICES` are converted into a tree of files, following the [servicebinding.io](https://servicebinding.io/spec/core/1.1.0/#workload-projection) workload-projection specification. The binding's name becomes a directory name, and each of the binding's properties becomes a file within that directory whose contents are the property's value.
+
+      The translation follows these rules:
+
+      - Each binding name must be unique and valid; duplicate or invalid names cause an error. A name must match `[a-z0-9\-.]{1,253}` (per the Kubernetes/servicebinding.io spec).
+      - The binding's name is used as the directory name; its properties become the file names.
+      - The `credentials` attribute is a JSON object: each top-level key becomes a file whose content is that key's value. Nested objects and lists are serialized as JSON.
+      - Reserved attributes may overwrite credential keys of the same name without error. The reserved attributes are: `binding_guid`, `binding_name`, `instance_guid`, `instance_name`, `name`, `label`, `tags`, `plan`, `syslog_drain_url`, `volume_mounts`, `type`, and `provider`.
+      - All file names must match `[a-z0-9\-._]{1,253}`; an invalid name causes an error. The underscore follows a post-1.1.0 update to the servicebinding.io spec ([commit `b5d6755`](https://github.com/servicebinding/spec/commit/b5d67551d13c8801f6b8a084c70b7167e3fbbe7e)), which is not yet part of a published spec release.
+      - List values (for example `tags` or `volume_mounts`) are stored as JSON arrays.
+      - Empty lists and `null` values are omitted - no file is created.
+      - Cloud Controller always writes a `type` file and a `provider` file, both set to the service label.
+      - If the total byte size (file paths plus contents) exceeds **1,000,000 bytes**, an error is raised.
+
+      ##### Examples
+
+      The following examples illustrate individual translation rules, showing only the properties relevant to each rule.
+
+      Nested and list credentials are serialized as JSON.
+
+      Input (`VCAP_SERVICES`):
+
+      ```json
+      {
+        "foo": [
+          {
+            "name": "foo",
+            "credentials": {
+              "simple": "value",
+              "deeply": {
+                "nested": "value"
+              },
+              "list": ["v", "a", "l", "u", "e"]
+            }
+          }
+        ]
+      }
+      ```
+
+      Output (service binding files):
+
+      ```
+      foo/name: foo
+      foo/simple: value
+      foo/deeply: {"nested":"value"}
+      foo/list: ["v","a","l","u","e"]
+      ```
+
+      A reserved attribute overwrites a credential key (the `name` credential is dropped in favor of the binding's `name`).
+
+      Input (`VCAP_SERVICES`):
+
+      ```json
+      {
+        "foo": [
+          {
+            "name": "foo",
+            "credentials": {
+              "name": "user",
+              "secret": "password"
+            }
+          }
+        ]
+      }
+      ```
+
+      Output (service binding files):
+
+      ```
+      foo/name: foo
+      foo/secret: password
+      ```
+
+      `null` and empty values are omitted.
+
+      Input (`VCAP_SERVICES`):
+
+      ```json
+      {
+        "foo": [
+          {
+            "name": "foo",
+            "binding_guid": "45436ca8-0a7c-45e3-9439-ca1b44db7a2b",
+            "syslog_drain_url": null,
+            "volume_mounts": []
+          }
+        ]
+      }
+      ```
+
+      Output (service binding files):
+
+      ```
+      foo/name: foo
+      foo/binding_guid: 45436ca8-0a7c-45e3-9439-ca1b44db7a2b
+      ```
   - name: App Usage Events
-    description: "App usage events are a record of changes in the usage of apps and tasks."
+    description: |-
+      App usage events are a record of changes in the usage of apps and tasks.
+      Examples include starting an application, scaling an application (from, say, one
+      to three instances), and stopping an application.
+
+      Usage events are typically used by billing and chargeback applications.
   - name: Audit Events
-    description: "Audit events help Cloud Foundry operators monitor actions taken against resources (such as apps) via user or system actions."
+    description: |-
+      Audit events help Cloud Foundry operators monitor actions taken against resources (such as apps) via user or system actions.
+
+      For more information, see the [Cloud Foundry docs](https://docs.cloudfoundry.org/running/managing-cf/audit-events.html).
+
+      #### Audit Event Types
+
+      ##### App lifecycle
+      - `audit.app.apply_manifest`
+      - `audit.app.build.create`
+      - `audit.app.build.failed`
+      - `audit.app.build.staged`
+      - `audit.app.copy-bits`
+      - `audit.app.create`
+      - `audit.app.delete-request`
+      - `audit.app.deployment.cancel`
+      - `audit.app.deployment.create`
+      - `audit.app.deployment.continue`
+      - `audit.app.droplet.create`
+      - `audit.app.droplet.delete`
+      - `audit.app.droplet.download`
+      - `audit.app.droplet.mapped`
+      - `audit.app.droplet.upload`
+      - `audit.app.environment.show`
+      - `audit.app.environment_variables.show`
+      - `audit.app.map-route`
+      - `audit.app.package.create`
+      - `audit.app.package.delete`
+      - `audit.app.package.download`
+      - `audit.app.package.upload`
+      - `audit.app.process.crash`
+      - `audit.app.process.create`
+      - `audit.app.process.delete`
+      - `audit.app.process.ready`
+      - `audit.app.process.not-ready`
+      - `audit.app.process.rescheduling`
+      - `audit.app.process.scale`
+      - `audit.app.process.terminate_instance`
+      - `audit.app.process.update`
+      - `audit.app.restage`
+      - `audit.app.restart`
+      - `audit.app.revision.create`
+      - `audit.app.revision.environment_variables.show`
+      - `audit.app.ssh-authorized`
+      - `audit.app.ssh-unauthorized`
+      - `audit.app.start`
+      - `audit.app.stop`
+      - `audit.app.task.cancel`
+      - `audit.app.task.create`
+      - `audit.app.unmap-route`
+      - `audit.app.update`
+      - `audit.app.upload-bits`
+
+      ##### Buildpack lifecycle
+      - `audit.buildpack.create`
+      - `audit.buildpack.delete`
+      - `audit.buildpack.update`
+      - `audit.buildpack.upload`
+
+      ##### Organization lifecycle
+      - `audit.organization.create`
+      - `audit.organization.delete-request`
+      - `audit.organization.update`
+
+      ##### Organization_quota lifecycle
+      - `audit.organization_quota.apply`
+      - `audit.organization_quota.create`
+      - `audit.organization_quota.delete`
+      - `audit.organization_quota.update`
+
+      ##### Route lifecycle
+      - `audit.route.create`
+      - `audit.route.delete-request`
+      - `audit.route.share`
+      - `audit.route.transfer-owner`
+      - `audit.route.unshare`
+      - `audit.route.update`
+
+      ##### Route_policy lifecycle
+      - `audit.route_policy.create`
+      - `audit.route_policy.delete`
+      - `audit.route_policy.update`
+
+      ##### Service lifecycle
+      - `audit.service.create`
+      - `audit.service.delete`
+      - `audit.service.update`
+
+      ##### Service_binding lifecycle
+      - `audit.service_binding.create`
+      - `audit.service_binding.delete`
+      - `audit.service_binding.show`
+      - `audit.service_binding.start_create`
+      - `audit.service_binding.start_delete`
+      - `audit.service_binding.update`
+
+      ##### Service_broker lifecycle
+      - `audit.service_broker.create`
+      - `audit.service_broker.delete`
+      - `audit.service_broker.update`
+
+      ##### Service_dashboard_client lifecycle
+      - `audit.service_dashboard_client.create`
+      - `audit.service_dashboard_client.delete`
+
+      ##### Service_instance lifecycle
+      - `audit.service_instance.bind_route`
+      - `audit.service_instance.create`
+      - `audit.service_instance.delete`
+      - `audit.service_instance.purge`
+      - `audit.service_instance.share`
+      - `audit.service_instance.show`
+      - `audit.service_instance.start_create`
+      - `audit.service_instance.start_delete`
+      - `audit.service_instance.start_update`
+      - `audit.service_instance.unbind_route`
+      - `audit.service_instance.unshare`
+      - `audit.service_instance.update`
+
+      ##### Service_key lifecycle
+      - `audit.service_key.create`
+      - `audit.service_key.delete`
+      - `audit.service_key.show`
+      - `audit.service_key.start_create`
+      - `audit.service_key.start_delete`
+      - `audit.service_key.update`
+
+      ##### Service_plan lifecycle
+      - `audit.service_plan.create`
+      - `audit.service_plan.delete`
+      - `audit.service_plan.update`
+
+      ##### Service_plan_visibility lifecycle
+      - `audit.service_plan_visibility.create`
+      - `audit.service_plan_visibility.delete`
+      - `audit.service_plan_visibility.update`
+
+      ##### Service_route_binding lifecycle
+      - `audit.service_route_binding.create`
+      - `audit.service_route_binding.delete`
+      - `audit.service_route_binding.start_create`
+      - `audit.service_route_binding.start_delete`
+      - `audit.service_route_binding.update`
+
+      ##### Space lifecycle
+      - `audit.space.create`
+      - `audit.space.delete-request`
+      - `audit.space.update`
+
+      ##### Space_quota lifecycle
+      - `audit.space_quota.apply`
+      - `audit.space_quota.create`
+      - `audit.space_quota.delete`
+      - `audit.space_quota.remove`
+      - `audit.space_quota.update`
+
+      ##### Stack lifecycle
+      - `audit.stack.create`
+      - `audit.stack.delete`
+      - `audit.stack.update`
+
+      ##### User lifecycle
+      - `audit.user.organization_auditor_add`
+      - `audit.user.organization_auditor_remove`
+      - `audit.user.organization_billing_manager_add`
+      - `audit.user.organization_billing_manager_remove`
+      - `audit.user.organization_manager_add`
+      - `audit.user.organization_manager_remove`
+      - `audit.user.organization_user_add`
+      - `audit.user.organization_user_remove`
+      - `audit.user.space_auditor_add`
+      - `audit.user.space_auditor_remove`
+      - `audit.user.space_developer_add`
+      - `audit.user.space_developer_remove`
+      - `audit.user.space_manager_add`
+      - `audit.user.space_manager_remove`
+      - `audit.user.space_supporter_add`
+      - `audit.user.space_supporter_remove`
+
+      ##### User_provided_service_instance lifecycle
+      - `audit.user_provided_service_instance.create`
+      - `audit.user_provided_service_instance.delete`
+      - `audit.user_provided_service_instance.show`
+      - `audit.user_provided_service_instance.update`
+
+      ##### Special events
+      - `app.crash`
+      - `blob.remove_orphan`
   - name: Builds
-    description: "Builds represent the process of staging an application package."
+    description: |-
+      Builds represent the process of staging an application package. There are two types
+      ([lifecycles](#lifecycles)) of builds: buildpack and docker.
+
+      After an [application](#apps) is created and [packages](#packages) are uploaded, a build
+      resource can be created to initiate the staging process. A successful build results in a 
+      [droplet](#droplets).
   - name: Buildpacks
-    description: "Buildpacks are used during a build to download external dependencies and transform a package into an executable droplet."
+    description: |-
+      Buildpacks are used during a [build][builds]
+      to download external dependencies
+      and transform a [package][packages]
+      into an executable [droplet][droplets].
+      In this way, buildpacks are a pluggable extension to Cloud Foundry
+      that enable CF to run different languages and frameworks.
+      Buildpacks will automatically detect if they support an application.
+      Buildpacks can also be explicitly specified on [apps][] and [builds][].
+
+      [apps]: #apps
+      [builds]: #builds
+      [droplets]: #droplets
+      [packages]: #packages
   - name: Deployments
-    description: "Deployments are objects that manage updates to applications with zero downtime."
+    description: |-
+      Deployments are objects that manage updates to applications with zero downtime.
+
+      They can either:
+
+      * Manage updating an app's [droplet](#droplets) directly after an application package is staged
+
+      * Roll an app back to a specific [revision](#revisions) along with its associated droplet
+
+      Deployments are different than the traditional method of pushing app updates which performs start/stop deployments.
+
+      Deployment strategies supported:
+
+      * [Rolling deployments](https://docs.cloudfoundry.org/devguide/deploy-apps/rolling-deploy.html) allows for
+      applications to be deployed without incurring downtime by gradually rolling out instances. Max-in-flight can be configured
+      to specify how many instances are rolled out simultaneously.
+
+      * [Canary deployments](https://docs.cloudfoundry.org/devguide/deploy-apps/rolling-deploy.html#canary-deployment-process) deploy a single instance and pause for user evaluation. If the canary instance is deemed successful, the deployment can be resumed via the [continue action](#continue-a-deployment). The deployment then continues like a rolling deployment. This feature is experimental and is subject to change.
   - name: Domains
-    description: "Domains represent a fully qualified domain name that is used for application routes."
+    description: |-
+      Domains represent a [fully qualified domain name](https://en.wikipedia.org/wiki/Fully_qualified_domain_name) that is used for application routes.
+
+      A domain can be scoped to an organization, meaning it can be used to create routes for spaces inside that organization, or be left unscoped to allow all organizations access.
   - name: Droplets
-    description: "Droplets are the result of staging an application package."
+    description: |-
+      Droplets are the result of staging an application package. There are two types
+      (lifecycles) of droplets: buildpack and docker. In the case of the buildpacks,
+      the droplet contains the bits produced by the buildpack, typically application
+      code and dependencies.
+
+      After an application is created and packages are uploaded, a droplet must be
+      created via a [build](#builds) in order for an application to be deployed or tasks to be run. 
+      The current droplet [must be assigned](#set-current-droplet) to an
+      application before it may be started. When [tasks are created](#create-a-task), 
+      they either use a specific droplet guid, or use the current droplet assigned to an application.
   - name: Environment Variable Groups
-    description: "There are two types of environment variable groups: running and staging."
+    description: |-
+      There are two types of environment variable groups: running and staging. They are designed to allow platform operators/admins to manage environment variables across all apps in a foundation.
+
+      Variables in a **running** environment variable group will be injected into all **running app containers**.
+
+      Variables in a **staging** environment variable group will be injected into the **staging container** for all apps while they are being staged.
   - name: Feature Flags
-    description: "Feature flags are runtime flags that enable or disable functionality on the API."
+    description: |-
+      Feature flags are runtime flags that enable or disable functionality on the API.
+
+      ### List of feature flags
+
+      | Name | Default | Description |
+      | ---- | ------- | ----------- |
+      | `app_bits_upload` | `true` | When enabled, space developers can upload app bits. When disabled, only admin users can upload app bits. |
+      | `app_scaling` | `true` | When enabled, space developers can perform scaling operations (i.e. change memory, disk, log rate, or instances). When disabled, only admins can perform scaling operations. |
+      | `diego_cnb (experimental)` | `false` | When enabled, the staging process using Cloud Native Buildpacks is supported. |
+      | `diego_docker` | `false` | When enabled, Docker applications are supported by Diego. When disabled, Docker applications will stop running. It will still be possible to stop and delete them and update their configurations. |
+      | `env_var_visibility` | `true` | When enabled, all users can see their environment variables. When disabled, no users can see environment variables. |
+      | `hash_based_routing` | `false` | When enabled, the `hash`, `hash_header`, and `hash_balance` route options may be set on a route to enable hash-based load balancing. When disabled, those route options are rejected. |
+      | `hide_marketplace_from_unauthenticated_users` | `false` | When enabled, service offerings available in the marketplace will be hidden from unauthenticated users. When disabled, unauthenticated users will be able to see the service offerings available in the marketplace. |
+      | `private_domain_creation` | `true` | When enabled, an organization manager can create private domains for that organization. When disabled, only admin users can create private domains. |
+      | `resource_matching` | `true` | When enabled, any user can create resource matches. When disabled, the [resource match endpoint](#resource-matches) always returns an empty array of matches. The [package upload endpoint](#upload-package-bits) will not cache any uploaded packages for resource matching. |
+      | `route_creation` | `true` | When enabled, a space developer can create routes in a space. When disabled, only admin users can create routes. |
+      | `route_sharing (experimental)` | `false` | When enabled, Space Developers can share routes between two spaces (even across orgs!) in which they have the Space Developer role. When disabled, Space Developers cannot share routes between two spaces. |
+      | `service_instance_creation` | `true` | When enabled, a space developer can create service instances in a space. When disabled, only admin users can create service instances. |
+      | `service_instance_sharing` | `false` | When enabled, Space Developers can share service instances between two spaces (even across orgs!) in which they have the Space Developer role. When disabled, Space Developers cannot share service instances between two spaces. |
+      | `set_roles_by_username` | `true` | When enabled, Org Managers or Space Managers can add access roles by username. In order for this feature to be enabled the CF operator must: <br>1) Enable the `/ids/users/` endpoint for UAA <br>2) Create a UAA `cloud_controller_username_lookup` client with the `scim.userids` authority |
+      | `space_developer_env_var_visibility` | `true` | When enabled, space developers can perform a get on the /v2/apps/:guid/env endpoint, and both space developers and space supporters can perform a get on the /v3/apps/:guid/env and /v3/apps/:guid/environment_variables endpoints. When disabled, neither space developers nor space supporters can access these endpoints. |
+      | `space_scoped_private_broker_creation` | `true` | When enabled, space developers can create space scoped private brokers. When disabled, only admin users can create create space scoped private brokers. |
+      | `task_creation` | `true` | When enabled, space developers can create tasks. When disabled, only admin users can create tasks. |
+      | `unset_roles_by_username` | `true` | When enabled, Org Managers or Space Managers can remove access roles by username. In order for this feature to be enabled the CF operator must: <br>1) Enable the `/ids/users/` endpoint for UAA <br>2) Create a UAA `cloud_controller_username_lookup` client with the `scim.userids` authority |
+      | `user_org_creation` | `false` | When enabled, any user can create an organization via the API. When disabled, only admin users can create organizations via the API. |
+
   - name: Info
-    description: "Info endpoints expose Cloud Controller configuration information."
-  - name: Internal
-    description: "Internal endpoints for system monitoring and metrics."
+    description: |-
+      Info endpoints expose Cloud Controller configuration information.
   - name: Isolation Segments
-    description: "Isolation Segments provide dedicated pools of resources to which apps can be deployed to isolate workloads."
+    description: |-
+      Isolation Segments provide dedicated pools of resources to which apps can be deployed to isolate workloads.
   - name: Jobs
-    description: "Jobs are created by the platform when performing certain asynchronous actions."
+    description: |-
+      Jobs are created by the platform when performing certain asynchronous actions.
   - name: Manifests
-    description: "A manifest is a method for applying bulk configurations to apps and their underlying processes."
+    description: |-
+      ## Manifests
   - name: Organizations
-    description: "An org is a development account that an individual or multiple collaborators can own and use."
+    description: |-
+      An org is a development account that an individual or multiple collaborators can own and use. All collaborators access an org with user accounts. Collaborators in an org share a resource quota plan, applications, services availability, and custom domains.
   - name: Organization Quotas
-    description: "Organization quotas are named sets of memory, log rate, service, and instance usage quotas."
+    description: |-
+      Organization quotas are named sets of memory, log rate, service, and instance usage quotas. For example, one organization quota might allow up to 10 services, 10 routes, and 2 GB of RAM, while another might offer 100 services, 100 routes, and 10 GB of RAM.
+
+      An organization has exactly one organization quota. If not specifically assigned a quota, it will have the default quota.
+
+      For more information, see the [Cloud Foundry docs](https://docs.cloudfoundry.org/adminguide/quota-plans.html).
   - name: Packages
-    description: "A package is an application’s ‘source code’; either raw bits for your application or a pointer to these bits."
+    description: |-
+      A package is an application's 'source code'; either raw bits for your application or a pointer to these bits.
+
+      In Cloud Foundry, packages are staged to produce an executable Droplet. We currently support raw bits and Docker packages.
   - name: Processes
-    description: "Processes define the runnable units of an app."
+    description: |-
+      Processes define the runnable units of an app. An app can have multiple process types, each with differing commands and scale.
+      Processes for an app are defined by the buildpack used to stage the app and can be customized by including a [Procfile](#procfiles) in the application source.
+
+      #### Web process type
+      * By default, a newly created app will come with one instance of the `web` process and all other process types are scaled to zero
+      * Scale the `web` process to zero if it is not required for your app
+      * Unless otherwise specified, all routes will be mapped to the `web` process by default
   - name: Resource Matches
-    description: "Resource Matches are used to determine if a resource has been previously uploaded to the Cloud Controller."
+    description: |-
+      This endpoint matches given resource SHA-1/file size pairs against the Cloud Controller cache
+      and reports the subset that describes already cached files.
+      This is usually used to avoid uploading duplicate files
+      when pushing an app which has only been partially changed.
+      The `path` and `mode` fields are not used when matching.
+
+      When [uploading package bits](#upload-package-bits),
+      the response from this endpoint should be used as the `resources` form field.
+      As such, it is useful to include the `path` and `mode` fields for each resource
+      even though they are not used when determining a resource match.
+
+      Cloud Foundry operators may set minimum/maximum file sizes to match against.
+      If the file size provided is outside this range,
+      it will not be matched against.
+
+      If the `resource_matching` [feature flag](#the-feature-flag-object) is disabled,
+      resource matching will always return an empty array.
   - name: Revisions
-    description: "Revisions represent code used by an application at a specific time."
+    description: |-
+      Revisions represent code used by an application at a specific time. The most recent revision for a running application represents code and configuration currently running in Cloud Foundry. Revisions are not created for Tasks.
+
+      Revision are created when the following is changed:
+
+      * A new droplet is deployed for an app
+
+      * An app is deployed with new environment variables
+
+      * The app is deployed with a new or changed custom start command
+
+      * An app rolls back to a prior revision
+
+      Each time a new revision is created the reason(s) for the revisions creation will be appended to its description field.
+
+      By default the cloud foundry API retains at most 100 revisions per app.
   - name: Roles
-    description: "Roles are used to control access to resources."
+    description: |-
+      Roles control access to resources in organizations and spaces.
+      Roles are assigned to users.
+
+      For example, a user with the `space_developer` role is able to push
+      applications to their space. A `space_manager` user can also add roles to users
+      within that space (e.g. making a user a `space_auditor`). An
+      `organization_manager` has wide-reaching privileges, able to create & delete
+      spaces, and assign & unassign roles to users.
+
+      ### Valid role types
+      - `organization_user`
+      - `organization_auditor`
+      - `organization_manager`
+      - `organization_billing_manager`
+      - `space_auditor`
+      - `space_developer`
+      - `space_manager`
+      - `space_supporter`
+        * Users with only the space supporter role are not authorized to use the **V2** API
   - name: Root
-    description: "Root API endpoints that provide entry points and API information."
+    description: |-
+      These endpoints link to other resources, endpoints, and external services that are relevant to API clients.
   - name: Routes
-    description: "Routes are used to map a URL to an app."
+    description: |-
+      Routes are addresses that direct matched network traffic to one or more destinations. Each route is based on a domain name with additional matching criteria (host (subdomain), path, etc). Matched traffic will be distributed across all destinations, based on their configuration (round-robin by default).
   - name: Route Policies
-    description: "Route policies control which callers can access routes on identity-aware domains."
+    description: |-
+      Route policies control which Cloud Foundry apps, spaces, or organizations can access routes on identity-aware domains. When a domain has `enforce_route_policies` enabled, GoRouter automatically enforces these access controls using mutual TLS (mTLS) to verify the identity of the calling application.
+
+      Route policies are defined using a `source` selector that specifies who can access the route:
+      - `cf:app:<uuid>` - Allow a specific app
+      - `cf:space:<uuid>` - Allow all apps in a space
+      - `cf:org:<uuid>` - Allow all apps in an organization
+      - `cf:any` - Allow any caller (cannot be combined with other sources on the same route)
+
+      **Note:** Route policies can only be created for routes on domains where `enforce_route_policies` is `true` and the domain is not internal (internal routes use container-to-container networking and bypass GoRouter).
+
+      **This feature is experimental and is subject to change.**
   - name: Security Groups
-    description: "Security groups are used to control access to apps."
+    description: |-
+      Security groups are collections of egress traffic rules that can be applied to the staging or running state of applications.
+
+      Security groups can either be applied globally or at the space-level.
+
+      Security groups can only allow (whitelist) traffic. They cannot be used to disallow (blacklist) traffic.
+
+      IPv6 security groups can be configured if `cc.enable_ipv6` is set to `true`.
   - name: Service Brokers
-    description: "Service brokers are used to manage services."
-  - name: Service Credential Bindings
-    description: "Service credential bindings are used to bind a service instance to an app."
-  - name: Service Instances
-    description: "Service instances are instances of a service."
+    description: |-
+      Service brokers manage the lifecycle of services. On behalf of users, Cloud Controller will interact with service brokers to provision, get access to and manage access to the service offerings and plans they offer.
+
+      Admins can create and manage service brokers that are globally available, i.e., the service broker and its associated resources (service offerings and plans) can be made available to all users.
+
+      Space Developers can create and manage space-scoped service brokers. A space-scoped broker and its associated resources will only be available in the space the service broker was created.
+
+      ### Service broker jobs
+
+      CRUD operations for service brokers are asynchronous. `create`, `update` and `delete` endpoints include a job URL in the `Location` header of the HTTP response.
+
+      These jobs are the only source of information about the progress of the operation. Therefore, the job must be polled to find out when the process ends and if it was successful.
+      There is no mechanism to link a service broker with its jobs, apart from the `Location` header in the API response.
+
+      When a failure occurs during a create job, the service broker won't be usable. It will still be included in the `GET` endpoints responses, hence the importance of querying the job to find out the end status.
+
+      When updating a service broker, catalog changes will be rolled-back in the event of the job failing. The service broker catalog will remain unchanged with no indication that the update operation failed. Querying the job will provide such information.
   - name: Service Offerings
-    description: "Service offerings are services that are available to be used."
+    description: |-
+      Service offerings represent the services offered by service brokers.
+      A service broker will have one or more service offerings.
+      A service offering will have one or more service plans.
+      Service offerings and service plans are created and updated when a service broker is registered or updated.
+
+      ### Visibility of service offerings
+
+      This table shows the service offerings that different roles can see.
+      The service offerings that a user can see relate to their space and organization roles,
+      regardless of which space or organization is being targeted.
+
+      A service offering can be seen when at least one of its service plans can be seen.
+      Service plans may be configured to be `public`,
+      or they may be configured with a relationship to a restricted list of organizations.
+
+      Service offerings and service plans from a space-scoped service broker cannot have their visibility configured.
+      They are only visible to members of that space.
+
+      Role | Public plans | Restricted plans | From space-scoped service brokers
+      --- | --- | --- | ---
+      Admin | All | All | All
+      Admin Read | All | All | All
+      Global Auditor | All | All | All
+      Org Manager | All | In organisation | None
+      Org Auditor | All | In organisation | None
+      Org Billing | All | In organisation | None
+      Space Manager | All | In organisation | In space
+      Space Developer | All | In organisation | In space
+      Space Auditor | All | In organisation | In space
+      Unauthenticated | All* | None | None
+
+      *Unless the `hide_marketplace_from_unauthenticated_users` feature flag is `true`
   - name: Service Plans
-    description: "Service plans are plans for a service."
+    description: |-
+      Service plans represent the service plans offered by a service offering.
+      A service offering will have one or more service plans.
+      Service offerings and service plans are created and updated when a service broker is registered or updated.
+  - name: Service Plan Visibility
+    description: |-
+      Service plan visibility is used to manage whether a role has access to a given service plan and its service offering.
+
+      ### List of visibility types
+
+      Name | Description
+      ---- | -----------
+      **public** | Everyone, including unauthenticated users can see the service plan
+      **admin** | Only Admin, Admin Read-Only and Global Auditor can see the service plan
+      **organization** | Restricted to members of a set of organizations
+      **space** | Restricted to members of a space; only possible if the plan comes from a space-scoped service broker
+  - name: Service Instances
+    description: |-
+      An instantiation of a service.
+
+      Service instances can be of type `managed` when it is an instantiation of a [service offering](#service-offerings) registered with CF
+      or `user-provided` when it describes an instance of an offering that is not registered with CF.
+  - name: Service Credential Bindings
+    description: |-
+      Service credential bindings are used to make the details of the connection to a service instance available to an app or a developer.
+
+      Service credential bindings can be of type `app` or `key`.
+
+      A service credential binding is of type `app` when it is a binding between a [service instance](#service-instances) and an [application](#apps).
+      Not all services support this binding, as some services deliver value to users directly without integration with an application. 
+      Field `broker_catalog.features.bindable` from [service plan](#the-service-plan-object) of the service instance can be used to determine if it is bindable.
+
+      A service credential binding is of type `key` when it only retrieves the details of the service instance and makes them available to the developer.
   - name: Service Route Bindings
-    description: "Service route bindings are used to bind a route to a service instance."
+    description: |-
+      Service route bindings are relations between a service instance and a route.
+
+      Not all service instances support route binding. 
+      In order to bind to a managed service instance, the service instance should be created from a service offering that has requires route forwarding (`requires=[route_forwarding]`). 
+      In order to bind to a user-provided service instance, the service instance must have `route_service_url` set.
   - name: Service Usage Events
-    description: "Service usage events are a record of changes in the usage of services."
+    description: |-
+      Service usage events are a record of changes in the usage of services. For
+      example, service usage events are recorded when a service instance is created,
+      updated, and deleted. They may contain information about the service instance in
+      question and the associated space, service broker, and service offering.
+
+      Usage events are typically used by billing and chargeback applications.
   - name: Sidecars
-    description: "Sidecars are used to run a process alongside an app."
+    description: |-
+      Sidecars are additional operating system processes that are run in the same container as a [process](#processes).
+
+      #### Use cases for sidecars
+
+      Sidecars are useful for any app processes that need to communicate with another within the same container or are otherwise dependent on each other. Some use cases are:
+
+      - Two or more processes that require access to a shared file
+      - An Application Performance Monitoring (APM) tool that attaches to a dependent app's processes
+      - Two or more processes that communicate via a local socket
+
+      #### Steps to create a sidecar
+      The recommended way to create sidecars for your app is with a [manifest](#manifests).
+
+      ```yaml
+       sidecars:
+        - name: authenticator
+          process_types: [ 'web', 'worker' ]
+          command: bundle exec run-authenticator
+        - name: performance monitor
+          process_types: [ 'web' ]
+          command: bundle exec run-performance-monitor
+          memory: 128M
+      ```
+
+      - **name** is a user defined identifier (unique per app)
+      - **process_types** is a list of app processes the sidecar will attach to. You can attach multiple sidecars to each process type your app uses
+      - **command** is the command used to start the sidecar
+      - **memory** is the memory reserved for the sidecar<sup>[1]</sup>
+
+      <sup>1 Applies for Java apps.  If you do not reserve memory for the sidecar, the JVM will consume all of the memory in the app container.  This value must be less thatn the process' reserved memory.</sup>
+
+      #### Current limitations
+      - Start and stop order of app processes and their sidecars is undefined
+      - App processes and sidecar processes are codependent: if either crashes or exits, the other will as well
+      - Sidecars are currently not independently scalable (memory / disk) and share resources with the main app process and other sidecars within that container
+      - Sidecars only support PID based health checks; HTTP health-checks for sidecars are not currently supported
+      - This has only been tested on Linux based systems
   - name: Spaces
-    description: "Spaces are used to group apps and services."
+    description: |-
+      Every application and service is scoped to a space. Each org contains at least one space. A space provides users with access to a shared location for application development, deployment, and maintenance.
+  - name: Space Features
+    description: |-
+      Space features are used to manage whether optional capabilities are enabled for
+      a given space.
+
+      Currently, the only space feature is SSH (`ssh`), which controls whether
+      applications in the space may be accessed via SSH.
+
+      **Note**: SSH must also be [enabled globally](https://docs.cloudfoundry.org/running/config-ssh.html) and on the [app](#supported-app-features).
   - name: Space Quotas
-    description: "Space quotas are named sets of memory, log rate, service, and instance usage quotas."
+    description: |-
+      Space quotas are named sets of quotas. Space quota names are unique within an organization. For example, an organization may only have one space quota named "production", but two organizations may have two distinct space quotas, both named "production".
+
+      Only one space quota may be applied to a given space at any given time.
+
+      Space quotas cannot be used to bypass organization quotas. When the organization's quota and the space's quota specify a different values for a given resource, the more restrictive of the two is used. In the event of permissions, the more restrictive permission is used.
   - name: Stacks
-    description: "Stacks are used to specify the operating system and runtime environment for an app."
+    description: |-
+      Stacks are the base operating system and file system that your application will execute in.
+      A stack is how you configure applications to run against different operating systems
+      (like Windows or Linux)
+      and different versions of those operating systems
+      (like Windows 2012 or Windows 2016).
+
+      An application's [lifecycle](#lifecycles) will specify which stack to execute the application in.
+      Buildpacks can also be associated with a particular stack if they contain stack-specific logic.
+      An application will automatically use buildpacks associated with the application's configured stack.
+
+      Stacks are not used for apps with a [Docker lifecycle](#docker-lifecycle).
+
+      Operators control stack availability through state management. The following states determine how a stack can be used:
+
+      *ACTIVE*: Default state. The stack is fully available for all operations.
+
+      *DEPRECATED*: The stack is nearing end-of-life. It remains fully functional,
+      but users should migrate to an ACTIVE stack.
+
+      *RESTRICTED*: A transitional state typically applied before deprecation or disabling.
+      New application creation is blocked; existing deployments continue to operate normally.
+
+      *DISABLED*: The stack has reached end-of-life. New application creation and restaging are prohibited. 
+      Running applications remain available.
   - name: Tasks
-    description: "Tasks are one-off commands that can be run against an app."
+    description: |-
+      Tasks are one-off jobs that are intended to perform a task, stop, and be cleaned up, freeing up resources.
+
+      Examples of this include database migrations, sending things, and batch jobs.
   - name: Users
-    description: "Users are the users of the Cloud Foundry platform."
+    description: |-
+      The user resource is used to manage access to organizations, spaces, and other
+      resources within Cloud Foundry. Cloud Controller is not the ultimate authority
+      on the users in the Cloud Foundry system; UAA and its configured identity
+      providers determine which users are able to sign in to Cloud Foundry.
+
+      To be functional, Cloud Controller users must "shadow" a corresponding user or
+      client in UAA. The Cloud Controller user resource's guid should match either a
+      UAA user or a UAA client id. However, Cloud Controller does not enforce that
+      a user's guid is a valid UAA user or client id.
+
+      Users can be assigned roles, which give them privileges to perform actions
+      within a given context. For example, the Space Developer role grants a user
+      permission to manage apps and services in a space (e.g. to push apps, scale
+      apps, delete apps).
 security:
   - oauth:
       - cloud_controller.read
