@@ -4,6 +4,7 @@ content:
   application/json:
     schema:
       type: object
+      description: Request schema for updating an organization quota
       properties:
         name:
           type: string
@@ -14,49 +15,66 @@ content:
           properties:
             per_process_memory_in_mb:
               type: [integer, "null"]
-              description: Maximum memory for a single process or task
+              description: Maximum memory for a single process or task; `null` means unlimited
             total_memory_in_mb:
               type: [integer, "null"]
-              description: Total memory allowed for all the started processes and running tasks in an organization
+              description: Total memory of all the started processes and running tasks in an organization; `null` means unlimited
             total_instances:
               type: [integer, "null"]
-              description: Total instances of all the started processes allowed in an organization
+              description: Total instances of all the started processes in an organization; `null` means unlimited
             log_rate_limit_in_bytes_per_second:
               type: [integer, "null"]
-              description: Total log rate limit allowed for all the started processes and running tasks in an organization
+              description: Total log rate limit allowed for all the started processes and running tasks in an organization; `null` means unlimited
             per_app_tasks:
               type: [integer, "null"]
-              description: Maximum number of running tasks in an organization
+              description: Maximum number of running tasks in an organization; `null` means unlimited
         services:
           type: object
           description: Quotas that affect services
           properties:
             paid_services_allowed:
               type: boolean
-              description: Specifies whether instances of paid service plans can be created
+              description: If instances of paid service plans can be created
             total_service_instances:
               type: [integer, "null"]
-              description: Total number of service instances allowed in an organization
+              description: Total number of service instances in an organization; `null` means unlimited
             total_service_keys:
               type: [integer, "null"]
-              description: Total number of service keys allowed in an organization
+              description: Total number of service keys in an organization; `null` means unlimited
         routes:
           type: object
           description: Quotas that affect routes
           properties:
             total_routes:
               type: [integer, "null"]
-              description: Total number of routes allowed in an organization
+              description: Total number of routes that an organization can have; `null` means unlimited
             total_reserved_ports:
               type: [integer, "null"]
-              description: Total number of ports that are reservable by routes in an organization
+              description: Total number of ports that all routes in an organization can reserve; `null` means unlimited
         domains:
           type: object
           description: Quotas that affect domains
           properties:
             total_domains:
               type: [integer, "null"]
-              description: Total number of domains that can be scoped to an organization
-        metadata:
-          $ref: '../schemas/Metadata.yaml'
-      description: Request schema for updating an organization quota
+              description: Total number of domains that can be scoped to an organization; `null` means unlimited
+    examples:
+      default:
+        summary: default
+        value:
+          name: don-quixote
+          apps:
+            total_memory_in_mb: 5120
+            per_process_memory_in_mb: 1024
+            log_rate_limit_in_bytes_per_second: 1024
+            total_instances: 10
+            per_app_tasks: 5
+          services:
+            paid_services_allowed: true
+            total_service_instances: 10
+            total_service_keys: 20
+          routes:
+            total_routes: 8
+            total_reserved_ports: 4
+          domains:
+            total_domains: 7

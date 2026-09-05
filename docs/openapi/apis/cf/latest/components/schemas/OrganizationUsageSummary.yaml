@@ -1,0 +1,45 @@
+type: object
+properties:
+  usage_summary:
+    type: object
+    description: The memory and app instance usage summary for the organization
+    properties:
+      started_instances:
+        type: integer
+        description: Total instances of all the started processes in the organization
+      memory_in_mb:
+        type: integer
+        description: Total memory used by all the started processes and running tasks in the organization
+      routes:
+        type: integer
+        description: Total number of routes in the organization
+      service_instances:
+        type: integer
+        description: Total number of service instances in the organization
+      reserved_ports:
+        type: integer
+        description: Total number of ports reserved by routes in the organization
+      domains:
+        type: integer
+        description: Total number of domains scoped to the organization
+      per_app_tasks:
+        type: integer
+        description: Total number of running tasks in the organization
+      service_keys:
+        type: integer
+        description: Total number of service keys in the organization
+  links:
+    type: object
+    description: Links to related resources
+    properties:
+      self:
+        $ref: './Link.yaml'
+        description: The URL of this usage summary
+      organization:
+        $ref: './Link.yaml'
+        description: The URL of the organization this usage summary belongs to
+required:
+  - usage_summary
+  - links
+description: |-
+  The memory and app instance usage summary for an organization.
