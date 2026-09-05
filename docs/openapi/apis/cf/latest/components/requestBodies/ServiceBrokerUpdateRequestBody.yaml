@@ -10,34 +10,14 @@ content:
           description: Name of the service broker
         url:
           type: string
+          format: uri
           description: URL of the service broker
         authentication:
-          type: object
+          $ref: ../schemas/ServiceBrokerAuthentication.yaml
           description: Credentials used to authenticate against the service broker
-          properties:
-            type:
-              type: string
-              enum:
-                - basic
-              description: Authentication type
-            credentials:
-              type: object
-              description: Authentication credentials
-              properties:
-                username:
-                  type: string
-                  description: Username for basic authentication
-                password:
-                  type: string
-                  description: Password for basic authentication
-              required:
-                - username
-                - password
-          required:
-            - type
-            - credentials
         metadata:
           $ref: ../schemas/Metadata.yaml
+          description: Labels and annotations applied to the service broker
     examples:
       default:
         summary: default
