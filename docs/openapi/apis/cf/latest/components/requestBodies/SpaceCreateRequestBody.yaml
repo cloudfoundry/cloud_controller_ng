@@ -4,12 +4,17 @@ content:
   application/json:
     schema:
       type: object
+      description: Request schema for creating a space
       properties:
         name:
           type: string
-          description: Name of the space
+          description: Space name; must be unique within the organization (case-insensitive)
+        suspended:
+          type: boolean
+          description: Whether a space is suspended or not
         relationships:
           type: object
+          description: Relationships for the space
           properties:
             organization:
               $ref: ../schemas/RelationshipToOne.yaml
@@ -18,10 +23,10 @@ content:
             - organization
         metadata:
           $ref: ../schemas/Metadata.yaml
+          description: Labels and annotations applied to the space
       required:
         - name
         - relationships
-      description: Request schema for creating a space
     examples:
       default:
         summary: default
@@ -30,4 +35,4 @@ content:
           relationships:
             organization:
               data:
-                guid: 123e4567-e89b-12d3-a456-426614174000
+                guid: e00705b9-7b42-4561-ae97-2520399d2133
