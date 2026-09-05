@@ -1,4 +1,5 @@
 type: object
+description: A list of service brokers
 properties:
   pagination:
     $ref: './Pagination.yaml'
@@ -6,3 +7,4 @@ properties:
     type: array
     items:
       $ref: './ServiceBroker.yaml'
+    description: List of service brokers
