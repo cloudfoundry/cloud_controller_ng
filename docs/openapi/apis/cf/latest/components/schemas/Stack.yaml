@@ -4,27 +4,43 @@ allOf:
   - properties:
       name:
         type: string
-        description: Name of the stack
+        description: The name of the stack
       description:
         type: [string, "null"]
-        description: Description of the stack
+        description: The description of the stack
+      state:
+        type: string
+        enum:
+          - ACTIVE
+          - RESTRICTED
+          - DEPRECATED
+          - DISABLED
+        description: 'The state of the stack; valid states are: `ACTIVE`, `RESTRICTED`, `DEPRECATED`, `DISABLED`'
+      state_reason:
+        type: [string, "null"]
+        description: Optional plain text describing the stack state change
       build_rootfs_image:
         type: string
-        description: The filesystem root image for building
+        description: The name of the stack image associated with staging/building Apps. If a stack does not have unique images, this will be the same as the stack name.
       run_rootfs_image:
         type: string
-        description: The filesystem root image for running
+        description: The name of the stack image associated with running Apps + Tasks. If a stack does not have unique images, this will be the same as the stack name.
       default:
         type: boolean
-        description: Whether this is the default stack
+        description: Whether the stack is configured to be the default stack for new applications.
+      metadata:
+        $ref: './Metadata.yaml'
+        description: Labels and annotations applied to the stack
       links:
         type: object
         properties:
           self:
             $ref: './Link.yaml'
-      metadata:
-        $ref: './Metadata.yaml'
+            description: The URL of this stack
+        description: Links to related resources
     required:
       - name
       - description
       - links
+description: |-
+  The base operating system and file system that an application will execute in.
