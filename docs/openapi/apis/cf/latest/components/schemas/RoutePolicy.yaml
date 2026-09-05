@@ -1,0 +1,65 @@
+type: object
+allOf:
+  - $ref: './BaseSchema.yaml'
+  - properties:
+      source:
+        type: string
+        description: |-
+          The policy selector specifying who can access the route. Must be one of:
+          - `cf:app:<uuid>` (specific app)
+          - `cf:space:<uuid>` (all apps in a space)
+          - `cf:org:<uuid>` (all apps in an organization)
+          - `cf:any` (any caller - cannot be combined with other sources)
+      metadata:
+        $ref: './Metadata.yaml'
+        description: Labels and annotations applied to the route policy
+      relationships:
+        type: object
+        properties:
+          route:
+            $ref: './RelationshipToOne.yaml'
+            description: The route this policy applies to
+          app:
+            $ref: './RelationshipToOne.yaml'
+            description: Read-only. Always present; `data` is `null` unless the source is `cf:app:<uuid>`
+          space:
+            $ref: './RelationshipToOne.yaml'
+            description: Read-only. Always present; `data` is `null` unless the source is `cf:space:<uuid>`
+          organization:
+            $ref: './RelationshipToOne.yaml'
+            description: Read-only. Always present; `data` is `null` unless the source is `cf:org:<uuid>`
+        description: Relationships to the route this policy applies to and to the app, space, or organization referenced by the source
+      links:
+        type: object
+        properties:
+          self:
+            $ref: './Link.yaml'
+            description: The URL to get this route policy
+          route:
+            $ref: './Link.yaml'
+            description: The URL to get the route this policy applies to
+          app:
+            $ref: './Link.yaml'
+            description: The URL to get the app referenced by the source; only present when the source is `cf:app:<uuid>`
+          space:
+            $ref: './Link.yaml'
+            description: The URL to get the space referenced by the source; only present when the source is `cf:space:<uuid>`
+          organization:
+            $ref: './Link.yaml'
+            description: The URL to get the organization referenced by the source; only present when the source is `cf:org:<uuid>`
+        description: Links to related resources. Always includes `self` and `route`; includes `app`, `space`, or `organization` when the source references that resource
+      included:
+        $ref: './IncludedResources.yaml'
+        description: Additional related resources included in the response when using the include parameter
+description: |-
+  Route policies control which Cloud Foundry apps, spaces, or organizations can access routes on identity-aware domains. When a domain has `enforce_route_policies` enabled, GoRouter automatically enforces these access controls using mutual TLS (mTLS) to verify the identity of the calling application.
+
+  Route policies are defined using a `source` selector that specifies who can access the route:
+  - `cf:app:<uuid>` - Allow a specific app
+  - `cf:space:<uuid>` - Allow all apps in a space
+  - `cf:org:<uuid>` - Allow all apps in an organization
+  - `cf:any` - Allow any caller (cannot be combined with other sources on the same route)
+
+  > **Note:** Route policies can only be created for routes on domains where `enforce_route_policies` is `true` and the domain is not internal (internal routes use container-to-container networking and bypass GoRouter).
+
+  **This feature is experimental and is subject to change.**

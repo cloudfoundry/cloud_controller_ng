@@ -1,0 +1,19 @@
+description: Route policy metadata to update
+required: true
+content:
+  application/json:
+    schema:
+      type: object
+      properties:
+        metadata:
+          $ref: ../schemas/Metadata.yaml
+          description: Labels and annotations applied to the route policy
+    examples:
+      default:
+        summary: default
+        value:
+          metadata:
+            labels:
+              team: backend
+            annotations:
+              note: Updated contact info

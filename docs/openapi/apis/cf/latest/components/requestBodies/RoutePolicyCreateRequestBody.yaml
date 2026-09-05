@@ -1,0 +1,55 @@
+description: Route policy to create
+required: true
+content:
+  application/json:
+    schema:
+      type: object
+      properties:
+        source:
+          type: string
+          description: The policy selector. Must be `cf:app:<uuid>`, `cf:space:<uuid>`, `cf:org:<uuid>`, or `cf:any`
+        relationships:
+          type: object
+          properties:
+            route:
+              $ref: ../schemas/RelationshipToOne.yaml
+              description: The route this policy applies to
+          required:
+            - route
+          description: A relationship to the route this policy applies to
+        metadata:
+          $ref: ../schemas/Metadata.yaml
+          description: Labels and annotations applied to the route policy
+      required:
+        - source
+        - relationships
+    examples:
+      default:
+        summary: Allow specific app
+        value:
+          source: cf:app:d76446a1-f429-4444-8797-be2f78b75b08
+          relationships:
+            route:
+              data:
+                guid: 89b32bd6-688f-4424-b94f-2e2c86495a5f
+          metadata:
+            labels:
+              team: frontend
+            annotations:
+              description: Allow frontend app to call backend API
+      space:
+        summary: Allow all apps in a space
+        value:
+          source: cf:space:3fa85f64-5717-4562-b3fc-2c963f66afa6
+          relationships:
+            route:
+              data:
+                guid: 89b32bd6-688f-4424-b94f-2e2c86495a5f
+      any:
+        summary: Allow any caller
+        value:
+          source: cf:any
+          relationships:
+            route:
+              data:
+                guid: 89b32bd6-688f-4424-b94f-2e2c86495a5f
