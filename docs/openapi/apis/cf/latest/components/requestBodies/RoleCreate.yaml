@@ -3,10 +3,13 @@ content:
   application/json:
     schema:
       type: object
+      required:
+        - type
+        - relationships
       properties:
         type:
           type: string
-          description: Role to create
+          description: Role to create; see [valid role types](#valid-role-types)
           enum:
             - organization_user
             - organization_auditor
@@ -18,9 +21,19 @@ content:
             - space_supporter
         relationships:
           type: object
+          description: |-
+            Relationships for the role. `user` is always required. Exactly one of `organization` (when creating an organization role) or `space` (when creating a space role) must also be provided.
+          required:
+            - user
+          oneOf:
+            - required:
+                - organization
+            - required:
+                - space
           properties:
             user:
               $ref: ../schemas/UserRelationshipToOne.yaml
+              description: A relationship to a user; the user can be defined by either a `guid` or, if the `set_roles_by_username` [feature_flag](#list-of-feature-flags) is enabled, a `username` (with the option of including an `origin` to disambiguate it)
             organization:
               $ref: ../schemas/RelationshipToOne.yaml
               description: A relationship to an organization; required only when creating an organization role
@@ -35,10 +48,10 @@ content:
           relationships:
             user:
               data:
-                guid: 123e4567-e89b-12d3-a456-426614174000
+                guid: 47c5da3b-6cbc-421c-87c3-20bb3c41ab7c
             organization:
               data:
-                guid: 123e4567-e89b-12d3-a456-426614174000
+                guid: 40557c70-d1bd-4976-a2ab-a85f5e882418
       by_username_and_origin:
         summary: by username and origin
         value:
@@ -50,4 +63,15 @@ content:
                 origin: ldap
             organization:
               data:
-                guid: 123e4567-e89b-12d3-a456-426614174000
+                guid: 40557c70-d1bd-4976-a2ab-a85f5e882418
+      space_role:
+        summary: space role
+        value:
+          type: space_developer
+          relationships:
+            user:
+              data:
+                guid: 47c5da3b-6cbc-421c-87c3-20bb3c41ab7c
+            space:
+              data:
+                guid: 12347c70-d1bd-4976-a2ab-a85f5e882418

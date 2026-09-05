@@ -1,20 +1,32 @@
-anyOf:
-  - type: object
+oneOf:
+  - title: By guid
+    type: object
+    required:
+      - guid
+    additionalProperties: false
     properties:
       guid:
         type: string
-        description: Unique identifier for the user. For UAA users this will match the user ID of an existing UAA user's GUID; in the case of UAA clients, this will match the UAA client ID
+        description: Unique identifier for the user. For UAA users this will match the UAA user ID; in the case of UAA clients, this will match the UAA client ID
       metadata:
         $ref: './Metadata.yaml'
-    required: [guid]
-  - type: object
+        description: Labels applied to and annotations added to the user
+  - title: By username and origin
+    type: object
+    required:
+      - username
+      - origin
+    additionalProperties: false
     properties:
       username:
-        type: [string, "null"]
-        description: Username of the user to be created. This can only be provided together with origin
+        type: string
+        description: Username of the user to be created. This can only be provided together with `origin`.
       origin:
-        type: [string, "null"]
-        description: Origin of the user to be created. This can only be provided together with username and cannot be uaa
+        type: string
+        description: Origin of the user to be created. This can only be provided together with `username` and cannot be `uaa`.
       metadata:
         $ref: './Metadata.yaml'
-    required: [username, origin]
+        description: Labels applied to and annotations added to the user
+description: |
+  A user is created either by `guid` (the UAA user id or UAA client id) or by `username` and `origin`.
+  Creating a user by guid is only permitted by admins.
