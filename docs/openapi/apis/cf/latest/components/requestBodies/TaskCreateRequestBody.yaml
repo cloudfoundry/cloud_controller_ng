@@ -1,4 +1,4 @@
-description: Task object that needs to be created
+description: The task to create
 required: true
 content:
   application/json:
@@ -7,43 +7,68 @@ content:
       properties:
         command:
           type: string
-          description: The command to run for the task. **NOTE:** optional if a `template.process.guid` is provided
+          description: |-
+            Command that will be executed; **NOTE:** optional if a `template.process.guid` is provided.
+
+            If not provided, and a `template.process.guid` is provided, this field will use the value from the process with the given guid.
         name:
           type: string
-          description: Human-readable name for the task
-        memory_in_mb:
-          type: integer
-          description: Amount of memory to allocate for the task in MB
+          description: Name of the task; defaults to an auto-generated name
+        user:
+          type: string
+          description: OS user used to run the task in the runtime
+          default: vcap
         disk_in_mb:
           type: integer
-          description: Amount of disk to allocate for the task in MB
+          description: |-
+            Amount of disk to allocate for the task in MB; defaults to the operator-configured `default_app_disk_in_mb`.
+
+            If not provided, and a `template.process.guid` is provided, this field will use the value from the process with the given guid.
+        memory_in_mb:
+          type: integer
+          description: |-
+            Amount of memory to allocate for the task in MB; defaults to the operator-configured `default_app_memory`.
+
+            If not provided, and a `template.process.guid` is provided, this field will use the value from the process with the given guid.
         log_rate_limit_in_bytes_per_second:
           type: integer
-          description: Amount of log rate limit to allocate for the task in bytes per second
+          description: |-
+            Amount of log rate to allocate for the task in bytes; defaults to the operator-configured `default_app_log_rate_limit_in_bytes_per_second`.
+
+            If not provided, and a `template.process.guid` is provided, this field will use the value from the process with the given guid.
         droplet_guid:
           type: string
           format: uuid
-          description: The GUID of a droplet to use to run the task
+          description: The guid of the droplet that will be used to run the command; defaults to the app's current droplet
         template:
           type: object
-          description: An object with a process field to template the task from
+          description: An object that describes a process to template the task from
           properties:
             process:
               type: object
+              description: The process that will be used as a template
               properties:
                 guid:
                   type: string
                   format: uuid
+                  description: The guid of the process that will be used as a template; defaults to `null`
               required:
                 - guid
-              description: The guid of the process that will be used as a template
         metadata:
           $ref: ../schemas/Metadata.yaml
+          description: |-
+            `labels`: Labels applied to the package
+
+            `annotations`: Annotations applied to the package
       description: Request schema for creating a task
     examples:
       default:
-        summary: default
+        summary: with command
+        value:
+          command: rake db:migrate
+      template:
+        summary: with template process
         value:
           template:
             process:
-              guid: 123e4567-e89b-12d3-a456-426614174000
+              guid: 89323d4e-2e84-43e7-83e9-adbf50a20c0e

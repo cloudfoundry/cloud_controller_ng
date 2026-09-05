@@ -2,7 +2,11 @@ type: object
 properties:
   pagination:
     $ref: './Pagination.yaml'
+    description: Pagination information for the list of tasks
   resources:
     type: array
     items:
       $ref: './Task.yaml'
+    description: The list of tasks
+description: |-
+  A paginated list of tasks.
