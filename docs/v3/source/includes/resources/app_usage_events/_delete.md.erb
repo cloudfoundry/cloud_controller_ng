@@ -21,6 +21,8 @@ Content-Type: application/json
 
 Destroys all existing events. Populates new usage events, one for each started app. All populated events will have a `created_at` value of current time. There is the potential race condition if apps are currently being started, stopped, or scaled. The seeded usage events will have the same guid as the app.
 
+**Note:** the reseed only writes `STARTED` events for app processes — it does not restore the start evidence (`TASK_STARTED`/`TASK_WAS_RUNNING`) of currently-running tasks, and `TASK_STOPPED` events are only emitted for tasks with recorded start evidence. After a purge, operators should run `rake db:was_running_backfill` on a Cloud Controller VM to reseed baselines for running tasks; otherwise their eventual stops are silently suppressed.
+
 #### Definition
 `POST /v3/app_usage_events/actions/destructively_purge_all_and_reseed`
 
