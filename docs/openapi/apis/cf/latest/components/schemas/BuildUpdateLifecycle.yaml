@@ -1,0 +1,18 @@
+type: object
+description: Lifecycle information for the build (field can only be passed by Build State Updaters)
+properties:
+  type:
+    type: string
+    description: Type of the lifecycle; valid values are `buildpack`, `cnb`, `docker`
+  data:
+    type: object
+    description: Data specific to the lifecycle
+    properties:
+      image:
+        type: string
+        description: Image reference tag where the built complete image was stored (field can only be passed by Build State Updaters)
+      processTypes:
+        type: object
+        additionalProperties:
+          type: string
+        description: Process types detected during staging, keyed by process type (field can only be passed by Build State Updaters)
