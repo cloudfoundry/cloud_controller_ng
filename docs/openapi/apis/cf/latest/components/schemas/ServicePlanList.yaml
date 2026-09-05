@@ -1,4 +1,5 @@
 type: object
+description: A list of service plans
 properties:
   pagination:
     $ref: './Pagination.yaml'
@@ -6,6 +7,7 @@ properties:
     type: array
     items:
       $ref: './ServicePlan.yaml'
+    description: List of service plans
   included:
     $ref: './IncludedResources.yaml'
     description: Additional related resources included in the response when using the include parameter

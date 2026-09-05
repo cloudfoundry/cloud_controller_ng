@@ -1,0 +1,18 @@
+type: object
+description: Features supported by this service offering
+properties:
+  plan_updateable:
+    type: boolean
+    description: Whether the service offering supports upgrade/downgrade for service plans by default; service plans can override this field
+  bindable:
+    type: boolean
+    description: Specifies whether service Instances of the service can be bound to applications
+  instances_retrievable:
+    type: boolean
+    description: Specifies whether the Fetching a service instance endpoint is supported for all service plans
+  bindings_retrievable:
+    type: boolean
+    description: Specifies whether the Fetching a service binding endpoint is supported for all service plans
+  allow_context_updates:
+    type: boolean
+    description: Specifies whether service instance updates relating only to context are propagated to the service broker
