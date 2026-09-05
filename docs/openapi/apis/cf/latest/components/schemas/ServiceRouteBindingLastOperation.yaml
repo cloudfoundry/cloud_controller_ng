@@ -28,4 +28,4 @@ properties:
     type: string
     format: date-time
     description: The time with zone when the operation was last updated
-description: The last operation object for service credential binding
+description: The last operation object for service route binding
