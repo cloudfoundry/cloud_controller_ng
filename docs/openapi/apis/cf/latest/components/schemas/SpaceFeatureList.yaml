@@ -1,0 +1,10 @@
+type: object
+description: The list of features for a space; this list is not paginated
+properties:
+  resources:
+    type: array
+    items:
+      $ref: './SpaceFeature.yaml'
+    description: List of space features
+required:
+  - resources

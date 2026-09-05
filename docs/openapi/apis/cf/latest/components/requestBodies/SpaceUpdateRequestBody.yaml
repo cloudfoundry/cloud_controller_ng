@@ -4,13 +4,17 @@ content:
   application/json:
     schema:
       type: object
+      description: Request schema for updating a space
       properties:
         name:
           type: string
           description: New space name
+        suspended:
+          type: boolean
+          description: Whether a space is suspended or not
         metadata:
           $ref: ../schemas/Metadata.yaml
-      description: Request schema for updating a space
+          description: Labels and annotations applied to the space
     examples:
       default:
         summary: default
