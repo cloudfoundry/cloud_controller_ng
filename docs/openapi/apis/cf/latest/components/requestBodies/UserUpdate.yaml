@@ -4,23 +4,9 @@ content:
     schema:
       type: object
       properties:
-        username:
-          type: string
-          description: The username of the user
-        presentation_name:
-          type: string
-          description: The presentation name of the user
-        origin:
-          type: string
-          description: The origin of the user
         metadata:
           $ref: ../schemas/Metadata.yaml
-        links:
-          type: object
-          properties:
-            self:
-              $ref: ../schemas/Link.yaml
-              description: The URL to get this user
+          description: Labels applied to and annotations added to the user
     examples:
       default:
         summary: default
@@ -30,5 +16,3 @@ content:
               environment: production
             annotations:
               note: detailed information
-          rate_limits:
-            custom_request_limit: 2000
