@@ -2,6 +2,7 @@ type: object
 properties:
   pagination:
     $ref: './Pagination.yaml'
+    description: Pagination information for the list of service instances
   resources:
     type: array
     items:
@@ -13,3 +14,5 @@ properties:
         mapping:
           managed: './ManagedServiceInstance.yaml'
           user-provided: './UserProvidedServiceInstance.yaml'
+    description: List of service instances
+description: A paginated list of service instances

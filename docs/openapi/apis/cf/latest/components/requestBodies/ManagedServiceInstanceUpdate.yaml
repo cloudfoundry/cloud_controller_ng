@@ -1,25 +1,32 @@
-description: Managed service instance to update
+description: Optional parameters for updating a managed service instance
+required: true
 content:
   application/json:
     schema:
-      type: object
-      properties:
-        name:
-          type: string
-          description: Name of the service instance
-        tags:
-          type: array
-          items:
-            type: string
-          description: Tags for the service instance
-        parameters:
-          type: object
-          description: Parameters for the service instance
-        relationships:
-          type: object
-          properties:
+      $ref: '../schemas/ManagedServiceInstanceUpdate.yaml'
+    examples:
+      managed_service_instance:
+        summary: Update managed service instance
+        value:
+          name: my_service_instance
+          parameters:
+            foo: bar
+            baz: qux
+          tags:
+            - foo
+            - bar
+            - baz
+          relationships:
             service_plan:
-              $ref: '../schemas/RelationshipToOne.yaml'
-          description: Relationships for the service instance
-        metadata:
-          $ref: '../schemas/Metadata.yaml'
+              data:
+                guid: f2b6ba9c-a4d2-11ea-8ae6-48bf6bec2d78
+          metadata:
+            annotations:
+              note: detailed information
+            labels:
+              key: value
+      managed_service_instance_upgrade:
+        summary: Upgrade managed service instance (maintenance_info update)
+        value:
+          maintenance_info:
+            version: 2.1.1
