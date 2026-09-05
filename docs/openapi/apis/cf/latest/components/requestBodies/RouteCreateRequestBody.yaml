@@ -1,4 +1,5 @@
 description: Route to create
+required: true
 content:
   application/json:
     schema:
@@ -22,8 +23,16 @@ content:
             space:
               $ref: ../schemas/RelationshipToOne.yaml
               description: A relationship to the space containing the route; routes can only be mapped to destinations in that space
+          required:
+            - domain
+            - space
+          description: Relationships to the space and domain of the route
+        options:
+          $ref: ../schemas/RouteOptions.yaml
+          description: Options applied to the route
         metadata:
           $ref: ../schemas/Metadata.yaml
+          description: Labels and annotations applied to the route
       required:
         - relationships
     examples:
@@ -36,10 +45,10 @@ content:
           relationships:
             domain:
               data:
-                guid: 123e4567-e89b-12d3-a456-426614174000
+                guid: 0b5f3633-194c-42d2-9408-972366617e0e
             space:
               data:
-                guid: 123e4567-e89b-12d3-a456-426614174000
+                guid: 885a8cb3-c07b-4856-b448-eeb10bf36236
           options:
             loadbalancing: round-robin
           metadata:
@@ -47,3 +56,19 @@ content:
               key: value
             annotations:
               note: detailed information
+      hash-based-routing:
+        summary: Example with hash-based routing
+        description: Creates a route that uses hash-based routing on the `X-User-ID` header with a load balance factor of 5.0.
+        value:
+          host: user-specific-app
+          relationships:
+            domain:
+              data:
+                guid: 0b5f3633-194c-42d2-9408-972366617e0e
+            space:
+              data:
+                guid: 885a8cb3-c07b-4856-b448-eeb10bf36236
+          options:
+            loadbalancing: hash
+            hash_header: X-User-ID
+            hash_balance: '5.0'
