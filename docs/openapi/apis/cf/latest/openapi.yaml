@@ -60,6 +60,8 @@ tags:
     description: "Root API endpoints that provide entry points and API information."
   - name: Routes
     description: "Routes are used to map a URL to an app."
+  - name: Route Policies
+    description: "Route policies control which callers can access routes on identity-aware domains."
   - name: Security Groups
     description: "Security groups are used to control access to apps."
   - name: Service Brokers
@@ -464,6 +466,10 @@ paths:
     $ref: './paths/Roles.yaml#/~1v3~1roles'
   /v3/roles/{guid}:
     $ref: './paths/Roles.yaml#/~1v3~1roles~1{guid}'
+  /v3/route_policies:
+    $ref: './paths/RoutePolicies.yaml#/~1v3~1route_policies'
+  /v3/route_policies/{guid}:
+    $ref: './paths/RoutePolicies.yaml#/~1v3~1route_policies~1{guid}'
   /v3/routes:
     $ref: './paths/Routes.yaml#/~1v3~1routes'
   /v3/routes/{guid}/destinations:
