@@ -1,14 +1,29 @@
 /v3/isolation_segments:
   get:
     summary: List isolation segments
-    description: Retrieves all isolation segments to which the user has access. For admin, this is all the isolation segments in the system. For anyone else, this is the isolation segments in the allowed list for any organization to which the user belongs.
+    description: |-
+      Retrieves all isolation segments to which the user has access. For admin, this is all the isolation segments in the system. For anyone else, this is the isolation segments in the allowed list for any organization to which the user belongs.
+
+      **Permitted roles:** All Roles
     operationId: listIsolationSegments
     tags:
       - Isolation Segments
     parameters:
       - $ref: ../components/parameters/Page.yaml
       - $ref: ../components/parameters/PerPage.yaml
-      - $ref: ../components/parameters/OrderBy.yaml
+      - name: order_by
+        in: query
+        required: false
+        schema:
+          type: string
+          enum:
+            - created_at
+            - -created_at
+            - updated_at
+            - -updated_at
+            - name
+            - -name
+        description: Value to sort by; defaults to ascending. Prepend with `-` to sort descending. Valid values are `created_at`, `updated_at`, and `name`
       - $ref: ../components/parameters/CreatedAts.yaml
       - $ref: ../components/parameters/UpdatedAts.yaml
       - $ref: ../components/parameters/LabelSelector.yaml
@@ -18,21 +33,21 @@
           type: array
           items:
             type: string
-        description: Comma-delimited list of isolation segment guids to filter by.
+        description: Comma-delimited list of isolation segment guids to filter by
       - name: names
         in: query
         schema:
           type: array
           items:
             type: string
-        description: Comma-delimited list of isolation segment names to filter by.
+        description: Comma-delimited list of isolation segment names to filter by (case-insensitive)
       - name: organization_guids
         in: query
         schema:
           type: array
           items:
             type: string
-        description: Comma-delimited list of organization guids to filter by.
+        description: Comma-delimited list of organization guids to filter by
     responses:
       '200':
         description: OK
@@ -55,7 +70,7 @@
                       href: https://api.example.org/v3/isolation_segments?page=2&per_page=5
                     previous: null
                   resources:
-                    - guid: 123e4567-e89b-12d3-a456-426614174000
+                    - guid: b19f6525-cbd3-4155-b156-dc0c2a431b4c
                       name: an_isolation_segment
                       created_at: '2016-10-19T20:25:04Z'
                       updated_at: '2016-11-08T16:41:26Z'
@@ -67,7 +82,7 @@
                       metadata:
                         annotations: {}
                         labels: {}
-                    - guid: 123e4567-e89b-12d3-a456-426614174000
+                    - guid: 68d54d31-9b3a-463b-ba94-e8e4c32edbac
                       name: an_isolation_segment1
                       created_at: '2016-10-19T20:29:19Z'
                       updated_at: '2016-11-08T16:41:26Z'
@@ -79,7 +94,7 @@
                       metadata:
                         annotations: {}
                         labels: {}
-                    - guid: 123e4567-e89b-12d3-a456-426614174000
+                    - guid: ecdc67c3-a71e-43ff-bddf-048930b8cd03
                       name: an_isolation_segment2
                       created_at: '2016-10-19T20:29:22Z'
                       updated_at: '2016-11-08T16:41:26Z'
@@ -91,7 +106,7 @@
                       metadata:
                         annotations: {}
                         labels: {}
-                    - guid: 123e4567-e89b-12d3-a456-426614174000
+                    - guid: 424c89e4-4353-46b7-9bf4-f90bd9bacac0
                       name: an_isolation_segment3
                       created_at: '2016-10-19T20:29:27Z'
                       updated_at: '2016-11-08T16:41:26Z'
@@ -103,7 +118,7 @@
                       metadata:
                         annotations: {}
                         labels: {}
-                    - guid: 123e4567-e89b-12d3-a456-426614174000
+                    - guid: 0a79fcec-a648-4eb8-a6c3-2b5be39047c7
                       name: an_isolation_segment4
                       created_at: '2016-10-19T20:29:33Z'
                       updated_at: '2016-11-08T16:41:26Z'
@@ -133,7 +148,10 @@
         $ref: ../components/responses/ServiceUnavailable.yaml
   post:
     summary: Create an isolation segment
-    description: Create an isolation segment.
+    description: |-
+      Create an isolation segment.
+
+      **Permitted roles:** Admin
     operationId: createIsolationSegment
     tags:
       - Isolation Segments
@@ -150,7 +168,7 @@
               default:
                 summary: default
                 value:
-                  guid: 123e4567-e89b-12d3-a456-426614174000
+                  guid: b19f6525-cbd3-4155-b156-dc0c2a431b4c
                   name: an_isolation_segment
                   created_at: '2016-10-19T20:25:04Z'
                   updated_at: '2016-11-08T16:41:26Z'
@@ -179,7 +197,10 @@
 /v3/isolation_segments/{guid}:
   get:
     summary: Get an isolation segment
-    description: Retrieve an isolation segment to which the user has access. For admin, this is any isolation segment in the system. For anyone else, this is an isolation segment in the allowed list for any organization to which the user belongs.
+    description: |-
+      Retrieve an isolation segment to which the user has access. For admin, this is any isolation segment in the system. For anyone else, this is an isolation segment in the allowed list for any organization to which the user belongs.
+
+      **Permitted roles:** All Roles
     operationId: getIsolationSegment
     tags:
       - Isolation Segments
@@ -196,7 +217,7 @@
               default:
                 summary: default
                 value:
-                  guid: 123e4567-e89b-12d3-a456-426614174000
+                  guid: b19f6525-cbd3-4155-b156-dc0c2a431b4c
                   name: an_isolation_segment
                   created_at: '2016-10-19T20:25:04Z'
                   updated_at: '2016-11-08T16:41:26Z'
@@ -216,7 +237,10 @@
         $ref: ../components/responses/NotFound.yaml
   patch:
     summary: Update an isolation segment
-    description: Update an isolation segment.
+    description: |-
+      Update an isolation segment.
+
+      **Permitted roles:** Admin
     operationId: updateIsolationSegment
     tags:
       - Isolation Segments
@@ -232,9 +256,10 @@
             properties:
               name:
                 type: string
-                description: The name of the isolation segment
+                description: Name of the isolation segment; isolation segment names must be unique across the entire system, and case is ignored when checking for uniqueness
               metadata:
                 $ref: ../components/schemas/Metadata.yaml
+                description: Labels and annotations applied to the isolation segment
           examples:
             default:
               summary: default
@@ -251,8 +276,8 @@
               default:
                 summary: default
                 value:
-                  guid: 123e4567-e89b-12d3-a456-426614174000
-                  name: <%= name %>
+                  guid: b19f6525-cbd3-4155-b156-dc0c2a431b4c
+                  name: my_isolation_segment
                   created_at: '2016-10-19T20:25:04Z'
                   updated_at: '2016-11-08T16:41:26Z'
                   links:
@@ -281,7 +306,10 @@
         $ref: ../components/responses/ServiceUnavailable.yaml
   delete:
     summary: Delete an isolation segment
-    description: An isolation segment cannot be deleted if it is entitled to any organization.
+    description: |-
+      An isolation segment cannot be deleted if it is entitled to any organization.
+
+      **Permitted roles:** Admin
     operationId: deleteIsolationSegment
     tags:
       - Isolation Segments
@@ -302,27 +330,31 @@
         $ref: ../components/responses/500.yaml
 /v3/isolation_segments/{guid}/relationships/organizations:
   post:
-    summary: Entitle organizations for isolation segment
-    description: This endpoint entitles the specified organizations for the isolation segment. In the case where the specified isolation segment is the system-wide shared segment, and if an organization is not already entitled for any other isolation segment, then the shared isolation segment automatically gets assigned as the default for that organization.
+    summary: Entitle organizations for an isolation segment
+    description: |-
+      This endpoint entitles the specified organizations for the isolation segment. In the case where the specified isolation segment is the system-wide shared segment, and if an organization is not already entitled for any other isolation segment, then the shared isolation segment automatically gets assigned as the default for that organization.
+
+      **Permitted roles:** Admin
     operationId: entitleOrganizationsForIsolationSegment
     tags:
       - Isolation Segments
     parameters:
       - $ref: ../components/parameters/Guid.yaml
     requestBody:
-      description: List of organizations to entitle
+      description: Organization relationships; each organization will be entitled to manage this isolation segment
       required: true
       content:
         application/json:
           schema:
             $ref: ../components/schemas/RelationshipToMany.yaml
+            description: Organization relationships; each organization will be entitled to manage this isolation segment
           examples:
             default:
               summary: default
               value:
                 data:
-                  - guid: 123e4567-e89b-12d3-a456-426614174000
-                  - guid: 123e4567-e89b-12d3-a456-426614174000
+                  - guid: 68d54d31-9b3a-463b-ba94-e8e4c32edbac
+                  - guid: b19f6525-cbd3-4155-b156-dc0c2a431b4c
     responses:
       '200':
         description: OK
@@ -335,8 +367,8 @@
                 summary: default
                 value:
                   data:
-                    - guid: 123e4567-e89b-12d3-a456-426614174000
-                    - guid: 123e4567-e89b-12d3-a456-426614174000
+                    - guid: 68d54d31-9b3a-463b-ba94-e8e4c32edbac
+                    - guid: b19f6525-cbd3-4155-b156-dc0c2a431b4c
                   links:
                     self:
                       href: https://api.example.org/v3/isolation_segments/bdeg4371-cbd3-4155-b156-dc0c2a431b4c/relationships/organizations
@@ -352,14 +384,15 @@
         $ref: ../components/responses/UnprocessableEntity.yaml
   get:
     summary: List organizations relationship
-    description: This endpoint lists the organizations entitled for the isolation segment. For an Admin, this will list all entitled organizations in the system. For any other user, this will list only the entitled organizations to which the user belongs.
+    description: |-
+      This endpoint lists the organizations entitled for the isolation segment. For an Admin, this will list all entitled organizations in the system. For any other user, this will list only the entitled organizations to which the user belongs.
+
+      **Permitted roles:** All Roles
     operationId: listOrganizationsForIsolationSegment
     tags:
       - Isolation Segments
     parameters:
       - $ref: ../components/parameters/Guid.yaml
-      - $ref: ../components/parameters/Page.yaml
-      - $ref: ../components/parameters/PerPage.yaml
     responses:
       '200':
         description: OK
@@ -372,8 +405,8 @@
                 summary: default
                 value:
                   data:
-                    - guid: 123e4567-e89b-12d3-a456-426614174000
-                    - guid: 123e4567-e89b-12d3-a456-426614174000
+                    - guid: 68d54d31-9b3a-463b-ba94-e8e4c32edbac
+                    - guid: b19f6525-cbd3-4155-b156-dc0c2a431b4c
                   links:
                     self:
                       href: https://api.example.org/v3/isolation_segments/bdeg4371-cbd3-4155-b156-dc0c2a431b4c/relationships/organizations
@@ -388,7 +421,10 @@
 /v3/isolation_segments/{guid}/relationships/organizations/{org_guid}:
   delete:
     summary: Revoke entitlement to isolation segment for an organization
-    description: This endpoint revokes the entitlement for the specified organization to the isolation segment. If the isolation segment is assigned to a space within an organization, the entitlement cannot be revoked. If the isolation segment is the organization’s default, the entitlement cannot be revoked.
+    description: |-
+      This endpoint revokes the entitlement for the specified organization to the isolation segment. If the isolation segment is assigned to a space within an organization, the entitlement cannot be revoked. If the isolation segment is the organization's default, the entitlement cannot be revoked.
+
+      **Permitted roles:** Admin
     operationId: revokeIsolationSegmentForOrganization
     tags:
       - Isolation Segments
@@ -400,7 +436,7 @@
         schema:
           type: string
           format: uuid
-        description: The GUID of the organization to revoke entitlement from.
+        description: The guid of the organization to revoke entitlement from
     responses:
       '204':
         description: No Content
@@ -415,14 +451,15 @@
 /v3/isolation_segments/{guid}/relationships/spaces:
   get:
     summary: List spaces relationship
-    description: This endpoint lists the spaces to which the isolation segment is assigned. For an Admin, this will list all associated spaces in the system. For an org manager, this will list only those associated spaces belonging to orgs for which the user is a manager. For any other user, this will list only those associated spaces to which the user has access.
+    description: |-
+      This endpoint lists the spaces to which the isolation segment is assigned. For an Admin, this will list all associated spaces in the system. For an org manager, this will list only those associated spaces belonging to orgs for which the user is a manager. For any other user, this will list only those associated spaces to which the user has access.
+
+      **Permitted roles:** All Roles
     operationId: listSpacesForIsolationSegment
     tags:
       - Isolation Segments
     parameters:
       - $ref: ../components/parameters/Guid.yaml
-      - $ref: ../components/parameters/Page.yaml
-      - $ref: ../components/parameters/PerPage.yaml
     responses:
       '200':
         description: OK
@@ -435,8 +472,8 @@
                 summary: default
                 value:
                   data:
-                    - guid: 123e4567-e89b-12d3-a456-426614174000
-                    - guid: 123e4567-e89b-12d3-a456-426614174000
+                    - guid: 885735b5-aea4-4cf5-8e44-961af0e41920
+                    - guid: d4c91047-7b29-4fda-b7f9-04033e5c9c9f
                   links:
                     self:
                       href: https://api.example.org/v3/isolation_segments/bdeg4371-cbd3-4155-b156-dc0c2a431b4c/relationships/spaces
@@ -449,14 +486,44 @@
 /v3/isolation_segments/{guid}/organizations:
   get:
     summary: List organizations for isolation segment
-    description: This endpoint lists the organizations entitled for the isolation segment. For an Admin, this will list all entitled organizations in the system. For any other user, this will list only the entitled organizations to which the user belongs.
+    description: |-
+      Retrieve the organizations entitled to the isolation segment. Return only the organizations the user has access to.
+
+      **Permitted roles:** Admin, Admin Read-Only, Global Auditor, Org Auditor, Org Billing Manager, Org Manager
     operationId: listOrganizationsForIsolationSegmentShort
     tags:
       - Isolation Segments
     parameters:
       - $ref: ../components/parameters/Guid.yaml
+      - name: names
+        in: query
+        schema:
+          type: array
+          items:
+            type: string
+        description: Comma-delimited list of organization names to filter by (case-insensitive)
+      - name: guids
+        in: query
+        schema:
+          type: array
+          items:
+            type: string
+        description: Comma-delimited list of organization guids to filter by
       - $ref: ../components/parameters/Page.yaml
       - $ref: ../components/parameters/PerPage.yaml
+      - name: order_by
+        in: query
+        required: false
+        schema:
+          type: string
+          enum:
+            - created_at
+            - -created_at
+            - updated_at
+            - -updated_at
+            - name
+            - -name
+        description: Value to sort by; defaults to ascending. Prepend with `-` to sort descending. Valid values are `created_at`, `updated_at`, and `name`
     responses:
       '200':
         description: OK
@@ -478,7 +545,7 @@
                     next: null
                     previous: null
                   resources:
-                    - guid: 123e4567-e89b-12d3-a456-426614174000
+                    - guid: 885735b5-aea4-4cf5-8e44-961af0e41920
                       created_at: '2017-02-01T01:33:58Z'
                       updated_at: '2017-02-01T01:33:58Z'
                       name: org1
@@ -495,11 +562,11 @@
                       relationships:
                         quota:
                           data:
-                            guid: 123e4567-e89b-12d3-a456-426614174000
+                            guid: b7887f5c-34bb-40c5-9778-577572e4fb2d
                       metadata:
                         labels: {}
                         annotations: {}
-                    - guid: 123e4567-e89b-12d3-a456-426614174000
+                    - guid: d4c91047-7b29-4fda-b7f9-04033e5c9c9f
                       created_at: '2017-02-02T00:14:30Z'
                       updated_at: '2017-02-02T00:14:30Z'
                       name: org2
@@ -507,7 +574,7 @@
                       relationships:
                         quota:
                           data:
-                            guid: 123e4567-e89b-12d3-a456-426614174000
+                            guid: b7887f5c-34bb-40c5-9778-577572e4fb2d
                       links:
                         self:
                           href: https://api.example.org/v3/organizations/d4c91047-7b29-4fda-b7f9-04033e5c9c9f

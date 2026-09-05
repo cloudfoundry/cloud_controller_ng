@@ -7,4 +7,14 @@ content:
       properties:
         metadata:
           $ref: '../schemas/Metadata.yaml'
+          description: Labels and annotations applied to the domain
       description: Request schema for updating a domain
+    examples:
+      default:
+        summary: default
+        value:
+          metadata:
+            labels:
+              key: value
+            annotations:
+              note: detailed information
