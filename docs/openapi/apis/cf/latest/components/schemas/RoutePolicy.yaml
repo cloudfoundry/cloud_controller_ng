@@ -1,0 +1,37 @@
+type: object
+allOf:
+  - $ref: './BaseSchema.yaml'
+  - properties:
+      source:
+        $ref: './RoutePolicySource.yaml'
+      metadata:
+        $ref: './Metadata.yaml'
+      relationships:
+        $ref: './RoutePolicyRelationships.yaml'
+      links:
+        type: object
+        required:
+          - self
+          - route
+        properties:
+          self:
+            $ref: './Link.yaml'
+            description: The URL to get this route policy
+          route:
+            $ref: './Link.yaml'
+            description: The URL to get the route protected by this policy
+      included:
+        $ref: './IncludedResources.yaml'
+        description: Related resources included by the `include` query parameter
+required:
+  - guid
+  - created_at
+  - updated_at
+  - source
+  - metadata
+  - relationships
+  - links
+description: |
+  A route policy controls which Cloud Foundry app, space, organization, or
+  authenticated caller can access a route on a domain with route-policy
+  enforcement enabled.

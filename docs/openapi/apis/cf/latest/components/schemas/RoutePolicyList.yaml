@@ -1,0 +1,15 @@
+type: object
+required:
+  - pagination
+  - resources
+properties:
+  pagination:
+    $ref: './Pagination.yaml'
+  resources:
+    type: array
+    items:
+      $ref: './RoutePolicy.yaml'
+  included:
+    $ref: './IncludedResources.yaml'
+    description: Related resources included by the `include` query parameter
+description: A paginated list of route policies
