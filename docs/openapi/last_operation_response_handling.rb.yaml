@@ -1,0 +1,204 @@
+---
+openapi: 3.0.3
+info:
+  title: Cloud Controller V3 API
+  version: v3
+servers: []
+paths:
+  "/v3/service_credential_bindings":
+    post:
+      summary: create
+      tags:
+      - ServiceCredentialBinding
+      requestBody:
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                type:
+                  type: string
+                name:
+                  type: string
+                relationships:
+                  type: object
+                  properties:
+                    service_instance:
+                      type: object
+                      properties:
+                        data:
+                          type: object
+                          properties:
+                            guid:
+                              type: string
+                          required:
+                          - guid
+                      required:
+                      - data
+                    app:
+                      type: object
+                      properties:
+                        data:
+                          type: object
+                          properties:
+                            guid:
+                              type: string
+                          required:
+                          - guid
+                      required:
+                      - data
+                  required:
+                  - service_instance
+                metadata:
+                  type: object
+                  properties:
+                    labels:
+                      type: object
+                      properties:
+                        foo:
+                          type: string
+                      required:
+                      - foo
+                    annotations:
+                      type: object
+                      properties:
+                        foz:
+                          type: string
+                      required:
+                      - foz
+                  required:
+                  - labels
+                  - annotations
+              required:
+              - type
+              - name
+              - relationships
+              - metadata
+            example:
+              type: key
+              name: name-52642
+              relationships:
+                service_instance:
+                  data:
+                    guid: 4852c407-e7e6-4037-8255-25fdb0cb9917
+                app:
+                  data:
+                    guid: 641a5321-9bfd-48d6-b57f-f77f05aa4fe6
+              metadata:
+                labels:
+                  foo: bar
+                annotations:
+                  foz: baz
+      responses:
+        '202':
+          description: continues polling
+          content:
+            text/html:
+              schema:
+                type: string
+              example: ''
+  "/v3/service_route_bindings":
+    post:
+      summary: create
+      tags:
+      - ServiceRouteBinding
+      requestBody:
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                metadata:
+                  type: object
+                  properties:
+                    labels:
+                      type: object
+                      properties:
+                        peanut:
+                          type: string
+                      required:
+                      - peanut
+                    annotations:
+                      type: object
+                      properties:
+                        number:
+                          type: string
+                      required:
+                      - number
+                  required:
+                  - labels
+                  - annotations
+                relationships:
+                  type: object
+                  properties:
+                    service_instance:
+                      type: object
+                      properties:
+                        data:
+                          type: object
+                          properties:
+                            guid:
+                              type: string
+                          required:
+                          - guid
+                      required:
+                      - data
+                    route:
+                      type: object
+                      properties:
+                        data:
+                          type: object
+                          properties:
+                            guid:
+                              type: string
+                          required:
+                          - guid
+                      required:
+                      - data
+                  required:
+                  - service_instance
+                  - route
+              required:
+              - metadata
+              - relationships
+            example:
+              metadata:
+                labels:
+                  peanut: butter
+                annotations:
+                  number: eight
+              relationships:
+                service_instance:
+                  data:
+                    guid: 41ea462a-2579-436c-8863-18a657b067e9
+                route:
+                  data:
+                    guid: e2c5a820-b3fb-4b43-8b2d-79c7e0628802
+      responses:
+        '202':
+          description: updates the binding and job to failed
+          content:
+            text/html:
+              schema:
+                type: string
+              example: ''
+  "/v3/service_route_bindings/{guid}":
+    delete:
+      summary: destroy
+      tags:
+      - ServiceRouteBinding
+      parameters:
+      - name: guid
+        in: path
+        required: true
+        schema:
+          type: string
+        example: ad6b6578-3ea5-46ef-b0ca-7edda407bda9
+      responses:
+        '202':
+          description: continues polling
+          content:
+            text/html:
+              schema:
+                type: string
+              example: ''
