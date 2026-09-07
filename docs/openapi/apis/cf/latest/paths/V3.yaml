@@ -73,6 +73,10 @@ get:
                       allOf:
                         - $ref: '../components/schemas/Link.yaml'
                         - description: Link to the routes endpoint
+                    route_policies:
+                      allOf:
+                        - $ref: '../components/schemas/Link.yaml'
+                        - description: Link to the route policies endpoint
                     security_groups:
                       allOf:
                         - $ref: '../components/schemas/Link.yaml'

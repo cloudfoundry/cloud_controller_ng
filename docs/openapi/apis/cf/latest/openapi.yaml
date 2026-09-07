@@ -60,6 +60,8 @@ tags:
     description: "Root API endpoints that provide entry points and API information."
   - name: Routes
     description: "Routes are used to map a URL to an app."
+  - name: Route Policies
+    description: "Route policies control which callers can access routes on identity-aware domains."
   - name: Security Groups
     description: "Security groups are used to control access to apps."
   - name: Service Brokers
@@ -165,6 +167,14 @@ components:
       $ref: './components/schemas/AppSshEnabled.yaml'
     Route:
       $ref: './components/schemas/Route.yaml'
+    RoutePolicySource:
+      $ref: './components/schemas/RoutePolicySource.yaml'
+    RoutePolicyRelationships:
+      $ref: './components/schemas/RoutePolicyRelationships.yaml'
+    RoutePolicy:
+      $ref: './components/schemas/RoutePolicy.yaml'
+    RoutePolicyList:
+      $ref: './components/schemas/RoutePolicyList.yaml'
     RouteDestination:
       $ref: './components/schemas/RouteDestination.yaml'
     RouteDestinationList:
@@ -335,6 +345,10 @@ components:
       $ref: './components/requestBodies/RoleCreate.yaml'
     RouteCreateRequestBody:
       $ref: './components/requestBodies/RouteCreateRequestBody.yaml'
+    RoutePolicyCreateRequestBody:
+      $ref: './components/requestBodies/RoutePolicyCreateRequestBody.yaml'
+    RoutePolicyUpdateRequestBody:
+      $ref: './components/requestBodies/RoutePolicyUpdateRequestBody.yaml'
     RouteDestinations:
       $ref: './components/requestBodies/RouteDestinations.yaml'
     SpaceCreateRequestBody:
@@ -470,6 +484,10 @@ paths:
     $ref: './paths/Routes.yaml#/~1v3~1routes~1{guid}~1destinations'
   /v3/routes/{guid}/destinations/{destination_guid}:
     $ref: './paths/Routes.yaml#/~1v3~1routes~1{guid}~1destinations~1{destination_guid}'
+  /v3/route_policies:
+    $ref: './paths/RoutePolicies.yaml#/~1v3~1route_policies'
+  /v3/route_policies/{guid}:
+    $ref: './paths/RoutePolicies.yaml#/~1v3~1route_policies~1{guid}'
   /v3/security_groups:
     $ref: './paths/SecurityGroups.yaml#/~1v3~1security_groups'
   /v3/security_groups/{guid}:
