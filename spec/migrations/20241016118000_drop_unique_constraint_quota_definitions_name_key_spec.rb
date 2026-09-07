@@ -1,5 +1,5 @@
 # rubocop:disable Migration/TooManyMigrationRuns
-require 'spec_helper'
+require 'migration_spec_helper'
 require 'migrations/helpers/migration_shared_context'
 
 RSpec.describe 'migration to add or remove unique constraint on name column in quota_definitions table', isolation: :truncation, type: :migration do

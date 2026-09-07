@@ -1,4 +1,4 @@
-require 'spec_helper'
+require 'migration_spec_helper'
 require 'migrations/helpers/bigint_migration_step3_shared_context'
 
 RSpec.describe 'bigint migration - jobs table - step3b', isolation: :truncation, type: :migration do

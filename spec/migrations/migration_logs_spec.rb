@@ -1,4 +1,4 @@
-require 'spec_helper'
+require 'migration_spec_helper'
 
 RSpec.describe 'migration logs', isolation: :truncation, type: :migration do
   let(:db) { Sequel::Model.db }

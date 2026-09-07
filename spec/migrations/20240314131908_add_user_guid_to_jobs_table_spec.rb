@@ -1,4 +1,4 @@
-require 'spec_helper'
+require 'migration_spec_helper'
 require 'migrations/helpers/migration_shared_context'
 
 RSpec.describe 'migration to add user_guid column to jobs table and add an index for that column', isolation: :truncation, type: :migration do
