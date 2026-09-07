@@ -1,0 +1,20 @@
+type: object
+required:
+  - route
+  - app
+  - space
+  - organization
+properties:
+  route:
+    $ref: './RelationshipToOne.yaml'
+    description: The route protected by this policy
+  app:
+    $ref: './RelationshipToOne.yaml'
+    description: The app selected by a `cf:app:<uuid>` source, otherwise null
+  space:
+    $ref: './RelationshipToOne.yaml'
+    description: The space selected by a `cf:space:<uuid>` source, otherwise null
+  organization:
+    $ref: './RelationshipToOne.yaml'
+    description: The organization selected by a `cf:org:<uuid>` source, otherwise null
+description: Relationships exposed by a route policy

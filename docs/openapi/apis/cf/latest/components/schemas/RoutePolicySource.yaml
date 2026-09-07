@@ -1,0 +1,13 @@
+oneOf:
+  - type: string
+    enum:
+      - cf:any
+  - type: string
+    pattern: '^cf:(app|space|org):[0-9a-f-]+$'
+description: |
+  The caller selector for a route policy. Use `cf:app:<uuid>` for one app,
+  `cf:space:<uuid>` for all apps in a space, `cf:org:<uuid>` for all apps in
+  an organization, or `cf:any` for any authenticated caller.
+examples:
+  - cf:app:d76446a1-f429-4444-8797-be2f78b75b08
+  - cf:any
