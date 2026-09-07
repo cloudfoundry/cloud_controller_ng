@@ -25,6 +25,7 @@ module VCAP::CloudController
     #
     # @return [Sequel::Database]
     def self.connect(opts, logger)
+      VCAP::CloudController::DbConnection::OptionsFactory.set_env(opts)
       connection_options = VCAP::CloudController::DbConnection::OptionsFactory.build(opts)
 
       db = get_connection(opts, connection_options)
