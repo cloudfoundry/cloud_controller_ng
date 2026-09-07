@@ -1,0 +1,195 @@
+/v3/route_policies:
+  get:
+    summary: List route policies
+    description: Retrieve route policies visible to the current user.
+    operationId: listRoutePolicies
+    tags:
+      - Route Policies
+    parameters:
+      - $ref: ../components/parameters/Page.yaml
+      - $ref: ../components/parameters/PerPage.yaml
+      - $ref: ../components/parameters/OrderBy.yaml
+      - $ref: ../components/parameters/CreatedAts.yaml
+      - $ref: ../components/parameters/UpdatedAts.yaml
+      - $ref: ../components/parameters/LabelSelector.yaml
+      - name: guids
+        in: query
+        schema:
+          type: array
+          items:
+            type: string
+            format: uuid
+        description: Comma-delimited route-policy GUIDs to filter by
+      - name: route_guids
+        in: query
+        schema:
+          type: array
+          items:
+            type: string
+            format: uuid
+        description: Comma-delimited route GUIDs to filter by
+      - name: space_guids
+        in: query
+        schema:
+          type: array
+          items:
+            type: string
+            format: uuid
+        description: Comma-delimited space GUIDs to filter by route space
+      - name: sources
+        in: query
+        schema:
+          type: array
+          items:
+            $ref: ../components/schemas/RoutePolicySource.yaml
+        description: Comma-delimited exact route-policy sources to filter by
+      - name: source_guids
+        in: query
+        schema:
+          type: array
+          items:
+            type: string
+            format: uuid
+        description: Comma-delimited GUIDs in route-policy sources to filter by
+      - name: include
+        in: query
+        schema:
+          type: array
+          items:
+            type: string
+            enum:
+              - route
+              - source
+        description: Include the route and/or source resource in the response
+    responses:
+      '200':
+        description: Successfully retrieved route policies
+        content:
+          application/json:
+            schema:
+              $ref: ../components/schemas/RoutePolicyList.yaml
+      '400':
+        $ref: ../components/responses/BadRequest.yaml
+      '401':
+        $ref: ../components/responses/Unauthorized.yaml
+      '403':
+        $ref: ../components/responses/Forbidden.yaml
+      '422':
+        $ref: ../components/responses/UnprocessableEntity.yaml
+      '500':
+        $ref: ../components/responses/500.yaml
+      '502':
+        $ref: ../components/responses/BadGateway.yaml
+      '503':
+        $ref: ../components/responses/ServiceUnavailable.yaml
+  post:
+    summary: Create a route policy
+    description: Create a route policy for a route on a domain with route-policy enforcement enabled.
+    operationId: createRoutePolicy
+    tags:
+      - Route Policies
+    requestBody:
+      $ref: ../components/requestBodies/RoutePolicyCreateRequestBody.yaml
+    responses:
+      '201':
+        description: Successfully created route policy
+        content:
+          application/json:
+            schema:
+              $ref: ../components/schemas/RoutePolicy.yaml
+      '400':
+        $ref: ../components/responses/BadRequest.yaml
+      '401':
+        $ref: ../components/responses/Unauthorized.yaml
+      '403':
+        $ref: ../components/responses/Forbidden.yaml
+      '404':
+        $ref: ../components/responses/NotFound.yaml
+      '422':
+        $ref: ../components/responses/UnprocessableEntity.yaml
+      '500':
+        $ref: ../components/responses/500.yaml
+      '503':
+        $ref: ../components/responses/ServiceUnavailable.yaml
+/v3/route_policies/{guid}:
+  get:
+    summary: Get a route policy
+    description: Retrieve a route policy and optionally include its route or source resource.
+    operationId: getRoutePolicy
+    tags:
+      - Route Policies
+    parameters:
+      - $ref: ../components/parameters/Guid.yaml
+      - name: include
+        in: query
+        schema:
+          type: array
+          items:
+            type: string
+            enum:
+              - route
+              - source
+        description: Include the route and/or source resource in the response
+    responses:
+      '200':
+        description: Successfully retrieved route policy
+        content:
+          application/json:
+            schema:
+              $ref: ../components/schemas/RoutePolicy.yaml
+      '401':
+        $ref: ../components/responses/Unauthorized.yaml
+      '403':
+        $ref: ../components/responses/Forbidden.yaml
+      '404':
+        $ref: ../components/responses/NotFound.yaml
+      '422':
+        $ref: ../components/responses/UnprocessableEntity.yaml
+  patch:
+    summary: Update a route policy
+    description: Update route-policy labels and annotations. The source and route relationship are immutable.
+    operationId: updateRoutePolicy
+    tags:
+      - Route Policies
+    parameters:
+      - $ref: ../components/parameters/Guid.yaml
+    requestBody:
+      $ref: ../components/requestBodies/RoutePolicyUpdateRequestBody.yaml
+    responses:
+      '200':
+        description: Successfully updated route policy
+        content:
+          application/json:
+            schema:
+              $ref: ../components/schemas/RoutePolicy.yaml
+      '400':
+        $ref: ../components/responses/BadRequest.yaml
+      '401':
+        $ref: ../components/responses/Unauthorized.yaml
+      '403':
+        $ref: ../components/responses/Forbidden.yaml
+      '404':
+        $ref: ../components/responses/NotFound.yaml
+      '422':
+        $ref: ../components/responses/UnprocessableEntity.yaml
+      '500':
+        $ref: ../components/responses/500.yaml
+      '503':
+        $ref: ../components/responses/ServiceUnavailable.yaml
+  delete:
+    summary: Delete a route policy
+    description: Delete a route policy and remove access for its source on the route.
+    operationId: deleteRoutePolicy
+    tags:
+      - Route Policies
+    parameters:
+      - $ref: ../components/parameters/Guid.yaml
+    responses:
+      '204':
+        description: Successfully deleted route policy
+      '401':
+        $ref: ../components/responses/Unauthorized.yaml
+      '403':
+        $ref: ../components/responses/Forbidden.yaml
+      '404':
+        $ref: ../components/responses/NotFound.yaml
