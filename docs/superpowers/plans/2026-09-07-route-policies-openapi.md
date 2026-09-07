@@ -25,7 +25,6 @@ Create these focused components:
 Modify these registries:
 
 - `docs/openapi/apis/cf/latest/openapi.yaml`: tag, schema, request-body, and path registrations.
-- `docs/openapi/apis/cf/latest/paths/V3.yaml`: `route_policies` link in the V3 root response.
 
 Do not modify CAPI controllers, messages, presenters, legacy API documentation, numbered OpenAPI versions, or shared components unless linting demonstrates that a shared component must be extended.
 
@@ -556,11 +555,10 @@ git add docs/openapi/apis/cf/latest/paths/RoutePolicies.yaml
 git commit -m "docs: add route policy OpenAPI operations"
 ```
 
-### Task 6: Register the Latest Specification and V3 Root Link
+### Task 6: Register the Latest Specification
 
 **Files:**
 - Modify: `docs/openapi/apis/cf/latest/openapi.yaml:12-362`
-- Modify: `docs/openapi/apis/cf/latest/paths/V3.yaml:68-80`
 
 - [ ] **Step 1: Add the `Route Policies` tag.**
 
@@ -608,18 +606,7 @@ Insert under `paths`, adjacent to the existing routes entries:
     $ref: './paths/RoutePolicies.yaml#/~1v3~1route_policies~1{guid}'
 ```
 
-- [ ] **Step 5: Add the route-policy link to the V3 root.**
-
-Insert after the `routes` link in `paths/V3.yaml`:
-
-```yaml
-                    route_policies:
-                      allOf:
-                        - $ref: '../components/schemas/Link.yaml'
-                        - description: Link to the route policies endpoint
-```
-
-- [ ] **Step 6: Build the registered specification.**
+- [ ] **Step 5: Build the registered specification.**
 
 Run from `docs/openapi`:
 
@@ -630,10 +617,10 @@ yarn build
 
 Expected: Redocly resolves every route-policy reference, lint succeeds under the repository configuration, and `dist/latest/openapi.yaml` is generated.
 
-- [ ] **Step 7: Commit the registration changes.**
+- [ ] **Step 6: Commit the registration changes.**
 
 ```bash
-git add docs/openapi/apis/cf/latest/openapi.yaml docs/openapi/apis/cf/latest/paths/V3.yaml
+git add docs/openapi/apis/cf/latest/openapi.yaml
 git commit -m "docs: register route policies in OpenAPI"
 ```
 
@@ -652,15 +639,15 @@ rg -n "/v3/route_policies|listRoutePolicies|createRoutePolicy|getRoutePolicy|upd
 
 Expected: both route-policy paths, all five operation IDs, and the route-policy component names appear in the bundled document.
 
-- [ ] **Step 2: Confirm the root link and contract-specific fields exist.**
+- [ ] **Step 2: Confirm the contract-specific fields exist.**
 
 Run:
 
 ```bash
-rg -n "route_policies|source_guids|route_guids|space_guids|cf:any|include|metadata|relationships" dist/latest/openapi.yaml
+rg -n "source_guids|route_guids|space_guids|cf:any|include|metadata|relationships" dist/latest/openapi.yaml
 ```
 
-Expected: the V3 root exposes `route_policies`; the collection filters include `route_guids`, `space_guids`, `sources`, and `source_guids`; the resource includes metadata and relationships; and both `route` and `source` are allowed include values.
+Expected: the collection filters include `route_guids`, `space_guids`, `sources`, and `source_guids`; the resource includes metadata and relationships; and both `route` and `source` are allowed include values.
 
 - [ ] **Step 3: Review the final diff and check whitespace.**
 

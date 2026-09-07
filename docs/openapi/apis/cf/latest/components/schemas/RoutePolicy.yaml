@@ -20,6 +20,15 @@ allOf:
           route:
             $ref: './Link.yaml'
             description: The URL to get the route protected by this policy
+          app:
+            $ref: './Link.yaml'
+            description: The URL to get the app selected by a `cf:app:<uuid>` source
+          space:
+            $ref: './Link.yaml'
+            description: The URL to get the space selected by a `cf:space:<uuid>` source
+          organization:
+            $ref: './Link.yaml'
+            description: The URL to get the organization selected by a `cf:org:<uuid>` source
       included:
         $ref: './IncludedResources.yaml'
         description: Related resources included by the `include` query parameter

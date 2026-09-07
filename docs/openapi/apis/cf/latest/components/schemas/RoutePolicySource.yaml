@@ -3,7 +3,7 @@ oneOf:
     enum:
       - cf:any
   - type: string
-    pattern: '^cf:(app|space|org):[0-9a-f-]+$'
+    pattern: '^cf:(app|space|org):[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$'
 description: |
   The caller selector for a route policy. Use `cf:app:<uuid>` for one app,
   `cf:space:<uuid>` for all apps in a space, `cf:org:<uuid>` for all apps in
