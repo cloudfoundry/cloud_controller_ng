@@ -1,0 +1,19 @@
+description: Route policy metadata to update; source and route are immutable
+required: true
+content:
+  application/json:
+    schema:
+      type: object
+      additionalProperties: false
+      properties:
+        metadata:
+          $ref: '../schemas/Metadata.yaml'
+    examples:
+      default:
+        summary: Update route policy metadata
+        value:
+          metadata:
+            labels:
+              team: backend
+            annotations:
+              note: Updated contact information

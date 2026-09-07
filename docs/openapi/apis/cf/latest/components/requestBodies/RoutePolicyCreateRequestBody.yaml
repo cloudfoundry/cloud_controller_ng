@@ -1,0 +1,59 @@
+description: Route policy object that needs to be created
+required: true
+content:
+  application/json:
+    schema:
+      type: object
+      additionalProperties: false
+      required:
+        - source
+        - relationships
+      properties:
+        source:
+          $ref: '../schemas/RoutePolicySource.yaml'
+        relationships:
+          type: object
+          additionalProperties: false
+          required:
+            - route
+          properties:
+            route:
+              type: object
+              additionalProperties: false
+              required:
+                - data
+              properties:
+                data:
+                  type: object
+                  additionalProperties: false
+                  required:
+                    - guid
+                  properties:
+                    guid:
+                      type: string
+                      format: uuid
+                      description: GUID of the route to protect
+        metadata:
+          $ref: '../schemas/Metadata.yaml'
+    examples:
+      app:
+        summary: Allow one app to access a route
+        value:
+          source: cf:app:d76446a1-f429-4444-8797-be2f78b75b08
+          relationships:
+            route:
+              data:
+                guid: 89b32bd6-688f-4424-b94f-2e2c86495a5f
+          metadata:
+            labels:
+              team: frontend
+            annotations:
+              description: Allow frontend app to call backend API
+      any:
+        summary: Allow any authenticated caller to access a route
+        value:
+          source: cf:any
+          relationships:
+            route:
+              data:
+                guid: 89b32bd6-688f-4424-b94f-2e2c86495a5f
