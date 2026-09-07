@@ -110,6 +110,21 @@ module VCAP::CloudController
           it_behaves_like 'does not resolve the operation'
         end
 
+        context 'when delayed_job.failed_at is nil and pollable is FAILED (not POLLING)' do
+          # Isolates the main exclude(delayed_jobs.failed_at => nil) filter: pollable state FAILED
+          # does not match live_pollable_exists (which only considers POLLING/PROCESSING), so this
+          # row is excluded solely by the failed_at IS NULL condition. Guards against accidentally
+          # removing that filter while keeping the live-pollable guard.
+          let(:subject_scenario) do
+            prepare_stuck_service_instance(
+              pollable_job_state: PollableJobModel::FAILED_STATE,
+              delayed_job_failed_at: nil
+            )
+          end
+
+          it_behaves_like 'does not resolve the operation'
+        end
+
         context 'when pollable job state is COMPLETE' do
           let(:subject_scenario) { prepare_stuck_service_instance(pollable_job_state: PollableJobModel::COMPLETE_STATE) }
 
