@@ -76,7 +76,7 @@ oneOf:
     enum:
       - cf:any
   - type: string
-    pattern: '^cf:(app|space|org):[0-9a-f-]+$'
+    pattern: '^cf:(app|space|org):[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$'
 description: |
   The caller selector for a route policy. Use `cf:app:<uuid>` for one app,
   `cf:space:<uuid>` for all apps in a space, `cf:org:<uuid>` for all apps in
@@ -350,6 +350,7 @@ Create the `/v3/route_policies` section of `RoutePolicies.yaml` with these exact
       - $ref: ../components/parameters/LabelSelector.yaml
       - name: guids
         in: query
+        explode: false
         schema:
           type: array
           items:
@@ -358,6 +359,7 @@ Create the `/v3/route_policies` section of `RoutePolicies.yaml` with these exact
         description: Comma-delimited route-policy GUIDs to filter by
       - name: route_guids
         in: query
+        explode: false
         schema:
           type: array
           items:
@@ -366,6 +368,7 @@ Create the `/v3/route_policies` section of `RoutePolicies.yaml` with these exact
         description: Comma-delimited route GUIDs to filter by
       - name: space_guids
         in: query
+        explode: false
         schema:
           type: array
           items:
@@ -374,6 +377,7 @@ Create the `/v3/route_policies` section of `RoutePolicies.yaml` with these exact
         description: Comma-delimited space GUIDs to filter by route space
       - name: sources
         in: query
+        explode: false
         schema:
           type: array
           items:
@@ -381,6 +385,7 @@ Create the `/v3/route_policies` section of `RoutePolicies.yaml` with these exact
         description: Comma-delimited exact route-policy sources to filter by
       - name: source_guids
         in: query
+        explode: false
         schema:
           type: array
           items:
@@ -389,6 +394,7 @@ Create the `/v3/route_policies` section of `RoutePolicies.yaml` with these exact
         description: Comma-delimited GUIDs in route-policy sources to filter by
       - name: include
         in: query
+        explode: false
         schema:
           type: array
           items:
@@ -465,6 +471,7 @@ Append the `/v3/route_policies/{guid}` section:
       - $ref: ../components/parameters/Guid.yaml
       - name: include
         in: query
+        explode: false
         schema:
           type: array
           items:
@@ -536,6 +543,10 @@ Append the `/v3/route_policies/{guid}` section:
         $ref: ../components/responses/Forbidden.yaml
       '404':
         $ref: ../components/responses/NotFound.yaml
+      '422':
+        $ref: ../components/responses/UnprocessableEntity.yaml
+      '500':
+        $ref: ../components/responses/500.yaml
 ```
 
 - [ ] **Step 3: Lint the path file after it is reachable through a temporary direct command.**

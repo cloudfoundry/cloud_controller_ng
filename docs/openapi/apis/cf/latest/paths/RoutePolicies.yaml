@@ -202,3 +202,5 @@
         $ref: ../components/responses/NotFound.yaml
       '422':
         $ref: ../components/responses/UnprocessableEntity.yaml
+      '500':
+        $ref: ../components/responses/500.yaml
