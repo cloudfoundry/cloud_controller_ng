@@ -67,7 +67,7 @@ group :test do
   gem 'rubocop-rspec', '~> 3.10'
   gem 'rubocop-rspec_rails'
   gem 'rubocop-sequel', '~> 0.4.1'
-  gem 'simplecov', '~> 1.1', require: false
+  gem 'simplecov', '~> 1.2', require: false
   gem 'timecop'
   gem 'webmock', '> 2.3.1'
   gem 'webrick', '~> 1.9.2'
