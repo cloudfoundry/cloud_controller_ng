@@ -82,7 +82,7 @@ GEM
     ffi (1.17.4)
     ffi (1.17.4-x86_64-darwin)
     ffi (1.17.4-x86_64-linux-gnu)
-    fluent-logger (0.10.0)
+    fluent-logger (0.11.0)
       logger (~> 1.6)
       msgpack (>= 1.0.0, < 2)
     google-protobuf (4.36.0)
