@@ -50,6 +50,8 @@ module VCAP::Services
             OrphanMitigator.new.cleanup_failed_bind(binding)
           end
 
+          after { Timecop.return }
+
           it 'enqueues an unbind job' do
             expect(VCAP::CloudController::Jobs::GenericEnqueuer).to have_received(:shared)
 
@@ -106,6 +108,8 @@ module VCAP::Services
             expect(run_at).to eq Time.now
           end
         end
+
+        after { Timecop.return }
 
         specify 'the enqueued job has a reschedule_at define such that exponential backoff occurs' do
           now = Time.now

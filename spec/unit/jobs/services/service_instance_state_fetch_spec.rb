@@ -473,13 +473,15 @@ module VCAP::CloudController
           context 'when enqueuing the job would exceed the max poll duration by the time it runs' do
             let(:state) { 'in progress' }
 
-            it 'does not enqueue another fetch job' do
-              Timecop.freeze(job.end_timestamp - (job.poll_interval * 0.5))
-              run_job(job)
+              it 'does not enqueue another fetch job' do
+                Timecop.freeze(job.end_timestamp - (job.poll_interval * 0.5)) do
+                  run_job(job)
+                end
 
-              Timecop.freeze(Time.now + (job.poll_interval * 2))
-              execute_all_jobs(expected_successes: 0, expected_failures: 0)
-            end
+                Timecop.freeze(Time.now + (job.poll_interval * 2)) do
+                  execute_all_jobs(expected_successes: 0, expected_failures: 0)
+                end
+              end
           end
 
           context 'when the job was migrated before the addition of end_timestamp' do
