@@ -1,0 +1,12 @@
+type: object
+properties:
+  version:
+    type: string
+    description: The current semantic version of this service instance; comparing this version with the version of the Service Plan can be used to determine whether or not this service instance is up to date with the Service Plan
+  description:
+    type: [string, "null"]
+    description: A textual explanation associated with this version
+description: |-
+  The maintenance info object for service instances.
+
+  Information about the version of this service instance; only shown when type is `managed`.

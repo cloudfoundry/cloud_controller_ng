@@ -2,10 +2,22 @@ allOf:
   - $ref: './BaseSchema.yaml'
 type: object
 properties:
+  guid:
+    type: string
+    format: uuid
+    description: Unique identifier for the role
+  created_at:
+    type: string
+    format: date-time
+    description: The time with zone when the role was created
+  updated_at:
+    type: string
+    format: date-time
+    description: The time with zone when the role was last updated
   type:
     type: string
     description: |-
-      Role type. Possible values are:
+      Role type; see [Valid role types](#valid-role-types). Possible values are:
       - `organization_user`: A user in the organization
       - `organization_auditor`: An auditor in the organization
       - `organization_manager`: A manager in the organization
@@ -13,7 +25,7 @@ properties:
       - `space_auditor`: An auditor in the space
       - `space_developer`: A developer in the space
       - `space_manager`: A manager in the space
-      - `space_supporter`: A supporter in the space (not authorized to use the V2 API)
+      - `space_supporter`: A supporter in the space; users with only the space supporter role are not authorized to use the **V2** API
     enum:
       - organization_user
       - organization_auditor
@@ -27,23 +39,18 @@ properties:
     allOf:
       - $ref: './Relationships.yaml'
     properties:
-      organization:
-        allOf:
-          - $ref: './RelationshipToOne.yaml'
-          - description: |
-              A relationship to the organization the role controls access to; when this is a space role, `organization.data` will be `null`.
-      space:
-        allOf:
-          - $ref: './RelationshipToOne.yaml'
-          - description: |
-              A relationship to the space the role controls access to; when this is an organization role, `space.data` will be `null`.
       user:
-        allOf:
-          - $ref: './UserRelationshipToOne.yaml'
-          - description: |
-              A relationship to the user; this is the user that has the role
+        $ref: './RelationshipToOne.yaml'
+        description: A relationship to the user; this is the user that has the role
+      space:
+        $ref: './RelationshipToOne.yaml'
+        description: A relationship to the space the role controls access to; when this is an organization role, `space.data` will be `null`
+      organization:
+        $ref: './RelationshipToOne.yaml'
+        description: A relationship to the organization the role controls access to; when this is a space role, `organization.data` will be `null`
   links:
     type: object
+    description: Links to related resources
     properties:
       self:
         $ref: './Link.yaml'
@@ -53,14 +60,14 @@ properties:
         description: The URL to get the user for this role
       organization:
         $ref: './Link.yaml'
-        description: The URL to get the organization for this role
+        description: The URL to get the organization for this role; only present for organization roles
       space:
         $ref: './Link.yaml'
-        description: The URL to get the space for this role
+        description: The URL to get the space for this role; only present for space roles
   included:
     $ref: './IncludedResources.yaml'
     description: Additional related resources included in the response when using the include parameter
 description: |
-  Roles represent a set of permissions that can be granted to users. Roles are represented as a JSON object.
-  A role consists of several required role fields and other attributes specific to the role.
-  See Roles for specific roles.
+  Roles control access to resources in organizations and spaces. Roles are assigned to users.
+
+  A role is represented as a JSON object consisting of a role type and relationships to the user and to the organization or space the role controls access to.

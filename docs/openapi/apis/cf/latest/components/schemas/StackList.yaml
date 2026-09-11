@@ -2,7 +2,9 @@ type: object
 properties:
   pagination:
     $ref: './Pagination.yaml'
+    description: Pagination information for the list of stacks
   resources:
     type: array
     items:
       $ref: './Stack.yaml'
+    description: The list of stacks

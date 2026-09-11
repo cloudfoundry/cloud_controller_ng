@@ -1,6 +1,9 @@
 post:
-  summary: Clear the buildpack cache
-  description: This endpoint will delete all of the existing buildpack caches in the blobstore. The buildpack cache is used during staging by buildpacks as a way to cache certain resources, e.g. downloaded Ruby gems. An admin who wants to decrease the size of their blobstore could use this endpoint to delete unnecessary blobs.
+  summary: Clear buildpack cache
+  description: |-
+    This endpoint will delete all of the existing buildpack caches in the blobstore. The buildpack cache is used during staging by buildpacks as a way to cache certain resources, e.g. downloaded Ruby gems. An admin who wants to decrease the size of their blobstore could use this endpoint to delete unnecessary blobs.
+
+    **Permitted roles:** Admin
   operationId: clearBuildpackCache
   tags:
     - Admin
@@ -13,6 +16,8 @@ post:
           schema:
             type: string
             format: uri
+            examples:
+              - https://api.example.org/v3/jobs/c33a5caf-77e0-4d6e-b587-5555d339bc9a
     '401':
       $ref: '../components/responses/Unauthorized.yaml'
     '403':

@@ -1,0 +1,42 @@
+type: object
+required:
+  - type
+  - name
+  - relationships
+properties:
+  type:
+    type: string
+    enum:
+      - managed
+    description: Must be `managed`
+  name:
+    type: string
+    description: Name of the service instance; must be unique within the space (case-sensitive)
+  tags:
+    type: array
+    items:
+      type: string
+    description: Tags are used by apps to identify service instances; they are shown in the app VCAP_SERVICES env
+  parameters:
+    type: object
+    description: A JSON object that is passed to the service broker
+  relationships:
+    type: object
+    required:
+      - space
+      - service_plan
+    properties:
+      space:
+        $ref: './RelationshipToOne.yaml'
+        description: The space in which to create the service instance
+      service_plan:
+        $ref: './RelationshipToOne.yaml'
+        description: The service plan from which to create the service instance
+    description: Relationships for the service instance
+  metadata:
+    $ref: './Metadata.yaml'
+    description: Labels and annotations applied to the service instance
+description: |-
+  Parameters for creating a managed service instance.
+
+  If failures occur when creating managed service instances, the API might execute orphan mitigation steps accordingly to cases outlined in the [OSBAPI specification](https://github.com/openservicebrokerapi/servicebroker/blob/master/spec.md#orphan-mitigation)

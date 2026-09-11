@@ -1,19 +1,22 @@
 /v3/processes:
   get:
     summary: List processes
-    description: Retrieve all processes.
+    description: |-
+      Retrieve all processes the user has access to.
+
+      **Permitted roles:** All Roles
     operationId: listProcesses
     tags:
       - Processes
     parameters:
       - $ref: ../components/parameters/Page.yaml
       - $ref: ../components/parameters/PerPage.yaml
-      - $ref: ../components/parameters/OrderBy.yaml
       - $ref: ../components/parameters/CreatedAts.yaml
       - $ref: ../components/parameters/UpdatedAts.yaml
       - $ref: ../components/parameters/LabelSelector.yaml
       - name: guids
         in: query
+        required: false
         schema:
           type: array
           items:
@@ -21,6 +24,7 @@
         description: Comma-delimited list of process guids to filter by
       - name: types
         in: query
+        required: false
         schema:
           type: array
           items:
@@ -28,6 +32,7 @@
         description: Comma-delimited list of process types to filter by
       - name: app_guids
         in: query
+        required: false
         schema:
           type: array
           items:
@@ -35,6 +40,7 @@
         description: Comma-delimited list of app guids to filter by
       - name: space_guids
         in: query
+        required: false
         schema:
           type: array
           items:
@@ -42,11 +48,31 @@
         description: Comma-delimited list of space guids to filter by
       - name: organization_guids
         in: query
+        required: false
         schema:
           type: array
           items:
             type: string
         description: Comma-delimited list of organization guids to filter by
+      - name: order_by
+        in: query
+        required: false
+        schema:
+          type: string
+          enum:
+            - created_at
+            - -created_at
+            - updated_at
+            - -updated_at
+        description: Value to sort by. Defaults to ascending; prepend with `-` to sort descending. Valid values are `created_at`, `updated_at`
+      - name: embed
+        in: query
+        required: false
+        schema:
+          type: string
+          enum:
+            - process_instances
+        description: Comma-delimited list of resources to embed in the response. Valid values are `process_instances`. See [embed](#embed) for more details. This parameter is experimental.
     responses:
       '200':
         description: OK
@@ -54,6 +80,111 @@
           application/json:
             schema:
               $ref: ../components/schemas/ProcessList.yaml
+            examples:
+              default:
+                summary: default
+                value:
+                  pagination:
+                    total_results: 3
+                    total_pages: 2
+                    first:
+                      href: https://api.example.org/v3/processes?page=1&per_page=2
+                    last:
+                      href: https://api.example.org/v3/processes?page=2&per_page=2
+                    next:
+                      href: https://api.example.org/v3/processes?page=2&per_page=2
+                    previous: null
+                  resources:
+                    - guid: 6a901b7c-9417-4dc1-8189-d3234aa0ab82
+                      type: web
+                      command: '[PRIVATE DATA HIDDEN IN LISTS]'
+                      user: vcap
+                      instances: 5
+                      memory_in_mb: 256
+                      disk_in_mb: 1024
+                      log_rate_limit_in_bytes_per_second: 1024
+                      health_check:
+                        type: port
+                        data:
+                          timeout: null
+                          invocation_timeout: null
+                          interval: null
+                      readiness_health_check:
+                        type: process
+                        data:
+                          invocation_timeout: null
+                          interval: null
+                      relationships:
+                        app:
+                          data:
+                            guid: ccc25a0f-c8f4-4b39-9f1b-de9f328d0ee5
+                        revision:
+                          data:
+                            guid: 885735b5-aea4-4cf5-8e44-961af0e41920
+                      metadata:
+                        labels: {}
+                        annotations: {}
+                      created_at: '2016-03-23T18:48:22Z'
+                      updated_at: '2016-03-23T18:48:42Z'
+                      version: e9df685c-0464-4aa7-b5f0-8ed843077c13
+                      links:
+                        self:
+                          href: https://api.example.org/v3/processes/6a901b7c-9417-4dc1-8189-d3234aa0ab82
+                        scale:
+                          href: https://api.example.org/v3/processes/6a901b7c-9417-4dc1-8189-d3234aa0ab82/actions/scale
+                          method: POST
+                        app:
+                          href: https://api.example.org/v3/apps/ccc25a0f-c8f4-4b39-9f1b-de9f328d0ee5
+                        space:
+                          href: https://api.example.org/v3/spaces/2f35885d-0c9d-4423-83ad-fd05066f8576
+                        stats:
+                          href: https://api.example.org/v3/processes/6a901b7c-9417-4dc1-8189-d3234aa0ab82/stats
+                        process_instances:
+                          href: https://api.example.org/v3/processes/6a901b7c-9417-4dc1-8189-d3234aa0ab82/process_instances
+                    - guid: 3fccacd9-4b02-4b96-8d02-8e865865e9eb
+                      type: worker
+                      command: '[PRIVATE DATA HIDDEN IN LISTS]'
+                      user: vcap
+                      instances: 1
+                      memory_in_mb: 256
+                      disk_in_mb: 1024
+                      log_rate_limit_in_bytes_per_second: 1024
+                      health_check:
+                        type: process
+                        data:
+                          invocation_timeout: null
+                          interval: null
+                      readiness_health_check:
+                        type: http
+                        data:
+                          endpoint: /ready
+                          invocation_timeout: 2
+                          interval: 5
+                      relationships:
+                        app:
+                          data:
+                            guid: ccc25a0f-c8f4-4b39-9f1b-de9f328d0ee5
+                        revision: null
+                      metadata:
+                        labels: {}
+                        annotations: {}
+                      created_at: '2016-03-23T18:48:22Z'
+                      updated_at: '2016-03-23T18:48:42Z'
+                      version: 74e513bb-7b9e-445c-84d5-7fea1394e611
+                      links:
+                        self:
+                          href: https://api.example.org/v3/processes/3fccacd9-4b02-4b96-8d02-8e865865e9eb
+                        scale:
+                          href: https://api.example.org/v3/processes/3fccacd9-4b02-4b96-8d02-8e865865e9eb/actions/scale
+                          method: POST
+                        app:
+                          href: https://api.example.org/v3/apps/ccc25a0f-c8f4-4b39-9f1b-de9f328d0ee5
+                        space:
+                          href: https://api.example.org/v3/spaces/2f35885d-0c9d-4423-83ad-fd05066f8576
+                        stats:
+                          href: https://api.example.org/v3/processes/3fccacd9-4b02-4b96-8d02-8e865865e9eb/stats
+                        process_instances:
+                          href: https://api.example.org/v3/processes/3fccacd9-4b02-4b96-8d02-8e865865e9eb/process_instances
       '400':
         $ref: ../components/responses/BadRequest.yaml
       '401':
@@ -73,12 +204,23 @@
 /v3/processes/{guid}:
   get:
     summary: Get a process
-    description: Get a process.
+    description: |-
+      Retrieve a process.
+
+      **Permitted roles:** Admin, Admin Read-Only, Global Auditor *(some fields are redacted)*, Org Manager *(some fields are redacted)*, Space Auditor *(some fields are redacted)*, Space Developer, Space Manager *(some fields are redacted)*, Space Supporter *(some fields are redacted)*
     operationId: getProcess
     tags:
       - Processes
     parameters:
       - $ref: ../components/parameters/Guid.yaml
+      - name: embed
+        in: query
+        required: false
+        schema:
+          type: string
+          enum:
+            - process_instances
+        description: Comma-delimited list of resources to embed in the response. Valid values are `process_instances`. See [embed](#embed) for more details. This parameter is experimental.
     responses:
       '200':
         description: OK
@@ -90,7 +232,53 @@
               default:
                 summary: default
                 value:
-                  guid: 123e4567-e89b-12d3-a456-426614174000
+                  guid: 6a901b7c-9417-4dc1-8189-d3234aa0ab82
+                  type: web
+                  command: rackup
+                  user: vcap
+                  instances: 5
+                  memory_in_mb: 256
+                  disk_in_mb: 1024
+                  log_rate_limit_in_bytes_per_second: 1024
+                  health_check:
+                    type: port
+                    data:
+                      timeout: null
+                  readiness_health_check:
+                    type: process
+                    data:
+                      invocation_timeout: null
+                  relationships:
+                    app:
+                      data:
+                        guid: ccc25a0f-c8f4-4b39-9f1b-de9f328d0ee5
+                    revision:
+                      data:
+                        guid: 885735b5-aea4-4cf5-8e44-961af0e41920
+                  metadata:
+                    labels: {}
+                    annotations: {}
+                  created_at: '2016-03-23T18:48:22Z'
+                  updated_at: '2016-03-23T18:48:42Z'
+                  version: e9df685c-0464-4aa7-b5f0-8ed843077c13
+                  links:
+                    self:
+                      href: https://api.example.org/v3/processes/6a901b7c-9417-4dc1-8189-d3234aa0ab82
+                    scale:
+                      href: https://api.example.org/v3/processes/6a901b7c-9417-4dc1-8189-d3234aa0ab82/actions/scale
+                      method: POST
+                    app:
+                      href: https://api.example.org/v3/apps/ccc25a0f-c8f4-4b39-9f1b-de9f328d0ee5
+                    space:
+                      href: https://api.example.org/v3/spaces/2f35885d-0c9d-4423-83ad-fd05066f8576
+                    stats:
+                      href: https://api.example.org/v3/processes/6a901b7c-9417-4dc1-8189-d3234aa0ab82/stats
+                    process_instances:
+                      href: https://api.example.org/v3/processes/6a901b7c-9417-4dc1-8189-d3234aa0ab82/process_instances
+              embedded_process_instances:
+                summary: with embedded process instances
+                value:
+                  guid: 6a901b7c-9417-4dc1-8189-d3234aa0ab82
                   type: web
                   command: rackup
                   user: vcap
@@ -119,10 +307,10 @@
                   relationships:
                     app:
                       data:
-                        guid: 123e4567-e89b-12d3-a456-426614174000
+                        guid: ccc25a0f-c8f4-4b39-9f1b-de9f328d0ee5
                     revision:
                       data:
-                        guid: 123e4567-e89b-12d3-a456-426614174000
+                        guid: 885735b5-aea4-4cf5-8e44-961af0e41920
                   metadata:
                     labels: {}
                     annotations: {}
@@ -162,7 +350,10 @@
         $ref: ../components/responses/NotFound.yaml
   patch:
     summary: Update a process
-    description: Update a process.
+    description: |-
+      Update a process.
+
+      **Permitted roles:** Admin, Space Developer, Space Supporter
     operationId: updateProcess
     tags:
       - Processes
@@ -177,6 +368,55 @@
           application/json:
             schema:
               $ref: ../components/schemas/Process.yaml
+            examples:
+              default:
+                summary: default
+                value:
+                  guid: 6a901b7c-9417-4dc1-8189-d3234aa0ab82
+                  type: web
+                  command: rackup
+                  user: vcap
+                  instances: 5
+                  memory_in_mb: 256
+                  disk_in_mb: 1024
+                  log_rate_limit_in_bytes_per_second: 1024
+                  health_check:
+                    type: port
+                    data:
+                      timeout: null
+                  readiness_health_check:
+                    type: process
+                    data:
+                      invocation_timeout: null
+                  relationships:
+                    app:
+                      data:
+                        guid: ccc25a0f-c8f4-4b39-9f1b-de9f328d0ee5
+                    revision:
+                      data:
+                        guid: 885735b5-aea4-4cf5-8e44-961af0e41920
+                  metadata:
+                    labels:
+                      key: value
+                    annotations:
+                      note: detailed information
+                  created_at: '2016-03-23T18:48:22Z'
+                  updated_at: '2016-03-23T18:48:42Z'
+                  version: e9df685c-0464-4aa7-b5f0-8ed843077c13
+                  links:
+                    self:
+                      href: https://api.example.org/v3/processes/6a901b7c-9417-4dc1-8189-d3234aa0ab82
+                    scale:
+                      href: https://api.example.org/v3/processes/6a901b7c-9417-4dc1-8189-d3234aa0ab82/actions/scale
+                      method: POST
+                    app:
+                      href: https://api.example.org/v3/apps/ccc25a0f-c8f4-4b39-9f1b-de9f328d0ee5
+                    space:
+                      href: https://api.example.org/v3/spaces/2f35885d-0c9d-4423-83ad-fd05066f8576
+                    stats:
+                      href: https://api.example.org/v3/processes/6a901b7c-9417-4dc1-8189-d3234aa0ab82/stats
+                    process_instances:
+                      href: https://api.example.org/v3/processes/6a901b7c-9417-4dc1-8189-d3234aa0ab82/process_instances
         links:
           app:
             operationId: getApp
@@ -206,8 +446,11 @@
         $ref: ../components/responses/ServiceUnavailable.yaml
 /v3/processes/{guid}/process_instances:
   get:
-    summary: List instances for a process
-    description: Retrieve the instances for a process. Unlike the stats endpoint, this returns a simplified view with only the index, state, and uptime of each instance.
+    summary: Get process instances for a process (experimental)
+    description: |-
+      This endpoint retrieves the instances for a process. This is a pseudo-resource that provides a lightweight view of process instance states, containing only the `index`, `state`, and `since` fields. Unlike the full [process stats](#get-stats-for-a-process) endpoint, this endpoint is designed for embedding into process resources and provides a minimal representation.
+
+      **Permitted roles:** Admin, Admin Read-Only, Global Auditor, Org Manager, Space Auditor, Space Developer, Space Manager, Space Supporter
     operationId: listProcessInstances
     tags:
       - Processes
@@ -219,32 +462,7 @@
         content:
           application/json:
             schema:
-              type: object
-              properties:
-                resources:
-                  type: array
-                  items:
-                    type: object
-                    properties:
-                      index:
-                        type: integer
-                      state:
-                        type: string
-                        enum:
-                          - RUNNING
-                          - CRASHED
-                          - STARTING
-                          - DOWN
-                      since:
-                        type: number
-                        format: double
-                links:
-                  type: object
-                  properties:
-                    self:
-                      $ref: ../components/schemas/Link.yaml
-                    process:
-                      $ref: ../components/schemas/Link.yaml
+              $ref: ../components/schemas/ProcessInstanceList.yaml
             examples:
               default:
                 summary: default
@@ -273,7 +491,10 @@
 /v3/processes/{guid}/stats:
   get:
     summary: Get stats for a process
-    description: Get stats for a process.
+    description: |-
+      Process stats are objects that represent the individual instances of a process.
+
+      **Permitted roles:** Admin, Admin Read-Only, Global Auditor *(some fields are redacted)*, Org Manager *(some fields are redacted)*, Space Auditor *(some fields are redacted)*, Space Developer, Space Manager *(some fields are redacted)*, Space Supporter *(some fields are redacted)*
     operationId: getProcessStats
     tags:
       - Processes
@@ -293,7 +514,7 @@
                   resources:
                     - type: web
                       index: 0
-                      instance_guid: 123e4567-e89b-12d3-a456-426614174000
+                      instance_guid: e49f448e-54d2-4c33-61a3-5335
                       state: RUNNING
                       routable: true
                       usage:
@@ -349,45 +570,17 @@
 /v3/processes/{guid}/actions/scale:
   post:
     summary: Scale a process
-    description: Scale a process.
+    description: |-
+      Scale a process.
+
+      **Permitted roles:** Admin, Space Developer, Space Supporter
     operationId: scaleProcess
     tags:
       - Processes
     parameters:
       - $ref: ../components/parameters/Guid.yaml
     requestBody:
-      content:
-        application/json:
-          schema:
-            properties:
-              instances:
-                type:
-                  - integer
-                  - 'null'
-                description: The number of instances to run
-              memory_in_mb:
-                type:
-                  - integer
-                  - 'null'
-                description: The memory in MB allocated per instance
-              disk_in_mb:
-                type:
-                  - integer
-                  - 'null'
-                description: The disk in MB allocated per instance
-              log_rate_limit_in_bytes_per_second:
-                type:
-                  - integer
-                  - 'null'
-                description: The log rate limit in bytes per second per instance
-          examples:
-            default:
-              summary: default
-              value:
-                instances: 5
-                memory_in_mb: 256
-                disk_in_mb: 1024
-                log_rate_limit_in_bytes_per_second: 1024
+      $ref: ../components/requestBodies/ProcessScaleRequestBody.yaml
     responses:
       '202':
         description: Accepted
@@ -395,6 +588,53 @@
           application/json:
             schema:
               $ref: ../components/schemas/Process.yaml
+            examples:
+              default:
+                summary: default
+                value:
+                  guid: 6a901b7c-9417-4dc1-8189-d3234aa0ab82
+                  type: web
+                  command: rackup
+                  user: vcap
+                  instances: 5
+                  memory_in_mb: 256
+                  disk_in_mb: 1024
+                  log_rate_limit_in_bytes_per_second: 1024
+                  health_check:
+                    type: port
+                    data:
+                      timeout: null
+                  readiness_health_check:
+                    type: process
+                    data:
+                      invocation_timeout: null
+                  relationships:
+                    app:
+                      data:
+                        guid: ccc25a0f-c8f4-4b39-9f1b-de9f328d0ee5
+                    revision:
+                      data:
+                        guid: 885735b5-aea4-4cf5-8e44-961af0e41920
+                  metadata:
+                    labels: {}
+                    annotations: {}
+                  created_at: '2016-03-23T18:48:22Z'
+                  updated_at: '2016-03-23T18:48:42Z'
+                  version: e9df685c-0464-4aa7-b5f0-8ed843077c13
+                  links:
+                    self:
+                      href: https://api.example.org/v3/processes/6a901b7c-9417-4dc1-8189-d3234aa0ab82
+                    scale:
+                      href: https://api.example.org/v3/processes/6a901b7c-9417-4dc1-8189-d3234aa0ab82/actions/scale
+                      method: POST
+                    app:
+                      href: https://api.example.org/v3/apps/ccc25a0f-c8f4-4b39-9f1b-de9f328d0ee5
+                    space:
+                      href: https://api.example.org/v3/spaces/2f35885d-0c9d-4423-83ad-fd05066f8576
+                    stats:
+                      href: https://api.example.org/v3/processes/6a901b7c-9417-4dc1-8189-d3234aa0ab82/stats
+                    process_instances:
+                      href: https://api.example.org/v3/processes/6a901b7c-9417-4dc1-8189-d3234aa0ab82/process_instances
       '400':
         $ref: ../components/responses/BadRequest.yaml
       '401':
@@ -418,6 +658,8 @@
       Terminate an instance of a specific process. Health management will eventually restart the instance.
 
       This allows a user to stop a single misbehaving instance of a process.
+
+      **Permitted roles:** Admin, Space Developer, Space Supporter
     operationId: terminateProcessInstance
     tags:
       - Processes
@@ -428,6 +670,7 @@
         required: true
         schema:
           type: integer
+        description: The zero-based index of the process instance
     responses:
       '204':
         description: No Content
@@ -443,16 +686,62 @@
         $ref: ../components/responses/500.yaml
 /v3/apps/{guid}/processes:
   get:
-    summary: List processes for an app
-    description: Retrieves all processes belonging to an app.
+    summary: List processes for app
+    description: |-
+      Retrieves all processes belonging to an app.
+
+      **Permitted roles:** Admin, Admin Read-Only, Global Auditor, Org Manager, Space Auditor, Space Developer, Space Manager, Space Supporter
     operationId: listAppProcesses
     tags:
       - Processes
     parameters:
-      - $ref: ../components/parameters/Guid.yaml
+      - name: guid
+        in: path
+        required: true
+        schema:
+          type: string
+          format: uuid
+        description: The unique identifier for the app
       - $ref: ../components/parameters/Page.yaml
       - $ref: ../components/parameters/PerPage.yaml
-      - $ref: ../components/parameters/OrderBy.yaml
+      - $ref: ../components/parameters/CreatedAts.yaml
+      - $ref: ../components/parameters/UpdatedAts.yaml
+      - $ref: ../components/parameters/LabelSelector.yaml
+      - name: guids
+        in: query
+        required: false
+        schema:
+          type: array
+          items:
+            type: string
+        description: Comma-delimited list of process guids to filter by
+      - name: types
+        in: query
+        required: false
+        schema:
+          type: array
+          items:
+            type: string
+        description: Comma-delimited list of process types to filter by
+      - name: order_by
+        in: query
+        required: false
+        schema:
+          type: string
+          enum:
+            - created_at
+            - -created_at
+            - updated_at
+            - -updated_at
+        description: Value to sort by. Defaults to ascending; prepend with `-` to sort descending. Valid values are `created_at`, `updated_at`
+      - name: embed
+        in: query
+        required: false
+        schema:
+          type: string
+          enum:
+            - process_instances
+        description: Comma-delimited list of resources to embed in the response. Valid values are `process_instances`. See [embed](#embed) for more details. This parameter is experimental.
     responses:
       '200':
         description: OK
@@ -460,26 +749,109 @@
           application/json:
             schema:
               $ref: ../components/schemas/ProcessList.yaml
+            examples:
+              default:
+                summary: default
+                value:
+                  pagination:
+                    total_results: 3
+                    total_pages: 2
+                    first:
+                      href: https://api.example.org/v3/apps/ccc25a0f-c8f4-4b39-9f1b-de9f328d0ee5/processes?page=1&per_page=2
+                    last:
+                      href: https://api.example.org/v3/apps/ccc25a0f-c8f4-4b39-9f1b-de9f328d0ee5/processes?page=2&per_page=2
+                    next:
+                      href: https://api.example.org/v3/apps/ccc25a0f-c8f4-4b39-9f1b-de9f328d0ee5/processes?page=2&per_page=2
+                    previous: null
+                  resources:
+                    - guid: 6a901b7c-9417-4dc1-8189-d3234aa0ab82
+                      type: web
+                      command: '[PRIVATE DATA HIDDEN IN LISTS]'
+                      user: vcap
+                      instances: 5
+                      memory_in_mb: 256
+                      disk_in_mb: 1024
+                      log_rate_limit_in_bytes_per_second: 1024
+                      health_check:
+                        type: port
+                        data:
+                          timeout: null
+                          invocation_timeout: null
+                          interval: null
+                      readiness_health_check:
+                        type: process
+                        data:
+                          invocation_timeout: null
+                          interval: null
+                      relationships:
+                        app:
+                          data:
+                            guid: ccc25a0f-c8f4-4b39-9f1b-de9f328d0ee5
+                        revision:
+                          data:
+                            guid: 885735b5-aea4-4cf5-8e44-961af0e41920
+                      metadata:
+                        labels: {}
+                        annotations: {}
+                      created_at: '2016-03-23T18:48:22Z'
+                      updated_at: '2016-03-23T18:48:42Z'
+                      version: e9df685c-0464-4aa7-b5f0-8ed843077c13
+                      links:
+                        self:
+                          href: https://api.example.org/v3/processes/6a901b7c-9417-4dc1-8189-d3234aa0ab82
+                        scale:
+                          href: https://api.example.org/v3/processes/6a901b7c-9417-4dc1-8189-d3234aa0ab82/actions/scale
+                          method: POST
+                        app:
+                          href: https://api.example.org/v3/apps/ccc25a0f-c8f4-4b39-9f1b-de9f328d0ee5
+                        space:
+                          href: https://api.example.org/v3/spaces/2f35885d-0c9d-4423-83ad-fd05066f8576
+                        stats:
+                          href: https://api.example.org/v3/processes/6a901b7c-9417-4dc1-8189-d3234aa0ab82/stats
+                        process_instances:
+                          href: https://api.example.org/v3/processes/6a901b7c-9417-4dc1-8189-d3234aa0ab82/process_instances
+      '400':
+        $ref: ../components/responses/BadRequest.yaml
       '401':
         $ref: ../components/responses/Unauthorized.yaml
       '403':
         $ref: ../components/responses/Forbidden.yaml
       '404':
         $ref: ../components/responses/NotFound.yaml
+      '422':
+        $ref: ../components/responses/UnprocessableEntity.yaml
 /v3/apps/{guid}/processes/{type}:
   get:
     summary: Get a process for an app
-    description: Get a specific process for an app.
+    description: |-
+      Retrieve a process by type for an app.
+
+      **Permitted roles:** Admin, Admin Read-Only, Global Auditor *(some fields are redacted)*, Org Manager *(some fields are redacted)*, Space Auditor *(some fields are redacted)*, Space Developer, Space Manager *(some fields are redacted)*, Space Supporter *(some fields are redacted)*
     operationId: getProcessForApp
     tags:
       - Processes
     parameters:
-      - $ref: ../components/parameters/Guid.yaml
+      - name: guid
+        in: path
+        required: true
+        schema:
+          type: string
+          format: uuid
+        description: The unique identifier for the app
       - name: type
         in: path
         required: true
         schema:
           type: string
+        description: Process type; a unique identifier for processes belonging to an app
+      - name: embed
+        in: query
+        required: false
+        schema:
+          type: string
+          enum:
+            - process_instances
+        description: Comma-delimited list of resources to embed in the response. Valid values are `process_instances`. See [embed](#embed) for more details. This parameter is experimental.
     responses:
       '200':
         description: OK
@@ -487,6 +859,53 @@
           application/json:
             schema:
               $ref: ../components/schemas/Process.yaml
+            examples:
+              default:
+                summary: default
+                value:
+                  guid: 6a901b7c-9417-4dc1-8189-d3234aa0ab82
+                  type: web
+                  command: rackup
+                  user: vcap
+                  instances: 5
+                  memory_in_mb: 256
+                  disk_in_mb: 1024
+                  log_rate_limit_in_bytes_per_second: 1024
+                  health_check:
+                    type: port
+                    data:
+                      timeout: null
+                  readiness_health_check:
+                    type: process
+                    data:
+                      invocation_timeout: null
+                  relationships:
+                    app:
+                      data:
+                        guid: ccc25a0f-c8f4-4b39-9f1b-de9f328d0ee5
+                    revision:
+                      data:
+                        guid: 885735b5-aea4-4cf5-8e44-961af0e41920
+                  metadata:
+                    labels: {}
+                    annotations: {}
+                  created_at: '2016-03-23T18:48:22Z'
+                  updated_at: '2016-03-23T18:48:42Z'
+                  version: e9df685c-0464-4aa7-b5f0-8ed843077c13
+                  links:
+                    self:
+                      href: https://api.example.org/v3/processes/6a901b7c-9417-4dc1-8189-d3234aa0ab82
+                    scale:
+                      href: https://api.example.org/v3/processes/6a901b7c-9417-4dc1-8189-d3234aa0ab82/actions/scale
+                      method: POST
+                    app:
+                      href: https://api.example.org/v3/apps/ccc25a0f-c8f4-4b39-9f1b-de9f328d0ee5
+                    space:
+                      href: https://api.example.org/v3/spaces/2f35885d-0c9d-4423-83ad-fd05066f8576
+                    stats:
+                      href: https://api.example.org/v3/processes/6a901b7c-9417-4dc1-8189-d3234aa0ab82/stats
+                    process_instances:
+                      href: https://api.example.org/v3/processes/6a901b7c-9417-4dc1-8189-d3234aa0ab82/process_instances
       '401':
         $ref: ../components/responses/Unauthorized.yaml
       '403':
@@ -495,17 +914,27 @@
         $ref: ../components/responses/NotFound.yaml
   patch:
     summary: Update a process for an app
-    description: Update a specific process for an app.
+    description: |-
+      Update a process by type for an app.
+
+      **Permitted roles:** Admin, Space Developer, Space Supporter
     operationId: updateProcessForApp
     tags:
       - Processes
     parameters:
-      - $ref: ../components/parameters/Guid.yaml
+      - name: guid
+        in: path
+        required: true
+        schema:
+          type: string
+          format: uuid
+        description: The unique identifier for the app
       - name: type
         in: path
         required: true
         schema:
           type: string
+        description: Process type; a unique identifier for processes belonging to an app
     requestBody:
       $ref: ../components/requestBodies/ProcessUpdateRequestBody.yaml
     responses:
@@ -515,6 +944,55 @@
           application/json:
             schema:
               $ref: ../components/schemas/Process.yaml
+            examples:
+              default:
+                summary: default
+                value:
+                  guid: 6a901b7c-9417-4dc1-8189-d3234aa0ab82
+                  type: web
+                  command: rackup
+                  user: vcap
+                  instances: 5
+                  memory_in_mb: 256
+                  disk_in_mb: 1024
+                  log_rate_limit_in_bytes_per_second: 1024
+                  health_check:
+                    type: port
+                    data:
+                      timeout: null
+                  readiness_health_check:
+                    type: process
+                    data:
+                      invocation_timeout: null
+                  relationships:
+                    app:
+                      data:
+                        guid: ccc25a0f-c8f4-4b39-9f1b-de9f328d0ee5
+                    revision:
+                      data:
+                        guid: 885735b5-aea4-4cf5-8e44-961af0e41920
+                  metadata:
+                    labels:
+                      key: value
+                    annotations:
+                      note: detailed information
+                  created_at: '2016-03-23T18:48:22Z'
+                  updated_at: '2016-03-23T18:48:42Z'
+                  version: e9df685c-0464-4aa7-b5f0-8ed843077c13
+                  links:
+                    self:
+                      href: https://api.example.org/v3/processes/6a901b7c-9417-4dc1-8189-d3234aa0ab82
+                    scale:
+                      href: https://api.example.org/v3/processes/6a901b7c-9417-4dc1-8189-d3234aa0ab82/actions/scale
+                      method: POST
+                    app:
+                      href: https://api.example.org/v3/apps/ccc25a0f-c8f4-4b39-9f1b-de9f328d0ee5
+                    space:
+                      href: https://api.example.org/v3/spaces/2f35885d-0c9d-4423-83ad-fd05066f8576
+                    stats:
+                      href: https://api.example.org/v3/processes/6a901b7c-9417-4dc1-8189-d3234aa0ab82/stats
+                    process_instances:
+                      href: https://api.example.org/v3/processes/6a901b7c-9417-4dc1-8189-d3234aa0ab82/process_instances
       '400':
         $ref: ../components/responses/BadRequest.yaml
       '401':
@@ -528,17 +1006,27 @@
 /v3/apps/{guid}/processes/{type}/stats:
   get:
     summary: Get stats for a process for an app
-    description: Get stats for a specific process for an app.
+    description: |-
+      Process stats are objects that represent the individual instances of a process.
+
+      **Permitted roles:** Admin, Admin Read-Only, Global Auditor *(some fields are redacted)*, Org Manager *(some fields are redacted)*, Space Auditor *(some fields are redacted)*, Space Developer, Space Manager *(some fields are redacted)*, Space Supporter *(some fields are redacted)*
     operationId: getProcessStatsForApp
     tags:
       - Processes
     parameters:
-      - $ref: ../components/parameters/Guid.yaml
+      - name: guid
+        in: path
+        required: true
+        schema:
+          type: string
+          format: uuid
+        description: The unique identifier for the app
       - name: type
         in: path
         required: true
         schema:
           type: string
+        description: Process type; a unique identifier for processes belonging to an app
     responses:
       '200':
         description: OK
@@ -546,6 +1034,37 @@
           application/json:
             schema:
               $ref: ../components/schemas/ProcessStats.yaml
+            examples:
+              default:
+                summary: default
+                value:
+                  resources:
+                    - type: web
+                      index: 0
+                      instance_guid: e49f448e-54d2-4c33-61a3-5335
+                      state: RUNNING
+                      routable: true
+                      usage:
+                        time: '2016-03-23T23:17:30.476314154Z'
+                        cpu: 0.00038711029163348665
+                        cpu_entitlement: 0.01117396940977856
+                        mem: 19177472
+                        disk: 69705728
+                        log_rate: 0
+                      host: 10.244.16.10
+                      instance_internal_ip: 10.255.93.167
+                      instance_ports:
+                        - external: 64546
+                          internal: 8080
+                          external_tls_proxy_port: 61002
+                          internal_tls_proxy_port: 61003
+                      uptime: 9042
+                      mem_quota: 268435456
+                      disk_quota: 1073741824
+                      fds_quota: 16384
+                      isolation_segment: example_iso_segment
+                      log_rate_limit: null
+                      details: null
       '401':
         $ref: ../components/responses/Unauthorized.yaml
       '403':
@@ -557,42 +1076,29 @@
 /v3/apps/{guid}/processes/{type}/actions/scale:
   post:
     summary: Scale a process for an app
-    description: Scale a specific process for an app.
+    description: |-
+      Scale a process by type for an app.
+
+      **Permitted roles:** Admin, Space Developer, Space Supporter
     operationId: scaleProcessForApp
     tags:
       - Processes
     parameters:
-      - $ref: ../components/parameters/Guid.yaml
+      - name: guid
+        in: path
+        required: true
+        schema:
+          type: string
+          format: uuid
+        description: The unique identifier for the app
       - name: type
         in: path
         required: true
         schema:
           type: string
+        description: Process type; a unique identifier for processes belonging to an app
     requestBody:
-      content:
-        application/json:
-          schema:
-            properties:
-              instances:
-                type:
-                  - integer
-                  - 'null'
-                description: The number of instances to run
-              memory_in_mb:
-                type:
-                  - integer
-                  - 'null'
-                description: The memory in MB allocated per instance
-              disk_in_mb:
-                type:
-                  - integer
-                  - 'null'
-                description: The disk in MB allocated per instance
-              log_rate_limit_in_bytes_per_second:
-                type:
-                  - integer
-                  - 'null'
-                description: The log rate limit in bytes per second per instance
+      $ref: ../components/requestBodies/ProcessScaleRequestBody.yaml
     responses:
       '202':
         description: Accepted
@@ -600,6 +1106,55 @@
           application/json:
             schema:
               $ref: ../components/schemas/Process.yaml
+            examples:
+              default:
+                summary: default
+                value:
+                  guid: 6a901b7c-9417-4dc1-8189-d3234aa0ab82
+                  type: web
+                  command: rackup
+                  user: vcap
+                  instances: 5
+                  memory_in_mb: 256
+                  disk_in_mb: 1024
+                  log_rate_limit_in_bytes_per_second: 1024
+                  health_check:
+                    type: port
+                    data:
+                      timeout: null
+                  readiness_health_check:
+                    type: process
+                    data:
+                      invocation_timeout: null
+                  relationships:
+                    app:
+                      data:
+                        guid: ccc25a0f-c8f4-4b39-9f1b-de9f328d0ee5
+                    revision:
+                      data:
+                        guid: 885735b5-aea4-4cf5-8e44-961af0e41920
+                  metadata:
+                    labels: {}
+                    annotations: {}
+                  created_at: '2016-03-23T18:48:22Z'
+                  updated_at: '2016-03-23T18:48:42Z'
+                  version: e9df685c-0464-4aa7-b5f0-8ed843077c13
+                  links:
+                    self:
+                      href: https://api.example.org/v3/processes/6a901b7c-9417-4dc1-8189-d3234aa0ab82
+                    scale:
+                      href: https://api.example.org/v3/processes/6a901b7c-9417-4dc1-8189-d3234aa0ab82/actions/scale
+                      method: POST
+                    app:
+                      href: https://api.example.org/v3/apps/ccc25a0f-c8f4-4b39-9f1b-de9f328d0ee5
+                    space:
+                      href: https://api.example.org/v3/spaces/2f35885d-0c9d-4423-83ad-fd05066f8576
+                    stats:
+                      href: https://api.example.org/v3/processes/6a901b7c-9417-4dc1-8189-d3234aa0ab82/stats
+                    process_instances:
+                      href: https://api.example.org/v3/processes/6a901b7c-9417-4dc1-8189-d3234aa0ab82/process_instances
+      '400':
+        $ref: ../components/responses/BadRequest.yaml
       '401':
         $ref: ../components/responses/Unauthorized.yaml
       '403':
@@ -611,22 +1166,35 @@
 /v3/apps/{guid}/processes/{type}/instances/{index}:
   delete:
     summary: Terminate a process instance for an app
-    description: Terminate a specific process instance for an app.
+    description: |-
+      Terminate an instance of a specific process. Health management will eventually restart the instance.
+
+      This allows a user to stop a single misbehaving instance of a process.
+
+      **Permitted roles:** Admin, Space Developer, Space Supporter
     operationId: terminateProcessInstanceForApp
     tags:
       - Processes
     parameters:
-      - $ref: ../components/parameters/Guid.yaml
+      - name: guid
+        in: path
+        required: true
+        schema:
+          type: string
+          format: uuid
+        description: The unique identifier for the app
       - name: type
         in: path
         required: true
         schema:
           type: string
+        description: Process type; a unique identifier for processes belonging to an app
       - name: index
         in: path
         required: true
         schema:
           type: integer
+        description: The zero-based index of the process instance
     responses:
       '204':
         description: No Content

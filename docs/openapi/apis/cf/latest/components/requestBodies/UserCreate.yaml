@@ -1,25 +1,14 @@
 description: User to create
+required: true
 content:
   application/json:
     schema:
-      type: object
-      properties:
-        guid:
-          type: string
-          description: Unique identifier for the user
-        username:
-          type: string
-          description: Username of the user to be created. This can only be provided together with origin
-        origin:
-          type: string
-          description: Origin of the user to be created. This can only be provided together with username and cannot be uaa
-        metadata:
-          $ref: ../schemas/Metadata.yaml
+      $ref: ../schemas/UserCreate.yaml
     examples:
       default:
         summary: default
         value:
-          guid: 123e4567-e89b-12d3-a456-426614174000
+          guid: 3a5d3d89-3f89-4f05-8188-8a2b298c79d5
       by_username_and_origin:
         summary: by username and origin
         value:

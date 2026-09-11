@@ -2,15 +2,28 @@ type: object
 allOf:
   - $ref: './BaseSchema.yaml'
   - properties:
+      guid:
+        type: string
+        format: uuid
+        description: Unique identifier for the event
+      created_at:
+        type: string
+        format: date-time
+        description: The time with zone when the object was created
+      updated_at:
+        type: string
+        format: date-time
+        description: The time with zone when the object was last updated
       type:
         type: string
-        description: The type of the event
+        description: The type of the event; see the "Audit Event Types" list in the Audit Events resource description for the full set of values
       actor:
         type: object
+        description: The user or system resource that performed the action
         properties:
           guid:
             type: string
-            description: The unique identifier for the actor (user or system resource that performed the action)
+            description: Unique identifier for the actor (user or system resource that performed the action)
           type:
             type: string
             description: The actor type
@@ -19,10 +32,12 @@ allOf:
             description: The name of the actor
       target:
         type: object
+        description: The resource that the event acted upon
         properties:
           guid:
             type: string
-            description: The unique identifier for the target (resource that the event acted upon)
+            format: uuid
+            description: Unique identifier for the target (resource that the event acted upon)
           type:
             type: string
             description: The target type
@@ -31,24 +46,30 @@ allOf:
             description: The name of the target
       data:
         type: object
+        additionalProperties: true
         description: Additional information about event
       space:
         type: [object, "null"]
+        description: The space where the event occurred; if the event did not occur within a space, the `space` field will be `null`
         properties:
           guid:
             type: string
+            format: uuid
             description: Unique identifier for the space where the event occurred; if the event did not occur within a space, the `space` field will be `null`
       organization:
         type: [object, "null"]
+        description: The organization where the event occurred; if the event did not occur within an organization, the `organization` field will be `null`
         properties:
           guid:
             type: string
+            format: uuid
             description: Unique identifier for the organization where the event occurred; if the event did not occur within an organization, the `organization` field will be `null`
       links:
         type: object
+        description: Links to related resources
         properties:
           self:
             $ref: './Link.yaml'
             description: The URL to get this audit event
-description: >
+description: |-
   Audit events help Cloud Foundry operators monitor actions taken against resources (such as apps) via user or system actions.

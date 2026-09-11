@@ -1,0 +1,19 @@
+type: object
+properties:
+  loadbalancing:
+    type: string
+    enum:
+      - round-robin
+      - least-connection
+      - hash
+    description: The load-balancer associated with this route. Valid values are `round-robin`, `least-connection`, and `hash`
+  hash_header:
+    type: string
+    description: HTTP header name to hash for routing (e.g., `X-User-ID`, `Cookie`). Required when loadbalancing is `hash`. Cannot be set when loadbalancing is not `hash`.
+  hash_balance:
+    type: string
+    description: Weight factor for load balancing (1.1 - 10, or 0 for disabling balancing). Higher values consider load more. Optional when loadbalancing is `hash`. Cannot be set when loadbalancing is not `hash`.
+description: |-
+  Options applied to the route.
+
+  > **Note:** `hash`-based loadbalancing and the `hash_header` and `hash_balance` options are only available when the `hash_based_routing` feature flag is enabled.

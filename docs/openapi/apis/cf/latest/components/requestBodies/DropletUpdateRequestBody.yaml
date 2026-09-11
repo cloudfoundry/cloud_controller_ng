@@ -1,0 +1,23 @@
+description: Droplet object that needs to be updated
+required: true
+content:
+  application/json:
+    schema:
+      type: object
+      properties:
+        metadata:
+          $ref: ../schemas/Metadata.yaml
+          description: Labels and annotations applied to the droplet
+        image:
+          type: string
+          description: Image reference where the built complete image was stored (field can only be passed by Build State Updaters)
+      description: Request schema for updating a droplet
+    examples:
+      default:
+        summary: default
+        value:
+          metadata:
+            labels:
+              key: value
+            annotations:
+              note: detailed information

@@ -1,4 +1,5 @@
 description: A list of route destinations
+required: true
 content:
   application/json:
     schema:
@@ -6,19 +7,36 @@ content:
       properties:
         destinations:
           type: array
+          minItems: 0
+          maxItems: 100
           items:
-            $ref: ../schemas/RouteDestination.yaml
+            $ref: ../schemas/RouteDestinationRequest.yaml
           description: List of destinations to add to route; destinations without `process.type` specified will get process type `"web"` by default
+      required:
+        - destinations
     examples:
       default:
         summary: default
         value:
           destinations:
             - app:
-                guid: 123e4567-e89b-12d3-a456-426614174000
+                guid: 1cb006ee-fb05-47e1-b541-c34179ddc446
+            - app:
+                guid: 01856e12-8ee8-11e9-98a5-bb397dbc818f
+                process:
+                  type: api
+              port: 9000
+              protocol: http1
+      weighted:
+        summary: Weighted destinations (deprecated)
+        description: Weighted destinations may only be supplied when replacing all destinations with `PATCH`; weights must sum to 100.
+        value:
+          destinations:
+            - app:
+                guid: 1cb006ee-fb05-47e1-b541-c34179ddc446
               weight: 61
             - app:
-                guid: 123e4567-e89b-12d3-a456-426614174000
+                guid: 01856e12-8ee8-11e9-98a5-bb397dbc818f
                 process:
                   type: api
               weight: 39

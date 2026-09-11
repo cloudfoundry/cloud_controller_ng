@@ -1,0 +1,28 @@
+type: object
+writeOnly: true
+description: |-
+  Credentials used to authenticate against the service broker.
+
+  Only `basic` authentication is currently supported; the credentials are write-only and are never returned by the API.
+properties:
+  type:
+    type: string
+    enum:
+      - basic
+    description: Type of the authentication mechanisms that can be used. Valid value is `basic`.
+  credentials:
+    type: object
+    description: Credentials for given authentication type.
+    properties:
+      username:
+        type: string
+        description: The username with which to authenticate against the service broker.
+      password:
+        type: string
+        description: The password with which to authenticate against the service broker.
+    required:
+      - username
+      - password
+required:
+  - type
+  - credentials
