@@ -128,6 +128,17 @@
   http_code: 422
   message: "The %s is being deleted"
 
+10021:
+  name: ConcurrentRequestLimitExceeded
+  http_code: 429
+  message: "Too many concurrent requests. Please retry."
+
+10022:
+  name: IPBasedConcurrentRequestLimitExceeded
+  http_code: 429
+  message: "Too many concurrent requests from this IP. Please retry."
+
+
 20001:
   name: UserInvalid
   http_code: 400
