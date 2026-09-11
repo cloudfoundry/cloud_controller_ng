@@ -1,4 +1,5 @@
 description: Isolation segment to create
+required: true
 content:
   application/json:
     schema:
@@ -6,9 +7,10 @@ content:
       properties:
         name:
           type: string
-          description: Name of the isolation segment; isolation segment names must be unique across the entire system, and case is ignored when checking for uniqueness
+          description: Name of the isolation segment; must be unique (case-insensitive)
         metadata:
           $ref: ../schemas/Metadata.yaml
+          description: Labels and annotations applied to the isolation segment
       required:
         - name
     examples:

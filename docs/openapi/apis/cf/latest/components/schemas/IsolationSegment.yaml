@@ -4,9 +4,10 @@ allOf:
   - properties:
       name:
         type: string
-        description: The name of the isolation segment
+        description: Name of the isolation segment
       metadata:
         $ref: './Metadata.yaml'
+        description: Labels and annotations on the isolation segment
       links:
         type: object
         properties:
@@ -15,5 +16,6 @@ allOf:
             description: The URL to get this isolation segment
           organizations:
             $ref: './Link.yaml'
-            description: The URL to get the organizations for this isolation segment
-description: An isolation segment provides a dedicated pool of compute resources for an organization or space.
+            description: The URL to get the organizations entitled to this isolation segment
+        description: Links to related resources
+description: Isolation Segments provide dedicated pools of resources to which apps can be deployed to isolate workloads.
