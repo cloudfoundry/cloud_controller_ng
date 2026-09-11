@@ -351,6 +351,10 @@ module VCAP::CloudController
           context 'and the newly started task completes before the iteration completes', isolation: :truncation do
             # Can't use transactions for isolation because we're using multiple threads
             let!(:cc_task) { create(:task_model, guid: 'some-task-guid', state: TaskModel::RUNNING_STATE) }
+            # A real running task always has a start event; without it, the
+            # update to SUCCEEDED skips the stop event and logs a warning that
+            # the strict logger double rejects.
+            let!(:cc_task_start_event) { create(:app_usage_event, task_guid: cc_task.guid, state: 'TASK_STARTED') }
             let(:bbs_tasks) { [] }
 
             before do

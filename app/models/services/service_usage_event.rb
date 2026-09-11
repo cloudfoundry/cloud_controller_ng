@@ -7,5 +7,17 @@ module VCAP::CloudController
                       :service_plan_guid, :service_plan_name,
                       :service_guid, :service_label,
                       :service_broker_name, :service_broker_guid
+
+    def self.usage_lifecycles
+      [
+        {
+          beginning_states: [Repositories::ServiceUsageEventRepository::CREATED_EVENT_STATE,
+                             Repositories::ServiceUsageEventRepository::UPDATED_EVENT_STATE,
+                             Repositories::ServiceUsageEventRepository::WAS_RUNNING_EVENT_STATE],
+          ending_state: Repositories::ServiceUsageEventRepository::DELETED_EVENT_STATE,
+          guid_column: :service_instance_guid
+        }
+      ].freeze
+    end
   end
 end
