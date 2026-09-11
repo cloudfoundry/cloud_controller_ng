@@ -3,18 +3,16 @@ require 'messages/validators/security_group_rule_validator'
 
 module VCAP::CloudController::Validators
   RSpec.describe 'SecurityGroupRuleValidator' do
-    let(:class_with_rules) do
-      Class.new do
-        include ActiveModel::Model
+    class_with_rules = Class.new do
+      include ActiveModel::Model
 
-        validates_with RulesValidator
+      validates_with RulesValidator
 
-        def self.name
-          'TestClass'
-        end
-
-        attr_accessor :rules
+      def self.name
+        'TestClass'
       end
+
+      attr_accessor :rules
     end
     let(:rules) { [] }
 

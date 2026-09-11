@@ -484,6 +484,7 @@ RSpec.describe Logcache::ContainerMetricBatcher do
 
     describe 'walking the log cache' do
       let(:lookback_window) { 2.minutes }
+      let(:process_guid) { SecureRandom.uuid }
 
       context 'when log cache never stops returning results' do
         let(:envelopes_max_limit_first_page) { generate_batch(1000) }

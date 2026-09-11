@@ -1,7 +1,6 @@
 require 'spec_helper'
-require 'tempfile'
 
-RSpec.describe 'Cloud controller Loggregator Integration', type: :integration do
+RSpec.shared_context 'Cloud controller Loggregator Integration' do
   before(:all) do
     @authed_headers = {
       'Authorization' => "bearer #{admin_token}",
@@ -9,20 +8,7 @@ RSpec.describe 'Cloud controller Loggregator Integration', type: :integration do
       'Content-Type' => 'application/json'
     }
 
-    base_cc_config_file = 'config/cloud_controller.yml'
-    port_8181_overrides = 'spec/fixtures/config/port_8181_config.yml'
-    config = VCAP::CloudController::YAMLConfig.safe_load_file(base_cc_config_file).deep_merge(
-      VCAP::CloudController::YAMLConfig.safe_load_file(port_8181_overrides)
-    )
-    config['loggregator'] = { 'endpoint' => 'localhost:12345' }
-
-    @cc_config_file = Tempfile.new('cc_config.yml')
-    @cc_config_file.write(YAML.dump(config))
-    @cc_config_file.close
-
-    start_cc(debug: false, config: @cc_config_file.path)
-
-    @loggregator_server = FakeLoggregatorServer.new(12_345)
+    @loggregator_server = FakeLoggregatorServer.new(3456)
     @loggregator_server.start
 
     org = org_with_default_quota(@authed_headers)
@@ -38,8 +24,6 @@ RSpec.describe 'Cloud controller Loggregator Integration', type: :integration do
   end
 
   after(:all) do
-    stop_cc
-    @cc_config_file.unlink
     @loggregator_server.stop
   end
 

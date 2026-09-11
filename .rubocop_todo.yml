@@ -169,8 +169,8 @@ RSpec/Be:
 # Offense count: 8
 RSpec/BeforeAfterAll:
   Exclude:
-    - 'spec/integration/app_log_emitter_spec.rb'
-    - 'spec/integration/cors_spec.rb'
+    - 'spec/integration/app_log_emitter_shared_context.rb'
+    - 'spec/integration/zz_cc_suite_spec.rb'
     - 'spec/isolated_specs/inline_runner_spec.rb'
     - 'spec/unit/lib/sequel/extensions/default_order_by_id_spec.rb'
     - 'spec/unit/lib/vcap/rest_api/event_query_spec.rb'
