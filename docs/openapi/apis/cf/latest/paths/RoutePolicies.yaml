@@ -1,0 +1,426 @@
+/v3/route_policies:
+  get:
+    summary: List route policies
+    description: |-
+      Retrieve all route policies the user has access to.
+
+      **Filtering examples**
+
+      - **Filter by route**: `GET /v3/route_policies?route_guids=89b32bd6-688f-4424-b94f-2e2c86495a5f`
+      - **Filter by space**: `GET /v3/route_policies?space_guids=3fa85f64-5717-4562-b3fc-2c963f66afa6`
+      - **Filter by source type**: `GET /v3/route_policies?sources=cf:any`
+      - **Find policies referencing a specific app**: `GET /v3/route_policies?source_guids=d76446a1-f429-4444-8797-be2f78b75b08`
+      - **Include source resources**: `GET /v3/route_policies?include=source` (batch-loads the app, space, or org referenced in each policy's source)
+      - **Include route and source**: `GET /v3/route_policies?include=route,source`
+
+      **This feature is experimental and is subject to change.**
+
+      **Permitted roles:** Admin, Admin Read-Only, Global Auditor, Org Manager, Org Auditor, Org Billing Manager *(will receive an empty list)*, Space Auditor, Space Developer, Space Manager, Space Supporter
+    operationId: listRoutePolicies
+    tags:
+      - Route Policies
+    parameters:
+      - name: guids
+        in: query
+        required: false
+        schema:
+          type: array
+          items:
+            type: string
+        description: Comma-delimited list of route policy guids to filter by
+      - name: route_guids
+        in: query
+        required: false
+        schema:
+          type: array
+          items:
+            type: string
+        description: Comma-delimited list of route guids to filter by
+      - name: space_guids
+        in: query
+        required: false
+        schema:
+          type: array
+          items:
+            type: string
+        description: Comma-delimited list of space guids to filter by (filters by the route's space)
+      - name: sources
+        in: query
+        required: false
+        schema:
+          type: array
+          items:
+            type: string
+        description: Comma-delimited list of exact source strings to filter by (e.g., `cf:any`, `cf:app:guid`)
+      - name: source_guids
+        in: query
+        required: false
+        schema:
+          type: array
+          items:
+            type: string
+        description: Comma-delimited list of GUIDs to filter by; matches the GUID portion of the source (e.g. the app, space, or org GUID)
+      - $ref: ../components/parameters/Page.yaml
+      - $ref: ../components/parameters/PerPage.yaml
+      - name: order_by
+        in: query
+        required: false
+        schema:
+          type: string
+          enum:
+            - created_at
+            - -created_at
+            - updated_at
+            - -updated_at
+        description: Value to sort by. Defaults to ascending; prepend with `-` to sort descending. Valid values are `created_at`, `updated_at`
+      - $ref: ../components/parameters/LabelSelector.yaml
+      - name: include
+        in: query
+        required: false
+        schema:
+          type: array
+          items:
+            type: string
+            enum:
+              - route
+              - source
+        description: Optionally include related resources in the response; valid values are `route` and `source` (source includes the app, space, or organization based on the source type)
+      - $ref: ../components/parameters/CreatedAts.yaml
+      - $ref: ../components/parameters/UpdatedAts.yaml
+    responses:
+      '200':
+        description: OK
+        content:
+          application/json:
+            schema:
+              $ref: ../components/schemas/RoutePolicyList.yaml
+            examples:
+              default:
+                summary: default
+                value:
+                  pagination:
+                    total_results: 3
+                    total_pages: 2
+                    first:
+                      href: https://api.example.org/v3/route_policies?page=1&per_page=2
+                    last:
+                      href: https://api.example.org/v3/route_policies?page=2&per_page=2
+                    next:
+                      href: https://api.example.org/v3/route_policies?page=2&per_page=2
+                    previous: null
+                  resources:
+                    - guid: a4ad8bc1-67a6-4ffa-95b7-f8cf04ad7d4f
+                      created_at: '2026-04-21T10:15:30Z'
+                      updated_at: '2026-04-21T10:15:30Z'
+                      source: cf:app:d76446a1-f429-4444-8797-be2f78b75b08
+                      metadata:
+                        labels: {}
+                        annotations: {}
+                      relationships:
+                        route:
+                          data:
+                            guid: 89b32bd6-688f-4424-b94f-2e2c86495a5f
+                        app:
+                          data:
+                            guid: d76446a1-f429-4444-8797-be2f78b75b08
+                        space:
+                          data: null
+                        organization:
+                          data: null
+                      links:
+                        self:
+                          href: https://api.example.org/v3/route_policies/a4ad8bc1-67a6-4ffa-95b7-f8cf04ad7d4f
+                        route:
+                          href: https://api.example.org/v3/routes/89b32bd6-688f-4424-b94f-2e2c86495a5f
+                        app:
+                          href: https://api.example.org/v3/apps/d76446a1-f429-4444-8797-be2f78b75b08
+                    - guid: f2b5d8c3-92a1-4e3f-b847-9c8f1d2e3a4b
+                      created_at: '2026-04-21T11:20:45Z'
+                      updated_at: '2026-04-21T11:20:45Z'
+                      source: cf:space:3fa85f64-5717-4562-b3fc-2c963f66afa6
+                      metadata:
+                        labels: {}
+                        annotations: {}
+                      relationships:
+                        route:
+                          data:
+                            guid: 89b32bd6-688f-4424-b94f-2e2c86495a5f
+                        app:
+                          data: null
+                        space:
+                          data:
+                            guid: 3fa85f64-5717-4562-b3fc-2c963f66afa6
+                        organization:
+                          data: null
+                      links:
+                        self:
+                          href: https://api.example.org/v3/route_policies/f2b5d8c3-92a1-4e3f-b847-9c8f1d2e3a4b
+                        route:
+                          href: https://api.example.org/v3/routes/89b32bd6-688f-4424-b94f-2e2c86495a5f
+                        space:
+                          href: https://api.example.org/v3/spaces/3fa85f64-5717-4562-b3fc-2c963f66afa6
+      '400':
+        $ref: ../components/responses/BadRequest.yaml
+      '401':
+        $ref: ../components/responses/Unauthorized.yaml
+      '403':
+        $ref: ../components/responses/Forbidden.yaml
+      '422':
+        $ref: ../components/responses/UnprocessableEntity.yaml
+      '500':
+        $ref: ../components/responses/500.yaml
+      '503':
+        $ref: ../components/responses/ServiceUnavailable.yaml
+  post:
+    summary: Create a route policy
+    description: |-
+      Create a route policy granting the given source access to a route on an identity-aware domain.
+
+      **Validation rules**
+
+      - The route's domain must have `enforce_route_policies` set to `true`
+      - The route's domain must not be internal (internal routes bypass GoRouter)
+      - The `source` must be unique per route (duplicate sources are rejected)
+      - If the route already has a `cf:any` policy, no other sources can be added
+      - If adding `cf:any`, the route must not have any existing policies
+      - The source GUID is not checked for existence at creation time; stale references are tolerated, and sources referencing resources the caller cannot see are accepted but do not appear under `?include=source`
+      - The `app`, `space`, and `organization` relationships are derived from `source` and cannot be set directly
+
+      **Common use cases**
+
+      - Allow a frontend app to call a backend API: create a policy with `source` of `cf:app:<frontend-app-guid>` on the backend route
+      - Allow all apps in a space to access a shared service: create a policy with `source` of `cf:space:<space-guid>` on the shared service route
+      - Open a route to any caller (public API): create a policy with `source` of `cf:any`
+
+      **This feature is experimental and is subject to change.**
+
+      **Permitted roles:** Admin, Space Developer *(can create policies for routes in spaces they can write to)*
+    operationId: createRoutePolicy
+    tags:
+      - Route Policies
+    requestBody:
+      $ref: ../components/requestBodies/RoutePolicyCreateRequestBody.yaml
+    responses:
+      '201':
+        description: Created
+        content:
+          application/json:
+            schema:
+              $ref: ../components/schemas/RoutePolicy.yaml
+            examples:
+              default:
+                summary: default
+                value:
+                  guid: a4ad8bc1-67a6-4ffa-95b7-f8cf04ad7d4f
+                  created_at: '2026-04-21T10:15:30Z'
+                  updated_at: '2026-04-21T10:15:30Z'
+                  source: cf:app:d76446a1-f429-4444-8797-be2f78b75b08
+                  metadata:
+                    labels:
+                      team: frontend
+                    annotations:
+                      description: Allow frontend app to call backend API
+                  relationships:
+                    route:
+                      data:
+                        guid: 89b32bd6-688f-4424-b94f-2e2c86495a5f
+                    app:
+                      data:
+                        guid: d76446a1-f429-4444-8797-be2f78b75b08
+                    space:
+                      data: null
+                    organization:
+                      data: null
+                  links:
+                    self:
+                      href: https://api.example.org/v3/route_policies/a4ad8bc1-67a6-4ffa-95b7-f8cf04ad7d4f
+                    route:
+                      href: https://api.example.org/v3/routes/89b32bd6-688f-4424-b94f-2e2c86495a5f
+                    app:
+                      href: https://api.example.org/v3/apps/d76446a1-f429-4444-8797-be2f78b75b08
+      '400':
+        $ref: ../components/responses/BadRequest.yaml
+      '401':
+        $ref: ../components/responses/Unauthorized.yaml
+      '403':
+        $ref: ../components/responses/Forbidden.yaml
+      '404':
+        $ref: ../components/responses/NotFound.yaml
+      '422':
+        $ref: ../components/responses/UnprocessableEntity.yaml
+      '500':
+        $ref: ../components/responses/500.yaml
+      '503':
+        $ref: ../components/responses/ServiceUnavailable.yaml
+/v3/route_policies/{guid}:
+  get:
+    summary: Get a route policy
+    description: |-
+      Retrieve a single route policy.
+
+      **This feature is experimental and is subject to change.**
+
+      **Permitted roles:** Admin, Admin Read-Only, Global Auditor, Org Manager, Org Auditor, Org Billing Manager *(will not be able to see any route policies)*, Space Auditor, Space Developer, Space Manager, Space Supporter
+    operationId: getRoutePolicy
+    tags:
+      - Route Policies
+    parameters:
+      - $ref: ../components/parameters/Guid.yaml
+      - name: include
+        in: query
+        required: false
+        schema:
+          type: array
+          items:
+            type: string
+            enum:
+              - route
+              - source
+        description: Optionally include a list of unique related resources in the response; valid values are `route` and `source` (source includes the app, space, or organization referenced by the source field)
+    responses:
+      '200':
+        description: OK
+        content:
+          application/json:
+            schema:
+              $ref: ../components/schemas/RoutePolicy.yaml
+            examples:
+              default:
+                summary: default
+                value:
+                  guid: a4ad8bc1-67a6-4ffa-95b7-f8cf04ad7d4f
+                  created_at: '2026-04-21T10:15:30Z'
+                  updated_at: '2026-04-21T10:15:30Z'
+                  source: cf:app:d76446a1-f429-4444-8797-be2f78b75b08
+                  metadata:
+                    labels: {}
+                    annotations: {}
+                  relationships:
+                    route:
+                      data:
+                        guid: 89b32bd6-688f-4424-b94f-2e2c86495a5f
+                    app:
+                      data:
+                        guid: d76446a1-f429-4444-8797-be2f78b75b08
+                    space:
+                      data: null
+                    organization:
+                      data: null
+                  links:
+                    self:
+                      href: https://api.example.org/v3/route_policies/a4ad8bc1-67a6-4ffa-95b7-f8cf04ad7d4f
+                    route:
+                      href: https://api.example.org/v3/routes/89b32bd6-688f-4424-b94f-2e2c86495a5f
+                    app:
+                      href: https://api.example.org/v3/apps/d76446a1-f429-4444-8797-be2f78b75b08
+      '400':
+        $ref: ../components/responses/BadRequest.yaml
+      '401':
+        $ref: ../components/responses/Unauthorized.yaml
+      '403':
+        $ref: ../components/responses/Forbidden.yaml
+      '404':
+        $ref: ../components/responses/NotFound.yaml
+      '422':
+        $ref: ../components/responses/UnprocessableEntity.yaml
+      '500':
+        $ref: ../components/responses/500.yaml
+      '503':
+        $ref: ../components/responses/ServiceUnavailable.yaml
+  patch:
+    summary: Update a route policy
+    description: |-
+      Update the metadata of a route policy.
+
+      > **Note:** This endpoint only supports updating metadata (labels and annotations). The `source` and route relationship are immutable after creation. To change the source, delete the policy and create a new one.
+
+      **This feature is experimental and is subject to change.**
+
+      **Permitted roles:** Admin, Space Developer *(can update policies for routes in spaces they can write to)*
+    operationId: updateRoutePolicy
+    tags:
+      - Route Policies
+    parameters:
+      - $ref: ../components/parameters/Guid.yaml
+    requestBody:
+      $ref: ../components/requestBodies/RoutePolicyUpdateRequestBody.yaml
+    responses:
+      '200':
+        description: OK
+        content:
+          application/json:
+            schema:
+              $ref: ../components/schemas/RoutePolicy.yaml
+            examples:
+              default:
+                summary: default
+                value:
+                  guid: a4ad8bc1-67a6-4ffa-95b7-f8cf04ad7d4f
+                  created_at: '2026-04-21T10:15:30Z'
+                  updated_at: '2026-04-21T10:15:30Z'
+                  source: cf:app:d76446a1-f429-4444-8797-be2f78b75b08
+                  metadata:
+                    labels:
+                      team: backend
+                    annotations:
+                      note: Updated contact info
+                  relationships:
+                    route:
+                      data:
+                        guid: 89b32bd6-688f-4424-b94f-2e2c86495a5f
+                    app:
+                      data:
+                        guid: d76446a1-f429-4444-8797-be2f78b75b08
+                    space:
+                      data: null
+                    organization:
+                      data: null
+                  links:
+                    self:
+                      href: https://api.example.org/v3/route_policies/a4ad8bc1-67a6-4ffa-95b7-f8cf04ad7d4f
+                    route:
+                      href: https://api.example.org/v3/routes/89b32bd6-688f-4424-b94f-2e2c86495a5f
+                    app:
+                      href: https://api.example.org/v3/apps/d76446a1-f429-4444-8797-be2f78b75b08
+      '400':
+        $ref: ../components/responses/BadRequest.yaml
+      '401':
+        $ref: ../components/responses/Unauthorized.yaml
+      '403':
+        $ref: ../components/responses/Forbidden.yaml
+      '404':
+        $ref: ../components/responses/NotFound.yaml
+      '422':
+        $ref: ../components/responses/UnprocessableEntity.yaml
+      '500':
+        $ref: ../components/responses/500.yaml
+      '503':
+        $ref: ../components/responses/ServiceUnavailable.yaml
+  delete:
+    summary: Delete a route policy
+    description: |-
+      Deleting a route policy removes the access control for that specific source. If this was the only policy on the route, the route will become inaccessible (no callers will be allowed) until new policies are added or a `cf:any` policy is created.
+
+      **This feature is experimental and is subject to change.**
+
+      **Permitted roles:** Admin, Space Developer *(can delete policies for routes in spaces they can write to)*
+    operationId: deleteRoutePolicy
+    tags:
+      - Route Policies
+    parameters:
+      - $ref: ../components/parameters/Guid.yaml
+    responses:
+      '204':
+        description: No Content
+      '401':
+        $ref: ../components/responses/Unauthorized.yaml
+      '403':
+        $ref: ../components/responses/Forbidden.yaml
+      '404':
+        $ref: ../components/responses/NotFound.yaml
+      '422':
+        $ref: ../components/responses/UnprocessableEntity.yaml
+      '500':
+        $ref: ../components/responses/500.yaml
+      '503':
+        $ref: ../components/responses/ServiceUnavailable.yaml
