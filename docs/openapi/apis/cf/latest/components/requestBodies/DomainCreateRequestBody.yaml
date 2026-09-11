@@ -20,6 +20,16 @@ content:
               type: string
               format: uuid
           description: 'The desired router group guid.  _note: creates a `tcp` domain; cannot be used when `internal` is set to `true` or domain is scoped to an org_'
+        enforce_route_policies:
+          type: boolean
+          description: When `true`, GoRouter enforces route policies for routes on this domain using mutual TLS (mTLS). Set at creation only; cannot be changed on update. Cannot be used with internal domains or router groups.
+        route_policies_scope:
+          type: string
+          enum:
+            - any
+            - org
+            - space
+          description: 'Operator-defined boundary for allowed callers: `any`, `org`, or `space`. Required when `enforce_route_policies` is `true`. Set at creation only; cannot be changed on update.'
         relationships:
           type: object
           properties:

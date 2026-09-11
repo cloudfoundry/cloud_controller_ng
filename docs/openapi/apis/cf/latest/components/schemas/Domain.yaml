@@ -25,6 +25,16 @@ allOf:
             - http
             - tcp
         description: Available protocols for routes using the domain, currently `http` and `tcp`
+      enforce_route_policies:
+        type: boolean
+        description: When `true`, GoRouter enforces route policies for routes on this domain. This field only appears in the response when set to `true`. Set at creation only; cannot be changed on update
+      route_policies_scope:
+        type: string
+        enum:
+          - any
+          - org
+          - space
+        description: 'Operator-defined boundary for allowed callers: `any`, `org`, or `space`. Required when `enforce_route_policies` is `true`. This field only appears when `enforce_route_policies` is `true`. Set at creation only; cannot be changed on update'
       relationships:
         $ref: './Relationships.yaml'
       metadata:
