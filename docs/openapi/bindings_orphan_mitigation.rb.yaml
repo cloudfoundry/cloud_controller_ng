@@ -1,0 +1,184 @@
+---
+openapi: 3.0.3
+info:
+  title: Cloud Controller V3 API
+  version: v3
+servers: []
+paths:
+  "/v3/service_credential_bindings":
+    post:
+      summary: create
+      tags:
+      - ServiceCredentialBinding
+      requestBody:
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                type:
+                  type: string
+                name:
+                  type: string
+                relationships:
+                  type: object
+                  properties:
+                    service_instance:
+                      type: object
+                      properties:
+                        data:
+                          type: object
+                          properties:
+                            guid:
+                              type: string
+                          required:
+                          - guid
+                      required:
+                      - data
+                    app:
+                      type: object
+                      properties:
+                        data:
+                          type: object
+                          properties:
+                            guid:
+                              type: string
+                          required:
+                          - guid
+                      required:
+                      - data
+                  required:
+                  - service_instance
+                metadata:
+                  type: object
+                  properties:
+                    labels:
+                      type: object
+                      properties:
+                        foo:
+                          type: string
+                      required:
+                      - foo
+                    annotations:
+                      type: object
+                      properties:
+                        foz:
+                          type: string
+                      required:
+                      - foz
+                  required:
+                  - labels
+                  - annotations
+              required:
+              - type
+              - name
+              - relationships
+              - metadata
+            example:
+              type: key
+              name: name-52495
+              relationships:
+                service_instance:
+                  data:
+                    guid: 043d83f8-5b25-426f-bcaa-d3e48f029a65
+                app:
+                  data:
+                    guid: 2a395a7f-c465-4e8b-b9d9-e05b4bb10d8d
+              metadata:
+                labels:
+                  foo: bar
+                annotations:
+                  foz: baz
+      responses:
+        '202':
+          description: fails the job and does not perform orphan mitigation
+          content:
+            text/html:
+              schema:
+                type: string
+              example: ''
+  "/v3/service_route_bindings":
+    post:
+      summary: create
+      tags:
+      - ServiceRouteBinding
+      requestBody:
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                metadata:
+                  type: object
+                  properties:
+                    labels:
+                      type: object
+                      properties:
+                        peanut:
+                          type: string
+                      required:
+                      - peanut
+                    annotations:
+                      type: object
+                      properties:
+                        number:
+                          type: string
+                      required:
+                      - number
+                  required:
+                  - labels
+                  - annotations
+                relationships:
+                  type: object
+                  properties:
+                    service_instance:
+                      type: object
+                      properties:
+                        data:
+                          type: object
+                          properties:
+                            guid:
+                              type: string
+                          required:
+                          - guid
+                      required:
+                      - data
+                    route:
+                      type: object
+                      properties:
+                        data:
+                          type: object
+                          properties:
+                            guid:
+                              type: string
+                          required:
+                          - guid
+                      required:
+                      - data
+                  required:
+                  - service_instance
+                  - route
+              required:
+              - metadata
+              - relationships
+            example:
+              metadata:
+                labels:
+                  peanut: butter
+                annotations:
+                  number: eight
+              relationships:
+                service_instance:
+                  data:
+                    guid: b9f93cc3-2c02-4b82-9a78-5c91f001b2ae
+                route:
+                  data:
+                    guid: 27443f98-9a9b-43d5-aa31-5e7bf16b1a90
+      responses:
+        '202':
+          description: does orphan mitigation and fails the job
+          content:
+            text/html:
+              schema:
+                type: string
+              example: ''

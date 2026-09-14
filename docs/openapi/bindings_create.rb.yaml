@@ -1,0 +1,186 @@
+---
+openapi: 3.0.3
+info:
+  title: Cloud Controller V3 API
+  version: v3
+servers: []
+paths:
+  "/v3/jobs/{guid}":
+    get:
+      summary: show
+      tags:
+      - V3::Job
+      parameters:
+      - name: guid
+        in: path
+        required: true
+        schema:
+          type: string
+        example: 75c955ec-b20f-480d-b20f-1cff06072614
+      responses:
+        '200':
+          description: responds with a job resource
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  guid:
+                    type: string
+                  created_at:
+                    type: string
+                  updated_at:
+                    type: string
+                  operation:
+                    type: string
+                  state:
+                    type: string
+                  errors:
+                    type: array
+                    items: {}
+                  warnings:
+                    type: array
+                    items: {}
+                  links:
+                    type: object
+                    properties:
+                      self:
+                        type: object
+                        properties:
+                          href:
+                            type: string
+                        required:
+                        - href
+                      service_credential_binding:
+                        type: object
+                        properties:
+                          href:
+                            type: string
+                        required:
+                        - href
+                    required:
+                    - self
+                    - service_credential_binding
+                required:
+                - guid
+                - created_at
+                - updated_at
+                - operation
+                - state
+                - errors
+                - warnings
+                - links
+              example:
+                guid: 75c955ec-b20f-480d-b20f-1cff06072614
+                created_at: '2026-03-31T23:37:38Z'
+                updated_at: '2026-03-31T23:37:38Z'
+                operation: service_keys.create
+                state: PROCESSING
+                errors: []
+                warnings: []
+                links:
+                  self:
+                    href: http://api2.vcap.me/v3/jobs/75c955ec-b20f-480d-b20f-1cff06072614
+                  service_credential_binding:
+                    href: http://api2.vcap.me/v3/service_credential_bindings/86e975a2-73fb-43c0-9568-bdeba2719ab5
+  "/v3/service_credential_bindings":
+    post:
+      summary: create
+      tags:
+      - ServiceCredentialBinding
+      requestBody:
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                type:
+                  type: string
+                name:
+                  type: string
+                relationships:
+                  type: object
+                  properties:
+                    service_instance:
+                      type: object
+                      properties:
+                        data:
+                          type: object
+                          properties:
+                            guid:
+                              type: string
+                          required:
+                          - guid
+                      required:
+                      - data
+                    app:
+                      type: object
+                      properties:
+                        data:
+                          type: object
+                          properties:
+                            guid:
+                              type: string
+                          required:
+                          - guid
+                      required:
+                      - data
+                  required:
+                  - service_instance
+                metadata:
+                  type: object
+                  properties:
+                    labels:
+                      type: object
+                      properties:
+                        foo:
+                          type: string
+                      required:
+                      - foo
+                    annotations:
+                      type: object
+                      properties:
+                        foz:
+                          type: string
+                      required:
+                      - foz
+                  required:
+                  - labels
+                  - annotations
+                parameters:
+                  type: object
+                  properties:
+                    foo:
+                      type: string
+                  required:
+                  - foo
+              required:
+              - type
+              - name
+              - relationships
+              - metadata
+            example:
+              type: key
+              name: name-52677
+              relationships:
+                service_instance:
+                  data:
+                    guid: 84e7282b-233b-4781-b5c5-fbbc4fafa25d
+                app:
+                  data:
+                    guid: 86b0ca9e-6290-4c87-9de5-3926ecb57116
+              metadata:
+                labels:
+                  foo: bar
+                annotations:
+                  foz: baz
+              parameters:
+                foo: bar
+      responses:
+        '202':
+          description: creates a credential binding in the database
+          content:
+            text/html:
+              schema:
+                type: string
+              example: ''
