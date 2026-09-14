@@ -188,6 +188,16 @@ module CloudFoundry
           expect(limiter.try_increment?(user_guid)).to be false
         end
 
+        it 'does not consume a slot for a rejected request (no phantom count)' do
+          blocking_limit.times { limiter.try_increment?(user_guid) }
+          # repeated rejected attempts must not increment the counter...
+          5.times { expect(limiter.try_increment?(user_guid)).to be false }
+          # ...so freeing exactly one slot admits exactly one request, then blocks again
+          limiter.decrement(user_guid)
+          expect(limiter.try_increment?(user_guid)).to be true
+          expect(limiter.try_increment?(user_guid)).to be false
+        end
+
         it 'logs a warning when count exceeds logging_limit' do
           logging_limit.times { limiter.try_increment?(user_guid) }
           limiter.try_increment?(user_guid)
@@ -241,10 +251,10 @@ module CloudFoundry
 
           it 'always returns true without hitting the store' do
             store = instance_double(ConcurrentInMemoryStore)
-            allow(store).to receive(:increment)
+            allow(store).to receive(:try_acquire)
             limiter.instance_variable_set(:@store, store)
             expect(limiter.try_increment?(user_guid)).to be true
-            expect(store).not_to have_received(:increment)
+            expect(store).not_to have_received(:try_acquire)
           end
         end
 
@@ -253,17 +263,17 @@ module CloudFoundry
 
           it 'always returns true without hitting the store' do
             store = instance_double(ConcurrentInMemoryStore)
-            allow(store).to receive(:increment)
+            allow(store).to receive(:try_acquire)
             limiter.instance_variable_set(:@store, store)
             expect(limiter.try_increment?(user_guid)).to be true
-            expect(store).not_to have_received(:increment)
+            expect(store).not_to have_received(:try_acquire)
           end
         end
 
         context 'when store raises StoreError' do
           before do
             store = instance_double(ConcurrentInMemoryStore)
-            allow(store).to receive(:increment).and_raise(StoreError)
+            allow(store).to receive(:try_acquire).and_raise(StoreError)
             limiter.instance_variable_set(:@store, store)
           end
 
@@ -333,14 +343,27 @@ module CloudFoundry
       let(:logger) { double('logger') }
       let(:key) { 'test-key' }
 
-      describe '#increment' do
+      describe '#try_acquire' do
         it 'returns 1 for a new key' do
-          expect(store.increment(key, logger)).to eq(1)
+          expect(store.try_acquire(key, 10, logger)).to eq(1)
         end
 
-        it 'increments on each call' do
-          store.increment(key, logger)
-          expect(store.increment(key, logger)).to eq(2)
+        it 'increments on each successful acquire' do
+          store.try_acquire(key, 10, logger)
+          expect(store.try_acquire(key, 10, logger)).to eq(2)
+        end
+
+        it 'returns nil without incrementing when at the limit' do
+          2.times { store.try_acquire(key, 2, logger) }
+          expect(store.try_acquire(key, 2, logger)).to be_nil
+          # rejected attempt did not consume a slot: freeing one admits exactly one more
+          store.decrement(key, logger)
+          expect(store.try_acquire(key, 2, logger)).to eq(2)
+        end
+
+        it 'treats a nil limit as unlimited' do
+          5.times { store.try_acquire(key, nil, logger) }
+          expect(store.try_acquire(key, nil, logger)).to eq(6)
         end
       end
 
@@ -350,13 +373,13 @@ module CloudFoundry
         end
 
         it 'decrements the counter' do
-          store.increment(key, logger)
-          store.increment(key, logger)
+          store.try_acquire(key, 10, logger)
+          store.try_acquire(key, 10, logger)
           expect(store.decrement(key, logger)).to eq(1)
         end
 
         it 'removes the key when count reaches 0' do
-          store.increment(key, logger)
+          store.try_acquire(key, 10, logger)
           store.decrement(key, logger)
           expect(store.instance_variable_get(:@data)).not_to have_key(key)
         end
@@ -371,35 +394,63 @@ module CloudFoundry
     RSpec.describe ConcurrentRedisStore do
       let(:logger) { double('logger', error: nil) }
       let(:key) { 'test-key' }
-      let(:store) { ConcurrentRedisStore.new(MockRedis.new) }
+      let(:redis) { MockRedis.new }
+      let(:store) { ConcurrentRedisStore.new(redis) }
 
-      describe '#increment' do
+      # MockRedis cannot execute Lua, so simulate ACQUIRE_SCRIPT faithfully against the same
+      # mock instance. Real atomicity is exercised in integration against a live Redis.
+      before do
+        allow(redis).to receive(:eval) do |_script, **opts|
+          k = opts[:keys].first
+          limit = opts[:argv][0].to_i
+          ttl = opts[:argv][1].to_i
+          current = redis.get(k).to_i
+          if limit >= 0 && current >= limit
+            -1
+          else
+            count = redis.incr(k)
+            redis.expire(k, ttl) if ttl > 0
+            count
+          end
+        end
+      end
+
+      describe '#try_acquire' do
         it 'returns 1 for a new key' do
-          expect(store.increment(key, logger)).to eq(1)
+          expect(store.try_acquire(key, 10, logger)).to eq(1)
         end
 
-        it 'increments on each call' do
-          store.increment(key, logger)
-          expect(store.increment(key, logger)).to eq(2)
+        it 'increments on each successful acquire' do
+          store.try_acquire(key, 10, logger)
+          expect(store.try_acquire(key, 10, logger)).to eq(2)
+        end
+
+        it 'returns nil without incrementing when at the limit' do
+          2.times { store.try_acquire(key, 2, logger) }
+          expect(store.try_acquire(key, 2, logger)).to be_nil
+          expect(redis.get(key).to_i).to eq(2)
+        end
+
+        it 'treats a nil limit as unlimited' do
+          5.times { store.try_acquire(key, nil, logger) }
+          expect(store.try_acquire(key, nil, logger)).to eq(6)
         end
 
         context 'with TTL configured' do
-          let(:store) { ConcurrentRedisStore.new(MockRedis.new, counter_ttl_seconds: 60) }
+          let(:store) { ConcurrentRedisStore.new(redis, counter_ttl_seconds: 60) }
 
-          it 'sets TTL on every increment' do
-            redis = store.instance_variable_get(:@redis)
+          it 'sets TTL when acquiring' do
             allow(redis).to receive(:expire).and_call_original
-            store.increment(key, logger)
-            store.increment(key, logger)
-            expect(redis).to have_received(:expire).with(key, 60).twice
+            store.try_acquire(key, 10, logger)
+            expect(redis).to have_received(:expire).with(key, 60)
           end
         end
 
         context 'when Redis raises an error' do
-          before { allow(store.instance_variable_get(:@redis)).to receive(:incr).and_raise(Redis::ConnectionError) }
+          before { allow(redis).to receive(:eval).and_raise(Redis::ConnectionError) }
 
           it 'logs the error and raises StoreError' do
-            expect { store.increment(key, logger) }.to raise_error(StoreError)
+            expect { store.try_acquire(key, 10, logger) }.to raise_error(StoreError)
             expect(logger).to have_received(:error).with(/Redis error/)
           end
         end
@@ -407,18 +458,18 @@ module CloudFoundry
 
       describe '#decrement' do
         it 'decrements the counter' do
-          store.increment(key, logger)
-          store.increment(key, logger)
+          store.try_acquire(key, 10, logger)
+          store.try_acquire(key, 10, logger)
           expect(store.decrement(key, logger)).to eq(1)
         end
 
         it 'does not go below 0 when key does not exist' do
           store.decrement(key, logger)
-          expect(store.increment(key, logger)).to eq(1)
+          expect(store.try_acquire(key, 10, logger)).to eq(1)
         end
 
         it 'returns 0 when key expired mid-flight' do
-          store.increment(key, logger)
+          store.try_acquire(key, 10, logger)
           store.instance_variable_get(:@redis).del(key) # simulate TTL expiry
           expect(store.decrement(key, logger)).to eq(0)
         end

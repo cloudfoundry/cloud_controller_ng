@@ -1,10 +1,38 @@
 require 'mixins/client_ip'
+require 'digest'
 
 module CloudFoundry
   module Middleware
     class StoreError < StandardError; end
 
     class ConcurrentRedisStore
+      # Atomically checks the limit and increments only when there is room, so requests
+      # that will be rejected never touch the counter. The whole check-and-increment runs
+      # on the Redis server in a single round-trip, which removes both:
+      #   - the "phantom" over-count under load (rejected requests transiently inflating the
+      #     counter via increment-then-rollback, causing false rejections), and
+      #   - the check-then-increment race between two concurrent requests.
+      #
+      # KEYS[1] = counter key
+      # ARGV[1] = limit (>= 0): 0 rejects everything; a positive N caps at N.
+      #           The limiter is deactivated in Ruby for negative limits, so they never reach here.
+      # ARGV[2] = ttl in seconds (<= 0 means do not set an expiry)
+      # Returns the post-increment count when admitted, or -1 when rejected (not incremented).
+      ACQUIRE_SCRIPT = <<~LUA.freeze
+        local limit = tonumber(ARGV[1])
+        local ttl = tonumber(ARGV[2])
+        local current = tonumber(redis.call('get', KEYS[1]) or '0')
+        if current >= limit then
+          return -1
+        end
+        local count = redis.call('incr', KEYS[1])
+        if ttl > 0 then
+          redis.call('expire', KEYS[1], ttl)
+        end
+        return count
+      LUA
+      ACQUIRE_SHA = Digest::SHA1.hexdigest(ACQUIRE_SCRIPT).freeze
+
       def initialize(redis, counter_ttl_seconds: nil)
         @redis = redis
         @counter_ttl_seconds = counter_ttl_seconds
@@ -18,13 +46,14 @@ module CloudFoundry
         new(redis, counter_ttl_seconds: counter_ttl_seconds)
       end
 
-      def increment(key, logger)
-        count = @redis.incr(key).to_i
-        @redis.expire(key, @counter_ttl_seconds) if @counter_ttl_seconds
-        count
+      # Returns the post-increment count when admitted, or nil when the limit is reached.
+      # The limit is always >= 0 (the limiter is deactivated in Ruby for negative limits).
+      def try_acquire(key, limit, logger)
+        count = eval_acquire(key, limit).to_i
+        count.negative? ? nil : count
       rescue Redis::BaseError => e
         logger.error("Redis error: #{e.class} - #{e.message}")
-        raise StoreError.new("increment failed: #{e.message}")
+        raise StoreError.new("acquire failed: #{e.message}")
       end
 
       def decrement(key, logger)
@@ -35,6 +64,20 @@ module CloudFoundry
         logger.error("Redis error: #{e.class} - #{e.message}")
         raise StoreError.new("decrement failed: #{e.message}")
       end
+
+      private
+
+      # Runs ACQUIRE_SCRIPT by its cached SHA to avoid shipping the script body on every
+      # request. Redis keeps the compiled script cached; if it isn't loaded yet (fresh server,
+      # SCRIPT FLUSH), Redis replies NOSCRIPT and we fall back to EVAL once, which also caches it.
+      def eval_acquire(key, limit)
+        argv = [limit, @counter_ttl_seconds || 0]
+        @redis.evalsha(ACQUIRE_SHA, keys: [key], argv: argv)
+      rescue Redis::CommandError => e
+        raise unless e.message.include?('NOSCRIPT')
+
+        @redis.eval(ACQUIRE_SCRIPT, keys: [key], argv: argv)
+      end
     end
 
     class ConcurrentInMemoryStore
@@ -43,9 +86,16 @@ module CloudFoundry
         @data = {}
       end
 
-      def increment(key, _logger)
+      # Atomic check-and-increment under the mutex: a rejected request never increments,
+      # mirroring the Redis Lua behaviour so both stores are phantom-free. Returns the
+      # post-increment count when admitted, or nil when the limit is reached. The limit is
+      # always >= 0 here (the limiter is deactivated in Ruby for negative limits).
+      def try_acquire(key, limit, _logger)
         @mutex.synchronize do
-          @data[key] = (@data[key] || 0) + 1
+          current = @data[key] || 0
+          return nil if current >= limit
+
+          @data[key] = current + 1
         end
       end
 
@@ -85,19 +135,17 @@ module CloudFoundry
       end
 
       def try_increment?(user_guid)
-        return true unless @blocking_limit&.>=(0) || @logging_limit&.>=(0)
+        # A negative (or unset) blocking limit means the limiter is deactivated: do nothing,
+        # never touch Redis.
+        return true unless @blocking_limit&.>=(0)
 
         key = "#{key_prefix}:#{user_guid}"
-        count = store.increment(key, @logger)
+        count = store.try_acquire(key, @blocking_limit, @logger)
+
+        return false if count.nil?
 
         if @logging_limit&.>=(0) && count > @logging_limit
           @logger.info("Concurrency limit warning for user '#{user_guid}', count=#{count} exceeded logging_limit=#{@logging_limit}")
-        end
-
-        if @blocking_limit&.>=(0) && count > @blocking_limit
-          store.decrement(key, @logger)
-          @logger.info("Concurrent rate limit exceeded for user '#{user_guid}', limit=#{@blocking_limit} remaining=0")
-          return false
         end
 
         true
@@ -107,7 +155,7 @@ module CloudFoundry
       end
 
       def decrement(user_guid)
-        return unless @blocking_limit&.>=(0) || @logging_limit&.>=(0)
+        return unless @blocking_limit&.>=(0)
 
         key = "#{key_prefix}:#{user_guid}"
         store.decrement(key, @logger)
