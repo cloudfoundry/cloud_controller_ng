@@ -14,6 +14,7 @@ module VCAP::CloudController
       droplet = DropletModel.new(
         app: app,
         state: DropletModel::AWAITING_UPLOAD_STATE,
+        lifecycle_type: BuildpackLifecycleDataModel::LIFECYCLE_TYPE,
         process_types: message.process_types || DEFAULT_PROCESS_TYPES,
         execution_metadata: ''
       )
@@ -87,6 +88,7 @@ module VCAP::CloudController
         app: build.app,
         package_guid: build.package_guid,
         state: DropletModel::STAGING_STATE,
+        lifecycle_type: build.lifecycle_type,
         build: build
       )
     end

@@ -22,7 +22,7 @@ module VCAP::CloudController
       droplet          = DropletModel.find(guid: staging_guid)
       raise CloudController::Errors::ApiError.new_from_details('ResourceNotFound', 'Droplet not found') if droplet.nil?
 
-      build = BuildModel.create(package: droplet.package, app: droplet.app, state: DropletModel::STAGING_STATE)
+      build = BuildModel.create(package: droplet.package, app: droplet.app, state: DropletModel::STAGING_STATE, lifecycle_type: droplet.lifecycle_type)
 
       BuildModel.db.transaction do
         build.lock!

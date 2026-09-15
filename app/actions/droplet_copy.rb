@@ -20,7 +20,7 @@ module VCAP::CloudController
       raise InvalidCopyError.new('source droplet is not staged') unless @source_droplet.staged?
       raise InvalidCopyError.new('source and destination lifecycle types do not match') unless @source_droplet.lifecycle_type == destination_app.lifecycle_type
 
-      new_droplet = DropletModel.new(state: DropletModel::COPYING_STATE, app: destination_app)
+      new_droplet = DropletModel.new(state: DropletModel::COPYING_STATE, app: destination_app, lifecycle_type: destination_app.lifecycle_type)
 
       # Needed to execute serializers and deserializers correctly on source and destination models
       CLONED_ATTRIBUTES.each do |attr|
