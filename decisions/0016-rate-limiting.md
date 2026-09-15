@@ -29,11 +29,11 @@ CF API rate limiting should be moved from CCNG (Ruby process) into a dedicated r
 
 ### Short-term
 
-A single user can't overload the CF API anymore by running more parallel requests than the CC api VMs can process. The CF API is protected up to ~750 req/s (~1.8k with token caching) per CC VM (max 429 response rate).
+A single user can't overload the CF API anymore by running more parallel requests than the CC api VMs can process. The CF API is protected up to ~2.2k req/s per CC VM (max 429 response rate).
 
 ### Long-term
 
-The protection level can be increased at least by factor 4.
+The protection level can be substantially increased (we expect at least factor 2).
 
 CCNG is offloaded by token decoding/validation and rate limiting middleware. We may be able to remove Redis/Valkey from CCNG which was introduced because of rate limiting.
 
@@ -47,14 +47,15 @@ Downside is the implementation and testing effort but we also gain full control 
 
 [ccng #5361](https://github.com/cloudfoundry/cloud_controller_ng/pull/5361)
 
-Improves also also the middleware order to increase throughput when rate limits are hit.
+The PR also improves the middleware order to increase throughput when rate limits are hit.
 
 Pros:
 - simple
 - big improvement compared to no concurrency rate limiting
 
 Cons:
-- limited protection (max ~750 req/s per api VM, max 1.8k with token caching)
+- less protection compared to a rate limiter outside of CCNG (max 2.2k req/s per api VM)
+- rate-limited requests consume CCNG resources
 
 ### Rate limiting in nginx using OpenResty
 
@@ -92,7 +93,7 @@ Cons:
 
 ### Rate limiting in nginx using a golang server for token decoding
 
-Aborted POC implementation.
+POC implementation started but then aborted.
 
 Pros:
 - no Redis/Valkey needed for rate limiters
@@ -108,7 +109,7 @@ Cons:
 
 ### Rate limiting in nginx using token decoding module in C
 
-Aborted POC implementation.
+POC implementation started but then aborted.
 
 Pros:
 - no Redis/Valkey needed for rate limiters
@@ -122,13 +123,13 @@ Cons:
 
 ### Replacing nginx by a CAPI specific go implementation
 
-No POC yet. Ideas is to replace nginx by a CAPI specific router implementation in golang.
-The new capi router has to implement routing rules, mTLS, rate limiting and file upload.
+No POC yet. Idea is to replace nginx by a CAPI specific router implementation in golang.
+A new capi router has to implement routing rules, mTLS, rate limiting and file upload.
 
 Pros
 - CAPI specific implementation without hacks
 - implementation in a well-understood and performant language (no Lua or JavaScript)
-- should perform even better than nginx because of in-process token decoding (to be validated)
+- should perform better than nginx because of in-process token decoding and validation (to be validated)
 - no Redis/Valkey needed for rate limiters
 - offloads CCNG (token decoding/validation and rate limiting)
 - no dependency to nginx and nginx modules, removes unmaintained nginx upload module
@@ -150,39 +151,39 @@ Test setup:
   - vegeta on external VM
   - 300s attack time
   - all requests by a single user
-  - assumed an API response time of 100ms (i.e. a rather slow endpoint), simulated by adding a 100ms delay to the /v3/info endpoint
+  - assumed an API response time of ~106ms (i.e. a rather slow endpoint), simulated by adding a 100ms delay to the /v3/info endpoint
 - rate limiting (per VM)
   - fixed-window rate limiter with very high limit so that it has no effect
   - concurrent request rate limiter with max 10 parallel requests per user
 
-Table shows highest achievable request rate w/o 5xx responses.
+The max measured 200 response throughput for this test setup is ~189 req/s (= 56,700 200 responses in 300s).
 
-- TODO: Update data. Some tests were run until reaching 40k 200, should rerun for 300s with fixed-window rate limiter set to very high limit so that we get comparable results.
+The table shows the highest achievable attack request rate for which the CF API is still working stable:
+- no 5xx responses
+- achieves at least 90% of the max 200 responses (~51k 200 responses in 300s, ~170 req/s).
 
 | Implementation | Rate | Duration | 200s | 429s | 5xx |
 |---|---|---|---|---|---|
 | Baseline (1)    |600 req/s | 300s | 180,000 | 0 | 0 |
-| CCNG middleware |1200 req/s | 183s | 40,000 | 179,100 | 0 |
-| CCNG middleware w. token caching |3500 req/s | 300s | 37,534 | 1,012,415 | 0 |
-| nginx OpenResty |5250 req/s| 238s | 40,000 | 1,178,881 | 0 |
-| nginx njs       |5250 req/s| 246s | 39,295 | 1,253,393 | 0 |
+| CCNG middleware |4000 req/s | 300s | 52,140 | 1,147,873 | 0 |
+| nginx njs       |4750 req/s| 300s | 51,771 | 1,373,232 | 0 |
+| nginx OpenResty |5250 req/s| 300s | 53,143 | 1,521,858 | 0 |
 
 (1) Baseline = current implementation w/o concurrent request rate limiter.
 
-Additional measurement of rate limiting throughput, i.e. all requests are rejected with 429. Concurrent request rate limiter set to 0:
+Additional measurement of max rate limiting throughput, i.e. all requests are rejected with 429. Concurrent request rate limiter set to 0:
 
 | Implementation | Rate | Duration | 200s | 429s | 5xx |
 |---|---|---|---|---|---|
 | Baseline (2)    | 1050 req/s | 300s | - | 315,000 | 0 |
-| CCNG middleware | 1500 req/s | 300s | - | 450,000 | 0 |
-| CCNG middleware w. token caching |3650 req/s | 300s | - | 1,095,002 | 0 |
-| nginx OpenResty | 6000 req/s | 300s | - | 1,800,007 | 0 |
+| CCNG middleware | 4500 req/s | 300s | - | 1,353,000 | 0 |
 | nginx njs       | 5750 req/s | 300s | - | 1,725,001 | 0 |
+| nginx OpenResty | 6000 req/s | 300s | - | 1,800,007 | 0 |
 
 (2) Baseline uses fixed-window rate limit with limit 0 instead of concurrent request rate limiter
 
 ## Additional Information
 
-The rate limiter protection performance (i.e. which max load can be responded with 429) can be further improved by caching tokens that have been validated and decoded. This applies to all implementation options. POC was only done for CCNG middleware.
+The rate limiter protection performance (i.e. which max load can be responded with 429) can be further improved by caching tokens that have been validated and decoded. This applies to all implementation options.
 
-Max nginx response rate is ~8..10k req/s per CC api VM (static response by nginx w/o token decoding and rate limiting). It might be possible to increase it further by tuning nginx configuration.
+Max nginx response rate is ~8..10k req/s per CC api VM (static response by nginx w/o token decoding and rate limiting). It might be possible to increase it further by tuning nginx configuration. This indicates that a CAPI specific and properly optimized rate limiting implementation outside of CCNG can provide a higher protection level than an implementation within CCNG.
