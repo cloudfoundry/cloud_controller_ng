@@ -3,7 +3,9 @@ const fs = require('fs-extra');
 const path = require('path');
 const net = require('net');
 const http = require('http');
+const https = require('https');
 const httpProxy = require('http-proxy');
+const { HarRecorder } = require('./har-recorder');
 
 const serverUrl = process.env.CF_API_URL;
 const appsDomain = process.env.CF_APPS_DOMAIN;
@@ -12,10 +14,102 @@ const adminUser = process.env.CF_ADMIN_USER;
 const adminPassword = process.env.CF_ADMIN_PASSWORD;
 const nodeCount = process.env.THREADS || '6';
 
+// HAR capture: records one exchange per (method, path, status) so this run
+// produces a replayable corpus. Disable with HAR_CAPTURE=0.
+const harCaptureEnabled = process.env.HAR_CAPTURE !== '0';
+const harRecorder = harCaptureEnabled ? new HarRecorder({
+    file: process.env.HAR_FILE || path.join('out', 'traffic.har'),
+    maxPerKey: parseInt(process.env.HAR_MAX_PER_KEY || '1', 10),
+    maxBodyBytes: parseInt(process.env.HAR_MAX_BODY_BYTES || String(256 * 1024), 10),
+}) : null;
+
+const suiteName = process.env.TEST_SUITE || 'capi-bara-tests';
+
+/**
+ * The acceptance suites that can drive the proxy.
+ *
+ * Both are ginkgo suites run through `./bin/test` with a JSON config named by
+ * $CONFIG, so only the repo and the config keys differ. `config` receives the
+ * facts discovered at runtime and returns the suite's own config shape.
+ */
+const SUITES = {
+    'capi-bara-tests': {
+        repo: 'https://github.com/cloudfoundry/capi-bara-tests.git',
+        configFile: 'integration_config.json',
+        config: ({ api, appsDomain, adminUser, adminPassword }) => ({
+            // The scheme and port live in `api` itself: `cf api` is handed this
+            // value verbatim and assumes https without one, and the suite skips
+            // its own https prefix when it sees a scheme here. App routes keep
+            // using https, since they still go through the real router.
+            api,
+            apps_domain: appsDomain,
+            admin_user: adminUser,
+            admin_password: adminPassword,
+            skip_ssl_validation: true,
+            timeout_scale: 5.0,
+        }),
+    },
+    'cf-acceptance-tests': {
+        repo: 'https://github.com/cloudfoundry/cf-acceptance-tests.git',
+        configFile: 'cats-config.json',
+        // CATS rejects both a scheme and a port in `api`, so it can only reach
+        // the proxy once the proxy answers TLS on 443 under a bare hostname.
+        config: ({ api, appsDomain, adminUser, adminPassword }) => ({
+            api,
+            apps_domain: appsDomain,
+            admin_user: adminUser,
+            admin_password: adminPassword,
+            skip_ssl_validation: true,
+            use_http: false,
+            timeout_scale: 5.0,
+            artifacts_directory: 'logs',
+            // Empty disables the credhub suites, which would otherwise demand
+            // credhub_client/credhub_secret.
+            credhub_mode: '',
+            stacks: ['cflinuxfs4'],
+            // On: the groups whose traffic is Cloud Controller API traffic.
+            include_apps: true,
+            include_v3: true,
+            include_tasks: true,
+            include_user_provided_services: true,
+            include_security_groups: true,
+            // Off: everything needing infrastructure CAPI does not own, or
+            // needing so many app pushes that the run stops fitting in a job.
+            include_detect: false,
+            include_app_syslog_tcp: false,
+            include_container_networking: false,
+            include_docker: false,
+            include_internet_dependent: false,
+            include_isolation_segments: false,
+            include_private_docker_registry: false,
+            include_route_services: false,
+            include_routing: false,
+            include_http2_routing: false,
+            include_tcp_routing: false,
+            include_routing_isolation_segments: false,
+            include_service_discovery: false,
+            include_services: false,
+            include_service_instance_sharing: false,
+            include_ssh: false,
+            include_sso: false,
+            include_zipkin: false,
+            include_volume_services: false,
+        }),
+    },
+};
+
+const suite = SUITES[suiteName];
+
 if (!serverUrl || !specFile || !adminUser || !adminPassword || !appsDomain) {
     console.error('Usage: node bin/test-compliance.js <spec-file>');
     console.error('Please also set CF_API_URL, CF_APPS_DOMAIN, CF_ADMIN_USER, and CF_ADMIN_PASSWORD environment variables.');
     console.error('Optional: TEST_NODES (default: 6) - Number of test nodes to run in parallel');
+    console.error(`Optional: TEST_SUITE (default: capi-bara-tests) - one of ${Object.keys(SUITES).join(', ')}`);
+    process.exit(1);
+}
+
+if (!suite) {
+    console.error(`Unknown TEST_SUITE '${suiteName}'. Expected one of: ${Object.keys(SUITES).join(', ')}`);
     process.exit(1);
 }
 
@@ -157,43 +251,132 @@ function waitForPort(port, retries = 30, delay = 2000) {
 }
 
 function createProxyServer() {
-    const proxy = httpProxy.createProxyServer({
-        timeout: 30000,
-        proxyTimeout: 30000
-    });
-    const target = serverUrl;
+    const targetUrl = new URL(serverUrl);
+    const isHttps = targetUrl.protocol === 'https:';
 
-    proxy.on('error', (err, req, res) => {
-        console.error(`Proxy error: ${err.message}`);
-        if (res && !res.headersSent) {
-            res.writeHead(502, {
-                'Content-Type': 'text/plain'
+    // Forward a buffered request directly to the CF API, bypassing wiretap.
+    function forwardDirect(reqPath, method, headers, body, res) {
+        return new Promise((resolve, reject) => {
+            const lib = isHttps ? https : http;
+            const upstreamHeaders = { ...headers, host: targetUrl.hostname };
+            delete upstreamHeaders['content-length'];
+            if (body.length > 0) upstreamHeaders['content-length'] = String(body.length);
+
+            const proxyReq = lib.request({
+                hostname: targetUrl.hostname,
+                port: targetUrl.port || (isHttps ? 443 : 80),
+                path: reqPath,
+                method,
+                headers: upstreamHeaders,
+                rejectUnauthorized: false,
+                timeout: 30000,
+            }, (proxyRes) => {
+                if (!res.headersSent) {
+                    res.writeHead(proxyRes.statusCode, proxyRes.headers);
+                    proxyRes.pipe(res, { end: true });
+                }
+                resolve();
             });
-            res.end('Bad Gateway - Wiretap may not be ready yet');
-        }
-    });
+
+            proxyReq.on('error', reject);
+            proxyReq.on('timeout', () => {
+                proxyReq.destroy();
+                reject(new Error('Direct CF API request timed out'));
+            });
+
+            if (body.length > 0) proxyReq.write(body);
+            proxyReq.end();
+        });
+    }
 
     const server = http.createServer((req, res) => {
-        if (req.url.startsWith('/v2/')) {
-            // Always proxy v2 requests to the actual CF API
-            proxy.web(req, res, { target, secure: false, changeOrigin: true });
-        } else if (req.headers['content-type'] && req.headers['content-type'].includes('multipart/form-data')) {
-            // Always proxy multipart requests to the actual CF API
-            proxy.web(req, res, { target, secure: false, changeOrigin: true });
-        } else {
-            // Try to proxy to wiretap first, fall back to direct CF API on failure
-            proxy.web(req, res, {
-                target: 'http://localhost:9090',
-                secure: false,
-                timeout: 5000
-            }, (proxyErr) => {
-                if (proxyErr) {
-                    console.log(`Wiretap proxy failed, falling back to direct CF API: ${proxyErr.message}`);
-                    // Fallback: proxy directly to CF API
-                    proxy.web(req, res, { target, secure: false, changeOrigin: true });
-                }
+        // Buffer the full request body before forwarding so we can retry on wiretap errors.
+        const bodyChunks = [];
+        req.on('data', chunk => bodyChunks.push(chunk));
+        req.on('end', () => {
+            const body = Buffer.concat(bodyChunks);
+            const startedAt = Date.now();
+            const reqPath = req.url;
+            const isMultipart = req.headers['content-type'] && req.headers['content-type'].includes('multipart/form-data');
+
+            // Bypass wiretap for v2 API and multipart (binary) uploads.
+            if (reqPath.startsWith('/v2/') || isMultipart) {
+                forwardDirect(reqPath, req.method, req.headers, body, res).catch(err => {
+                    console.error(`Direct proxy error: ${err.message}`);
+                    if (!res.headersSent) { res.writeHead(502); res.end('Bad Gateway'); }
+                });
+                return;
+            }
+
+            // Route through wiretap for traffic recording. Buffer wiretap's response so
+            // we can detect its internal "cannot rewind body" errors and retry directly.
+            const wiretapReq = http.request({
+                hostname: '127.0.0.1',
+                port: 9090,
+                path: reqPath,
+                method: req.method,
+                headers: req.headers,
+                timeout: 30000,
+            }, (wiretapRes) => {
+                const respChunks = [];
+                wiretapRes.on('data', c => respChunks.push(c));
+                wiretapRes.on('end', () => {
+                    const respBody = Buffer.concat(respChunks);
+
+                    // Detect wiretap's own upstream error (Go HTTP keep-alive "cannot rewind body").
+                    // These arrive as HTTP 500 with a pb33f wiretap error JSON body.
+                    if (wiretapRes.statusCode === 500) {
+                        try {
+                            const errObj = JSON.parse(respBody.toString());
+                            if (errObj.type === 'https://pb33f.io/wiretap/error') {
+                                console.log(`Wiretap upstream error on ${req.method} ${reqPath} — retrying via CF API directly`);
+                                forwardDirect(reqPath, req.method, req.headers, body, res).catch(err => {
+                                    if (!res.headersSent) { res.writeHead(502); res.end(err.message); }
+                                });
+                                return;
+                            }
+                        } catch (_) { /* not JSON, fall through */ }
+                    }
+
+                    if (harRecorder) {
+                        try {
+                            harRecorder.record({
+                                method: req.method,
+                                url: reqPath,
+                                requestHeaders: req.headers,
+                                requestBody: body,
+                                status: wiretapRes.statusCode,
+                                statusText: wiretapRes.statusMessage || '',
+                                responseHeaders: wiretapRes.headers,
+                                responseBody: respBody,
+                                startedAt: new Date(startedAt),
+                                timeMs: Date.now() - startedAt,
+                            });
+                        } catch (harErr) {
+                            console.warn(`HAR capture skipped for ${req.method} ${reqPath}: ${harErr.message}`);
+                        }
+                    }
+
+                    // Forward wiretap's response as-is.
+                    if (!res.headersSent) {
+                        res.writeHead(wiretapRes.statusCode, wiretapRes.headers);
+                        res.end(respBody);
+                    }
+                });
             });
-        }
+
+            wiretapReq.on('error', (err) => {
+                console.log(`Wiretap unavailable (${err.message}), falling back to direct CF API`);
+                forwardDirect(reqPath, req.method, req.headers, body, res).catch(e => {
+                    if (!res.headersSent) { res.writeHead(502); res.end(e.message); }
+                });
+            });
+
+            wiretapReq.on('timeout', () => wiretapReq.destroy());
+
+            if (body.length > 0) wiretapReq.write(body);
+            wiretapReq.end();
+        });
     });
 
     return server;
@@ -350,6 +533,16 @@ async function testCompliance() {
     const cleanup = async (signal = 'SIGTERM') => {
         console.log(`\nCleaning up processes due to ${signal}...`);
 
+        if (harRecorder) {
+            try {
+                const file = harRecorder.save();
+                const { kept, deduped, distinct } = harRecorder.stats;
+                console.log(`HAR capture: ${kept} entries across ${distinct} distinct exchanges (${deduped} duplicates dropped) -> ${file}`);
+            } catch (harErr) {
+                console.warn(`Could not write HAR file: ${harErr.message}`);
+            }
+        }
+
         // Stop wiretap process and its children
         if (wiretapProcess && wiretapProcess.pid) {
             console.log(`Stopping wiretap process group (PID: ${wiretapProcess.pid})...`);
@@ -461,7 +654,7 @@ async function testCompliance() {
         }
     });
 
-    const tempDir = path.join(process.cwd(), '.tmp', 'capi-bara-tests');
+    const tempDir = path.join(process.cwd(), '.tmp', suiteName);
     const wiretapProxyPort = 9090;
     const wiretapApiHost = `http://127.0.0.1:9999`;
 
@@ -497,41 +690,39 @@ async function testCompliance() {
         await waitForPort(9999);
         console.log('Proxy server is ready.');
 
-        // Check if capi-bara-tests repository already exists
+        // A checkout already in place wins: it lets a caller pin the ref (the
+        // Concourse task seeds it from a git resource) instead of taking main.
         const repoExists = await fs.pathExists(tempDir);
         if (repoExists) {
-            console.log('capi-bara-tests repository already exists, skipping clone...');
+            console.log(`${suiteName} checkout already exists, skipping clone...`);
         } else {
-            console.log('Cloning capi-bara-tests repository...');
+            console.log(`Cloning ${suiteName}...`);
             await fs.ensureDir(path.dirname(tempDir));
-            await runCommand('git', ['clone', '-b', 'allow-local-api', 'https://github.com/cloudfoundry/capi-bara-tests.git', tempDir]);
+            await runCommand('git', ['clone', suite.repo, tempDir]);
         }
 
         console.log('Populating vendor dependencies...');
         await runCommand('go', ['mod', 'vendor'], { cwd: tempDir });
 
-        console.log('Configuring capi-bara-tests to point to wiretap proxy...');
-        const integrationConfig = {
+        console.log(`Configuring ${suiteName} to point to wiretap proxy...`);
+        const integrationConfig = suite.config({
             api: wiretapApiHost,
-            protocol: wiretapApiHost.startsWith('https') ? 'https' : 'http',
-            apps_domain: appsDomain,
-            admin_user: adminUser,
-            admin_password: adminPassword,
-            skip_ssl_validation: true,
-            timeout_scale: 5.0,
-        };
-        const configPath = path.join(tempDir, 'integration_config.json');
+            appsDomain,
+            adminUser,
+            adminPassword,
+        });
+        const configPath = path.join(tempDir, suite.configFile);
         await fs.writeJson(configPath, integrationConfig, { spaces: 2 });
 
         const testEnv = { ...process.env };
         delete testEnv.CF_API_URL;
         testEnv.CONFIG = configPath;
 
-        console.log(`Running capi-bara-tests with ${nodeCount} nodes...`);
+        console.log(`Running ${suiteName} with ${nodeCount} nodes...`);
 
         // Prepare test output logging
-        const testLogFile = path.join(reportDir, 'capi-bara-tests.log');
-        const testErrorLogFile = path.join(reportDir, 'capi-bara-tests-error.log');
+        const testLogFile = path.join(reportDir, `${suiteName}.log`);
+        const testErrorLogFile = path.join(reportDir, `${suiteName}-error.log`);
 
         try {
             const testResult = await runCommand('./bin/test', [`-nodes=${nodeCount}`], {
@@ -548,12 +739,17 @@ async function testCompliance() {
 
             console.log('Tests completed successfully.');
             console.log(`Report file available at: ${reportFile}`);
+            if (harRecorder) {
+                const file = harRecorder.save();
+                const { kept, deduped, distinct } = harRecorder.stats;
+                console.log(`HAR capture: ${kept} entries across ${distinct} distinct exchanges (${deduped} duplicates dropped) -> ${file}`);
+            }
             process.exit(0);
 
         } catch (testError) {
             // Enhanced error logging for test failures
             const timestamp = new Date().toISOString();
-            console.error(`[${timestamp}] capi-bara-tests failed with exit code: ${testError.code}`);
+            console.error(`[${timestamp}] ${suiteName} failed with exit code: ${testError.code}`);
 
             // Log test output and errors to files
             if (testError.stdout) {
