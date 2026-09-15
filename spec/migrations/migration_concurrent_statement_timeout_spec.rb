@@ -1,4 +1,4 @@
-require 'spec_helper'
+require 'migration_spec_helper'
 
 RSpec.describe 'migration concurrent statement timeout', isolation: :truncation, type: :migration do
   let(:db) { Sequel::Model.db }
@@ -20,7 +20,11 @@ RSpec.describe 'migration concurrent statement timeout', isolation: :truncation,
     migration_file = "#{tmp_migrations_dir}/001_test_for_concurrent_statement_timeout_migration.rb"
     File.write(migration_file, long_time_migration)
 
-    allow(VCAP::CloudController::Config.config).to receive(:get).with(:migration_psql_concurrent_statement_timeout_in_seconds).and_return(1899)
+    allow(VCAP::CloudController::Config).to receive(:config).and_return(
+      instance_double(VCAP::CloudController::Config, get: nil).tap do |cfg|
+        allow(cfg).to receive(:get).with(:migration_psql_concurrent_statement_timeout_in_seconds).and_return(1899)
+      end
+    )
     allow(db).to receive(:run).and_call_original
   end
 
