@@ -215,6 +215,29 @@ module VCAP::CloudController
               expect(logger_spy).to have_received(:info).with(Oj.dump(expected_json))
             end
           end
+
+          it 'redacts credentials from custom buildpack URLs in telemetry' do
+            Timecop.freeze do
+              buildpack = create(:buildpack_lifecycle_buildpack_model, :custom_buildpack, buildpack_url: 'https://user:secret@github.com/myorg/private-buildpack')
+              buildpack_lifecycle_data = create(:buildpack_lifecycle_data_model, stack: 'my_stack', buildpack_lifecycle_buildpack_guids: [buildpack.guid])
+
+              app = create(:app_model)
+              app.buildpack_lifecycle_data = buildpack_lifecycle_data
+              app.save
+              process = create(:process_model, memory: 765, disk_quota: 1234, app: app)
+              create(:package_model, app: process.app, state: PackageModel::READY_STATE)
+              process.reload
+
+              action.stage(process)
+
+              expect(logger_spy).to have_received(:info) do |json_str|
+                logged = Oj.load(json_str)
+                buildpacks = logged['create-build']['buildpacks']
+                expect(buildpacks).to eq(['https://***:***@github.com/myorg/private-buildpack'])
+                expect(buildpacks.first).not_to include('secret')
+              end
+            end
+          end
         end
 
         context 'stack state warnings' do
