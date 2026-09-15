@@ -183,6 +183,27 @@ module VCAP::CloudController
 
           expect(ServiceUsageEvent.last.created_at).to be < cutoff_age_in_days.days.ago
         end
+
+        # This is where the scheduled cleanup gets its keep_running_records
+        # behavior from -- assert the wiring here, not just in
+        # Database::OldRecordCleanup's own specs.
+        it 'keeps old beginning events of still-existing service instances while deleting completed lifecycles' do
+          old = Time.now.utc - 999.days
+          living_created = create(:service_usage_event, state: 'CREATED', service_instance_guid: 'living-instance', created_at: old)
+          living_baseline = create(:service_usage_event, state: 'WAS_RUNNING', service_instance_guid: 'baselined-instance', created_at: old)
+          gone_created = create(:service_usage_event, state: 'CREATED', service_instance_guid: 'gone-instance', created_at: old)
+          gone_deleted = create(:service_usage_event, state: 'DELETED', service_instance_guid: 'gone-instance', created_at: old)
+          # Created last, so keep_at_least_one_record protects THIS row; the
+          # events above survive (or not) on lifecycle logic alone.
+          create(:service_usage_event, state: 'SOME-STATE', service_instance_guid: 'unrelated-instance', created_at: old)
+
+          repository.delete_events_older_than(cutoff_age_in_days)
+
+          expect(living_created.reload).to be_present
+          expect(living_baseline.reload).to be_present
+          expect { gone_created.reload }.to raise_error(Sequel::NoExistingObject)
+          expect { gone_deleted.reload }.to raise_error(Sequel::NoExistingObject)
+        end
       end
     end
   end

@@ -61,17 +61,23 @@ module VCAP::CloudController
         expect(events[0].metadata['task_guid']).to eq(task4.guid)
       end
 
-      it 'creates a usage event for non-terminal tasks' do
+      it 'creates a usage event for non-terminal tasks with recorded start evidence' do
+        # task4 and task5 wrote TASK_STARTED when they moved to RUNNING. task3
+        # is still PENDING: no consumer ever saw it start, so destroying it
+        # must not write a TASK_STOPPED that nothing can pair with a start.
+        create(:app_usage_event, task_guid: task4.guid, state: 'TASK_STARTED')
+        create(:app_usage_event, task_guid: task5.guid, state: 'TASK_STARTED')
+
         task_delete.delete_for_app(app.guid)
 
-        events = AppUsageEvent.where(parent_app_guid: app.guid).all
-        expect(events.size).to eq(3)
-        task_guids = [task3.guid, task4.guid, task5.guid]
+        events = AppUsageEvent.where(parent_app_guid: app.guid, state: 'TASK_STOPPED').all
+        expect(events.size).to eq(2)
+        task_guids = [task4.guid, task5.guid]
         events.each do |event|
-          expect(event.state).to eq('TASK_STOPPED')
           expect(task_guids.delete(event.task_guid)).not_to be_nil
         end
         expect(task_guids).to be_empty
+        expect(AppUsageEvent.where(task_guid: task3.guid, state: 'TASK_STOPPED')).to be_empty
       end
     end
   end
