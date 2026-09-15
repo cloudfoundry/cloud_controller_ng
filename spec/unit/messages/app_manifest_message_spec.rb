@@ -1394,6 +1394,78 @@ module VCAP::CloudController
           expect(message.audit_hash).to eq(expected_hash)
         end
       end
+
+      context 'when "buildpack" contains credentials in the URL' do
+        let(:parsed_yaml) do
+          {
+            'buildpack' => 'https://user:secret@git.example.com/buildpack.git'
+          }
+        end
+
+        it 'obfuscates the credentials in the buildpack URL' do
+          message = AppManifestMessage.create_from_yml(parsed_yaml)
+          expect(message.audit_hash['buildpack']).to eq('https://***:***@git.example.com/buildpack.git')
+        end
+      end
+
+      context 'when "buildpack" does not contain credentials' do
+        let(:parsed_yaml) { { 'buildpack' => 'ruby_buildpack' } }
+
+        it 'leaves the buildpack value unchanged' do
+          message = AppManifestMessage.create_from_yml(parsed_yaml)
+          expect(message.audit_hash['buildpack']).to eq('ruby_buildpack')
+        end
+      end
+
+      context 'when "buildpacks" contains credential URLs' do
+        let(:parsed_yaml) do
+          {
+            'buildpacks' => [
+              'https://user:secret@git.example.com/bp1.git',
+              'ruby_buildpack'
+            ]
+          }
+        end
+
+        it 'obfuscates credentials in each buildpack URL' do
+          message = AppManifestMessage.create_from_yml(parsed_yaml)
+          expect(message.audit_hash['buildpacks']).to eq([
+            'https://***:***@git.example.com/bp1.git',
+            'ruby_buildpack'
+          ])
+        end
+      end
+
+      context 'when "services" contain parameters' do
+        let(:parsed_yaml) do
+          {
+            'services' => [
+              { 'name' => 'my-service', 'parameters' => { 'key' => 'secret-value' } },
+              { 'name' => 'other-service' }
+            ]
+          }
+        end
+
+        it 'redacts parameters from each service binding' do
+          message = AppManifestMessage.create_from_yml(parsed_yaml)
+          services = message.audit_hash['services']
+          expect(services[0]).to eq({ 'name' => 'my-service', 'parameters' => '[PRIVATE DATA HIDDEN]' })
+          expect(services[1]).to eq({ 'name' => 'other-service' })
+        end
+      end
+
+      context 'when "services" is a list of plain strings' do
+        let(:parsed_yaml) do
+          {
+            'services' => %w[my-service other-service]
+          }
+        end
+
+        it 'leaves the services list unchanged' do
+          message = AppManifestMessage.create_from_yml(parsed_yaml)
+          expect(message.audit_hash['services']).to eq(%w[my-service other-service])
+        end
+      end
     end
 
     describe '#manifest_process_scale_messages' do

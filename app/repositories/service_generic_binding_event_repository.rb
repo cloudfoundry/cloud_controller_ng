@@ -97,8 +97,9 @@ module VCAP::CloudController
       private
 
       def censor_request_attributes(request)
-        attrs         = request.dup.stringify_keys
+        attrs = request.dup.stringify_keys
         attrs['data'] = Presenters::Censorship::PRIVATE_DATA_HIDDEN if attrs.key?('data')
+        attrs['parameters'] = Presenters::Censorship::PRIVATE_DATA_HIDDEN if attrs.key?('parameters')
         attrs
       end
 

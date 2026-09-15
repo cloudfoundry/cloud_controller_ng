@@ -124,9 +124,12 @@ module VCAP::CloudController
     end
 
     def audit_hash
-      override_env = original_yaml['env'] ? { 'env' => Presenters::Censorship::PRIVATE_DATA_HIDDEN } : {}
-      override_cnb = original_yaml['cnb-credentials'] ? { 'cnb-credentials' => Presenters::Censorship::PRIVATE_DATA_HIDDEN } : {}
-      original_yaml.merge(override_env).merge(override_cnb)
+      result = original_yaml.dup
+      result['env'] = Presenters::Censorship::PRIVATE_DATA_HIDDEN if result.key?('env')
+      result['cnb-credentials'] = Presenters::Censorship::PRIVATE_DATA_HIDDEN if result.key?('cnb-credentials')
+      obfuscate_buildpack_urls(result)
+      redact_service_parameters(result)
+      result
     end
 
     def app_lifecycle_hash
@@ -163,6 +166,21 @@ module VCAP::CloudController
     private
 
     attr_reader :original_yaml
+
+    def obfuscate_buildpack_urls(result)
+      result['buildpack'] = CloudController::UrlSecretObfuscator.obfuscate(result['buildpack']) if result['buildpack']
+      result['buildpacks'] = result['buildpacks'].map { |b| CloudController::UrlSecretObfuscator.obfuscate(b) } if result['buildpacks']
+    end
+
+    def redact_service_parameters(result)
+      return unless result['services']
+
+      result['services'] = result['services'].map do |svc|
+        next svc unless svc.is_a?(Hash) && svc.key?('parameters')
+
+        svc.merge('parameters' => Presenters::Censorship::PRIVATE_DATA_HIDDEN)
+      end
+    end
 
     def manifest_buildpack_message
       @manifest_buildpack_message ||= ManifestBuildpackMessage.new(buildpack:)
