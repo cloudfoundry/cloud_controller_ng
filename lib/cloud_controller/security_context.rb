@@ -12,6 +12,12 @@ module VCAP::CloudController
       Thread.current[:vcap_auth_token] = auth_token
     end
 
+    def self.set_token_only(token, auth_token=nil)
+      Thread.current[:vcap_user] = nil
+      Thread.current[:vcap_token] = token
+      Thread.current[:vcap_auth_token] = auth_token
+    end
+
     def self.current_user
       Thread.current[:vcap_user]
     end

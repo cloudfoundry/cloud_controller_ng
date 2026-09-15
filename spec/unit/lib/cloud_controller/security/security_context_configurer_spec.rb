@@ -197,6 +197,81 @@ module VCAP::CloudController
           end
         end
       end
+
+      describe '#configure_token_only' do
+        let(:auth_token) { 'auth-token' }
+        let(:token_information) { { 'user_id' => 'user-id-1' } }
+
+        before do
+          allow(token_decoder).to receive(:decode_token).with(auth_token).and_return(token_information)
+        end
+
+        it 'sets the token without looking up the user in the DB' do
+          configurer.configure_token_only(auth_token)
+          expect(SecurityContext.token).to eq(token_information)
+          expect(SecurityContext.auth_token).to eq(auth_token)
+          expect(SecurityContext.current_user).to be_nil
+        end
+
+        it 'clears the security context first' do
+          SecurityContext.set('foo', 'bar', 'baz')
+          configurer.configure_token_only(auth_token)
+          expect(SecurityContext.current_user).to be_nil
+        end
+
+        context 'when the auth_token is invalid' do
+          before do
+            allow(token_decoder).to receive(:decode_token).with(auth_token).and_raise(VCAP::CloudController::UaaTokenDecoder::BadToken)
+          end
+
+          it 'sets invalid token without raising' do
+            expect { configurer.configure_token_only(auth_token) }.not_to raise_error
+            expect(SecurityContext.token).to eq(:invalid_token)
+          end
+        end
+      end
+
+      describe '#configure_user' do
+        let(:token_information) { { 'user_id' => 'user-id-1' } }
+
+        before do
+          SecurityContext.set_token_only(token_information, 'auth-token')
+        end
+
+        context 'when user does not exist' do
+          it 'creates and sets the user' do
+            expect { configurer.configure_user }.to change(User, :count).by(1)
+            expect(SecurityContext.current_user.guid).to eq('user-id-1')
+          end
+        end
+
+        context 'when user already exists' do
+          let!(:user) { create(:user, guid: 'user-id-1') }
+
+          it 'sets the existing user on the security context' do
+            configurer.configure_user
+            expect(SecurityContext.current_user.id).to eq(user.id)
+          end
+        end
+
+        context 'when token is nil' do
+          before { SecurityContext.set_token_only(nil, nil) }
+
+          it 'does not raise and leaves current_user nil' do
+            expect { configurer.configure_user }.not_to raise_error
+            expect(SecurityContext.current_user).to be_nil
+          end
+        end
+
+        context 'when token is invalid_token' do
+          before { SecurityContext.set(nil, :invalid_token, 'auth-token') }
+
+          it 'does not raise and leaves current_user nil' do
+            expect { configurer.configure_user }.not_to raise_error
+            expect(SecurityContext.current_user).to be_nil
+          end
+        end
+      end
     end
   end
 end
