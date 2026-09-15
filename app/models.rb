@@ -1,3 +1,4 @@
+require 'models/helpers/lifecycle_data_model_mixin'
 require 'models/helpers/metadata_model_mixin'
 
 require 'models/runtime/space'
