@@ -4,19 +4,43 @@ allOf:
   - properties:
       protocol:
         type: string
+        enum:
+          - http
+          - tcp
+        description: The protocol supported by the route, based on the route's domain configuration. Valid protocols are `http` and `tcp`
       host:
         type: string
+        description: The hostname for the route; not compatible with routes specifying the `tcp` protocol; must be either a wildcard (*) or be under 63 characters long and only contain letters, numbers, dashes (-) or underscores(_)
       path:
         type: string
+        description: The path for the route; not compatible with routes specifying the `tcp` protocol; must be under 128 characters long and not contain question marks (?), begin with a slash (/) and not be exactly a slash (/). Must conform to path components from [RFC 2396](https://tools.ietf.org/html/rfc2396)
       port:
         type: [integer, 'null']
+        description: The port that the route listens on. Only compatible with routes specifying the `tcp` protocol
       url:
         type: string
-        description: Fully qualified path or address where the route directs traffic
+        description: The URL for the route; URLs of protocol `http` are a combination of host, domain name, and path; URLs of protocol `tcp` are a combination of domain name and port
+      destinations:
+        type: array
+        items:
+          $ref: './RouteDestination.yaml'
+        description: List of destinations for the route
       relationships:
-        $ref: './Relationships.yaml'
+        type: object
+        properties:
+          space:
+            $ref: './RelationshipToOne.yaml'
+            description: A relationship to the space containing the route. Routes can only be mapped to destinations in that space
+          domain:
+            $ref: './RelationshipToOne.yaml'
+            description: A relationship to the domain of the route
+        description: Relationships to the space and domain of the route
+      options:
+        $ref: './RouteOptions.yaml'
+        description: Options applied to the route
       metadata:
         $ref: './Metadata.yaml'
+        description: Labels and annotations applied to the route
       links:
         type: object
         properties:
@@ -32,7 +56,9 @@ allOf:
           destinations:
             $ref: './Link.yaml'
             description: The URL to get the destinations for this route
+        description: Links to related resources
       included:
         $ref: './IncludedResources.yaml'
         description: Additional related resources included in the response when using the include parameter
-description: A route in Cloud Foundry is used to direct traffic from a URL to an application.
+description: |-
+  Routes are addresses that direct matched network traffic to one or more destinations. Each route is based on a domain name with additional matching criteria (host (subdomain), path, etc). Matched traffic will be distributed across all destinations, based on their configuration (round-robin by default).

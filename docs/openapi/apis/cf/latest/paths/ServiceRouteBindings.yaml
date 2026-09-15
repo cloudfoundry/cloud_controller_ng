@@ -1,16 +1,17 @@
 /v3/service_route_bindings:
   get:
     summary: List service route bindings
-    description: This endpoint retrieves the service route bindings the user has access to.
+    description: |-
+      This endpoint retrieves the service route bindings the user has access to.
+
+      **Permitted roles:** Admin, Admin Read-Only, Global Auditor, Org Manager, Space Auditor, Space Developer, Space Manager, Space Supporter
     operationId: listServiceRouteBindings
     tags:
       - Service Route Bindings
     parameters:
-      - $ref: ../components/parameters/Page.yaml
-      - $ref: ../components/parameters/PerPage.yaml
-      - $ref: ../components/parameters/OrderBy.yaml
       - name: route_guids
         in: query
+        required: false
         schema:
           type: array
           items:
@@ -18,6 +19,7 @@
         description: Comma-delimited list of route guids to filter by
       - name: service_instance_guids
         in: query
+        required: false
         schema:
           type: array
           items:
@@ -25,14 +27,16 @@
         description: Comma-delimited list of service instance guids to filter by
       - name: service_instance_names
         in: query
+        required: false
         schema:
           type: array
           items:
             type: string
-        description: Comma-delimited list of service instance names to filter by
+        description: Comma-delimited list of service instance names to filter by (case-sensitive)
       - $ref: ../components/parameters/LabelSelector.yaml
       - name: guids
         in: query
+        required: false
         schema:
           type: array
           items:
@@ -42,6 +46,7 @@
       - $ref: ../components/parameters/UpdatedAts.yaml
       - name: include
         in: query
+        required: false
         schema:
           type: array
           items:
@@ -50,13 +55,91 @@
               - route
               - service_instance
         description: 'Optionally include a list of unique related resources in the response. Valid values are: `route`, `service_instance`'
+      - $ref: ../components/parameters/Page.yaml
+      - $ref: ../components/parameters/PerPage.yaml
+      - name: order_by
+        in: query
+        required: false
+        schema:
+          type: string
+          enum:
+            - created_at
+            - -created_at
+            - updated_at
+            - -updated_at
+        description: Value to sort by. Defaults to ascending; prepend with `-` to sort descending. Valid values are `created_at` and `updated_at`
     responses:
       '200':
-        description: OK
+        description: Request succeeded
         content:
           application/json:
             schema:
               $ref: ../components/schemas/ServiceRouteBindingList.yaml
+            examples:
+              default:
+                summary: default
+                value:
+                  pagination:
+                    total_results: 3
+                    total_pages: 2
+                    first:
+                      href: https://api.example.org/v3/service_route_bindings?page=1&per_page=2
+                    last:
+                      href: https://api.example.org/v3/service_route_bindings?page=2&per_page=2
+                    next:
+                      href: https://api.example.org/v3/service_route_bindings?page=2&per_page=2
+                    previous: null
+                  resources:
+                    - guid: 4ac1a475-0f4d-4e4b-8ff6-957c94f68211
+                      route_service_url: https://some-route-1.api.example.org
+                      created_at: '2020-09-08T08:55:59Z'
+                      updated_at: '2020-09-08T08:55:59Z'
+                      last_operation: null
+                      metadata:
+                        annotations:
+                          foo: bar
+                        labels:
+                          baz: qux
+                      relationships:
+                        service_instance:
+                          data:
+                            guid: 39903ed2-6476-4c78-843a-0195f5fc4ccd
+                        route:
+                          data:
+                            guid: 15697508-cb68-4d88-9f19-85fc53851571
+                      links:
+                        self:
+                          href: https://api.example.org/v3/service_route_bindings/4ac1a475-0f4d-4e4b-8ff6-957c94f68211
+                        service_instance:
+                          href: https://api.example.org/v3/service_instances/39903ed2-6476-4c78-843a-0195f5fc4ccd
+                        route:
+                          href: https://api.example.org/v3/routes/15697508-cb68-4d88-9f19-85fc53851571
+                        parameters:
+                          href: https://api.example.org/v3/service_route_bindings/4ac1a475-0f4d-4e4b-8ff6-957c94f68211/parameters
+                    - guid: bdf63c4f-85af-4c20-bea9-e9def7d57dab
+                      route_service_url: https://some-route-2.api.example.org
+                      created_at: '2020-09-08T09:13:51Z'
+                      updated_at: '2020-09-08T09:13:51Z'
+                      last_operation: null
+                      metadata:
+                        annotations:
+                          foo: bar
+                        labels:
+                          baz: qux
+                      relationships:
+                        service_instance:
+                          data:
+                            guid: f957dc7c-46d1-4a3f-973d-71ce5fdec788
+                        route:
+                          data:
+                            guid: 75ebe2a1-04b0-407b-b33c-733388fc7aa4
+                      links:
+                        self:
+                          href: https://api.example.org/v3/service_route_bindings/bdf63c4f-85af-4c20-bea9-e9def7d57dab
+                        service_instance:
+                          href: https://api.example.org/v3/service_instances/f957dc7c-46d1-4a3f-973d-71ce5fdec788
+                        route:
+                          href: https://api.example.org/v3/routes/75ebe2a1-04b0-407b-b33c-733388fc7aa4
       '400':
         $ref: ../components/responses/BadRequest.yaml
       '401':
@@ -76,15 +159,22 @@
   post:
     summary: Create a service route binding
     description: |-
-      This endpoint creates a new route service binding. The service instance and the route must be in the same space.
+      This endpoint creates a new route service binding. The service instance and the route
+      must be in the same space.
 
-      To bind a route to a user-provided service instance, the service instance must have the `route_service_url` property set.
+      To bind a route to a user-provided service instance, the service instance must
+      have the `route_service_url` property set.
 
-      To bind a route to a managed service instance, the service offering must be bindable, and the service offering must have `route_forwarding` set in the `requires` property.
+      To bind a route to a managed service instance, the service offering must be bindable,
+      and the service offering must have `route_forwarding` set in the `requires` property.
+
+      **Permitted roles:** Admin, Space Developer, Space Supporter
     operationId: createServiceRouteBinding
     tags:
       - Service Route Bindings
     requestBody:
+      description: A request to create a service route binding
+      required: true
       content:
         application/json:
           schema:
@@ -101,16 +191,16 @@
                 relationships:
                   route:
                     data:
-                      guid: 123e4567-e89b-12d3-a456-426614174000
+                      guid: 7304bc3c-7010-11ea-8840-48bf6bec2d78
                   service_instance:
                     data:
-                      guid: 123e4567-e89b-12d3-a456-426614174000
+                      guid: e0e4417c-74ee-11ea-a604-48bf6bec2d78
                 parameters:
                   key1: value1
                   key2: value2
     responses:
       '201':
-        description: Created
+        description: User-provided service instance route binding created
         content:
           application/json:
             schema:
@@ -119,7 +209,7 @@
               default:
                 summary: default
                 value:
-                  guid: 123e4567-e89b-12d3-a456-426614174000
+                  guid: dde5ad2a-d8f4-44dc-a56f-0452d744f1c3
                   created_at: '2015-11-13T17:02:56Z'
                   updated_at: '2016-06-08T16:41:26Z'
                   route_service_url: https://route-service-url.io
@@ -137,19 +227,17 @@
                   relationships:
                     service_instance:
                       data:
-                        guid: 123e4567-e89b-12d3-a456-426614174000
+                        guid: 8bfe4c1b-9e18-45b1-83be-124163f31f9e
                     route:
                       data:
-                        guid: 123e4567-e89b-12d3-a456-426614174000
+                        guid: 74f7c078-0934-470f-9883-4fdd555b8f13
                   links:
                     self:
                       href: https://api.example.org/v3/service_route_bindings/dde5ad2a-d8f4-44dc-a56f-0452d744f1c3
                     service_instance:
                       href: https://api.example.org/v3/service_instances/8bfe4c1b-9e18-45b1-83be-124163f31f9e
                     route:
-                      href: https://api.example.org/v3/routes/74f7c078-0934-470f-9883-4fddss5b8f13
-                    parameters:
-                      href: https://api.example.org/v3/service_route_bindings/b3536566-63e2-428f-8f87-a1b99864ada6/parameters
+                      href: https://api.example.org/v3/routes/74f7c078-0934-470f-9883-4fdd555b8f13
         links:
           route:
             operationId: getRoute
@@ -162,13 +250,15 @@
               guid: $response.body#/relationships/service_instance/data/guid
             description: Retrieve the service instance for this service route binding
       '202':
-        description: Accepted
+        description: Managed service instance route binding creation accepted; the binding is being created asynchronously
         headers:
           Location:
-            description: URL of the job that is creating the service route binding
+            description: URL of the [job](#jobs) that is creating the service route binding
             schema:
               type: string
               format: uri
+              examples:
+                - https://api.example.org/v3/jobs/af5c57f6-8769-41fa-a499-2c84ed896788
       '400':
         $ref: ../components/responses/BadRequest.yaml
       '401':
@@ -186,7 +276,10 @@
 /v3/service_route_bindings/{guid}:
   get:
     summary: Get a service route binding
-    description: This endpoint retrieves the service route binding by GUID.
+    description: |-
+      This endpoint retrieves the service route binding by GUID.
+
+      **Permitted roles:** Admin, Admin Read-Only, Global Auditor, Org Manager, Space Auditor, Space Developer, Space Manager, Space Supporter
     operationId: getServiceRouteBinding
     tags:
       - Service Route Bindings
@@ -194,6 +287,7 @@
       - $ref: ../components/parameters/Guid.yaml
       - name: include
         in: query
+        required: false
         schema:
           type: array
           items:
@@ -201,10 +295,10 @@
             enum:
               - route
               - service_instance
-        description: Optionally include a list of unique related resources in the response
+        description: 'Optionally include a list of unique related resources in the response. Valid values are: `route`, `service_instance`'
     responses:
       '200':
-        description: OK
+        description: Request succeeded
         content:
           application/json:
             schema:
@@ -213,7 +307,7 @@
               default:
                 summary: default
                 value:
-                  guid: 123e4567-e89b-12d3-a456-426614174000
+                  guid: dde5ad2a-d8f4-44dc-a56f-0452d744f1c3
                   created_at: '2015-11-13T17:02:56Z'
                   updated_at: '2016-06-08T16:41:26Z'
                   route_service_url: https://route-service-url.io
@@ -231,19 +325,19 @@
                   relationships:
                     service_instance:
                       data:
-                        guid: 123e4567-e89b-12d3-a456-426614174000
+                        guid: 8bfe4c1b-9e18-45b1-83be-124163f31f9e
                     route:
                       data:
-                        guid: 123e4567-e89b-12d3-a456-426614174000
+                        guid: 74f7c078-0934-470f-9883-4fdd555b8f13
                   links:
                     self:
                       href: https://api.example.org/v3/service_route_bindings/dde5ad2a-d8f4-44dc-a56f-0452d744f1c3
                     service_instance:
                       href: https://api.example.org/v3/service_instances/8bfe4c1b-9e18-45b1-83be-124163f31f9e
                     route:
-                      href: https://api.example.org/v3/routes/74f7c078-0934-470f-9883-4fddss5b8f13
+                      href: https://api.example.org/v3/routes/74f7c078-0934-470f-9883-4fdd555b8f13
                     parameters:
-                      href: https://api.example.org/v3/service_route_bindings/b3536566-63e2-428f-8f87-a1b99864ada6/parameters
+                      href: https://api.example.org/v3/service_route_bindings/dde5ad2a-d8f4-44dc-a56f-0452d744f1c3/parameters
         links:
           route:
             operationId: getRoute
@@ -263,19 +357,26 @@
         $ref: ../components/responses/NotFound.yaml
   patch:
     summary: Update a service route binding
-    description: This endpoint updates a service route binding with labels and annotations.
+    description: |-
+      This endpoint updates a service route binding with labels and annotations.
+
+      **Permitted roles:** Admin, Space Developer
     operationId: updateServiceRouteBinding
     tags:
       - Service Route Bindings
     parameters:
       - $ref: ../components/parameters/Guid.yaml
     requestBody:
+      description: A request to update a service route binding
+      required: true
       content:
         application/json:
           schema:
+            type: object
             properties:
               metadata:
                 $ref: ../components/schemas/Metadata.yaml
+                description: Labels and annotations applied to the service route binding
           examples:
             default:
               summary: default
@@ -287,7 +388,7 @@
                     note: detailed information
     responses:
       '200':
-        description: OK
+        description: Request succeeded
         content:
           application/json:
             schema:
@@ -296,7 +397,7 @@
               default:
                 summary: default
                 value:
-                  guid: 123e4567-e89b-12d3-a456-426614174000
+                  guid: dde5ad2a-d8f4-44dc-a56f-0452d744f1c3
                   created_at: '2015-11-13T17:02:56Z'
                   updated_at: '2016-06-08T16:41:26Z'
                   route_service_url: https://route-service-url.io
@@ -314,19 +415,19 @@
                   relationships:
                     service_instance:
                       data:
-                        guid: 123e4567-e89b-12d3-a456-426614174000
+                        guid: 8bfe4c1b-9e18-45b1-83be-124163f31f9e
                     route:
                       data:
-                        guid: 123e4567-e89b-12d3-a456-426614174000
+                        guid: 74f7c078-0934-470f-9883-4fdd555b8f13
                   links:
                     self:
                       href: https://api.example.org/v3/service_route_bindings/dde5ad2a-d8f4-44dc-a56f-0452d744f1c3
                     service_instance:
                       href: https://api.example.org/v3/service_instances/8bfe4c1b-9e18-45b1-83be-124163f31f9e
                     route:
-                      href: https://api.example.org/v3/routes/74f7c078-0934-470f-9883-4fddss5b8f13
+                      href: https://api.example.org/v3/routes/74f7c078-0934-470f-9883-4fdd555b8f13
                     parameters:
-                      href: https://api.example.org/v3/service_route_bindings/b3536566-63e2-428f-8f87-a1b99864ada6/parameters
+                      href: https://api.example.org/v3/service_route_bindings/dde5ad2a-d8f4-44dc-a56f-0452d744f1c3/parameters
       '400':
         $ref: ../components/responses/BadRequest.yaml
       '401':
@@ -345,7 +446,13 @@
         $ref: ../components/responses/ServiceUnavailable.yaml
   delete:
     summary: Delete a service route binding
-    description: This endpoint deletes a service route binding. When deleting route bindings originating from user provided service instances, the delete operation does not require interactions with service brokers, therefore the API will respond synchronously to the delete request. Consequently, deleting route bindings from managed service instances responds with a job which can be used to track the progress of the delete operation.
+    description: |-
+      This endpoint deletes a service route binding. When deleting route bindings originating from user provided
+      service instances, the delete operation does not require interactions with service brokers, therefore the API will
+      respond synchronously to the delete request. Consequently, deleting route bindings from managed service instances
+      responds with a job which can be used to track the progress of the delete operation.
+
+      **Permitted roles:** Admin, Space Developer, Space Supporter
     operationId: deleteServiceRouteBinding
     tags:
       - Service Route Bindings
@@ -353,15 +460,17 @@
       - $ref: ../components/parameters/Guid.yaml
     responses:
       '202':
-        description: Accepted
+        description: Managed service instance route binding deletion accepted; the binding is being deleted asynchronously
         headers:
           Location:
-            description: URL of the job that is deleting the service route binding
+            description: URL of the [job](#jobs) that is deleting the service route binding
             schema:
               type: string
               format: uri
+              examples:
+                - https://api.example.org/v3/jobs/af5c57f6-8769-41fa-a499-2c84ed896788
       '204':
-        description: No Content
+        description: User-provided service instance route binding deleted
       '401':
         $ref: ../components/responses/Unauthorized.yaml
       '403':
@@ -375,7 +484,13 @@
 /v3/service_route_bindings/{guid}/parameters:
   get:
     summary: Get parameters for a route binding
-    description: Queries the Service Broker for the parameters associated with this service route binding. The broker catalog must have enabled the `bindings_retrievable` feature for the Service Offering. Check the [Service Offering object](#the-service-offering-object) for the value of this feature flag. This endpoint is not available for User-Provided Service Instances.
+    description: |-
+      Queries the Service Broker for the parameters associated with this service route binding.
+      The broker catalog must have enabled the `bindings_retrievable` feature for the Service Offering.
+      Check the [Service Offering object](#the-service-offering-object) for the value of this feature flag.
+      This endpoint is not available for User-Provided Service Instances.
+
+      **Permitted roles:** Admin, Admin Read-Only, Space Developer
     operationId: getServiceRouteBindingParameters
     tags:
       - Service Route Bindings
@@ -383,17 +498,21 @@
       - $ref: ../components/parameters/Guid.yaml
     responses:
       '200':
-        description: OK
+        description: Request succeeded
         content:
           application/json:
             schema:
               type: object
+              additionalProperties: true
+              description: The parameters that the service route binding was created with, as returned by the service broker
             examples:
               default:
                 summary: default
                 value:
                   foo: bar
                   foz: baz
+      '400':
+        $ref: ../components/responses/BadRequest.yaml
       '401':
         $ref: ../components/responses/Unauthorized.yaml
       '403':

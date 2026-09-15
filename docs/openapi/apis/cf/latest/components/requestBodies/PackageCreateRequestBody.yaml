@@ -1,4 +1,5 @@
-description: Package object that needs to be created or copied. When copying (source_guid query parameter is provided), only relationships.app is required. When creating a new package, type and relationships.app are required.
+description: |-
+  Package object that needs to be created. When the `source_guid` query parameter is supplied the package is copied instead, and `relationships.app` (the destination app) is the only accepted parameter.
 required: true
 content:
   application/json:
@@ -7,23 +8,10 @@ content:
       properties:
         type:
           type: string
-          description: Type of the package; valid values are bits or docker. Required when creating a new package (when source_guid is not provided). Not required when copying a package (when source_guid is provided).
+          description: Type of the package; valid values are `bits`, `docker`. Required when creating a package; not accepted when copying a package (when `source_guid` is supplied)
           enum:
             - bits
             - docker
-        data:
-          type: object
-          description: Data for package type
-          properties:
-            image:
-              type: string
-              description: The registry address of the image (for docker packages)
-            username:
-              type: string
-              description: The username for the image's registry (for docker packages)
-            password:
-              type: string
-              description: The password for the image's registry (for docker packages)
         relationships:
           type: object
           properties:
@@ -32,11 +20,26 @@ content:
               description: A relationship to an app
           required:
             - app
+        data:
+          type: object
+          default: {}
+          description: Data for package type; not accepted when copying a package
+          properties:
+            image:
+              type: string
+              description: Required when `type` is `docker`; the registry address of the image
+            username:
+              type: string
+              description: Optional when `type` is `docker` and accessing a secured registry
+            password:
+              type: string
+              description: Optional when `type` is `docker` and accessing a secured registry
         metadata:
           $ref: ../schemas/Metadata.yaml
+          description: Labels and annotations applied to the package
       required:
         - relationships
-      description: Request schema for creating a package
+      description: Request schema for creating or copying a package
     examples:
       buildpack_app:
         summary: buildpack app
@@ -58,3 +61,10 @@ content:
             image: registry/image:latest
             username: username
             password: password
+      copy:
+        summary: copy (with the source_guid query parameter)
+        value:
+          relationships:
+            app:
+              data:
+                guid: 36208a68-562d-4f51-94ea-28bd8553a271

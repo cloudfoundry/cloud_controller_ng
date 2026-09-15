@@ -2,41 +2,32 @@ type: object
 properties:
   name:
     type: string
-    description: Name of the security group
+    maxLength: 250
+    description: Name of the security group; must be unique (case-sensitive)
   globally_enabled:
     type: object
     properties:
       running:
         type: boolean
-        description: Whether the security group is globally enabled for running apps
+        description: Specifies whether the group should be applied globally to all running applications
       staging:
         type: boolean
-        description: Whether the security group is globally enabled for staging apps
+        description: Specifies whether the group should be applied globally to all staging applications
+    description: Object that controls if the group is applied globally to the lifecycle of all applications
   rules:
     type: array
     items:
-      type: object
-      properties:
-        protocol:
-          type: string
-          description: Protocol for the rule
-        destination:
-          type: string
-          description: Destination for the rule
-        ports:
-          type: string
-          description: Ports for the rule
-        type:
-          type: integer
-          description: Type for ICMP rules
-        code:
-          type: integer
-          description: Code for ICMP rules
-        description:
-          type: [string, "null"]
-          description: Description of the rule
-    description: Rules for the security group
-  metadata:
-    $ref: './Metadata.yaml'
+      $ref: './SecurityGroupRule.yaml'
+    description: Rules that will be applied by this security group
+  relationships:
+    type: object
+    properties:
+      staging_spaces:
+        $ref: './RelationshipToMany.yaml'
+        description: A relationship to the spaces where the security group is applied to applications during staging
+      running_spaces:
+        $ref: './RelationshipToMany.yaml'
+        description: A relationship to the spaces where the security group is applied to applications during runtime
+    description: Relationships to the spaces the security group is applied to
 required:
   - name

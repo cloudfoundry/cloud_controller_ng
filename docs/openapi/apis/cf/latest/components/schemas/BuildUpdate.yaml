@@ -2,25 +2,33 @@ type: object
 properties:
   state:
     type: string
-    description: State of the build
+    description: Build status; valid values are `FAILED` or `STAGED` (field can only be passed by Build State Updaters)
     enum:
-      - STAGING
       - STAGED
       - FAILED
-  staging_memory_in_mb:
-    type: [integer, "null"]
-    description: Memory in MB allocated for staging of the build
-  staging_disk_in_mb:
-    type: [integer, "null"]
-    description: Disk space in MB allocated for staging of the build
-  staging_log_rate_limit_bytes_per_second:
-    type: integer
-    description: Log rate limit in bytes per second allocated for staging of the build
   error:
     type: [string, 'null']
-    description: A string describing errors during the build process
+    description: A string describing errors during the build process (field can only be passed by Build State Updaters)
   lifecycle:
-    $ref: './Lifecycle.yaml'
-    description: Provides the lifecycle object to use during staging
+    type: object
+    description: Lifecycle information for the build (field can only be passed by Build State Updaters)
+    properties:
+      type:
+        type: string
+        description: Type of the lifecycle; valid values are `buildpack`, `cnb`, `docker`
+      data:
+        type: object
+        description: Data specific to the lifecycle
+        properties:
+          image:
+            type: string
+            description: Image reference tag where the built complete image was stored (field can only be passed by Build State Updaters)
+          processTypes:
+            type: object
+            additionalProperties:
+              type: string
+            description: Process types detected during staging, keyed by process type (field can only be passed by Build State Updaters)
   metadata:
     $ref: './Metadata.yaml'
+    description: Labels and annotations applied to the build
+description: Request schema for updating a build

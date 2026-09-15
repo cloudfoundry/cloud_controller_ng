@@ -1,0 +1,184 @@
+type: string
+description: |-
+  A manifest is a method for applying bulk configurations to apps and their underlying processes.
+
+  Manifests are in the YAML format. However, anchors and aliases are not supported.
+
+  ### The manifest schema
+
+  ```yaml
+  ---
+  version: 1
+  applications:
+  - name: app1
+    buildpacks:
+    - ruby_buildpack
+    - java_buildpack
+    env:
+      VAR1: value1
+      VAR2: value2
+    features:
+      ssh: true
+      revisions: true
+      service-binding-k8s: false
+      file-based-vcap-services: false
+    routes:
+    - route: route.example.com
+    - route: another-route.example.com
+      protocol: http2
+    - route: route-with-options.example.com
+      options:
+        loadbalancing: least-connection
+    services:
+    - my-service1
+    - my-service2
+    - name: my-service-with-arbitrary-params
+      binding_name: my-binding
+      parameters:
+        key1: value1
+        key2: value2
+    stack: cflinuxfs4
+    metadata:
+      annotations:
+        contact: "bob@example.com jane@example.com"
+      labels:
+        sensitive: true
+    processes:
+    - type: web
+      command: start-web.sh
+      disk_quota: 512M
+      health-check-type: http
+      health-check-http-endpoint: /healthcheck
+      health-check-invocation-timeout: 10
+      health-check-interval: 5
+      readiness-health-check-type: http
+      readiness-health-check-http-endpoint: /ready
+      readiness-health-check-invocation-timeout: 10
+      readiness-health-check-interval: 5
+      instances: 3
+      memory: 500M
+      log-rate-limit-per-second: 1KB
+      timeout: 10
+      user: vcap
+    - type: worker
+      command: start-worker.sh
+      disk_quota: 1G
+      health-check-type: process
+      instances: 2
+      memory: 256M
+      log-rate-limit-per-second: 1KB
+      timeout: 15
+  - name: app2
+    env:
+      VAR1: value1
+    processes:
+    - type: web
+      instances: 1
+      memory: 256M
+      log-rate-limit-per-second: 1KB
+    sidecars:
+    - name: authenticator
+      process_types: [ 'web', 'worker' ]
+      command: bundle exec run-authenticator
+      memory: 800M
+
+    - name: upcaser
+      process_types: [ 'worker' ]
+      command: ./tr-server
+      memory: 2G
+  ```
+
+  #### Space-level configuration
+
+  Name | Type | Description
+  ----- | ---- | -----------
+  **applications** | _array of [app configurations](#space-manifest-app-level-configuration)_ | Configurations for apps in the space
+  **version** | _integer_ | The manifest schema version; currently the only valid version is `1`, defaults to `1` if not provided
+
+  #### App-level configuration
+
+  This configuration is specified per application and applies to all of the application's processes.
+
+  Name | Type | Description
+  ----- | ---- | -----------
+  **name** | _string_ | Name of the app
+  **lifecycle** | _string_ | Type of the lifecycle; valid values are `buildpack`, `cnb`, `docker`. Defaults to `buildpack`, unless the **docker** property is present.
+  **buildpacks** | _list of strings_ | a) An empty array, which will automatically select the appropriate default buildpack according to the coding language (incompatible with **lifecycle: cnb**) b) An array of one or more URLs pointing to buildpacks c) An array of one or more installed buildpack names. Replaces the legacy `buildpack` field
+  **docker** | _object_ | If present, the created app will have Docker lifecycle type; the value of this key is ignored by the API but may be used by clients to source the registry address of the image and credentials, if needed; the [generate manifest endpoint](#generate-a-manifest-for-an-app) will return the registry address of the image and username provided with this key
+  **env** | _object_ | A key-value mapping of environment variables to be used for the app when running
+  **features** | _object_ | A key-value mapping of feature names to booleans (true = enabled, false = disabled)
+  **no-route** | _boolean_ | When set to `true`, any routes specified with the `routes` attribute will be ignored and any existing routes will be removed
+  **processes** | _array of [process configurations](#space-manifest-process-level-configuration)_ | List of configurations for individual process types
+  **random-route** | _boolean_ | Creates a random route for the app if `true`; if `routes` is specified, if the app already has routes, or if `no-route` is specified, this field is ignored regardless of its value
+  **default-route** | _boolean_ | If true, a route for the app will be created using the app name as the hostname and the containing organization's default domain as the domain; if `routes` is specified, if the app already has routes, or if `no-route` is specified, this field is ignored regardless of its value
+  **routes** | _array of [route configurations](#space-manifest-route-level-configuration)_ | List declaring HTTP and TCP routes to be mapped to the app.
+  **services** | _array of [service configurations](#space-manifest-service-level-configuration)_ | A list of service-instances to bind to the app
+  **sidecars** | _array of [sidecar configurations](#space-manifest-sidecar-level-configuration)_ | A list of configurations for individual sidecars
+  **stack** | _string_ | The root filesystem to use with the buildpack, for example `cflinuxfs4`
+  **metadata.labels** | _[label object](#labels)_ | Labels applied to the app
+  **metadata.annotations** | _[annotation object](#annotations)_ | Annotations applied to the app
+  **buildpack** | _string_ | **DEPRECATED in favor of the `buildpacks` field above**
+
+  #### Process-level configuration
+
+  This configuration is for the individual process. Each process is created if it does not already exist.
+
+  For backwards compatibility, the `web` process configuration may be placed at the top level of the application configuration, rather than listed under `processes`. However, if there is a process with `type: web` listed under `processes`, this configuration will override any at the top level.
+
+  Name | Type | Description
+  ---- | ---- | -----------
+  **type** | _string_ | **(Required)** The identifier for the processes to be configured
+  **command** | _string_ | The command used to start the process; this overrides start commands from [Procfiles](#procfiles) and buildpacks
+  **user** | _string_ | The user under which the process runs
+  **disk_quota** | _string_ | The disk limit for all instances of the web process; this attribute requires a unit of measurement: `B`, `K`, `KB`, `M`, `MB`, `G`, `GB`, `T`, or `TB` in upper case or lower case
+  **health-check-http-endpoint** | _string_ | Endpoint called to determine if the app is healthy
+  **health-check-interval** | _integer_ | The interval in seconds between health check requests
+  **health-check-invocation-timeout** | _integer_ | The timeout in seconds for individual health check requests for http and port health checks
+  **health-check-type** | _string_ | Type of health check to perform; `none` is deprecated and an alias to `process`
+  **readiness-health-check-http-endpoint** | _string_ | Endpoint called to determine if the app is ready to receive traffic
+  **readiness-health-check-interval** | _integer_ | The interval in seconds between readiness health check requests
+  **readiness-health-check-invocation-timeout** | _integer_ | The timeout in seconds for individual readiness health check requests for http and port readiness checks
+  **readiness-health-check-type** | _string_ | Type of readiness health check to perform; valid values: `http`, `port`, `process`
+  **instances** | _integer_ | The number of instances to run
+  **memory** | _string_ | The memory limit for all instances of the web process; this attribute requires a unit of measurement: `B`, `K`, `KB`, `M`, `MB`, `G`, `GB`, `T`, or `TB` in upper case or lower case
+  **log-rate-limit-per-second** | _string_ | The log rate limit for all the instances of the process; this attribute requires a unit of measurement: `B`, `K`, `KB`, `M`, `MB`, `G`, `GB`, `T`, or `TB` in upper case or lower case, or -1 or 0
+  **timeout** | _integer_ | Time in seconds at which the health-check will report failure
+
+  #### Route-level configuration
+
+  This configuration is for _creating_ mappings between the app and a route. Each route is created if it does not already exist. The protocol will be updated for any existing route mapping.
+
+  Name | Type | Description
+  ---- | ---- | -----------
+  **route** | _string_ | **(Required)** The route URI. Example: `host.domain.com`
+  **protocol** | _string_ | Protocol to use for this route. Valid protocols are `http1`, `http2`, and `tcp`
+  **options** | _object_ | A key-value mapping of configuration [options](#space-manifest-per-route-options-level-configuration) to be applied to the specific application route
+
+  #### Per-Route Options-level configuration
+
+  This configuration allows additional key-value options for the specific application route.
+
+  Name | Type | Description
+  ---- | ---- | -----------
+  **loadbalancing** | _string_ | The load-balancer associated with this route. Valid values are `round-robin` and `least-connection`
+
+  #### Service-level configuration
+
+  This configuration is _creating_ new service bindings between the app and a service instance. The `services` field can take either an array of service instance name strings or an array of the following service-level fields.
+
+  Name | Type | Description
+  ---- | ---- | -----------
+  **name** | _string_ | **(Required)** The name of the service instance to be bound to
+  **binding_name** | _string_ | The name of the service binding to be created
+  **parameters** | _object_ | A map of arbitrary key/value pairs to send to the service broker during binding
+
+  #### Sidecar-level configuration
+
+  This configuration is for the individual sidecar. Each sidecar is created if it does not already exist.
+
+  Name | Type | Description
+  ---- | ---- | -----------
+  **name** | _string_ | **(Required)** The identifier for the sidecars to be configured
+  **command** | _string_ | The command used to start the sidecar
+  **process_types** | _list of strings_ | List of processes to associate sidecar with
+  **memory** | _integer_ | Memory in MB that the sidecar will be allocated

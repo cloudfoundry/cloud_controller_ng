@@ -1,8 +1,10 @@
 type: object
 properties:
   data:
-    type: [object, "null"]
-    $ref: './Relationship.yaml'
+    oneOf:
+      - $ref: './Relationship.yaml'
+      - type: "null"
+    description: The related resource, or `null` when the relationship is not set
   links:
     type: object
     properties:

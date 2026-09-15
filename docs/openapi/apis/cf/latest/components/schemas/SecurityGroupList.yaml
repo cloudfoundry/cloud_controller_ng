@@ -2,7 +2,9 @@ type: object
 properties:
   pagination:
     $ref: './Pagination.yaml'
+    description: Pagination information for the list of security groups
   resources:
     type: array
     items:
       $ref: './SecurityGroup.yaml'
+    description: The list of security groups

@@ -1,23 +1,9 @@
-description: Sidecar to create
+description: The sidecar to create
+required: true
 content:
   application/json:
     schema:
-      type: object
-      properties:
-        name:
-          type: string
-          description: Name of the sidecar
-        command:
-          type: string
-          description: Command to run for the sidecar
-        process_types:
-          type: array
-          items:
-            type: string
-          description: Process types that the sidecar applies to
-        memory_in_mb:
-          type: integer
-          description: Memory limit for the sidecar in MB
+      $ref: ../schemas/SidecarCreate.yaml
     examples:
       default:
         summary: default

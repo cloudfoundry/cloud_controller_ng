@@ -1,14 +1,27 @@
 /v3/users:
   get:
     summary: List users
-    description: Retrieve all users that the current user can see.
+    description: |-
+      Retrieve all users that the current user can see.
+
+      **Permitted roles:** Admin, Admin Read-Only, Global Auditor, Org Auditor *(Can only view users affiliated with their org)*, Org Billing Manager *(Can only view users affiliated with their org)*, Org Manager *(Can only view users affiliated with their org)*, Space Auditor *(Can only view users affiliated with their org)*, Space Developer *(Can only view users affiliated with their org)*, Space Manager *(Can only view users affiliated with their org)*, Space Supporter *(Can only view users affiliated with their org)*
     operationId: listUsers
     tags:
     - Users
     parameters:
     - $ref: '../components/parameters/Page.yaml'
     - $ref: '../components/parameters/PerPage.yaml'
-    - $ref: '../components/parameters/OrderBy.yaml'
+    - name: order_by
+      in: query
+      required: false
+      schema:
+        type: string
+        enum:
+        - created_at
+        - -created_at
+        - updated_at
+        - -updated_at
+      description: Value to sort by. Defaults to ascending; prepend with `-` to sort descending. Valid values are `created_at` and `updated_at`
     - $ref: '../components/parameters/CreatedAts.yaml'
     - $ref: '../components/parameters/UpdatedAts.yaml'
     - $ref: '../components/parameters/LabelSelector.yaml'
@@ -18,28 +31,28 @@
         type: array
         items:
           type: string
-      description: Comma-delimited list of user guids to filter by (can include UAA user IDs or client IDs)
+      description: Comma-delimited list of user guids to filter by
     - name: usernames
       in: query
       schema:
         type: array
         items:
           type: string
-      description: Comma-delimited list of usernames to filter by
-    - name: origins
-      in: query
-      schema:
-        type: array
-        items:
-          type: string
-      description: Comma-delimited list of user origins to filter by
+      description: Comma-delimited list of usernames to filter by. Mutually exclusive with **partial_usernames**
     - name: partial_usernames
       in: query
       schema:
         type: array
         items:
           type: string
-      description: Comma-delimited list of partial usernames to filter by
+      description: Comma-delimited list of strings to search by. When using this query parameter, all the users that contain the string provided in their username will be returned. Mutually exclusive with **usernames**
+    - name: origins
+      in: query
+      schema:
+        type: array
+        items:
+          type: string
+      description: Comma-delimited list of user origins (user stores) to filter by, for example, users authenticated by UAA have the origin "uaa"; users authenticated by an LDAP provider have the origin "ldap"; when filtering by origins, usernames must be included
     responses:
       '200':
         description: OK
@@ -47,6 +60,45 @@
           application/json:
             schema:
               $ref: '../components/schemas/UserList.yaml'
+            examples:
+              default:
+                summary: default
+                value:
+                  pagination:
+                    total_results: 3
+                    total_pages: 2
+                    first:
+                      href: https://api.example.org/v3/users?page=1&per_page=2
+                    last:
+                      href: https://api.example.org/v3/users?page=2&per_page=2
+                    next:
+                      href: https://api.example.org/v3/users?page=2&per_page=2
+                    previous: null
+                  resources:
+                  - guid: client_id
+                    created_at: '2019-03-08T01:06:19Z'
+                    updated_at: '2019-03-08T01:06:19Z'
+                    username: null
+                    presentation_name: client_id
+                    origin: null
+                    metadata:
+                      labels: {}
+                      annotations: {}
+                    links:
+                      self:
+                        href: https://api.example.org/v3/users/client_id
+                  - guid: 9da93b89-3f89-4f05-7238-8a2b123c79l9
+                    created_at: '2019-03-08T01:06:19Z'
+                    updated_at: '2019-03-08T01:06:19Z'
+                    username: some-name
+                    presentation_name: some-name
+                    origin: uaa
+                    metadata:
+                      labels: {}
+                      annotations: {}
+                    links:
+                      self:
+                        href: https://api.example.org/v3/users/9da93b89-3f89-4f05-7238-8a2b123c79l9
       '400':
         $ref: '../components/responses/BadRequest.yaml'
       '401':
@@ -65,20 +117,20 @@
         $ref: '../components/responses/Conflict.yaml'
   post:
     summary: Create a user
-    description: 'Creating a user requires one value, a GUID. This creates a user
-      in the Cloud Controller database.
+    description: |-
+      Creating a user requires one value, a GUID. This creates a user in the Cloud
+      Controller database.
 
+      Generally, the GUID should match the ID of an already-created user in the UAA
+      database, though this is not required. The GUID can also be a UAA client ID, to
+      support the UAA `client_credentials` grant type. Creating a user by guid is
+      only permitted by admins.
 
-      Generally, the GUID should match the GUID of an already-created user in the
-      UAA database, though this is not required. Creating a user by guid is only permitted
-      by admins.
+      If CAPI property `cc.allow_user_creation_by_org_manager` is enabled, a UAA user will be automatically created if it does not exist yet.
+      The UAA user will be only created when `username` and `origin` have been provided instead of a guid. Additionally `origin` must be different from `uaa`.
+      Admins and OrgManagers can make use of the UAA user creation.
 
-
-      If CAPI property `cc.allow_user_creation_by_org_manager` is enabled, a UAA user
-      will be automatically created if it does not exist yet. The UAA user will be
-      only created when `username` and `origin` have been provided instead of a guid.
-      Additionally `origin` must be different from `uaa`. Admins and OrgManagers can
-      make use of the UAA user creation.'
+      **Permitted roles:** Admin, OrgManager *(can only create users by `username` and `origin` and when CAPI property `cc.allow_user_creation_by_org_manager` is enabled)*
     operationId: createUser
     tags:
     - Users
@@ -106,7 +158,12 @@
 /v3/users/{guid}:
   get:
     summary: Get a user
-    description: Retrieve a user.
+    description: |-
+      Retrieve a user.
+
+      **Permitted roles:** Admin, Admin Read-Only, Global Auditor, Org Auditor *(Can only view users affiliated with their org)*, Org Billing Manager *(Can only view users affiliated with their org)*, Org Manager *(Can only view users affiliated with their org)*, Space Auditor *(Can only view users affiliated with their org)*, Space Developer *(Can only view users affiliated with their org)*, Space Manager *(Can only view users affiliated with their org)*, Space Supporter *(Can only view users affiliated with their org)*
+
+      > **Note:** A user can always see themselves with this endpoint, regardless of role.
     operationId: getUser
     tags:
     - Users
@@ -119,6 +176,22 @@
           application/json:
             schema:
               $ref: '../components/schemas/User.yaml'
+            examples:
+              default:
+                summary: default
+                value:
+                  guid: 3a5d3d89-3f89-4f05-8188-8a2b298c79d5
+                  created_at: '2019-03-08T01:06:19Z'
+                  updated_at: '2019-03-08T01:06:19Z'
+                  username: some-name
+                  presentation_name: some-name
+                  origin: uaa
+                  metadata:
+                    labels: {}
+                    annotations: {}
+                  links:
+                    self:
+                      href: https://api.example.org/v3/users/3a5d3d89-3f89-4f05-8188-8a2b298c79d5
       '401':
         $ref: '../components/responses/Unauthorized.yaml'
       '404':
@@ -127,7 +200,10 @@
         $ref: '../components/responses/Forbidden.yaml'
   patch:
     summary: Update a user
-    description: Update a user's metadata.
+    description: |-
+      Update a user's metadata.
+
+      **Permitted roles:** Admin
     operationId: updateUser
     tags:
     - Users
@@ -156,7 +232,10 @@
         $ref: '../components/responses/Conflict.yaml'
   delete:
     summary: Delete a user
-    description: All roles associated with a user will be deleted if the user is deleted.
+    description: |-
+      All roles associated with a user will be deleted if the user is deleted.
+
+      **Permitted roles:** Admin
     operationId: deleteUser
     tags:
     - Users

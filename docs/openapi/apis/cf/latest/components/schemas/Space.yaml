@@ -5,31 +5,46 @@ allOf:
       name:
         type: string
         description: Name of the space
+      suspended:
+        type: boolean
+        description: Whether a space is suspended or not; non-admins and non-org-managers will be blocked from creating, updating, or deleting resources in a suspended space
       relationships:
         type: object
+        description: Relationships for the space
         properties:
           organization:
             $ref: './RelationshipToOne.yaml'
+            description: The organization the space is contained in
           quota:
             $ref: './RelationshipToOne.yaml'
-        description: Relationships for the space
+            description: The space quota applied to the space
       links:
         type: object
+        description: Links to related resources
         properties:
           self:
             $ref: './Link.yaml'
+            description: The URL of this space
           organization:
             $ref: './Link.yaml'
+            description: The URL of the organization the space is contained in
           features:
             $ref: './Link.yaml'
+            description: The URL to list the features of this space
+          quota:
+            $ref: './Link.yaml'
+            description: The URL of the space quota applied to the space; only present when a space quota is applied
           apply_manifest:
             $ref: './Link.yaml'
+            description: The URL to apply a manifest to this space
       metadata:
         $ref: './Metadata.yaml'
+        description: Labels and annotations applied to the space
       included:
         $ref: './IncludedResources.yaml'
         description: Additional related resources included in the response when using the include parameter
     required:
     - name
+    - suspended
     - relationships
     - links

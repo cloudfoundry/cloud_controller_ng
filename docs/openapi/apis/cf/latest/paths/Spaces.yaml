@@ -1,26 +1,43 @@
 /v3/spaces:
   get:
     summary: List spaces
-    description: Retrieve all spaces the user has access to.
+    description: |-
+      Retrieve all spaces the user has access to.
+
+      **Permitted roles:** All Roles
     operationId: listSpaces
     tags:
       - Spaces
     parameters:
       - $ref: ../components/parameters/Page.yaml
       - $ref: ../components/parameters/PerPage.yaml
-      - $ref: ../components/parameters/OrderBy.yaml
+      - name: order_by
+        in: query
+        required: false
+        schema:
+          type: string
+          enum:
+            - created_at
+            - -created_at
+            - updated_at
+            - -updated_at
+            - name
+            - -name
+        description: Value to sort by. Defaults to ascending; prepend with `-` to sort descending. Valid values are `created_at`, `updated_at`, `name`
       - $ref: ../components/parameters/CreatedAts.yaml
       - $ref: ../components/parameters/UpdatedAts.yaml
       - $ref: ../components/parameters/LabelSelector.yaml
       - name: names
         in: query
+        required: false
         schema:
           type: array
           items:
             type: string
-        description: Comma-delimited list of space names to filter by
+        description: Comma-delimited list of space names to filter by (case-insensitive)
       - name: guids
         in: query
+        required: false
         schema:
           type: array
           items:
@@ -28,6 +45,7 @@
         description: Comma-delimited list of space guids to filter by
       - name: organization_guids
         in: query
+        required: false
         schema:
           type: array
           items:
@@ -35,13 +53,14 @@
         description: Comma-delimited list of organization guids to filter by
       - name: include
         in: query
+        required: false
         schema:
           type: array
           items:
             type: string
             enum:
               - organization
-        description: Optionally include a list of unique related resources in the response
+        description: Optionally include a list of unique related resources in the response; valid value is `organization`
     responses:
       '200':
         description: OK
@@ -63,14 +82,15 @@
                     next: null
                     previous: null
                   resources:
-                    - guid: 123e4567-e89b-12d3-a456-426614174000
+                    - guid: 885735b5-aea4-4cf5-8e44-961af0e41920
                       created_at: '2017-02-01T01:33:58Z'
                       updated_at: '2017-02-01T01:33:58Z'
                       name: space1
+                      suspended: false
                       relationships:
                         organization:
                           data:
-                            guid: 123e4567-e89b-12d3-a456-426614174000
+                            guid: e00705b9-7b42-4561-ae97-2520399d2133
                         quota:
                           data: null
                       links:
@@ -86,17 +106,18 @@
                       metadata:
                         labels: {}
                         annotations: {}
-                    - guid: 123e4567-e89b-12d3-a456-426614174000
+                    - guid: d4c91047-7b29-4fda-b7f9-04033e5c9c9f
                       created_at: '2017-02-02T00:14:30Z'
                       updated_at: '2017-02-02T00:14:30Z'
                       name: space2
+                      suspended: false
                       relationships:
                         organization:
                           data:
-                            guid: 123e4567-e89b-12d3-a456-426614174000
+                            guid: b4ce91bd-31df-4b7d-8fd4-21a6b533276b
                         quota:
                           data:
-                            guid: 123e4567-e89b-12d3-a456-426614174000
+                            guid: 6da62599-4890-4a08-8b6f-180a4f47e46b
                       links:
                         self:
                           href: https://api.example.org/v3/spaces/d4c91047-7b29-4fda-b7f9-04033e5c9c9f
@@ -107,7 +128,7 @@
                         quota:
                           href: https://api.example.org/v3/space_quotas/6da62599-4890-4a08-8b6f-180a4f47e46b
                         apply_manifest:
-                          href: https://api.example.org/v3/spaces/d4c91047-7b29-4fda-b7f9-04033e5c9c9/actions/apply_manifest
+                          href: https://api.example.org/v3/spaces/d4c91047-7b29-4fda-b7f9-04033e5c9c9f/actions/apply_manifest
                           method: POST
                       metadata:
                         labels: {}
@@ -132,7 +153,10 @@
         $ref: ../components/responses/ServiceUnavailable.yaml
   post:
     summary: Create a space
-    description: Create a space.
+    description: |-
+      Create a space.
+
+      **Permitted roles:** Admin, Org Manager
     operationId: createSpace
     tags:
       - Spaces
@@ -149,14 +173,15 @@
               default:
                 summary: default
                 value:
-                  guid: 123e4567-e89b-12d3-a456-426614174000
+                  guid: 885735b5-aea4-4cf5-8e44-961af0e41920
                   created_at: '2017-02-01T01:33:58Z'
                   updated_at: '2017-02-01T01:33:58Z'
                   name: my-space
+                  suspended: false
                   relationships:
                     organization:
                       data:
-                        guid: 123e4567-e89b-12d3-a456-426614174000
+                        guid: e00705b9-7b42-4561-ae97-2520399d2133
                     quota:
                       data: null
                   links:
@@ -200,7 +225,10 @@
 /v3/spaces/{guid}:
   get:
     summary: Get a space
-    description: This endpoint retrieves the specified space object.
+    description: |-
+      This endpoint retrieves the specified space object.
+
+      **Permitted roles:** Admin, Admin Read-Only, Global Auditor, Org Manager, Space Auditor, Space Developer, Space Manager, Space Supporter
     operationId: getSpace
     tags:
       - Spaces
@@ -208,13 +236,14 @@
       - $ref: ../components/parameters/Guid.yaml
       - name: include
         in: query
+        required: false
         schema:
           type: array
           items:
             type: string
             enum:
               - organization
-        description: Optionally include additional related resources in the response
+        description: Optionally include additional related resources in the response; valid value is `organization`
     responses:
       '200':
         description: OK
@@ -226,14 +255,15 @@
               default:
                 summary: default
                 value:
-                  guid: 123e4567-e89b-12d3-a456-426614174000
+                  guid: 885735b5-aea4-4cf5-8e44-961af0e41920
                   created_at: '2017-02-01T01:33:58Z'
                   updated_at: '2017-02-01T01:33:58Z'
                   name: my-space
+                  suspended: false
                   relationships:
                     organization:
                       data:
-                        guid: 123e4567-e89b-12d3-a456-426614174000
+                        guid: e00705b9-7b42-4561-ae97-2520399d2133
                     quota:
                       data: null
                   links:
@@ -268,7 +298,10 @@
         $ref: ../components/responses/NotFound.yaml
   patch:
     summary: Update a space
-    description: Update a space
+    description: |-
+      Update a space.
+
+      **Permitted roles:** Admin, Org Manager, Space Manager *(cannot change the `suspended` field)*
     operationId: updateSpace
     tags:
       - Spaces
@@ -287,14 +320,15 @@
               default:
                 summary: default
                 value:
-                  guid: 123e4567-e89b-12d3-a456-426614174000
+                  guid: 885735b5-aea4-4cf5-8e44-961af0e41920
                   created_at: '2017-02-01T01:33:58Z'
                   updated_at: '2017-02-01T01:33:58Z'
-                  name: my-space
+                  name: new-space-name
+                  suspended: false
                   relationships:
                     organization:
                       data:
-                        guid: 123e4567-e89b-12d3-a456-426614174000
+                        guid: e00705b9-7b42-4561-ae97-2520399d2133
                     quota:
                       data: null
                   links:
@@ -339,7 +373,10 @@
         $ref: ../components/responses/ServiceUnavailable.yaml
   delete:
     summary: Delete a space
-    description: When a space is deleted, the user roles associated with the space will be deleted.
+    description: |-
+      When a space is deleted, the user roles associated with the space will be deleted.
+
+      **Permitted roles:** Admin, Org Manager
     operationId: deleteSpace
     tags:
       - Spaces
@@ -349,8 +386,8 @@
       '202':
         description: Accepted
         headers:
-          location:
-            description: URL of the job to query the asynchronous operation
+          Location:
+            description: URL of the job that is deleting the space
             schema:
               type: string
               format: uri
@@ -372,17 +409,30 @@
     description: |-
       Apply changes specified in a manifest to the named apps and their underlying processes. The apps must reside in the space. These changes are additive and will not modify any unspecified properties or remove any existing environment variables, app features, routes, or services.
 
-      Apply manifest will only trigger an immediate update for the “instances” property or routing changes. All other properties require an app restart to take effect.
+      > **Note:** Apply manifest will only trigger an immediate update for the "instances" property or routing changes. All other properties require an app restart to take effect.
+
+      **Permitted roles:** Admin, Space Developer
     operationId: applyManifestToSpace
     tags:
       - Spaces
     parameters:
       - $ref: ../components/parameters/Guid.yaml
     requestBody:
+      description: The manifest to apply, as a YAML document
+      required: true
       content:
         application/x-yaml:
           schema:
             type: string
+          examples:
+            default:
+              summary: default
+              value: |
+                ---
+                applications:
+                - name: my-app
+                  instances: 2
+                  memory: 512M
     responses:
       '202':
         description: Accepted
@@ -403,10 +453,13 @@
 /v3/spaces/{guid}/features:
   get:
     summary: List space features
-    description: This endpoint retrieves the list of features for the specified space. Currently, the only feature on spaces is the SSH feature.
+    description: |-
+      This endpoint retrieves the list of features for the specified space. Currently, the only feature on spaces is the SSH feature.
+
+      **Permitted roles:** Admin, Admin Read-Only, Global Auditor, Org Manager, Space Auditor, Space Developer, Space Manager, Space Supporter
     operationId: listSpaceFeatures
     tags:
-      - Spaces
+      - Space Features
     parameters:
       - $ref: ../components/parameters/Guid.yaml
     responses:
@@ -415,7 +468,7 @@
         content:
           application/json:
             schema:
-              $ref: ../components/schemas/SpaceFeature.yaml
+              $ref: ../components/schemas/SpaceFeatureList.yaml
             examples:
               default:
                 summary: default
@@ -423,9 +476,6 @@
                   resources:
                     - name: ssh
                       description: Enable SSHing into apps in the space.
-                      enabled: true
-                    - name: diego_docker
-                      description: Allow Docker image support for the space.
                       enabled: false
       '401':
         $ref: ../components/responses/Unauthorized.yaml
@@ -436,10 +486,13 @@
 /v3/spaces/{guid}/features/{name}:
   get:
     summary: Get a space feature
-    description: Get a space feature
+    description: |-
+      Retrieve the specified feature for the specified space.
+
+      **Permitted roles:** Admin, Admin Read-Only, Global Auditor, Org Manager, Space Auditor, Space Developer, Space Manager, Space Supporter
     operationId: getSpaceFeature
     tags:
-      - Spaces
+      - Space Features
     parameters:
       - $ref: ../components/parameters/Guid.yaml
       - name: name
@@ -449,6 +502,7 @@
           type: string
           enum:
             - ssh
+        description: Name of the space feature; the only space feature is `ssh`
     responses:
       '200':
         description: OK
@@ -470,11 +524,14 @@
       '404':
         $ref: ../components/responses/NotFound.yaml
   patch:
-    summary: Update a space feature
-    description: Update a space feature.
+    summary: Update space features
+    description: |-
+      Update the specified feature for the specified space.
+
+      **Permitted roles:** Admin, Org Manager, Space Manager
     operationId: updateSpaceFeature
     tags:
-      - Spaces
+      - Space Features
     parameters:
       - $ref: ../components/parameters/Guid.yaml
       - name: name
@@ -484,13 +541,20 @@
           type: string
           enum:
             - ssh
+        description: Name of the space feature; the only space feature is `ssh`
     requestBody:
+      description: The new state of the space feature
+      required: true
       content:
         application/json:
           schema:
+            type: object
             properties:
               enabled:
                 type: boolean
+                description: Denotes whether or not the space feature is enabled
+            required:
+              - enabled
           examples:
             default:
               summary: default
@@ -525,33 +589,78 @@
       This endpoint returns a JSON representation of the difference between the provided manifest and the current state of a space.
 
       Currently, this endpoint can only diff [version 1](#the-manifest-schema) manifests.
+
+      **Permitted roles:** Admin, Space Developer
     operationId: createManifestDiffForSpace
     tags:
       - Spaces
     parameters:
       - $ref: ../components/parameters/Guid.yaml
     requestBody:
+      description: The manifest to compare against the current state of the space, as a YAML document
+      required: true
       content:
         application/x-yaml:
           schema:
             type: string
+          examples:
+            default:
+              summary: default
+              value: |
+                ---
+                applications:
+                - name: my-app
+                  instances: 2
+                  memory: 512M
     responses:
       '201':
-        description: Accepted
-        headers:
-          Location:
-            description: URL of the job that is creating the manifest diff
+        description: Created
+        content:
+          application/json:
             schema:
-              type: string
-              format: uri
-      '202':
-        description: Accepted
-        headers:
-          Location:
-            description: URL of the job that is creating the manifest diff
-            schema:
-              type: string
-              format: uri
+              type: object
+              properties:
+                diff:
+                  type: array
+                  description: The list of differences between the provided manifest and the current state of the space; the diff object format is inspired by the [JSON Patch specification](https://tools.ietf.org/html/rfc6902)
+                  items:
+                    type: object
+                    properties:
+                      op:
+                        type: string
+                        enum:
+                          - add
+                          - remove
+                          - replace
+                        description: Type of change; valid values are `add`, `remove`, `replace`
+                      path:
+                        type: string
+                        description: Path to changing manifest field
+                      was:
+                        description: For `remove` and `replace` operations, the previous value; otherwise key is omitted
+                      value:
+                        description: For `add` and `replace` operations, the new value; otherwise key is omitted
+                    required:
+                      - op
+                      - path
+              required:
+                - diff
+            examples:
+              default:
+                summary: default
+                value:
+                  diff:
+                    - op: remove
+                      path: /applications/0/routes/1
+                      was:
+                        route: route.example.com
+                    - op: add
+                      path: /applications/1/buildpacks/2
+                      value: java_buildpack
+                    - op: replace
+                      path: /applications/2/processes/1/memory
+                      was: 256M
+                      value: 512M
       '401':
         $ref: ../components/responses/Unauthorized.yaml
       '403':
@@ -563,7 +672,10 @@
 /v3/spaces/{guid}/relationships/isolation_segment:
   get:
     summary: Get assigned isolation segment
-    description: Get assigned isolation segment
+    description: |-
+      Retrieve the isolation segment assigned to the specified space.
+
+      **Permitted roles:** Admin, Admin Read-Only, Global Auditor, Org Manager, Space Auditor, Space Developer, Space Manager, Space Supporter
     operationId: getAssignedIsolationSegmentForSpace
     tags:
       - Spaces
@@ -581,7 +693,7 @@
                 summary: default
                 value:
                   data:
-                    guid: 123e4567-e89b-12d3-a456-426614174000
+                    guid: e4c91047-3b29-4fda-b7f9-04033e5a9c9f
                   links:
                     self:
                       href: https://api.example.org/v3/spaces/885735b5-aea4-4cf5-8e44-961af0e41920/relationships/isolation_segment
@@ -596,25 +708,41 @@
   patch:
     summary: Manage isolation segment
     description: |-
-      This endpoint assigns an isolation segment to the space. The isolation segment must be [entitled](#entitle-organizations-for-an-isolation-segment) to the space’s parent organization.
+      This endpoint assigns an isolation segment to the space. The isolation segment must be [entitled](#entitle-organizations-for-an-isolation-segment) to the space's parent organization.
 
-      Apps will not run in the newly assigned isolation segment until they are restarted.
+      > **Note:** Apps will not run in the newly assigned isolation segment until they are restarted.
+
+      **Permitted roles:** Admin, Org Manager
     operationId: manageIsolationSegmentForSpace
     tags:
       - Spaces
     parameters:
       - $ref: ../components/parameters/Guid.yaml
     requestBody:
+      description: The isolation segment relationship to assign to the space
+      required: true
       content:
         application/json:
           schema:
-            $ref: ../components/schemas/RelationshipToOne.yaml
+            type: object
+            properties:
+              data:
+                oneOf:
+                  - $ref: ../components/schemas/Relationship.yaml
+                  - type: "null"
+                description: Isolation segment relationship, apps will run in this isolation segment; set data to `null` to remove the relationship
+            required:
+              - data
           examples:
             default:
               summary: default
               value:
                 data:
-                  guid: 123e4567-e89b-12d3-a456-426614174000
+                  guid: e4c91047-3b29-4fda-b7f9-04033e5a9c9f
+            remove:
+              summary: remove the isolation segment
+              value:
+                data: null
     responses:
       '200':
         description: OK
@@ -627,7 +755,7 @@
                 summary: default
                 value:
                   data:
-                    guid: 123e4567-e89b-12d3-a456-426614174000
+                    guid: e4c91047-3b29-4fda-b7f9-04033e5a9c9f
                   links:
                     self:
                       href: https://api.example.org/v3/spaces/885735b5-aea4-4cf5-8e44-961af0e41920/relationships/isolation_segment
@@ -644,7 +772,12 @@
 /v3/spaces/{guid}/routes:
   delete:
     summary: Delete unmapped routes for a space
-    description: Deletes all routes in a space that are not mapped to any applications and not bound to any service instances.
+    description: |-
+      Deletes all routes in a space that are not mapped to any applications and not bound to any service instances.
+
+      > **Note:** `unmapped=true` is a required query parameter; always include it.
+
+      **Permitted roles:** Admin, Space Developer, Space Supporter
     operationId: deleteUnmappedRoutesForSpace
     tags:
       - Spaces
@@ -657,7 +790,7 @@
           type: boolean
           enum:
             - true
-        description: Filter to only delete unmapped routes
+        description: Required query parameter; must be `true`. Only unmapped routes may be mass deleted
     responses:
       '202':
         description: Accepted
@@ -677,8 +810,11 @@
         $ref: ../components/responses/UnprocessableEntity.yaml
 /v3/spaces/{guid}/usage_summary:
   get:
-    summary: Get usage summary for a space
-    description: This endpoint retrieves the specified space's memory and app instance usage summary.
+    summary: Get space usage summary
+    description: |-
+      This endpoint retrieves a usage summary for the specified space. It provides aggregated data about the space's resource usage, such as memory, routes and services.
+
+      **Permitted roles:** Admin, Admin Read-Only, Global Auditor, Org Manager, Space Auditor, Space Developer, Space Manager, Space Supporter
     operationId: getUsageSummaryForSpace
     tags:
       - Spaces
@@ -694,25 +830,35 @@
               properties:
                 usage_summary:
                   type: object
+                  description: Aggregated data about the space's resource usage
                   properties:
                     started_instances:
                       type: integer
+                      description: Total number of started app instances in the space
                     memory_in_mb:
                       type: integer
+                      description: Total memory, in megabytes, used by started app instances in the space
                     routes:
                       type: integer
+                      description: Total number of routes in the space
                     service_instances:
                       type: integer
+                      description: Total number of managed service instances in the space
                     reserved_ports:
                       type: integer
+                      description: Total number of route ports reserved by the space
                     domains:
                       type: integer
+                      description: Total number of private domains owned by the space's organization
                     per_app_tasks:
                       type: integer
+                      description: Total number of running and pending tasks in the space
                     service_keys:
                       type: integer
+                      description: Total number of service keys in the space
                 links:
                   type: object
+                  description: Links to related resources
                   properties:
                     self:
                       $ref: ../components/schemas/Link.yaml
@@ -736,7 +882,7 @@
                   links:
                     self:
                       href: https://api.example.org/v3/spaces/f47ac10b-58cc-4372-a567-0e02b2c3d479/usage_summary
-                    organization:
+                    space:
                       href: https://api.example.org/v3/spaces/f47ac10b-58cc-4372-a567-0e02b2c3d479
       '401':
         $ref: ../components/responses/Unauthorized.yaml
@@ -747,12 +893,44 @@
 /v3/spaces/{guid}/running_security_groups:
   get:
     summary: List running security groups for a space
-    description: This endpoint returns security groups that are enabled for running globally or at the space level for the given space.
+    description: |-
+      This endpoint returns security groups that are enabled for running globally or at the space level for the given space.
+
+      **Permitted roles:** Admin *(can see all security groups)*, Admin Read-Only *(can see all security groups)*, Global Auditor *(can see all security groups)*, Org Manager *(can see globally-enabled security groups and groups associated with spaces in their managed organizations)*, Space Auditor *(can see globally-enabled security groups and groups associated with spaces where they have this role)*, Space Developer *(can see globally-enabled security groups and groups associated with spaces where they have this role)*, Space Manager *(can see globally-enabled security groups and groups associated with spaces where they have this role)*, Space Supporter *(can see globally-enabled security groups and groups associated with spaces where they have this role)*
     operationId: listRunningSecurityGroupsForSpace
     tags:
       - Spaces
     parameters:
       - $ref: ../components/parameters/Guid.yaml
+      - $ref: ../components/parameters/Page.yaml
+      - $ref: ../components/parameters/PerPage.yaml
+      - name: order_by
+        in: query
+        required: false
+        schema:
+          type: string
+          enum:
+            - created_at
+            - -created_at
+            - updated_at
+            - -updated_at
+        description: Value to sort by. Defaults to ascending; prepend with `-` to sort descending. Valid values are `created_at`, `updated_at`
+      - name: guids
+        in: query
+        required: false
+        schema:
+          type: array
+          items:
+            type: string
+        description: Comma-delimited list of security group guids to filter by
+      - name: names
+        in: query
+        required: false
+        schema:
+          type: array
+          items:
+            type: string
+        description: Comma-delimited list of security group names to filter by (case-sensitive)
     responses:
       '200':
         description: OK
@@ -760,6 +938,62 @@
           application/json:
             schema:
               $ref: ../components/schemas/SecurityGroupList.yaml
+            examples:
+              default:
+                summary: default
+                value:
+                  pagination:
+                    total_results: 1
+                    total_pages: 1
+                    first:
+                      href: https://api.example.org/v3/spaces/c5048979-53b9-4d2a-9fca-78e6bc07c041/running_security_groups?page=1&per_page=50
+                    last:
+                      href: https://api.example.org/v3/spaces/c5048979-53b9-4d2a-9fca-78e6bc07c041/running_security_groups?page=1&per_page=50
+                    next: 
+                    previous: 
+                  resources:
+                  - guid: b85a788e-671f-4549-814d-e34cdb2f539a
+                    created_at: '2020-02-20T17:42:08Z'
+                    updated_at: '2020-02-20T17:42:08Z'
+                    name: my-group0
+                    globally_enabled:
+                      running: true
+                      staging: false
+                    rules:
+                    - protocol: tcp
+                      destination: 10.10.10.0/24
+                      ports: '443,80,8080'
+                    - protocol: icmp
+                      destination: 10.10.10.0/24
+                      type: 8
+                      code: 0
+                      description: Allow ping requests to private services
+                    relationships:
+                      staging_spaces:
+                        data: []
+                      running_spaces:
+                        data:
+                        - guid: c5048979-53b9-4d2a-9fca-78e6bc07c041
+                        - guid: 885735b5-aea4-4cf5-8e44-961af0e41920
+                    links:
+                      self:
+                        href: https://api.example.org/v3/security_groups/b85a788e-671f-4549-814d-e34cdb2f539a
+                  - guid: a89a788e-671f-4549-814d-e34c1b2f533a
+                    created_at: '2020-02-20T17:42:08Z'
+                    updated_at: '2020-02-20T17:42:08Z'
+                    name: my-group1
+                    globally_enabled:
+                      running: true
+                      staging: true
+                    rules: []
+                    relationships:
+                      staging_spaces:
+                        data: []
+                      running_spaces:
+                        data: []
+                    links:
+                      self:
+                        href: https://api.example.org/v3/security_groups/a89a788e-671f-4549-814d-e34c1b2f533a
       '401':
         $ref: ../components/responses/Unauthorized.yaml
       '403':
@@ -769,12 +1003,44 @@
 /v3/spaces/{guid}/staging_security_groups:
   get:
     summary: List staging security groups for a space
-    description: This endpoint returns security groups that are enabled for staging globally or at the space level for the given space.
+    description: |-
+      This endpoint returns security groups that are enabled for staging globally or at the space level for the given space.
+
+      **Permitted roles:** Admin *(can see all security groups)*, Admin Read-Only *(can see all security groups)*, Global Auditor *(can see all security groups)*, Org Manager *(can see globally-enabled security groups and groups associated with spaces in their managed organizations)*, Space Auditor *(can see globally-enabled security groups and groups associated with spaces where they have this role)*, Space Developer *(can see globally-enabled security groups and groups associated with spaces where they have this role)*, Space Manager *(can see globally-enabled security groups and groups associated with spaces where they have this role)*, Space Supporter *(can see globally-enabled security groups and groups associated with spaces where they have this role)*
     operationId: listStagingSecurityGroupsForSpace
     tags:
       - Spaces
     parameters:
       - $ref: ../components/parameters/Guid.yaml
+      - $ref: ../components/parameters/Page.yaml
+      - $ref: ../components/parameters/PerPage.yaml
+      - name: order_by
+        in: query
+        required: false
+        schema:
+          type: string
+          enum:
+            - created_at
+            - -created_at
+            - updated_at
+            - -updated_at
+        description: Value to sort by. Defaults to ascending; prepend with `-` to sort descending. Valid values are `created_at`, `updated_at`
+      - name: guids
+        in: query
+        required: false
+        schema:
+          type: array
+          items:
+            type: string
+        description: Comma-delimited list of security group guids to filter by
+      - name: names
+        in: query
+        required: false
+        schema:
+          type: array
+          items:
+            type: string
+        description: Comma-delimited list of security group names to filter by (case-sensitive)
     responses:
       '200':
         description: OK
@@ -782,6 +1048,62 @@
           application/json:
             schema:
               $ref: ../components/schemas/SecurityGroupList.yaml
+            examples:
+              default:
+                summary: default
+                value:
+                  pagination:
+                    total_results: 1
+                    total_pages: 1
+                    first:
+                      href: https://api.example.org/v3/spaces/c5048979-53b9-4d2a-9fca-78e6bc07c041/staging_security_groups?page=1&per_page=50
+                    last:
+                      href: https://api.example.org/v3/spaces/c5048979-53b9-4d2a-9fca-78e6bc07c041/staging_security_groups?page=1&per_page=50
+                    next: 
+                    previous: 
+                  resources:
+                  - guid: b85a788e-671f-4549-814d-e34cdb2f539a
+                    created_at: '2020-02-20T17:42:08Z'
+                    updated_at: '2020-02-20T17:42:08Z'
+                    name: my-group0
+                    globally_enabled:
+                      running: false
+                      staging: true
+                    rules:
+                    - protocol: tcp
+                      destination: 10.10.10.0/24
+                      ports: '443,80,8080'
+                    - protocol: icmp
+                      destination: 10.10.10.0/24
+                      type: 8
+                      code: 0
+                      description: Allow ping requests to private services
+                    relationships:
+                      staging_spaces:
+                        data:
+                        - guid: c5048979-53b9-4d2a-9fca-78e6bc07c041
+                        - guid: 885735b5-aea4-4cf5-8e44-961af0e41920
+                      running_spaces:
+                        data: []
+                    links:
+                      self:
+                        href: https://api.example.org/v3/security_groups/b85a788e-671f-4549-814d-e34cdb2f539a
+                  - guid: a89a788e-671f-4549-814d-e34c1b2f533a
+                    created_at: '2020-02-20T17:42:08Z'
+                    updated_at: '2020-02-20T17:42:08Z'
+                    name: my-group1
+                    globally_enabled:
+                      running: true
+                      staging: true
+                    rules: []
+                    relationships:
+                      staging_spaces:
+                        data: []
+                      running_spaces:
+                        data: []
+                    links:
+                      self:
+                        href: https://api.example.org/v3/security_groups/a89a788e-671f-4549-814d-e34c1b2f533a
       '401':
         $ref: ../components/responses/Unauthorized.yaml
       '403':
@@ -791,12 +1113,63 @@
 /v3/spaces/{guid}/users:
   get:
     summary: List users for a space
-    description: Retrieve all users with a role in the specified space.
+    description: |-
+      Retrieve all users with a role in the specified space.
+
+      **Permitted roles:** Admin, Admin Read-Only, Global Auditor, Org Manager, Space Auditor, Space Developer, Space Manager, Space Supporter
     operationId: listUsersForSpace
     tags:
       - Spaces
     parameters:
       - $ref: ../components/parameters/Guid.yaml
+      - $ref: ../components/parameters/Page.yaml
+      - $ref: ../components/parameters/PerPage.yaml
+      - name: order_by
+        in: query
+        required: false
+        schema:
+          type: string
+          enum:
+            - created_at
+            - -created_at
+            - updated_at
+            - -updated_at
+        description: Value to sort by. Defaults to ascending; prepend with `-` to sort descending. Valid values are `created_at` and `updated_at`
+      - $ref: ../components/parameters/CreatedAts.yaml
+      - $ref: ../components/parameters/UpdatedAts.yaml
+      - $ref: ../components/parameters/LabelSelector.yaml
+      - name: guids
+        in: query
+        required: false
+        schema:
+          type: array
+          items:
+            type: string
+        description: Comma-delimited list of user guids to filter by
+      - name: usernames
+        in: query
+        required: false
+        schema:
+          type: array
+          items:
+            type: string
+        description: Comma-delimited list of usernames to filter by. Mutually exclusive with **partial_usernames**
+      - name: partial_usernames
+        in: query
+        required: false
+        schema:
+          type: array
+          items:
+            type: string
+        description: Comma-delimited list of strings to search by. When using this query parameter, all the users that contain the string provided in their username will be returned. Mutually exclusive with **usernames**
+      - name: origins
+        in: query
+        required: false
+        schema:
+          type: array
+          items:
+            type: string
+        description: Comma-delimited list of user origins (user stores) to filter by, for example, users authenticated by UAA have the origin "uaa"; users authenticated by an LDAP provider have the origin "ldap"; when filtering by origins, usernames must be included
     responses:
       '200':
         description: OK
@@ -804,6 +1177,32 @@
           application/json:
             schema:
               $ref: ../components/schemas/UserList.yaml
+            examples:
+              default:
+                summary: default
+                value:
+                  pagination:
+                    total_results: 1
+                    total_pages: 1
+                    first:
+                      href: https://api.example.org/v3/spaces/885735b5-aea4-4cf5-8e44-961af0e41920/users?page=1&per_page=50
+                    last:
+                      href: https://api.example.org/v3/spaces/885735b5-aea4-4cf5-8e44-961af0e41920/users?page=1&per_page=50
+                    next: null
+                    previous: null
+                  resources:
+                    - guid: 3a5d3d89-3f89-4f05-8188-8a2b298c79d5
+                      created_at: '2019-03-08T01:06:19Z'
+                      updated_at: '2019-03-08T01:06:19Z'
+                      username: some-name
+                      presentation_name: some-name
+                      origin: uaa
+                      metadata:
+                        labels: {}
+                        annotations: {}
+                      links:
+                        self:
+                          href: https://api.example.org/v3/users/3a5d3d89-3f89-4f05-8188-8a2b298c79d5
       '401':
         $ref: ../components/responses/Unauthorized.yaml
       '403':

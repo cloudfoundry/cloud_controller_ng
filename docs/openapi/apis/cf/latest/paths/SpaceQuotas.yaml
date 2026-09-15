@@ -1,14 +1,29 @@
 /v3/space_quotas:
   get:
     summary: List space quotas
-    description: This endpoint lists all space quota resources that the user has permission to view.
+    description: |-
+      This endpoint lists all space quota resources that the user has permission to view (see [getting a space quota](#get-a-space-quota)).
+
+      **Permitted roles:** All Roles
+
+      > **Note:** Space quotas in the response will not show any space guids that a user would not otherwise be able to see (see [space view permissions](#get-a-space)).
     operationId: listSpaceQuotas
     tags:
       - Space Quotas
     parameters:
       - $ref: ../components/parameters/Page.yaml
       - $ref: ../components/parameters/PerPage.yaml
-      - $ref: ../components/parameters/OrderBy.yaml
+      - name: order_by
+        in: query
+        required: false
+        schema:
+          type: string
+          enum:
+            - created_at
+            - -created_at
+            - updated_at
+            - -updated_at
+        description: Value to sort by. Defaults to ascending; prepend with `-` to sort descending. Valid values are `created_at`, `updated_at`
       - name: guids
         in: query
         schema:
@@ -22,7 +37,7 @@
           type: array
           items:
             type: string
-        description: Comma-delimited list of space quota names to filter by
+        description: Comma-delimited list of space quota names to filter by (case-sensitive)
       - name: organization_guids
         in: query
         schema:
@@ -60,7 +75,7 @@
                     next: null
                     previous: null
                   resources:
-                    - guid: 123e4567-e89b-12d3-a456-426614174000
+                    - guid: f919ef8a-e333-472a-8172-baaf2c30d301
                       created_at: '2016-05-04T17:00:41Z'
                       updated_at: '2016-05-04T17:00:41Z'
                       name: don-quixote
@@ -78,18 +93,18 @@
                         total_routes: 8
                         total_reserved_ports: 20
                       relationships:
-                        organizations:
+                        organization:
                           data:
-                            guid: 123e4567-e89b-12d3-a456-426614174000
+                            guid: 9b370018-c38e-44c9-86d6-155c76801104
                         spaces:
                           data:
-                            - guid: 123e4567-e89b-12d3-a456-426614174000
+                            - guid: 45bb0018-c38e-44c9-86d6-155c76803600
                       links:
                         self:
                           href: https://api.example.org/v3/space_quotas/f919ef8a-e333-472a-8172-baaf2c30d301
                         organization:
                           href: https://api.example.org/v3/organizations/9b370018-c38e-44c9-86d6-155c76801104
-                    - guid: 123e4567-e89b-12d3-a456-426614174000
+                    - guid: 554bcf32-7032-4cb0-92bc-738f9d2089d3
                       created_at: '2017-05-04T17:00:41Z'
                       updated_at: '2017-05-04T17:00:41Z'
                       name: sancho-panza
@@ -107,9 +122,9 @@
                         total_routes: 8
                         total_reserved_ports: 4
                       relationships:
-                        organizations:
+                        organization:
                           data:
-                            guid: 123e4567-e89b-12d3-a456-426614174000
+                            guid: 9b370018-c38e-44c9-86d6-155c76801104
                         spaces:
                           data: []
                       links:
@@ -135,7 +150,10 @@
         $ref: ../components/responses/ServiceUnavailable.yaml
   post:
     summary: Create a space quota
-    description: This endpoint creates a new space quota scoped to a specific organization.
+    description: |-
+      This endpoint creates a new space quota scoped to a specific organization.
+
+      **Permitted roles:** Admin, Org Manager *(Org managers can create space quotas in their managed organizations)*
     operationId: createSpaceQuota
     tags:
       - Space Quotas
@@ -152,7 +170,7 @@
               default:
                 summary: default
                 value:
-                  guid: 123e4567-e89b-12d3-a456-426614174000
+                  guid: f919ef8a-e333-472a-8172-baaf2c30d301
                   created_at: '2016-05-04T17:00:41Z'
                   updated_at: '2016-05-04T17:00:41Z'
                   name: don-quixote
@@ -172,10 +190,10 @@
                   relationships:
                     organization:
                       data:
-                        guid: 123e4567-e89b-12d3-a456-426614174000
+                        guid: 9b370018-c38e-44c9-86d6-155c76801104
                     spaces:
                       data:
-                        - guid: 123e4567-e89b-12d3-a456-426614174000
+                        - guid: 45bb0018-c38e-44c9-86d6-155c76803600
                   links:
                     self:
                       href: https://api.example.org/v3/space_quotas/f919ef8a-e333-472a-8172-baaf2c30d301
@@ -204,7 +222,12 @@
 /v3/space_quotas/{guid}:
   get:
     summary: Get a space quota
-    description: Get a space quota
+    description: |-
+      This endpoint gets an individual space quota resource.
+
+      **Permitted roles:** Admin, Admin Read-Only, Global Auditor, Org Manager *(Can only query space quotas owned by affiliated organizations)*, Space Auditor *(Can only query space quotas applied to affiliated spaces)*, Space Developer *(Can only query space quotas applied to affiliated spaces)*, Space Manager *(Can only query space quotas applied to affiliated spaces)*, Space Supporter *(Can only query space quotas applied to affiliated spaces)*
+
+      > **Note:** Response will not show any space guids that a user would not otherwise be able to see (see [space view permissions](#get-a-space)).
     operationId: getSpaceQuota
     tags:
       - Space Quotas
@@ -221,7 +244,7 @@
               default:
                 summary: default
                 value:
-                  guid: 123e4567-e89b-12d3-a456-426614174000
+                  guid: f919ef8a-e333-472a-8172-baaf2c30d301
                   created_at: '2016-05-04T17:00:41Z'
                   updated_at: '2016-05-04T17:00:41Z'
                   name: don-quixote
@@ -241,10 +264,10 @@
                   relationships:
                     organization:
                       data:
-                        guid: 123e4567-e89b-12d3-a456-426614174000
+                        guid: 9b370018-c38e-44c9-86d6-155c76801104
                     spaces:
                       data:
-                        - guid: 123e4567-e89b-12d3-a456-426614174000
+                        - guid: 45bb0018-c38e-44c9-86d6-155c76803600
                   links:
                     self:
                       href: https://api.example.org/v3/space_quotas/f919ef8a-e333-472a-8172-baaf2c30d301
@@ -264,7 +287,10 @@
         $ref: ../components/responses/NotFound.yaml
   patch:
     summary: Update a space quota
-    description: This endpoint will only update the parameters specified in the request body. Any unspecified parameters will retain their existing values.
+    description: |-
+      This endpoint will only update the parameters specified in the request body. Any unspecified parameters will retain their existing values.
+
+      **Permitted roles:** Admin, Org Manager *(Can update space quotas in the organization where they have this role)*
     operationId: updateSpaceQuota
     tags:
       - Space Quotas
@@ -283,7 +309,7 @@
               default:
                 summary: default
                 value:
-                  guid: 123e4567-e89b-12d3-a456-426614174000
+                  guid: f919ef8a-e333-472a-8172-baaf2c30d301
                   created_at: '2016-05-04T17:00:41Z'
                   updated_at: '2016-05-04T17:00:41Z'
                   name: don-quixote
@@ -303,10 +329,10 @@
                   relationships:
                     organization:
                       data:
-                        guid: 123e4567-e89b-12d3-a456-426614174000
+                        guid: 9b370018-c38e-44c9-86d6-155c76801104
                     spaces:
                       data:
-                        - guid: 123e4567-e89b-12d3-a456-426614174000
+                        - guid: 45bb0018-c38e-44c9-86d6-155c76803600
                   links:
                     self:
                       href: https://api.example.org/v3/space_quotas/f919ef8a-e333-472a-8172-baaf2c30d301
@@ -336,7 +362,10 @@
         $ref: ../components/responses/ServiceUnavailable.yaml
   delete:
     summary: Delete a space quota
-    description: Space quotas cannot be deleted when applied to any spaces.
+    description: |-
+      Space quotas cannot be deleted when applied to any spaces.
+
+      **Permitted roles:** Admin, Org Manager *(Can delete space quotas within their managed organizations)*
     operationId: deleteSpaceQuota
     tags:
       - Space Quotas
@@ -367,7 +396,9 @@
     description: |-
       This endpoint applies a space quota to one or more spaces.
 
-      Only an admin or an org manager in the quota’s parent organization can apply a space quota to a space.
+      Only an admin or an org manager in the quota's parent organization can apply a space quota to a space.
+
+      **Permitted roles:** Admin, Org Manager *(Can apply space quotas to spaces within their managed organizations)*
     operationId: applySpaceQuota
     tags:
       - Space Quotas
@@ -378,18 +409,28 @@
         schema:
           type: string
           format: uuid
+        description: The unique identifier for the space quota
     requestBody:
+      required: true
       content:
         application/json:
           schema:
-            $ref: ../components/schemas/RelationshipToMany.yaml
+            type: object
+            required:
+              - data
+            properties:
+              data:
+                type: array
+                description: Space guids that the quota will apply to
+                items:
+                  $ref: ../components/schemas/Relationship.yaml
           examples:
             default:
               summary: default
               value:
                 data:
-                  - guid: 123e4567-e89b-12d3-a456-426614174000
-                  - guid: 123e4567-e89b-12d3-a456-426614174000
+                  - guid: 885735b5-aea4-4cf5-8e44-961af0e41920
+                  - guid: 2f35885d-0c9d-4423-83ad-fd05066f8576
     responses:
       '200':
         description: OK
@@ -402,12 +443,12 @@
                 summary: default
                 value:
                   data:
-                    - guid: 123e4567-e89b-12d3-a456-426614174000
-                    - guid: 123e4567-e89b-12d3-a456-426614174000
-                    - guid: 123e4567-e89b-12d3-a456-426614174000
+                    - guid: 885735b5-aea4-4cf5-8e44-961af0e41920
+                    - guid: 2f35885d-0c9d-4423-83ad-fd05066f8576
+                    - guid: 45bb0018-c38e-44c9-86d6-155c76803600
                   links:
                     self:
-                      href: https://api.example.org/v3/space_quotas/quota-guid/relationships/spaces
+                      href: https://api.example.org/v3/space_quotas/f919ef8a-e333-472a-8172-baaf2c30d301/relationships/spaces
       '401':
         $ref: ../components/responses/Unauthorized.yaml
       '403':
@@ -422,47 +463,27 @@
     description: |-
       This endpoint removes a space quota from a space.
 
-      Only an admin or an org manager in the quota’s parent organization can remove a space quota from a space.
+      Only an admin or an org manager in the quota's parent organization can remove a space quota from a space.
+
+      **Permitted roles:** Admin, Org Manager *(Can remove space quotas from spaces within their managed organizations)*
     operationId: removeSpaceQuotaFromSpace
     tags:
       - Space Quotas
     parameters:
-      - $ref: ../components/parameters/Guid.yaml
+      - name: guid
+        in: path
+        required: true
+        schema:
+          type: string
+          format: uuid
+        description: The unique identifier for the space quota
       - name: space_guid
         in: path
         required: true
         schema:
           type: string
           format: uuid
-    responses:
-      '204':
-        description: No Content
-      '401':
-        $ref: ../components/responses/Unauthorized.yaml
-      '403':
-        $ref: ../components/responses/Forbidden.yaml
-      '404':
-        $ref: ../components/responses/NotFound.yaml
-      '422':
-        $ref: ../components/responses/UnprocessableEntity.yaml
-/v3/space_quotas/{guid}/relationships/spaces/{space_guid}/:
-  delete:
-    summary: Remove a space quota from a space (with trailing slash)
-    description: |-
-      This endpoint removes a space quota from a space.
-
-      Only an admin or an org manager in the quota’s parent organization can remove a space quota from a space.
-    operationId: removeSpaceQuotaFromSpaceWithSlash
-    tags:
-      - Space Quotas
-    parameters:
-      - $ref: ../components/parameters/Guid.yaml
-      - name: space_guid
-        in: path
-        required: true
-        schema:
-          type: string
-          format: uuid
+        description: The unique identifier for the space the quota will be removed from
     responses:
       '204':
         description: No Content

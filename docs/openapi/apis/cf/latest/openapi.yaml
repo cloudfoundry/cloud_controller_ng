@@ -1,7 +1,2080 @@
 openapi: 3.1.0
 info:
   title: Cloud Foundry V3 API
-  description: "# Welcome to the Experimental Cloud Foundry V3 API Docs! \n\n# Expermiental Warning\n This OpenAPI specification is a experiment and not ready for productive use.\n# Getting help\nThe CAPI team can most easily be reached on our Slack channel for questions and issues regarding the API. To report an issue with the docs or API, please feel free to file a GitHub issue on our API repo, cloud_controller_ng.\nWe recommend reaching out to Slack first as we will be most responsive there.\n    \n# More resources\n- The Cloud Foundry V2 API is still deprecated but still available for interacting with Cloud Foundry.\n- Running Tasks\n- V3 API Documentation OpenAPI Spec Source Code. "
+  description: |-
+    > **Note:** This OpenAPI specification is experimental and is not yet ready for production use.
+
+    # Introduction
+
+    ## Overview
+
+    Welcome to the Cloud Foundry V3 API docs! Version 3 adds support for several
+    key features:
+
+    * Running one-off tasks on Cloud Foundry
+    * Applications consisting of several processes via a Procfile
+    * Direct access to application packages and droplets
+    * Changing application source code without stopping the app via deployments
+
+    ## Getting help
+    The CAPI team can most easily be reached on our [Slack channel](https://cloudfoundry.slack.com/archives/C07C04W4Q) for
+    questions and issues regarding the API. To report an issue with the docs or API, please feel free to file a GitHub
+    issue on our API repo, [cloud_controller_ng](https://github.com/cloudfoundry/cloud_controller_ng).
+
+    We recommend reaching out to Slack first as we will be most responsive there.
+
+    ## More resources
+
+    * The [Cloud Foundry V2 API](http://v2-apidocs.cloudfoundry.org/) is still available for interacting with Cloud Foundry.
+    * [Running Tasks](https://docs.cloudfoundry.org/devguide/using-tasks.html)
+    * [V3 API Documentation Source Code](https://github.com/cloudfoundry/cloud_controller_ng/tree/main/docs/v3)
+
+    # Concepts
+
+    ## API Resource
+
+    A resource represents an individual object within the system, such as an app or a service. It is represented as a JSON object.
+
+    A resource consists of several required resource fields and other attributes specific to the resource.
+
+    See [Resources](#resources) and [Experimental Resources](#experimental-resources) for specific resources.
+
+    ### Required fields
+    **Example Person Resource**
+
+    ```json
+    {
+      "guid": "fd35633f-5c5c-4e4e-a5a9-0722c970a9d2",
+      "created_at": "2016-03-18T23:26:46Z",
+      "updated_at": "2016-10-17T20:00:42Z",
+
+      "name": "Bob",
+
+      "links": {
+        "self": {
+          "href": "https://api.example.org/v3/people/fd35633f-5c5c-4e4e-a5a9-0722c970a9d2"
+        }
+      }
+    }
+    ```
+
+    Name | Type | Description
+    ---- | ---- | -----------
+    **guid** | _uuid_ | The unique identifier for the resource
+    **created_at** | _[timestamp](#timestamps)_ | The ISO8601 compatible date and time when resource was created
+    **updated_at** | _[timestamp](#timestamps)_ | The ISO8601 compatible date and time when resource was last updated
+    **links** | [_links object_](#links) | URLs to related resources and actions for the current resource
+
+    ### Links
+
+    Links provide URLs to [relationships](#relationships) and actions for a resource. Links are represented as a JSON object and always contain a `self` link.
+
+    Each link is keyed by its type and will include a `href` for the URL and an optional `method` for links that cannot be followed using `GET`.
+
+    #### The link object
+
+    **Example Link object**
+
+    ```json
+    {
+      "href": "http://example.com/some/endpoint",
+      "method": "POST"
+    }
+    ```
+
+    Name | Type | Description
+    ---- | ---- | -----------
+    **href** | _string_ | The absolute URL
+    **method** | _string_ | An optional field containing the HTTP method to be used when following the URL
+
+    ## Authentication
+    The Cloud Foundry V3 API is secured using OAuth 2. Clients are expected to present a valid bearer token via HTTP header: `Authorization: bearer <token>`
+
+    Tokens can be obtained from the Cloud Foundry UAA server. For more information, see the [UAA API Documentation](http://docs.cloudfoundry.org/api/uaa/index.html)
+
+    > **Note:** Use the CF CLI to obtain a bearer token: `cf oauth-token`
+
+    ## Authorization
+
+    Access to resources is determined by combining scopes in the OAuth 2 token with user roles that are managed by the API.
+
+    #### OAuth 2 scopes
+
+    Scope | Description
+    ---------- | -------
+    `cloud_controller.admin` | This scope provides read and write access to all resources
+    `cloud_controller.admin_read_only` | This scope provides read only access to all resources
+    `cloud_controller.global_auditor` | This scope provides read only access to all resources except secrets (such as environment variables)
+    `cloud_controller.read` | This scope provides read access to resources based on user roles
+    `cloud_controller.write` | This scope provides write access to resources based on user roles
+    `cloud_controller.update_build_state` | This scope allows its bearer to update the state of a build; currently only used when [updating builds](#update-a-build)
+    `cloud_controller_service_permissions.read` | This scope provides read only access for [service instance permissions](#get-permissions-for-a-service-instance)
+
+    #### Cloud Foundry user roles
+
+    Users that interact with the API should have one or more of these roles. Some of them (e.g. admin)
+    are controlled via scopes on the user's token. Others (e.g. space developer) are controlled via the
+    [roles resource](#roles).
+
+    Role | Description
+    ---------------------------------------------------- | -------
+    Admin               | Allows a user to manage the platform; OAuth token must contain `cloud_controller.admin` scope
+    Admin Read-Only     | Allows a user to read all resources on the platform; OAuth token must contain `cloud_controller.admin_read_only` scope
+    Global Auditor      | Allows a user to read all resources on the platform, excluding sensitive data such as environment variables and service bindings. OAuth token must contain `cloud_controller.global_auditor` scope
+    Org User            | Allows a user to be assigned other roles within an organization and its spaces
+    Org Manager         | Provides organization management access
+    Org Auditor         | Provides read-only access to an organization for auditing purposes
+    Org Billing Manager | Allows a user to create and manage billing account and payment information
+    Space Developer     | Allows developers to create and manage apps and services in a space
+    Space Manager       | Provides space management access
+    Space Auditor       | Provides read-only access to a space for auditing purposes
+    Space Supporter     | Troubleshoot and debug apps and service bindings in a space
+
+    #### Component roles
+
+    Components that interact with the Cloud Controller in the back-end can be given these roles to allow
+    limited access to API resources. These roles are controlled via scopes on the component's token.
+
+    Role | Description
+    ---- | -----------
+    Build State Updater | Allows a component to update the state of build resources; OAuth token must contain `cloud_controller.update_build_state` scope
+
+    ## Embed
+
+    The experimental `embed` parameter allows clients to fetch resources and include information of related pseudo-resources directly in the response. This is different from the [`include`](#include) parameter, which is used for fetching parent resources.
+
+    **Important:** The `embed` feature is specifically designed for pseudo-resources that, by design, do not have their own list endpoint. These are resources that are tightly coupled to their parent resource and only make sense in the context of that parent. While they may have a GET endpoint to retrieve them individually for a specific parent, they cannot be listed independently across all parents.
+
+    For example, `process_instances` is a pseudo-resource that provides a lightweight view of process instance states. It can be embedded into process resources to avoid making additional API calls, but you cannot list all process instances across all processes in the system.
+
+    Developers may choose to use the `embed` feature to reduce the number of API calls. The embed query param can be used with a single resource or a list of resources.
+
+    ### Resources with embed
+
+    The following resources can take an `embed` parameter:
+
+    Resource | Allowed values
+    -------- | --------------
+    **processes** | `process_instances`
+    **processes/[:guid]** | `process_instances`
+    **apps/[:guid]/processes** | `process_instances`
+    **apps/[:guid]/processes/[:type]** | `process_instances`
+
+    ## Errors
+
+    **Example Error**
+
+    ```json
+    {
+      "errors": [
+        {
+          "code": 10008,
+          "title": "CF-UnprocessableEntity",
+          "detail": "something went wrong"
+        }
+      ]
+    }
+    ```
+
+    An error response will always return a list of error objects. Errors appear on the [job resource](#jobs) for asynchronous operations.
+
+    ### The error object
+
+    Clients should use the `code` and `title` fields for programmatically handling specific errors.
+    The message in the `detail` field is subject to change over time.
+
+    Name | Type | Description
+    ---- | ---- | -----------
+    **code** | _integer_ | A numeric code for this error
+    **title** | _string_ | Name of the error
+    **detail** | _string_ | Detailed description of the error
+
+    ### Common errors
+
+    These are some of the more common errors returned by many endpoints.
+
+    Title | Code | HTTP Status | Description
+    ----- | ---- | ----------- | -----------
+    `CF-BadQueryParameter` | 10005 | 400 | An invalid query parameter was given
+    `CF-InvalidAuthToken` | 1000 | 401 | An invalid auth token was given
+    `CF-NotAuthenticated` | 10002 | 401 | No auth token was given, but authentication is required for this endpoint
+    `CF-NotAuthorized` | 10003 | 403 | The authenticated user does not have permission to perform this operation
+    `CF-ResourceNotFound` | 10010 | 404 | The specified resource does not exist, or the authenticated user cannot read it
+    `CF-UnprocessableEntity` | 10008 | 422 | Catch-all error when an operation fails to complete; the `detail` field will contain more information
+    `CF-UaaRateLimited` | 20008 | 429 | Too many requests were made to the UAA instance. The request can be retried after the period stated in the `Retry-After` header
+    `UnknownError` | 10001 | 500 | An unexpected, uncaught error occurred; the CC logs will contain more information
+
+    ## Fields
+
+    The `fields` parameter allows clients to fetch resources and include information of parent objects
+    in the response.  It works in a similar way to [include](#include), but the response only displays
+    the requested fields rather than the entire resource.
+
+    For example, a response to `/v3/service_instances/:guid?fields[space.organization]=name` will contain detailed
+    information about the service instance, as well as the name of the organization it belongs to.
+
+    Developers may choose to use the `fields` feature to reduce the number of API calls. The fields
+    query param can be used with a single resource or a list of resources.
+
+    The fields query parameter may also grant visibility to parts of resources where the whole resource is not visible.
+    For instance, the name of an organization may be retrieved with fields, where the whole organization resource may
+    not be visible.
+
+    ### Fields parameter
+    The fields parameter is structured as: `fields[resource]=keys&fields[parent.resource]=other,keys`
+
+    - `resource` is the name of the resource being requested, qualified by the relationship to the current resource.
+    For example `/v3/service_instances?fields[space]=name` where `space` is a direct relationship of a service instance,
+    or `/v3/service_instances?fields[space.organization]=name` where `organization` is a relationship of `space`.
+    - `keys` is a comma-separated list of the fields in the object being requested. For example,
+    `/v3/service_instances?fields[space]=name,guid` will return just the `name` and `guid` of the space in the includes section.
+
+    For information on `fields` support for each resource refer to its documentation.
+
+    ### Resources with Fields
+
+    Resource |  Endpoint
+    -------- | --------------
+    **Service Instances** | [v3/service_instances](#list-service-instances), [v3/service_instances/:guid](/#get-a-service-instance)
+    **Shared Spaces** | [/v3/service_instances/:guid/relationships/shared_spaces](#list-shared-spaces-relationship)
+    **Service Offerings** | [v3/service_offerings](#list-service-offerings), [v3/service_offerings/:guid](/#get-a-service-offering)
+    **Service Plans** | [v3/service_plans](#list-service-plans), [v3/service_plans/:guid](/#get-a-service-plan)
+
+    ### Fields Sample requests
+
+    **Example request to service instances resource to include parent orgs and spaces**
+
+    ```shell
+    curl "https://api.example.org/v3/service_instances?fields[space]=name,guid,relationships.organization&fields[space.organization]=name,guid" \
+      -X GET \
+      -H "Authorization: bearer [token]"
+    ```
+
+    **Example response**
+
+    ```json
+    {
+       "pagination": {
+          "total_results": 2,
+           "...": "..."
+       },
+       "resources": [
+          {
+             "guid": "42ad8d5a-8124-4fc7-baf2-3f39bfe1c170",
+             "name": "service_instance_1",
+             "...": "..."
+          },
+          {
+             "guid": "b90f287b-fcdd-4cbb-9523-1a8dbd2a9837",
+             "name": "service_instance_2",
+             "...": "..."
+          }
+       ],
+       "included": {
+          "spaces": [
+             {
+                "guid": "134f95ad-b5eb-4b55-9ce0-b906c513d54b",
+                "name": "space1",
+                "relationships": {
+                   "organization": {
+                      "data": {
+                         "guid": "b2075a71-28b6-411a-a896-56f75d892f58"
+                      }
+                   }
+                }
+             },
+             {
+                "guid": "00b76d5c-5176-4cbc-be5d-0bd76363dca9",
+                "name": "space2",
+                "relationships": {
+                   "organization": {
+                      "data": {
+                         "guid": "b56fbd01-296b-442b-8faf-a559aebf985e"
+                      }
+                   }
+                }
+             }
+          ],
+          "organizations": [
+             {
+                "guid": "b2075a71-28b6-411a-a896-56f75d892f58",
+                "name": "org1"
+             },
+             {
+                "guid": "b56fbd01-296b-442b-8faf-a559aebf985e",
+                "name": "org2"
+             }
+          ]
+       }
+    }
+    ```
+
+    ## Filters
+
+    Endpoints which return lists of resources also support filtering the returned resources using query parameters. Each
+    resource's list endpoint documents the allowed filters for that endpoint. For details about the syntax of query parameters
+    in general, see [query parameters](#query-parameters).
+
+    #### Examples
+
+    ##### **Single value request**
+    `GET /v3/apps?names=the_name`
+
+    This will return all apps with name `the_name`.
+
+    ##### **Multiple value request**
+    `GET /v3/apps?names=first_name,second_name`
+
+    This will return all apps with name `the_name` OR `second_name`.
+
+    In the case of audit events, multiple timestamps can be requested, which will return all audit
+    events that occurred at those timestamps. In the following request, all audit events that occurred
+    New Year's just before midnight and July 4th at noon will be returned:
+
+    `GET /v3/audit_events?created_ats=2019-12-31T23:59:59Z,2020-07-04T12:00:00Z`
+
+    ###### **Exception**
+    The `label_selector` query parameter will act as AND function, not an OR.
+
+    `GET /v3/spaces?label_selector=production,east_coast`
+
+    This will return all spaces whose metadata has labels with keys `production` AND `east_coast`.
+
+    ##### **Combined filters**
+    `GET /v3/apps?names=the_name&stacks=cflinuxfs4`
+
+    This will return all apps with name `the_name` AND stack `cflinuxfs4`.
+
+    ##### **Empty filters**
+
+    An empty filter (`/v3/resources?fields=`) can mean either empty string (`""`) or `NULL`, depending on the resource type.
+
+    `GET /v3/buildpacks?stacks=`
+
+    This will return all buildpacks with stack `NULL`.
+
+    `GET /v3/routes?hosts=hostname1,,hostname2`
+
+    This will return all routes with hostname `"hostname1"`, `""` OR `"hostname2"`.
+
+    #### Relational Operators
+
+    Some fields (e.g. `created_at` and `updated_at`) can be filtered using relational operators when listing resources.
+
+    For example, a response to `GET /v3/audit_events?created_ats[lt]=2020-06-30T12:34:56Z` will contain
+    audit events with a `created_at` timestamp strictly earlier than `2020-06-30T12:34:56Z`.
+
+    Multiple relational operators can be combined to further refine the listed resources. For example, a
+    response to `GET /v3/audit_events?created_ats[lt]=2020-01-02T00:00:00Z&created_ats[gt]=2019-12-31T23:59:59Z`
+    will return all audit events occurring on New Year's Day.
+
+    Timestamps must be in [standard timestamp format](#timestamps).
+
+    ##### Valid relational operators
+
+    **Operator** | **Description**
+    -------------|-----------------
+    **lt**       | Return resources strictly less than the given value for the filtered attribute
+    **lte**      | Return resources less than or equal to the given value for the filtered attribute
+    **gt**       | Return resources strictly greater than the given value for the filtered attribute
+    **gte**      | Return resources greater than or equal to the given value for the filtered attribute
+
+    #### Exclusion Operator
+
+    Some fields support filtering on all values except a given set of values.
+
+    For example, a response to `GET /v3/audit_events?target_guids[not]=guid-1,guid-2`
+    will contain audit events with a `target.guid` not equal to `guid-1` nor `guid-2`.
+
+    **Operator** | **Description**
+    -------------|-----------------
+    **not**      | Return resources not equal to the given value(s) for the filtered attribute
+
+    ## Include
+
+    The `include` parameter allows clients to fetch resources and include information of parent objects in the response.
+    For example, a response to `/v3/spaces/:guid?include=organization` will contain detailed information about the space and its parent organization.
+
+    Developers may choose to use the `include` feature to reduce the number of API calls. The include
+    query param can be used with a single resource or a list of resources.
+
+    ### Resources with includes
+
+    The following resources can take an `include` parameter:
+
+    Resource | Allowed values
+    -------- | --------------
+    **apps** | `space.organization`, `space`
+    **apps/[:guid]** | `space.organization`, `space`
+    **roles** | `user`, `space`, `organization`
+    **roles/[:guid]** | `user`, `space`, `organization`
+    **routes** | `domain`, `space.organization`, `space`
+    **routes/[:guid]** | `domain`, `space.organization`, `space`
+    **service_plans** | `space.organization`, `service_offering`
+    **service_plans/[:guid]** | `space.organization`, `service_offering`
+    **service_credential_bindings** | `app`, `service_instance`
+    **service_credential_bindings/[:guid]** | `app`, `service_instance`
+    **service_route_bindings** | `route`, `service_instance`
+    **service_route_bindings/[:guid]** | `route`, `service_instance`
+    **spaces** | `organization`
+    **spaces/[:guid]** | `organization`
+
+    ### Sample requests
+
+    **Example request to apps resource to include parent orgs and spaces**
+
+    ```shell
+    curl "https://api.example.org/v3/apps?include=space.organization" \
+      -X GET \
+      -H "Authorization: bearer [token]"
+    ```
+
+    **Example response**
+
+    ```json
+    {
+       "pagination": {
+         "total_results": 2,
+         "...": "..."
+       },
+       "resources": [
+          {
+             "guid": "42ad8d5a-8124-4fc7-baf2-3f39bfe1c170",
+             "name": "app1",
+             "...": "..."
+          },
+          {
+             "guid": "b90f287b-fcdd-4cbb-9523-1a8dbd2a9837",
+             "name": "app2",
+             "...": "..."
+          }
+       ],
+       "included": {
+          "spaces": [
+             {
+                "guid": "134f95ad-b5eb-4b55-9ce0-b906c513d54b",
+                "name": "space1",
+                "...": "..."
+             },
+             {
+                "guid": "00b76d5c-5176-4cbc-be5d-0bd76363dca9",
+                "name": "space2",
+                "...": "..."
+             }
+          ],
+          "organizations": [
+             {
+                "guid": "b2075a71-28b6-411a-a896-56f75d892f58",
+                "name": "org1",
+                "...": "..."
+             },
+             {
+                "guid": "b56fbd01-296b-442b-8faf-a559aebf985e",
+                "name": "org2",
+                "...": "..."
+             }
+          ]
+       }
+    }
+    ```
+
+    **Example request for a single app instance to include its parent space**
+
+    ```shell
+    curl "https://api.example.org/v3/apps/[guid]?include=space" \
+      -X GET \
+      -H "Authorization: bearer [token]"
+    ```
+
+    **Example response**
+
+    ```json
+    {
+       "guid": "b90f287b-fcdd-4cbb-9523-1a8dbd2a9837",
+       "name": "staticfile",
+       "...": "...",
+       "included": {
+          "spaces": [
+             {
+                "guid": "00b76d5c-5176-4cbc-be5d-0bd76363dca9",
+                "name": "space1a",
+                "...": "..."
+             }
+          ]
+       }
+    }
+    ```
+
+    ## Lifecycles
+
+    Lifecycles inform the platform of how to build droplets and run apps. For example, a `docker` lifecycle will
+    pull a Docker image from a registry to run an app.
+
+    #### The lifecycle object
+
+    Name | Type | Description
+    ---- | ---- | -----------
+    **type** | _string_ | Type of the lifecycle; valid values are `buildpack`, `cnb`, `docker`
+    **data** | _object_ | Data that is used during staging and running for a lifecycle
+
+    ### Buildpack lifecycle
+
+    **Example Buildpack Lifecycle**
+
+    ```json
+    {
+      "type": "buildpack",
+      "data": {
+        "buildpacks": ["java_buildpack"],
+        "stack": "cflinuxfs4"
+      }
+    }
+    ```
+
+    This is the default lifecycle for Cloud Foundry for VMs. When staging an app with this lifecycle, the app source code will be
+    compiled using a buildpack, resulting in a droplet.  When running an app with this lifecycle, a container running a rootfs
+    will be created and the droplet will be expanded inside that container to be executed.
+
+    If buildpacks are not specified, then Cloud Foundry will automatically detect a
+    compatible buildpack, based on the files in an app's package. If a stack is not
+    specified, then the app will default to the operator-configured default stack.
+
+    #### Buildpack lifecycle object
+
+    Name | Type | Description
+    ---- | ---- | -----------
+    **type** | _string_ | `buildpack`
+    **data.buildpacks** | _list of strings_ | A list of the names of buildpacks, URLs from which they may be downloaded, or `null` to auto-detect a suitable buildpack during staging
+    **data.stack** | _string_ | The root filesystem to use with the buildpack, for example `cflinuxfs4`
+
+    For records whose historical lifecycle data is no longer available,
+    **data.buildpacks** may be an empty list and **data.stack** may be `null`.
+
+    ### Cloud Native Buildpacks Lifecycle *(experimental)*
+
+    **Example Cloud Native Buildpacks lifecycle**
+
+    ```json
+    {
+      "type": "cnb",
+      "data": {
+            "buildpacks": [
+                "docker://example.org/java-buildpack:latest"
+                "docker://second-example.org/logging-buildpack:latest"
+            ],
+            "stack": "cflinuxfs4",
+            "credentials": {
+                "example.org": {
+                    "username": "user",
+                    "password": "****"
+                },
+                "second-example.org": {
+                    "token": "****"
+                },
+            }
+      }
+    }
+    ```
+
+    This lifecycle allows Cloud Foundry to stage an application using the [Cloud Native Buildpacks](https://buildpacks.io/).
+
+    **Note**: the **data.buildpacks** field is required (at least 1 buildpack must be set).
+
+    #### Cloud Native Buildpacks lifecycle object
+
+    Name | Type | Description
+    ---- | ---- | -----------
+    **type** | _string_ | `cnb`
+    **data.buildpacks** | _list of strings_ | A list of URLs with either `docker://` or `http(s)://` scheme, pointing to the Cloud Native Buildpack OCI image. <br/>When the scheme is `http(s)://`, an OCI tarball is expected to be present at the specified location.
+    **data.credentials** | _object_ | Credentials used to download the configured buildpacks. This can either contain username/password  or a token.
+    **data.stack** | _string_ | The root filesystem to use with the buildpack, for example `cflinuxfs4`
+
+    For records whose historical lifecycle data is no longer available,
+    **data.buildpacks** may be an empty list and **data.stack** may be `null`.
+
+    ### Docker lifecycle
+
+    **Example Docker Lifecycle**
+
+    ```json
+    {
+      "type": "docker",
+      "data": {}
+    }
+    ```
+
+    This allows Cloud Foundry to run pre-built Docker images. When staging an app with this lifecycle, the Docker registry is queried for
+    metadata about the image, such as ports and start command.  When running an app with this lifecycle, a container is created
+    and the Docker image is executed inside of it.
+
+    #### Docker lifecycle object
+
+    Name | Type | Description
+    ---- | ---- | -----------
+    **type** | _string_ | `docker`
+    **data** | _object_ | Data is not used by the Docker lifecycle; valid value is `{}`
+
+    ## Metadata
+
+    Metadata allows you to tag [API resources](#api-resource) with information that does not directly affect its functionality.
+
+    ### Annotations
+
+    **Example Resource with Annotations**
+
+    ```json
+    {
+      "guid": "fd35633f-5c5c-4e4e-a5a9-0722c970a9d2",
+      "created_at": "2016-03-18T23:26:46Z",
+      "updated_at": "2016-10-17T20:00:42Z",
+      "name": "api-server",
+      "metadata": {
+        "labels": {},
+        "annotations": {
+          "contacts": "Bill tel(1111111) email(bill@fixme), Bob tel(222222) pager(3333333#555) email(bob@fixme)"
+        }
+      },
+      "links": {
+        "self": {
+          "href": "https://api.example.org/v3/apps/fd35633f-5c5c-4e4e-a5a9-0722c970a9d2"
+        }
+      }
+    }
+    ```
+
+    Annotations are user-specified key-value pairs that are attached to [API resources](#api-resource). They do not affect the operation of Cloud Foundry. Annotations cannot be used in [filters](#filters).
+
+    When a service instance is being created, the service broker is sent the annotations of the service instance, and the space and organization in which the service instance resides.
+    When a service instance is being updated, the service broker is sent the annotations of the space and organization in which the service instance resides.
+    When a service binding is being created, the service broker is sent annotations of any associated app, and the space and organization in which the binding resides.
+    Only annotations with a prefix (e.g. `company.com/contacts`) are sent to service brokers.
+
+    Examples may include (but are not limited to):
+
+    - `"contact-info": "bob@example.com jane@example.com"`
+    - `"library-versions": "Spring: 5.1, Redis Client: a184098. yaml parser: 38"`
+    - `"git-sha": "d56fe0367554ae5e878e37ed6c5b9a82f5995512"`
+
+    #### Annotation keys
+
+    Annotation keys are made up of an (optional) prefix and name. If a prefix is present, it is separated from the name by a `/`.
+    Prefixes are DNS names intended to enable namespacing of annotation keys.
+
+    An annotation key `prefix` must adhere to the following restrictions:
+
+    * Length: 0-253 characters
+    * Allowed characters: a-z, A-Z, 0-9, `-`, and `.`; emojis cannot be used in keys
+    * DNS subdomain format (series of subdomain annotations separated by `.`)
+
+    An annotation key `name` must adhere to the following restrictions:
+
+    * Length: 1-63 characters
+    * Allowed characters: a-z, A-Z, 0-9, `-`, `_`, and `.`; emojis cannot be used in keys
+    * Must begin and end with an alphanumeric character
+
+    #### Annotation values
+
+    Annotation values must adhere to the following restrictions:
+
+    * Length: 0-5000 unicode characters
+
+    ### Labels and selectors
+
+    **Example Resource with Labels**
+
+    ```json
+    {
+      "guid": "fd35633f-5c5c-4e4e-a5a9-0722c970a9d2",
+      "created_at": "2016-03-18T23:26:46Z",
+      "updated_at": "2016-10-17T20:00:42Z",
+      "name": "api-server",
+      "metadata": {
+        "labels": {
+          "environment": "production",
+          "internet-facing": "false"
+        },
+        "annotations": {}
+      },
+      "links": {
+        "self": {
+          "href": "https://api.example.org/v3/apps/fd35633f-5c5c-4e4e-a5a9-0722c970a9d2"
+        }
+      }
+    }
+    ```
+
+    Labels are user-specified key/value pairs that are attached to [API Resources](#api-resource).
+    They are queryable, identifying attributes of a resource, but they do not affect the operation of CloudFoundry.
+
+    For example, an app may be assigned a label with key `sensitive` and possible values `true` or `false`.
+
+    Users could then find all sensitive apps with a selector for `sensitive=true`, resulting in a response containing
+    only apps having the label key `sensitive` with a label value of `true`.
+
+    #### Labels
+
+    Labels allow users to apply identifying attributes to resources that are meaningful to the user, but not the CloudFoundry system.
+
+    Examples may include (but are not limited to):
+
+    - `"production" : "true"` or `"production" : "false"`
+    - `"env" : "dev"` or `"env" : "test"` or `"env" : "prod"`
+    - `"chargeback-code" : "abc123"`
+
+    ##### Label keys
+
+    Label keys are made up of an (optional) prefix, and name. If a prefix is present, it is separated from the name by a `/`.
+    Prefixes are dns names intended to enable namespacing of label keys.
+
+    A label key `prefix` must adhere to the following restrictions:
+
+    * Length: 0-253 characters
+    * Allowed characters: alphanumeric ( \[a-z0-9A-Z\] ), `-`, and `.`
+    * DNS subdomain format (series of subdomain labels separated by `.`)
+
+    A label key `name` must adhere to the following restrictions:
+
+    * Length: 1-63 characters
+    * Allowed characters: alphanumeric ( \[a-z0-9A-Z\] ), `-`, `_`, and `.`
+    * Must begin and end with an alphanumeric character
+
+    ##### Label values
+
+    Label values must adhere to the following restrictions:
+
+    * Length: 0-63 characters
+    * Allowed characters: alphanumeric ( \[a-z0-9A-Z\] ), `-`, `_`, and `.`
+    * Must begin and end with an alphanumeric character
+    * Empty values are allowed
+
+    #### Selectors
+
+    **Example label selector**
+
+    ```bash
+    cf curl /v3/apps?label_selector=env=dev,%21chargeback-code,tier%20in%20%28backend,worker%29
+    ```
+
+    Selectors allow users to filter and group API resources by the labels applied to them. A selector consists of one or
+    more `requirements` in a comma-delimited list. The maximum number of `requirements` in a single selector is 50.
+
+    _eg:_ `env=dev,!chargeback-code,tier in (backend,worker)`
+
+    Selectors can be used to filter and group resources using the query parameter `label_selector` on list endpoints.
+
+    > **Note:** When included in a url, the selector must be appropriately escaped.
+
+    A requirement consists of a _key_, an `operator`, and optional _value(s)_.
+
+    Requirement | Format | Description
+    ----------- | ------ | -----------
+    existence     | _key_                                | Returns all resources that have been assigned a label with the given _key_ (with any _value_)
+    non-existence | `!`_key_                             | Returns all resources that have not been assigned a label with the given _key_ (with any _value_)
+    equality      | _key_`=`_value_ or _key_`==`_value_  | Returns all resources that have been assigned a label with the given _key_ and _value_
+    inequality    | _key_`!=`_value_                     | Returns all resources that either have not been assigned a label with the given _key_ or have a label with the given _key_ but a different _value_
+    set inclusion | _key_ `in` (_value1_,_value2_...)    | Returns all resources that have been assigned a label with the given _key_ with one of the specified _value(s)_
+    set exclusion | _key_ `notin` (_value1_,_value2_...) | Returns all resources that either have not been assigned a label with the given _key_ or have a label with the given _key_ but none of the specified _value(s)_
+
+    See [the metadata documentation](https://docs.cloudfoundry.org/adminguide/metadata.html#query) for more information.
+
+    ### Updating labels and annotations
+
+    **Example Initial Metadata**
+
+    ```json
+    {
+      "metadata": {
+        "labels": {
+          "environment": "staging",
+          "ready-to-deploy": "true"
+        },
+        "annotations": {
+           "spring-version": "5.1",
+           "app-version": "0.1-alpha"
+         }
+      }
+    }
+    ```
+
+    **Example Patch Request Body**
+
+    ```json
+    {
+      "metadata": {
+        "labels": {
+          "environment": "production",
+          "ready-to-deploy": null
+        },
+        "annotations": {
+           "app-version": "0.1",
+           "deployed-month": "november"
+         }
+      }
+    }
+    ```
+
+    **Example Final Metadata**
+
+    ```json
+    {
+      "metadata": {
+        "labels": {
+          "environment": "production"
+        },
+        "annotations": {
+           "spring-version": "5.1",
+           "app-version": "0.1",
+           "deployed-month": "november"
+         }
+      }
+    }
+    ```
+
+    Labels and annotations can be updated by using the PATCH endpoint for their resource.
+    For example, to update labels or annotations on an app, use the [update an app](#update-an-app) endpoint.
+    When patching metadata, CAPI endpoints do a deep merge, only updating labels or annotations that are specified in the request.
+
+    Labels and annotations follow the same rules for patching and must be wrapped in the metadata object inside the request body
+
+    * To create, include the new key with a value
+    * To change, include the existing key with a new value
+    * To delete, include the existing key with a `null` value
+    * To remain unchanged, do not include the existing key.
+
+    ## Pagination
+
+    **Example Paginated Response**
+
+    ```json
+    {
+      "pagination": {
+        "total_results": 3,
+        "total_pages": 3,
+        "first": {
+          "href": "https://api.example.org/v3/people?page=1&per_page=1"
+        },
+        "last": {
+          "href": "https://api.example.org/v3/people?page=3&per_page=1"
+        },
+        "next": {
+          "href": "https://api.example.org/v3/people?page=2&per_page=1"
+        },
+        "previous": null
+      },
+      "resources": [
+        {
+          "guid": "fd35633f-5c5c-4e4e-a5a9-0722c970a9d2",
+          "created_at": "2016-03-18T23:26:46Z",
+          "updated_at": "2016-10-17T20:00:42Z",
+          "name": "Bob",
+          "links": {
+            "self": {
+              "href": "https://api.example.org/v3/people/fd35633f-5c5c-4e4e-a5a9-0722c970a9d2"
+            }
+          }
+        }
+      ]
+    }
+    ```
+
+    Any request that can return multiple resources will be paginated and contain a `pagination` object and list of `resources`.
+    Requests for multiple resources can use `page`, `per_page`, and `order_by` in addition to filters specific to the endpoint.
+
+    #### The pagination object
+
+    Name | Type | Description
+    ---- | ---- | -----------
+    **total_results** | _integer_ | Total number of resources for all pages
+    **total_pages** | _integer_ | Total number of pages
+    **first** | [_link object_](#the-link-object) | Link to the first page
+    **last** | [_link object_](#the-link-object) | Link to the last page
+    **next** | [_link object_](#the-link-object) | Link to the next page
+    **previous** | [_link object_](#the-link-object) | Link to the previous page
+
+    ## Procfiles
+
+    **Example Ruby Procfile**
+
+    ```yaml
+    web: bundle exec rackup config.ru -p $PORT
+    rake: bundle exec rake
+    worker: bundle exec rake workers:start
+    ```
+
+    A Procfile enables you to declare required runtime processes, called process types, for your app.
+    Procfiles must be named `Procfile` exactly and placed in the root directory of your application.
+
+    In a Procfile, you declare one process type per line and use the syntax `PROCESS_TYPE: COMMAND`.
+
+    - `PROCESS_TYPE` defines the type of the process.
+    - `COMMAND` is the command line to launch the process.
+
+    #### Procfile use cases
+
+    Many buildpacks provide their own process types and commands by default; however, there are special
+    cases where specifying a custom `COMMAND` is necessary.  Commands can be overwritten by providing a
+    Procfile with the same process type.
+
+    For example, a buildpack may provide a `worker` process type that runs the `rake default:start`
+    command.  If a Procfile is provided that also contains a `worker` process type, but a different
+    command such as `rake custom:start`, the `rake custom:start` command will be used.
+
+    Some buildpacks, such as Python, that work on a variety of frameworks, do not attempt to provide a
+    default start command. For these cases, a Procfile should be used to specify any necessary commands
+    for the app.
+
+    #### Web process
+
+    `web` is a [special process type](#web-process-type) that is required for all applications.
+    The `web` `PROCESS_TYPE` must be specified by either the buildpack or the Procfile.
+
+    #### Specifying processes in manifest files
+
+    Custom process types can also be configured via a manifest file. Read more about
+    [manifests](#manifests). It is not recommended to specify processes in both a manifest and a
+    Procfile for the same app.
+
+    ## Query Parameters
+
+    Clients can assume that query parameters on the API will always follow these rules:
+
+    - Parameter names (before the `=`, and ignoring any modifiers like `[gt]`) will only contain characters `a-z` (lowercase) and `-`.
+    - When a parameter accepts multiple values, these will be represented as a comma-delimited list of strings (see [filters](#filters)).
+
+    Because commas are used to separate list entries, **parameter values that contain commas must be percent-encoded**. For example, to retrieve apps named either `a,b` or `c,d`, the query parameter would look like `names=a%2Cb,c%2Cd`. Note that the commas within the app names are encoded (as `%2C`), but the comma separating the two app names is not. The resulting query parameter must be encoded a second time before sending it to the API, e.g. `cf curl /v3/apps?names=a%252Cb,c%252Cd`.
+
+    ## Relationships
+
+    Relationships represent associations between resources. When relationships are mutable, they can be
+    used to create, read, update, and delete these associations. An app's relationship to its current
+    droplet is mutable, but an app's relationship to its space is not.
+
+    Relationships do not affect the fundamental properties of a resource, but may affect their behavior
+    and permissions logic. Relationships are tied to the lifecycles of the associated resources and
+    will be removed if either of the associated resources are deleted. For example, if a user is removed
+    from an organization, both the user and the organization persist, but the relationship between them
+    does not.
+
+    Not all resources implement every relationship operation demonstrated in the examples below. See the
+    docs for each resource to see how it interacts with its relationships.
+
+    Endpoints that return relationship data list this information under the `relationships` key.
+
+    #### The relationship object
+
+    The relationship object is a key-value pair that uniquely identifies a resource. In practice this is
+    almost always the `guid` of a resource.
+
+    Name | Type | Description
+    ---- | ---- | -----------
+    **guid** | _string_ | The unique identifier for the related resource
+
+    ### To-one relationships
+
+    **Example to-one relationship**
+
+    ```json
+    {
+      "data": {
+        "guid": "[related-resource-guid]"
+      }
+    }
+    ```
+
+    Some relationships relate a resource to exactly one other resource. For example an app can belong to
+    only one space.
+
+    #### To-one relationship object
+
+    Name | Type | Description
+    ---- | ---- | -----------
+    **data** | _[relationship object](#the-relationship-object)_ | A single relationship
+
+    **Setting the to-one relationship while creating an object**
+
+    ```shell
+    curl "https://api.example.org/v3/books" \
+      -X POST \
+      -H "Authorization: bearer [token]" \
+      -H "Content-type: application/json" \
+      -d '{
+        "color": "yellow",
+        "relationships": {
+          "publisher": {
+            "data": {
+              "guid": "publisher-guid"
+            }
+          }
+        }
+      }'
+    ```
+
+    **Modifying the to-one relationship**
+
+    ```shell
+    curl "https://api.example.org/v3/books/[guid]/relationships/publisher" \
+      -X PATCH \
+      -H "Authorization: bearer [token]" \
+      -H "Content-type: application/json" \
+      -d '{
+        "data": {
+          "guid": "publisher-guid"
+        }
+      }'
+    ```
+
+    **Removing the to-one relationship**
+
+    ```shell
+    curl "https://api.example.org/v3/books/[guid]/relationships/publisher" \
+      -X PATCH \
+      -H "Authorization: bearer [token]" \
+      -H "Content-type: application/json" \
+      -d '{ "data": null }'
+    ```
+
+    **Viewing the to-one relationship**
+
+    ```shell
+    curl "https://api.example.org/v3/books/[guid]/relationships/publisher" \
+      -X GET \
+      -H "Authorization: bearer [token]"
+    ```
+
+    ### To-many relationships
+
+    **Example to-many relationship**
+
+    ```json
+    {
+      "data": [
+        { "guid": "[related-resource-guid-1]" },
+        { "guid": "[related-resource-guid-2]" }
+      ]
+    }
+    ```
+
+    Some relationships relate a resource to several other resources. For example, an isolation segment can be entitled to multiple organizations.
+
+    #### To-many relationship object
+
+    Name | Type | Description
+    ---- | ---- | -----------
+    **data** | _array of [relationship objects](#the-relationship-object)_ | An array of multiple relationships
+
+    **Adding related to-many resources**
+
+    ```shell
+    curl "https://api.example.org/v3/books/[guid]/relationships/authors" \
+      -X POST \
+      -H "Authorization: bearer [token]" \
+      -H "Content-type: application/json" \
+      -d '{
+        "data": [
+          { "guid":"author-guid-1" },
+          { "guid":"author-guid-2" }
+        ]
+      }'
+    ```
+
+    **Replacing all to-many relationships**
+
+    ```shell
+    curl "https://api.example.org/v3/books/[guid]/relationships/authors" \
+      -X PATCH \
+      -H "Authorization: bearer [token]" \
+      -H "Content-type: application/json" \
+      -d '{
+        "data": [
+          { "guid":"author-guid-3" },
+          { "guid":"author-guid-4" }
+        ]
+      }'
+    ```
+
+    **Removing all to-many relationships**
+
+    ```shell
+    curl "https://api.example.org/v3/books/[guid]/relationships/authors" \
+      -X PATCH \
+      -H "Authorization: bearer [token]" \
+      -H "Content-type: application/json" \
+      -d '{ "data": [] }'
+    ```
+
+    **Removing specific to-many relationships**
+
+    ```shell
+    curl "https://api.example.org/v3/books/[guid]/relationships/authors/[author-guid]" \
+      -X DELETE \
+      -H "Authorization: bearer [token]"
+    ```
+
+    **Viewing the to-many relationships**
+
+    ```shell
+    curl "https://api.example.org/v3/books/[guid]/relationships/authors" \
+      -X GET \
+      -H "Authorization: bearer [token]"
+    ```
+
+    ## Status Codes
+
+    Cloud Foundry V3 API uses a subset of HTTP response codes to indicate the success or failure of an API request.
+    In general, codes in the 2xx range indicate success, codes in the 4xx range indicate an error that can potentially be fixed by correcting the request, and codes in the 5xx range indicate an error on the server side.
+
+    HTTP Status Code | Description
+    ---------- | -------
+    200 OK | The request completed successfully
+    201 Created | The request completed successfully and created a new resource
+    202 Accepted | The request will be completed asynchronously; see [asynchronous operations](#asynchronous-operations)
+    204 No Content | The request completed successfully and did not return a body
+    400 Bad Request | The request has malformed or invalid data
+    401 Unauthenticated | The request requires an authenticated user
+    403 Forbidden | The request cannot be performed by the user
+    404 Not Found | The requested resource does not exist
+    422 Unprocessable Entity | The request cannot be performed
+    500 Internal Server Error | An unexpected error occurred
+    502 Bad Gateway | An external upstream service caused the request to fail
+    503 Service Unavailable | An internal upstream service caused the request to fail
+
+    ## Timestamps
+
+    Timestamps generally appear in `created_at` and `updated_at` fields on resources.  Precision beyond
+    seconds is not supported, even if the underlying database supports it (e.g. Postgres). As a result,
+    filtering on sub-second timestamps is not allowed.
+
+    All v3 timestamps have the following format `YYYY-MM-DDThh:mm:ssZ`.
+
+    Example timestamp (June 30, 2020 at 11:49:04 PM UTC): `2020-06-30T23:49:04Z`
+
+    ## Updating Actual State
+
+    The Cloud Controller is primarily responsible for the desired state of apps and processes. Most endpoints will
+    only update the desired states of your apps and processes within Cloud Controller in order
+    to provide users with the opportunity to incur zero downtime when updating apps. Restarting
+    the app will be required for the desired state changes to become the actual state.
+
+    The [stats endpoint](#get-stats-for-a-process) can be used at any time to determine the actual
+    (running) state of a process, and by proxy, an app.
+
+    #### Endpoints that will affect runtime
+
+    The following endpoints will immediately impact the runtime of the app, and the desired changes will take effect without needing to [restart the app](#restart-an-app).
+
+    |Endpoint|
+    |------|
+    |[`PATCH /v3/spaces/:guid/features/ssh`](#get-ssh-enabled-for-an-app)|
+    |[`DELETE /v3/routes/:guid/destinations/:destination_guid`](#remove-destination-for-a-route)|
+
+    The following endpoints will immediately impact runtime and take effect when **only** the `instances` field is updated. If any other fields are updated, the app will need to be restarted in order for any desired changes to take effect, including instance count changes.
+
+    |Endpoint|
+    |------|
+    |[`POST /v3/processes/:guid/actions/scale`](#scale-a-process)|
+    |[`POST /v3/apps/:guid/processes/:type/actions/scale`](#scale-a-process)|
+
+    The following endpoints will immediately impact runtime and the desired changes will take effect if the specified fields are **not** included in the request.
+
+    If the field is specified, the app will need to be restarted in order for any desired changes to take effect.
+
+    |Endpoint| Changes requiring a restart|
+    |------|------|
+    |[`POST /v3/routes/:guid/destinations`](#insert-destinations-for-a-route)| Adding a destination with a port|
+    |[`PATCH /v3/routes/:guid/destinations`](#replace-all-destinations-for-a-route)| Replacing the port field <br/> <br/>  *Note: If the port is specified, this endpoint will unmap any route not listed in the body but will not map any of the new routes in the request body. For this reason we caution against using the endpoint in most circumstances. A combination of [adding ports](#insert-destinations-for-a-route) and [removing ports](#remove-destination-for-a-route) will better fit most use cases.*|
+
+    All other changes will not take effect on running apps until they are restarted.
+
+    ## Warnings
+
+    **Example Warnings**
+
+    ```json
+    {
+      "warnings": [
+        {
+          "detail": "something went wrong"
+        }
+      ]
+    }
+    ```
+
+    Warnings appear on the [job resource](#jobs).
+
+    #### The warning object
+
+    Name | Type | Description
+    ---- | ---- | -----------
+    **detail** | _string_ | Description of the warning
+
+    # Upgrade Guide
+
+    This document is intended to help client authors upgrade from Cloud Foundry's V2 API to the V3 API.
+
+    When moving to the V3 API, it is important to understand that the V3 API is backed by the same database as the V2 API. Though resources may be presented differently and have different interaction patterns, the internal state of CF is the same across both APIs. If you create an organization using the V3 API,
+    it will be visible to the V2 API, and vice-versa.
+
+    If you have questions, need help, or want to chat about the upgrade process, please reach out to us in [Cloud Foundry Slack](https://cloudfoundry.slack.com/archives/C07C04W4Q).
+
+    ## Conceptual Changes
+
+    ### App Sub-Resources
+
+    The V2 API rolls up several resources into its representation of an "app":
+
+    1. **Packages:** Source assets for the application
+    2. **Droplets:** Staged, executable assets for the application
+    3. **Builds:** Configuration for how to stage the package into a droplet
+    4. **Processes:** Configuration for how to run the droplet
+
+    The V3 API exposes these resources on the API to provide more visibility and enable more complicated workflows. For example:
+
+    1. Staging a previous package into a new droplet
+    2. Rolling back to a previous droplet
+    3. Staging a droplet to run a task, without running any processes
+    4. Running multiple different processes from a single droplet (for example: a web process and a worker process)
+
+    Here are some examples of implications for clients:
+
+    1. The app resource contains much less information about the application as a whole
+    2. An application can have multiple processes, each with their own start command. The processes can be scaled independently, and stats be retrieved independently.
+    3. An application might not be running with its most recent package or droplet
+
+    ### Starting Apps
+
+    In the V2 API, starting an app (`PUT /v2/apps/:GUID` with `state`: `STARTED`) will automatically stage new packages into droplets. In V3, [starting an app](#start-an-app) will only run the app's current droplet. This change gives clients more control over what package to stage and when to stage it.
+
+    To reproduce the V2 start behavior in V3:
+
+    ![Start Diagram](start_diagram.png)
+
+    1. [List packages](#list-packages) and filter on package state with value `READY` and order by recency.
+    1. If a package has been turned into a droplet [(see this endpoint)](#list-droplets-for-a-package) this means it has been staged already. In V2 workflows, this would mean this package is what the current droplet is running.
+    1. Stage the package by [creating a build](#create-a-build). This turns your package into a droplet.
+    1. Update the app’s [current droplet](#set-current-droplet) to the selected droplet. This droplet will be run when the app starts.
+    1. Change the app’s state to [started](#start-an-app)
+
+    This gives V3 users more flexibility when managing applications. The following
+    diagram shows many different flows for starting an app.
+
+    ![Start Flow](start_flows.png)
+
+     Apps can upload multiple packages, stage multiple droplets, roll back to older droplets, and other complicated workflows.
+
+    ### Asynchronous Operations
+
+    Unlike V2, clients cannot opt-in for asynchronous responses from endpoints. 
+    Instead, endpoints that require asynchronous processing will return `202 Accepted` with a Location header pointing to the job resource to poll. 
+    Endpoints that do not require asynchronous processing will respond synchronously.
+
+    For clients that want to report the outcome of an asynchronous operation, poll the job in the Location header until its `state` is no longer `PROCESSING`. 
+    If the job's `state` is `FAILED`, the `errors` field will contain any errors that occurred during the operation.
+
+    An example of an asynchronous endpoint is the [delete app endpoint](#delete-an-app).
+
+    Service related endpoints such as [service instance](#service-instances), [service credential binding](#service-credential-binding) and [service route binding](#service-route-binding) may create jobs 
+    that transition to state `POLLING` after `PROCESSING`. This state reflects the polling of the last operation from the service broker.
+    For clients that want to report the outcome of this asynchronous operation, poll the job in the Location header until its `state` is no longer `POLLING`.
+
+    Read more about [the job resource](#jobs).
+
+    ### Errors
+
+    **Example Request**
+
+    ```shell
+    curl "https://api.example.org/v2/apps/not-found" \
+      -X GET \
+      -H "Authorization: bearer [token]"
+    ```
+
+    **Example Response**
+
+    ```http
+    HTTP/1.1 404 Not Found
+    Content-Type: application/json
+
+    {
+       "description": "The app could not be found: not-found",
+       "error_code": "CF-AppNotFound",
+       "code": 100004
+    }
+    ```
+
+    **Example Request**
+
+    ```shell
+    curl "https://api.example.org/v3/apps/not-found" \
+      -X GET \
+      -H "Authorization: bearer [token]"
+    ```
+
+    **Example Response**
+
+    ```http
+    HTTP/1.1 404 Not Found
+    Content-Type: application/json
+
+    {
+       "errors": [
+          {
+             "detail": "App not found",
+             "title": "CF-ResourceNotFound",
+             "code": 10010
+          }
+       ]
+    }
+    ```
+
+    The V3 API returns an array of errors instead of a single error like in V2.
+
+    Clients may wish to display all returned errors.
+
+    ### Filtering
+
+    **Filters are specified as individual query parameters in V3**
+
+    ```shell
+    curl "https://api.example.org/v2/apps?q=name+IN+dora,broker;stack:cflinuxfs4" \
+      -X GET \
+      -H "Authorization: bearer [token]"
+    ```
+
+    ```shell
+    curl "https://api.example.org/v3/apps?names=dora,broker&stacks=cflinuxfs4" \
+      -X GET \
+      -H "Authorization: bearer [token]"
+    ```
+
+    Filtering resources no longer uses V2's query syntax. See the example to the right.
+
+    A few common filters have been also renamed in V3:
+
+    |V2 filter|V3 filter|
+    |---|---|
+    |`results-per-page`|`per_page`|
+    |`page`|`page`|
+    |`order-by`|`order_by`|
+    |`order-direction`|N/A<sup>1</sup>|
+
+    <sup>1</sup> In V3, order is ascending by default. Prefix the `order_by` value with `-` to make it descending. For example, `?order_by=-name` would order a list of resources by `name` in descending order.
+
+    Filtering inequalities has changed in V3: V3 dispenses with the `q=` preamble,
+    uses `created_ats` instead of `timestamp` and uses bracket operators (`[lt]`,
+    `[gt]`, `[lte]`, `[gte]`). For example, to request all audit events occurring on
+    New Year's Day, one would use the following query: `GET
+    /v3/audit_events?created_ats[lt]=2020-01-02T00:00:00Z&created_ats[gt]=2019-12-31T23:59:59Z`.
+
+    The corresponding V2 query would be `GET
+    /v2/events?q=timestamp<2020-01-02T00:00:00Z&q=timestamp>2019-12-31T23:59:59Z`.
+
+    Filtering on equality has also changed: V3 dispenses with the `q=` preamble and
+    uses the pluralized field (e.g. `names`) on the left side of the equals sign.
+    For filtering on inclusion in a set, V3 allows passing multiple values separated
+    by commas.
+
+    For example, to request the organizations by
+    their name ("finance" and "marketing"), one would use the following query:
+    `/v3/organizations?names=finance,marketing`
+
+    The corresponding V2 query would be `GET
+    /v2/organizations?q=name%20IN%20finance,marketing`
+
+    Read more about [filtering in V3](#filters).
+
+    ### Including Associated Resources
+
+    The `inline-relations-depth` parameter is no longer supported on V3. Instead, some resources support the `include` parameter to selectively include associated resources in the response body.
+
+    For example, to include an app's space in the response:
+    ```
+    cf curl /v3/apps/:guid?include=space
+    ```
+
+    In addition, some resources provide the possibility of including specified fields of a related resource.
+
+    For example, to include the service broker `name` and `guid` in the service offering's response:
+    ```
+    cf curl /v3/service_offerings/:guid?fields[service_broker]=name,guid
+    ```
+
+    Read more about [the `include` parameter](#include) and [the `fields` parameter](#fields).
+
+    ### Resource Summaries
+
+    V2 provided several endpoints that returned rolled-up summaries (e.g.
+    `/v2/spaces/:guid/summary` for a space summary, or
+    `/v2/organizations/:guid/summary` for an organization summary). Although
+    convenient, these endpoints have been largely removed from V3, for they were
+    computationally expensive and often returned much more information than
+    needed.
+
+    In V3, to enable better API performance, these usage patterns are
+    deliberately disallowed. Instead, clients are encouraged to think more carefully
+    about which information they need and to fetch that information with
+    multiple API calls and/or by making use of the [`include`
+    parameter](#including-associated-resources) or [the `fields` parameter](#fields) on certain endpoints.
+
+    In V2, summary endpoints provided a way to fetch all resources associated with a
+    parent resource. In V3, fetch the summary though the associated resource and
+    filter by the parent resource. See below for examples of summaries in V3.
+
+    #### Replacing the space summary endpoint
+
+    - To fetch all apps in a space, use `GET /v3/apps?space_guids=<space-guid>`.
+      Passing `include=space` will include the space resource in the response body.
+    - To fetch all service offerings in a space use `GET
+      /v3/service_offerings?space_guids=<space-guid>`. Use the
+      `fields` parameter to include related information in the response
+      body.
+    - To fetch all service instances in a space use `GET
+      /v3/service_instances?space_guids=<space-guid>`. Use the
+      `fields` parameter to include related information in the response
+      body.
+      
+    ##### Replacing the space summary response for service instances
+
+    Similar fields to what `/v2/spaces/:guid/summary` was offering for services are available from v3 endpoints.
+
+    The table below describes the query parameters needed to retrieve some of those fields using `/v3/service_instances` endpoint.
+    Same query parameters are available on the request for a single resource.
+
+    |**V2 summary fields**|**V3 query**|**V3 response fields**|
+    |---|---|---|
+    | services[].service_plan.guid | fields[service_plan]=guid | resources[].included.service_plans[].guid |
+    | services[].service_plan.name | fields[service_plan]=name | resources[].included.service_plans[].name |
+    | services[].service_plan.service.guid | fields[service_plan.service_offering]=guid | resources[].included.service_offerings[].guid |
+    | services[].service_plan.service.label | fields[service_plan.service_offering]=name | resources[].included.service_offerings[].name |
+    | services[].service_broker_name | fields[service_plan.service_offering.service_broker]=name | resources[].included.service_brokers[].name | 
+    | shared_from.space_guid | fields[space]=guid | resources[].included.spaces[].guid |
+    | shared_from.space_name | fields[space]=name | resources[].included.spaces[].name |
+    | shared_from.organization_name | fields[space.organization]=name | resources[].included.organizations[].name |
+
+    The table below describes the query parameters needed to retrieve the sharing information using `/v3/service_instances/:guid/relationships/shared_spaces` endpoint.
+
+    |**V2 summary fields**|**V3 query**|**V3 response fields**|
+    |---|---|---|
+    | shared_to.space_guid | fields[space]=guid | included.spaces[].guid |
+    | shared_to.space_name | fields[space]=name | included.spaces[].name |
+    | shared_to.organization_name | fields[space.organization]=name | included.organizations[].name |
+
+    The existing `bound_app_count` field can be found by using the [usage summary endpoint](#get-usage-summary-in-shared-spaces)
+
+    Read more about [the `fields` parameter](#fields).
+
+    #### Replacing the user summary endpoint
+
+    - The user summary was useful for finding organizations and spaces where a user
+    had roles. In V3, with the introduction of the role resource, you can use `GET
+    /v3/roles?user_guids=<user-guid>` to list a user's roles. Passing
+    `include=space,organization` will include the relevant spaces and organizations
+    in the response body.
+
+    #### Usage summary endpoints
+
+    There are still a couple of endpoints in V3 that provide a basic summary of
+    instance and memory usage. See the [org summary](#get-usage-summary), [space summary](#get-space-usage-summary) and
+    [platform summary](#get-platform-usage-summary) endpoints.
+
+    ### Ports
+
+    In V2, users exposed ports on an app by modifying the app's `ports` field.
+
+    In V3, users expose ports on a process by creating destinations that map a route to a given app and process. For an app listening on multiple ports, users must create one destination per port. 
+
+    Read more about [routes, destinations, and ports](#routes).
+
+    ## New Concepts
+
+    ### Actions
+
+    Actions are API requests that are expected to immediately initiate change within the Cloud Foundry runtime. This is differentiated from requests which update a record but require additional updates, such as restarting an app, to cause changes to a resource to take effect.
+
+    Example:
+    ```
+    POST /v3/apps/:guid/actions/start
+    ```
+
+    ### Links
+
+    **Example Request**
+
+    ```shell
+    curl "https://api.example.org/v3/apps/:guid" \
+      -X GET \
+      -H "Authorization: bearer [token]"
+    ```
+
+    **Example Response**
+
+    ```json
+    {
+      "...": "...",
+      "links": {
+        "self": {
+          "href": "http://api.example.com/v3/apps/:guid"
+        },
+        "space": {
+          "href": "http://api.example.com/v3/spaces/:space_guid"
+        }
+      }
+    }
+    ```
+
+    Links provide URLs to associated resources, relationships, and actions for a resource.
+    The example links to both the app itself and the space in which it resides.
+
+    ### Metadata
+
+    **Example Request**
+
+    ```shell
+    curl "https://api.example.org/v3/:resource/:guid" \
+      -X GET \
+      -H "Authorization: bearer [token]"
+    ```
+
+    **Example Response**
+
+    ```json
+    {
+      "...": "...",
+      "metadata": {
+        "labels": {
+          "environment": "production",
+          "internet-facing": "false"
+        },
+        "annotations": {
+          "contacts": "Bill tel(1111111) email(bill@fixme)"
+        }
+      }
+    }
+    ```
+
+    Metadata allows you to tag and query certain API resources with information; metadata does not affect the resource's functionality.
+
+    For more details and usage examples, see [metadata](#metadata) or [official CF docs](https://docs.cloudfoundry.org/adminguide/metadata.html).
+
+    Note that metadata consists of two keys, `labels` and `annotations`, each of which consists of key-value pairs. API V3 allows filtering by labels (see [label_selector](#labels-and-selectors)) but not by annotations.
+
+    ### Relationships
+
+    **Example Request**
+
+    ```shell
+    curl "https://api.example.org/v3/apps" \
+      -X POST \
+      -H "Authorization: bearer [token]"
+      -d '{
+            "name": "testapp",
+            "relationships": {
+             "space": { "data": { "guid": "1234" }}
+            }
+          }'
+    ```
+
+    Relationships represent associations between resources: For example, every space belongs in an organization, and every app belongs in a space. The V3 API can create, read, update, and delete these associations.
+
+    In the example request we create an app with a relationship to a specific space.
+
+    One can retrieve or update a resource's relationships. For example, to retrieve an app's relationship to its space with the `/v3/apps/:app_guid/relationships/space` endpoint.
+
+    For more information, refer to the [relationships](#relationships).
+
+    ## New Resources
+
+    The V3 API introduces new resources that are not available on the V2 API. Below are brief descriptions of these resources. This is not intended to be an exhaustive list and may not be updated as new resources are added to V3.
+
+    **Note:** Some of these resources may still be experimental and are subject to change or removal without warning. For up to date information on which resources are still experimental see [Experimental Resources](#experimental-resources).
+
+    ### App Features
+
+    App features support enabling/disabling behaviors for an individual app.
+
+    Read more about the [app feature resource](#app-features).
+
+    ### Builds
+
+    Builds increase the flexibility and granularity of control available
+    to clients crafting stagings workflows. For example:
+
+    - Staging older packages instead of always staging the most recent package
+    - Staging packages without having to stop an application
+    - Staging packages to produce droplets without setting them as the current
+      droplet for an app
+    - Staging packages into droplets for use in tasks and/or rolling deployments
+
+    Read more about the [builds resource](#builds).
+
+    ### Deployments
+
+    Deployments are objects that manage updates to applications with zero downtime.
+
+    Read more about the [deployments resource](#deployments).
+
+    ### Isolation Segments
+
+    Isolation segments provide dedicated pools of resources to which apps can be deployed to isolate workloads.
+
+    Read more about the [isolation segment resource](#isolation-segments).
+
+    ### Manifests
+
+    Manifests are a method for providing bulk configuration to applications and other resources.
+
+    Read more about the [manifest](#manifests) resource.
+
+    ### Revisions
+
+    Revisions represent code and configuration used by an application at a specific time. The most recent revision for a running application represents the code and configuration currently running in Cloud Foundry.
+
+    Read more about the [revision resource](#revisions).
+
+    ### Service Route Bindings
+
+    There is a new resource `service route binding` that represents a binding between a route and a service instance.
+
+    Creation/Deletion of these bindings is therefore done via that endpoint in v3.
+
+    This resource also supports metadata both in create and update requests.
+    Audit event of type `audit.service_route_binding.update` is recorded when metadata update is requested.
+
+    It has a nested resource for fetching binding parameters from the broker. Parameters are only set during creation.
+
+    Read more about the [service route binding resource](#service-route-binding).
+
+    ### Sidecars
+
+    Sidecars are additional programs that are run in the same container as a process.
+
+    Read more about the [sidecar resource](#sidecars).
+
+    ### Tasks
+
+    Tasks are one-off jobs that are intended to execute a droplet, stop, and be cleaned up, freeing up resources.
+
+    Examples of this include database migrations and running batch jobs.
+
+    Read more about the [task resource](#tasks).
+
+    ## Changed Resources
+
+    This table shows how V2 resources map to their respective V3 counterparts. Note that some V2 resources have split into multiple V3 resources, and some V2 resources have been combined into a single resource on V3. As these resources are currently under active development, these mappings may change.
+
+    |**V2 Resource(s)**|**V3 Resource(s)**|**Details**|
+    |---|---|---|
+    |Apps|Apps, Builds, Droplets, Packages, Processes|
+    |Buildpacks|Buildpacks|
+    |Domains, Shared Domains, Private Domains|Domains|[Domains in V3](#domains-in-v3)|
+    |Environment Variable Groups|Environment Variable Groups|
+    |Events|Audit Events|[Audit Events in V3](#audit-events-in-v3)|
+    |Feature Flags|Feature Flags|
+    |Info|Info|[Info in V3](#info-in-v3)
+    |Jobs|Jobs|
+    |Organizations|Organizations|
+    |Quota Definitions|Organization Quotas|[Organization Quotas in V3](#organization-quotas-in-v3)
+    |Resource Matches|Resource Matches|
+    |Routes, Route Mappings|Routes, Destinations|[Routes in V3](#routes-in-v3)|
+    |Security Groups|Security Groups|[Security Groups in V3](#security-groups-in-v3)|
+    |Services|Service Offerings|[Service Offerings in V3](#service-offerings-in-v3)
+    |Service Bindings, Service Keys|Service Keys|
+    |Service Brokers|Service Brokers|[Service Brokers in V3](#service-brokers-in-v3)
+    |Service Instances, User-Provided Service Instances|Service Instances|
+    |Service Plans|Service Plans|[Service Plans in V3](#service-plans-in-v3)
+    |Service Plan Visibilities|Service Plan Visibility|[Service Plan Visibility in V3](#service-plan-visibility-in-v3)
+    |Spaces|Spaces|
+    |Space Quota Definitions|Space Quotas|[Space Quotas in V3](#space-quotas-in-v3)
+    |Stacks|Stacks|
+    |Usage Events|Usage Events|[Usage Events in V3](#usage-events-in-v3)|
+    |Users|Roles, Users|[Users and Roles in V3](#users-and-roles-in-v3)|
+
+    ### Audit Events in V3
+
+    In V2, these were called "events" (e.g. `/v2/events`). In V3, we adopt the term
+    "audit events" to better distinguish them from usage events.
+
+    V2 audit events contained information about the "actee" (the resource that the
+    event affected). V3 audit events refer to the affected resource as the "target".
+
+    V2 audit events had a `timestamp` field. In V3, this field has been renamed to
+    `created_at` for consistency with other resources. The value is the same.
+
+    In general, V3 audit events contain all of the same information that they
+    contained in V2, but the JSON is structured a little differently. In particular:
+
+    - The `metadata` field has been renamed to `data`.
+    - Actor-related fields have been grouped into an object under the `actor` key
+      (e.g. `actor.type` instead of `actor_type`).
+    - Actee-related fields have been grouped under the `target` key (e.g.
+      `target.type` instead of `actee_type`).
+
+    V3 endpoints attempt to report audit events in the same way as V2 endpoints did.
+    A notable case where this was not possible is for the `audit.app.restage` event.
+    Read more about [restaging](#restage) in V3.
+
+    Read more about the [audit event resource](#audit-events).
+
+    ### Domains in V3
+
+    In V2, there were two types of domains exposed via different endpoints: private domains and shared domains.
+
+    In V3, there is only one domain resource. A domain is "private" if it has an "owning organization", which is the organization in which the domain is accessible. This is represented as a relationship to this organization. A domain is "shared" if it doesn't have this relationship.
+
+    Read more about the [domain resource](#domains).
+
+    ### Info in V3
+
+    In V2, `/v2/info` provides descriptive information about the system and endpoints to external APIs.
+
+    In V3, `/v3/info` only provides descriptive information about the system.
+
+    To access the external APIs in V3, use the root (`/`).
+
+    ### Organization Quotas in V3
+
+    In V2, `-1` represented an unlimited value for a quota limit.
+
+    In V3, `null` is used to represent an unlimited value.
+
+    The names of the limit fields have changed from V2 to V3.
+
+    |**V2**|**V3**|
+    |---|---|
+    non_basic_services_allowed | services.paid_services_allowed
+    total_services | services.total_service_instances
+    total_service_keys | services.total_service_keys
+    total_routes | routes.total_routes
+    total_reserved_route_ports | routes.total_reserved_ports
+    total_private_domains | domains.total_domains
+    memory_limit | apps.total_memory_in_mb
+    instance_memory_limit | apps.per_process_memory_in_mb
+    app_instance_limit | apps.total_instances
+    app_task_limit | apps.per_app_tasks
+
+    Read more about the [organization quota resource](#organization-quotas).
+
+    ### Routes in V3
+
+    In V2, the route resource represented a URL that could be mapped to an app, and the route mapping resource represented a mapping between a route and an app.
+
+    In V3, these concepts have been collapsed into a single route resource. Now, a route can have one or more "destinations" listed on it. These represent a mapping from the route to a resource that can serve traffic (e.g. a process of an app).
+
+    Read more about [routes, destinations, and ports](#routes).
+
+    ### Security Groups in V3
+
+    In V2, security groups which apply to _all_ spaces in a Cloud Foundry deployment are termed "default", as in "default for running apps" and "default for staging apps". For example, to apply a default security group to all apps in the running lifecycle, one would `PUT /v2/config/running_security_groups/:guid`
+
+    In V3, security groups which apply to _all_ spaces in a Cloud Foundry deployment are termed "global", as in "globally-enabled running apps" and "globally-enabled staging apps." For example, to apply a security group globally to all apps in the running lifecycle, one would `PATCH /v3/security_groups/:guid` with a body specifying the `globally_enabled` key. See [here](#update-a-security-group) for an example.
+
+    In V2, on creation, one can specify the spaces to which the security group applies, but not whether it applies globally (by default). To set the group globally to all spaces in the foundation one would `PUT /v2/config/running_security_groups/43e0441d-c9c1-4250-b8d5-7fb624379e02`.
+
+    In V3, on creation, one can both specify the spaces to which it applies and also whether it applies globally (to staging and/or running) by specifying the `globally_enabled` key. See [here](#create-a-security-group) for more information.
+
+    In V2, the endpoint to apply a security group to a space only includes the lifecycle ("running" or "staging") explicitly when applying to "staging" ("running" is the default lifecycle). For example, to unbind a security group from the running lifecycle, one would `DELETE /v2/security_groups/:guid/spaces/:space_guid`, from the staging lifecycle, `DELETE /v2/security_groups/:guid/staging_spaces/:space_guid`.
+
+    In V3, the endpoint to apply a security group to a space includes the lifecycle. For example to unbind a security group from the running lifecycle, one would `DELETE /v3/security_groups/:guid/relationships/running_spaces/:space_guid`.
+
+    ### Service Bindings in V3
+
+    #### Combining service bindings and service keys
+
+    In v2, two different endpoints `/v2/service_bindings` and `/v2/service_keys`
+    were used to perform bindings operations for service instances.
+
+    In v3, all service bindings that are not route bindings are performed using the [service credential bindings](#service-credential-binding) resource.
+    Service credential bindings can be of type `app` when it is a binding between a [service instance](#service-instances) and an [application](#apps)
+    or `key` when it only retrieves the credentials of the service instance. 
+    The `type` filter can be used to list separately each type.
+
+    The required parameters when [creating](#create-a-service-credential-binding) 
+    a service credential binding are different for each type as defined in the documentation. 
+
+    #### Object
+
+    The structure of the service credential binding object follows V3 pattern.
+    If the type is `app` the object will contain a relationship to the app.
+
+    #### Retrieving service credential bindings details
+
+    The `credentials`, `syslog_drain_url` and `volume_mounts` fields for service credential bindings are not included in the response object of service credential bindings.
+    `/v3/service_credential_bindings/:guid/details` can be used to retrieve the credentials. 
+
+    Read more about the [service credential binding details](#get-a-service-credential-binding-details).
+
+    #### Service key operations
+
+    In v2, all service keys operations were synchronous.
+
+    In v3, all service credential bindings, including those of type `key` are asynchronous if possible.
+
+    #### Response mode
+
+    When operating on service credential bindings of `user-provided` service instances the API will respond synchronously for all operations.
+
+    When operating on service credential bindings of `managed` service instances the API will respond asynchronously and the operation might include communicating to the service broker. Read more about async responses [here](#asynchronous-operations).
+
+    #### Audit events
+
+    Audit events of type `audit.service_key.start_create` and  `audit.service_key.start_delete` have been added to track when 
+    an async create or delete `key` service credential binding operation has started. 
+
+    Audit events of type `audit.service_binding.update` and `audit.service_key.update` are recorded when metadata update is requested. 
+
+    Read more about the [service credential binding resource](#service-credential-binding).
+
+    ### Service Brokers in V3
+
+    #### Create, Update and Delete
+
+    In V3 these endpoints are now asynchronous. See [asynchronous operations](#asynchronous-operations) and [service broker jobs](#service-broker-jobs) for more information.
+
+    Read more about the [service broker resource](#service-brokers).
+
+    ### Service Instances in V3
+
+    #### Combining managed and user-provided service instances
+
+    In v2, two different endpoints `/v2/service_instances` and `/v2/user_provided_service_instances`
+    were used to perform operations on service instances according to their types.
+
+    In v3, all service instance operations are performed using the [service instance](#service-instances) resource, regardless of the type.
+    Service instances can be of type `managed` when it is an instantiation of a [service offering](#service-offerings) registered with CF 
+    or `user-provided` when it describes an instance of an offering that is not registered with CF. 
+    The `type` filter can be used to separately list each type.
+
+    The required parameters when [creating](#create-a-service-instance) and [updating](#update-a-service-instance) 
+    a service instance are different for each type as defined in their respective documentation. 
+
+    #### Object
+
+    The structure of the service instances object as well as some attribute names have changed from V2 to V3.
+    Each service instance type has type specific fields. Certain fields are omitted when they do not apply to the type of the service instance.
+
+    |**V2**|**V3**|
+    |---|---|
+    type valid values `managed_service_instance` and `user_provided_service_instance` | type valid values `managed` and `user-provided` |
+    entity.service_plan_guid | relationships.service_plan.data.guid |
+    entity.space_guid | relationships.space.data.guid |
+
+    #### User provided service instance credentials
+
+    The `credentials` field for user provided service instances is not included in the response object of service_instances.
+    `/v3/service_instances/:guid/credentials` can be used to retrieve the credentials. 
+
+    Read more about the [service instance credential](#get-credentials-for-a-user-provided-service-instance).
+
+    #### Response mode
+
+    When operating on service instances of type `user-provided` the API will respond synchronously for all operations.
+
+    When the service instance type is `managed` the API will respond asynchronously and the operation might include communicating to the service broker. Read more about async responses [here](#asynchronous-operations).
+
+    #### Listing bindings
+
+    In v2, there were specific endpoints `/v2/service_instances/:guid/service_bindings`, `/v2/service_instances/:guid/service_keys` 
+    and `/v2/user_provided_service_instances/:guid/service_bindings` to retrieve the service bindings and service keys for managed and user-provided service instances.
+
+    In v3, the [service credential bindings](#list-service-credential-bindings) can be filtered by `service_instance_guids` to retrieve the bindings of any service instance. 
+
+    #### Service instance route bindings
+
+    In v2, binding a service instance to a route was done as a relationship request for the service instance.
+
+    In v3, there is a new resource [service route binding](#service-route-bindings) that represents a binding between a route and a service instance.
+    Creation and deletion of route bindings is therefore done via that endpoint in v3.
+
+    Audit events for route bindings have changed as follows:
+
+    |**V2**|**V3**|
+    |---|---|
+    audit.service_instance.bind_route | audit.service_route_binding.start_create (async only)<br>audit.service_route_binding.create |
+    audit.service_instance.unbind_route |audit.service_route_binding.start_delete (async only)<br>audit.service_route_binding.delete |
+
+    Read more about the [service instance resource](#service-instances).
+
+    ### Service Offerings in V3
+
+    Services resource is now replaced by [service offerings resource](#service-offerings) at `/v3/service_offerings`
+
+    Some services related endpoints nested in other resources have been translated to filters on `service_offerings`, with the advantage that filters accept multiple values and can be combined.
+
+    `GET /v2/organizations/:guid/services` is now `GET /v3/service_offerings?organization_guids=guid`.
+
+    `GET /v2/spaces/:guid/services` is now `GET /v3/service_offerings?space_guids=guid`
+
+    `GET /v2/services/:guid/service_plans` is now a filter on the service plan resource: `GET /v3/service_plans?service_offering_guids=guid`. This link can also be found in the object's `links` section.
+
+    In V2, `service_broker_name` was returned in the response. V3 returns this value only if requested using the [`fields` syntax](#fields). Refer to [service offerings resource](#service-offerings) for further information. A link to the `Service Broker` resource is included in the object's `links` section.  
+
+    The structure of the service offering object as well as some attribute names have changed from V2 to V3:
+
+    |**V2**|**V3**|
+    |---|---|
+    label | name
+    active | available
+    bindable | broker_catalog.features.bindable
+    extra | shareable, broker_catalog.metadata
+    unique_id | broker_catalog.id
+    plan_updateable | broker_catalog.features.plan_updateable
+    instances_retrievable | broker_catalog.features.instances_retrievable
+    bindings_retrievable | broker_catalog.features.bindings_retrievable
+    service_broker_guid | relationships.service_broker.data.guid
+
+    Read more about the [service offering resource](#service-offerings).
+
+    ### Service Plan Visibility in V3
+
+    `v2/service_plan_visibilities` has been replaced in v3 with a nested resource `v3/service_plans/:guid/visibility`
+
+    This new resource has a `type`, and can have a list of `organizations` a `space` or be of type `public`
+
+    Read more about the [service plan visibility resource](#service-plan-visibility).
+
+    ### Service Plans in V3
+
+    Some service plans related endpoints nested in other resources have been translated to filters on service plans, with the advantage that filters accept multiple values and can be combined.
+
+    `GET /v2/services/:guid/service_plans` -> `GET /v3/service_plans?service_offering_guids=guid`
+
+    Changing plan visibility to `Public` is not a PUT operation anymore. To change visibility use the [service plan visibility resource](#service-plan-visibility)
+
+    The structure of the service plan object as well as some attribute names have changed from V2 to V3:
+
+    |**V2**|**V3**|
+    |---|---|
+    active | available
+    bindable | broker_catalog.features.bindable
+    extra | broker_catalog.metadata
+    public | `visibility_type == 'public'` (see [visibility types](#list-of-visibility-types))
+    unique_id | broker_catalog.id
+    plan_updateable | broker_catalog.features.plan_updateable
+    service_instances_url |  use `service_plan_guids` or `service_plan_names` filter on [service instances resource](#service-instances)
+    service_url | links.service_offering.href
+    service_guid | relationships.service_offering.data.guid
+
+    Some filters were renamed and changed to accept a list of values:
+
+    |**V2**|**V3**|
+    |---|---|
+    service_guid | service_offering_guids
+    service_instance_guid | service_instance_guids
+    service_broker_guid | service_broker_guids
+    unique_id | broker_catalog_ids
+
+    Read more about the [service plan resource](#service-plans).
+
+    ### Space Quotas in V3
+
+    In V2, `-1` represented an unlimited value for a quota limit.
+
+    In V3, `null` is used to represent an unlimited value.
+
+    The names of the limit fields have changed from V2 to V3.
+
+    |**V2**|**V3**|
+    |---|---|
+    non_basic_services_allowed | services.paid_services_allowed
+    total_services | services.total_service_instances
+    total_service_keys | services.total_service_keys
+    total_routes | routes.total_routes
+    total_reserved_route_ports | routes.total_reserved_ports
+    memory_limit | apps.total_memory_in_mb
+    instance_memory_limit | apps.per_process_memory_in_mb
+    app_instance_limit | apps.total_instances
+    app_task_limit | apps.per_app_tasks
+
+    Read more about the [space quota resource](#space-quotas).
+
+    ### Usage Events in V3
+
+    This section covers changes in both [app usage events](#app-usage-events) and [service usage events](#service-usage-events).
+
+    The V2 `service_guid` field for service usage events is now renamed to `service_offering.guid`.
+
+    The V2 `service_label` field for service usage events is now renamed to `service_offering.label`.
+
+    The V2 `app_guid` field for app usage events is now renamed to `process.guid`.
+
+    The V2 experimental field `parent_app_guid` for app usage events was used to identify a backing V3 app if present. In V3, this field has been renamed to `app.guid` and is no longer experimental.
+
+    ### Users and Roles in V3
+
+    The user resource remains largely unchanged from the v2 API. On v2, `GET /v2/users` was restricted to admins, and other users needed to use nested endpoints (`GET /v2/organizations/:guid/user` and `GET /v2/spaces/:guid/user`) to view user resources. On v3, those nested endpoints are carried over, but `GET /v3/users` is now available for all users in a similar way to other resources. Note that this does not change what user resources are visible.
+
+    In v2, roles were modeled as associations between organization and space endpoints. In V3, roles have a dedicated resource: `/v3/roles`. This has changed the manner in which roles are assigned. For example, in V2, to assign a user the `org_manager` role, one would `PUT /v2/organizations/:org_guid/managers/:user_id`. In V3, one would `POST /v3/roles` with the role type and relationships to the user and organization.
+
+    In v2, when an Org Manager gives a person an Org or Space role, that person automatically receives Org User status in that org. This is no longer the case in the v3 API.
+
+    Read more about [users](#users) and [roles](#roles).
+
+    ## Deprecated Endpoints
+
+    The specialized `/v2/apps/:guid/restage` endpoint is replaced by the
+    [builds](#builds) resource. Builds allow finer-grained control and increased
+    flexibility when staging packages into droplets. The V3 API avoids making
+    assumptions about which package/droplet to use when staging or running an app
+    and thus leaves it up to clients.
+
+    ### Restage
+
+    The specialized `/v2/apps/:guid/restage` endpoint is replaced by the [builds](#builds) resource. Builds allow finer-grained
+    control and increased flexibility when staging packages into droplets. The V3 API avoids making assumptions about which 
+    package/droplet to use when staging or running an app and thus leaves it up to clients.
+
+    #### Replicating Restage
+
+    1. Get newest READY package for an app:
+
+    	`
+    	GET /v3/packages?app_guids=:app-guid&order_by=-created_at&states=READY
+    	`
+
+    2. Stage the package:
+
+    	`
+    	POST /v3/build
+    	`
+
+    1. Poll build until the state is `STAGED`:
+
+    	`
+    	GET /v3/builds/build-guid
+    	`
+
+    1. Stop the app:
+
+    	`
+    	POST /v3/apps/:guid/actions/stop
+    	`
+
+    1. Set the app's current droplet to the build's resulting droplet:
+
+    	`
+    	PATCH /v3/apps/:guid/relationships/current_droplet
+    	`
+
+    1. Start app:
+
+    	`
+    	POST /v3/apps/:guid/actions/start
+    	`
+
+    For a zero-downtime restage, you may wish to use [deployments](#deployments) instead of stopping and starting the app.
+
+    #### Restage Event
+
+    Since the V3 API has no concept of a "restage", the `audit.app.restage` audit
+    event is no longer reported. Instead, the following events can be tracked:
+
+    Audit Event|Description
+    ---|---
+    audit.build.create | A build is created (staging is initiated)
+    audit.droplet.create | A droplet is created (staging finishes successfully)
+    audit.app.stop | Stopping an app is initiated
+    audit.app.droplet.mapped | A droplet is set as the current droplet for an app
+    audit.app.start | Starting an app is initiated
+    audit.app.deployment.create | A deployment is initialized
   version: latest
   license:
     name: Apache 2.0
@@ -11,85 +2084,749 @@ info:
     url: https://www.cloudfoundry.org/
 tags:
   - name: Admin
-    description: "Administrative operations for Cloud Foundry platform management."
+    description: |-
+      These endpoints are only for admin users.
   - name: Apps
-    description: "Apps are top-level objects that link together and contain configuration information for your packages, droplets, processes, tasks, and more."
+    description: |-
+      Apps are top-level objects that link together and contain configuration
+      information for your packages, droplets, processes, tasks, and more.
+  - name: App Features
+    description: |-
+      App features are used to manage whether optional capabilities are enabled for a given application.
+
+      ### Supported app features
+
+      **Note**: SSH must also be [enabled globally](https://docs.cloudfoundry.org/running/config-ssh.html) and on the [space](#space-features).
+
+      Name | Description
+      ---- | -----------
+      **ssh** | Enable SSHing into the app
+      **revisions** | Enable [versioning](#revisions) of an application
+      **service-binding-k8s** | Enable k8s service bindings for the app
+      **file-based-vcap-services** | Enable file-based VCAP service bindings for the app
+
+      ### Service binding files
+
+      By default, service binding details are exposed to an app through the `VCAP_SERVICES` environment variable. Two mutually exclusive app features instead expose them as files on the container's file system. Only one of the two features may be enabled for an app at a time.
+
+      - **file-based-vcap-services** writes the full contents of `VCAP_SERVICES` verbatim to a single file named `vcap_services`.
+      - **service-binding-k8s** translates each service binding into its own directory of files, as described below.
+
+      #### Translation of VCAP_SERVICES to service binding files
+
+      When **service-binding-k8s** is enabled, the service binding details in `VCAP_SERVICES` are converted into a tree of files, following the [servicebinding.io](https://servicebinding.io/spec/core/1.1.0/#workload-projection) workload-projection specification. The binding's name becomes a directory name, and each of the binding's properties becomes a file within that directory whose contents are the property's value.
+
+      The translation follows these rules:
+
+      - Each binding name must be unique and valid; duplicate or invalid names cause an error. A name must match `[a-z0-9\-.]{1,253}` (per the Kubernetes/servicebinding.io spec).
+      - The binding's name is used as the directory name; its properties become the file names.
+      - The `credentials` attribute is a JSON object: each top-level key becomes a file whose content is that key's value. Nested objects and lists are serialized as JSON.
+      - Reserved attributes may overwrite credential keys of the same name without error. The reserved attributes are: `binding_guid`, `binding_name`, `instance_guid`, `instance_name`, `name`, `label`, `tags`, `plan`, `syslog_drain_url`, `volume_mounts`, `type`, and `provider`.
+      - All file names must match `[a-z0-9\-._]{1,253}`; an invalid name causes an error. The underscore follows a post-1.1.0 update to the servicebinding.io spec ([commit `b5d6755`](https://github.com/servicebinding/spec/commit/b5d67551d13c8801f6b8a084c70b7167e3fbbe7e)), which is not yet part of a published spec release.
+      - List values (for example `tags` or `volume_mounts`) are stored as JSON arrays.
+      - Empty lists and `null` values are omitted - no file is created.
+      - Cloud Controller always writes a `type` file and a `provider` file, both set to the service label.
+      - If the total byte size (file paths plus contents) exceeds **1,000,000 bytes**, an error is raised.
+
+      ##### Examples
+
+      The following examples illustrate individual translation rules, showing only the properties relevant to each rule.
+
+      Nested and list credentials are serialized as JSON.
+
+      Input (`VCAP_SERVICES`):
+
+      ```json
+      {
+        "foo": [
+          {
+            "name": "foo",
+            "credentials": {
+              "simple": "value",
+              "deeply": {
+                "nested": "value"
+              },
+              "list": ["v", "a", "l", "u", "e"]
+            }
+          }
+        ]
+      }
+      ```
+
+      Output (service binding files):
+
+      ```
+      foo/name: foo
+      foo/simple: value
+      foo/deeply: {"nested":"value"}
+      foo/list: ["v","a","l","u","e"]
+      ```
+
+      A reserved attribute overwrites a credential key (the `name` credential is dropped in favor of the binding's `name`).
+
+      Input (`VCAP_SERVICES`):
+
+      ```json
+      {
+        "foo": [
+          {
+            "name": "foo",
+            "credentials": {
+              "name": "user",
+              "secret": "password"
+            }
+          }
+        ]
+      }
+      ```
+
+      Output (service binding files):
+
+      ```
+      foo/name: foo
+      foo/secret: password
+      ```
+
+      `null` and empty values are omitted.
+
+      Input (`VCAP_SERVICES`):
+
+      ```json
+      {
+        "foo": [
+          {
+            "name": "foo",
+            "binding_guid": "45436ca8-0a7c-45e3-9439-ca1b44db7a2b",
+            "syslog_drain_url": null,
+            "volume_mounts": []
+          }
+        ]
+      }
+      ```
+
+      Output (service binding files):
+
+      ```
+      foo/name: foo
+      foo/binding_guid: 45436ca8-0a7c-45e3-9439-ca1b44db7a2b
+      ```
   - name: App Usage Events
-    description: "App usage events are a record of changes in the usage of apps and tasks."
+    description: |-
+      App usage events are a record of changes in the usage of apps and tasks.
+      Examples include starting an application, scaling an application (from, say, one
+      to three instances), and stopping an application.
+
+      Usage events are typically used by billing and chargeback applications.
   - name: Audit Events
-    description: "Audit events help Cloud Foundry operators monitor actions taken against resources (such as apps) via user or system actions."
+    description: |-
+      Audit events help Cloud Foundry operators monitor actions taken against resources (such as apps) via user or system actions.
+
+      For more information, see the [Cloud Foundry docs](https://docs.cloudfoundry.org/running/managing-cf/audit-events.html).
+
+      #### Audit Event Types
+
+      ##### App lifecycle
+      - `audit.app.apply_manifest`
+      - `audit.app.build.create`
+      - `audit.app.build.failed`
+      - `audit.app.build.staged`
+      - `audit.app.copy-bits`
+      - `audit.app.create`
+      - `audit.app.delete-request`
+      - `audit.app.deployment.cancel`
+      - `audit.app.deployment.create`
+      - `audit.app.deployment.continue`
+      - `audit.app.droplet.create`
+      - `audit.app.droplet.delete`
+      - `audit.app.droplet.download`
+      - `audit.app.droplet.mapped`
+      - `audit.app.droplet.upload`
+      - `audit.app.environment.show`
+      - `audit.app.environment_variables.show`
+      - `audit.app.map-route`
+      - `audit.app.package.create`
+      - `audit.app.package.delete`
+      - `audit.app.package.download`
+      - `audit.app.package.upload`
+      - `audit.app.process.crash`
+      - `audit.app.process.create`
+      - `audit.app.process.delete`
+      - `audit.app.process.ready`
+      - `audit.app.process.not-ready`
+      - `audit.app.process.rescheduling`
+      - `audit.app.process.scale`
+      - `audit.app.process.terminate_instance`
+      - `audit.app.process.update`
+      - `audit.app.restage`
+      - `audit.app.restart`
+      - `audit.app.revision.create`
+      - `audit.app.revision.environment_variables.show`
+      - `audit.app.ssh-authorized`
+      - `audit.app.ssh-unauthorized`
+      - `audit.app.start`
+      - `audit.app.stop`
+      - `audit.app.task.cancel`
+      - `audit.app.task.create`
+      - `audit.app.unmap-route`
+      - `audit.app.update`
+      - `audit.app.upload-bits`
+
+      ##### Buildpack lifecycle
+      - `audit.buildpack.create`
+      - `audit.buildpack.delete`
+      - `audit.buildpack.update`
+      - `audit.buildpack.upload`
+
+      ##### Organization lifecycle
+      - `audit.organization.create`
+      - `audit.organization.delete-request`
+      - `audit.organization.update`
+
+      ##### Organization_quota lifecycle
+      - `audit.organization_quota.apply`
+      - `audit.organization_quota.create`
+      - `audit.organization_quota.delete`
+      - `audit.organization_quota.update`
+
+      ##### Route lifecycle
+      - `audit.route.create`
+      - `audit.route.delete-request`
+      - `audit.route.share`
+      - `audit.route.transfer-owner`
+      - `audit.route.unshare`
+      - `audit.route.update`
+
+      ##### Route_policy lifecycle
+      - `audit.route_policy.create`
+      - `audit.route_policy.delete`
+      - `audit.route_policy.update`
+
+      ##### Service lifecycle
+      - `audit.service.create`
+      - `audit.service.delete`
+      - `audit.service.update`
+
+      ##### Service_binding lifecycle
+      - `audit.service_binding.create`
+      - `audit.service_binding.delete`
+      - `audit.service_binding.show`
+      - `audit.service_binding.start_create`
+      - `audit.service_binding.start_delete`
+      - `audit.service_binding.update`
+
+      ##### Service_broker lifecycle
+      - `audit.service_broker.create`
+      - `audit.service_broker.delete`
+      - `audit.service_broker.update`
+
+      ##### Service_dashboard_client lifecycle
+      - `audit.service_dashboard_client.create`
+      - `audit.service_dashboard_client.delete`
+
+      ##### Service_instance lifecycle
+      - `audit.service_instance.bind_route`
+      - `audit.service_instance.create`
+      - `audit.service_instance.delete`
+      - `audit.service_instance.purge`
+      - `audit.service_instance.share`
+      - `audit.service_instance.show`
+      - `audit.service_instance.start_create`
+      - `audit.service_instance.start_delete`
+      - `audit.service_instance.start_update`
+      - `audit.service_instance.unbind_route`
+      - `audit.service_instance.unshare`
+      - `audit.service_instance.update`
+
+      ##### Service_key lifecycle
+      - `audit.service_key.create`
+      - `audit.service_key.delete`
+      - `audit.service_key.show`
+      - `audit.service_key.start_create`
+      - `audit.service_key.start_delete`
+      - `audit.service_key.update`
+
+      ##### Service_plan lifecycle
+      - `audit.service_plan.create`
+      - `audit.service_plan.delete`
+      - `audit.service_plan.update`
+
+      ##### Service_plan_visibility lifecycle
+      - `audit.service_plan_visibility.create`
+      - `audit.service_plan_visibility.delete`
+      - `audit.service_plan_visibility.update`
+
+      ##### Service_route_binding lifecycle
+      - `audit.service_route_binding.create`
+      - `audit.service_route_binding.delete`
+      - `audit.service_route_binding.start_create`
+      - `audit.service_route_binding.start_delete`
+      - `audit.service_route_binding.update`
+
+      ##### Space lifecycle
+      - `audit.space.create`
+      - `audit.space.delete-request`
+      - `audit.space.update`
+
+      ##### Space_quota lifecycle
+      - `audit.space_quota.apply`
+      - `audit.space_quota.create`
+      - `audit.space_quota.delete`
+      - `audit.space_quota.remove`
+      - `audit.space_quota.update`
+
+      ##### Stack lifecycle
+      - `audit.stack.create`
+      - `audit.stack.delete`
+      - `audit.stack.update`
+
+      ##### User lifecycle
+      - `audit.user.organization_auditor_add`
+      - `audit.user.organization_auditor_remove`
+      - `audit.user.organization_billing_manager_add`
+      - `audit.user.organization_billing_manager_remove`
+      - `audit.user.organization_manager_add`
+      - `audit.user.organization_manager_remove`
+      - `audit.user.organization_user_add`
+      - `audit.user.organization_user_remove`
+      - `audit.user.space_auditor_add`
+      - `audit.user.space_auditor_remove`
+      - `audit.user.space_developer_add`
+      - `audit.user.space_developer_remove`
+      - `audit.user.space_manager_add`
+      - `audit.user.space_manager_remove`
+      - `audit.user.space_supporter_add`
+      - `audit.user.space_supporter_remove`
+
+      ##### User_provided_service_instance lifecycle
+      - `audit.user_provided_service_instance.create`
+      - `audit.user_provided_service_instance.delete`
+      - `audit.user_provided_service_instance.show`
+      - `audit.user_provided_service_instance.update`
+
+      ##### Special events
+      - `app.crash`
+      - `blob.remove_orphan`
   - name: Builds
-    description: "Builds represent the process of staging an application package."
+    description: |-
+      Builds represent the process of staging an application package. There are two types
+      ([lifecycles](#lifecycles)) of builds: buildpack and docker.
+
+      After an [application](#apps) is created and [packages](#packages) are uploaded, a build
+      resource can be created to initiate the staging process. A successful build results in a 
+      [droplet](#droplets).
   - name: Buildpacks
-    description: "Buildpacks are used during a build to download external dependencies and transform a package into an executable droplet."
+    description: |-
+      Buildpacks are used during a [build][builds]
+      to download external dependencies
+      and transform a [package][packages]
+      into an executable [droplet][droplets].
+      In this way, buildpacks are a pluggable extension to Cloud Foundry
+      that enable CF to run different languages and frameworks.
+      Buildpacks will automatically detect if they support an application.
+      Buildpacks can also be explicitly specified on [apps][] and [builds][].
+
+      [apps]: #apps
+      [builds]: #builds
+      [droplets]: #droplets
+      [packages]: #packages
   - name: Deployments
-    description: "Deployments are objects that manage updates to applications with zero downtime."
+    description: |-
+      Deployments are objects that manage updates to applications with zero downtime.
+
+      They can either:
+
+      * Manage updating an app's [droplet](#droplets) directly after an application package is staged
+
+      * Roll an app back to a specific [revision](#revisions) along with its associated droplet
+
+      Deployments are different than the traditional method of pushing app updates which performs start/stop deployments.
+
+      Deployment strategies supported:
+
+      * [Rolling deployments](https://docs.cloudfoundry.org/devguide/deploy-apps/rolling-deploy.html) allows for
+      applications to be deployed without incurring downtime by gradually rolling out instances. Max-in-flight can be configured
+      to specify how many instances are rolled out simultaneously.
+
+      * [Canary deployments](https://docs.cloudfoundry.org/devguide/deploy-apps/rolling-deploy.html#canary-deployment-process) deploy a single instance and pause for user evaluation. If the canary instance is deemed successful, the deployment can be resumed via the [continue action](#continue-a-deployment). The deployment then continues like a rolling deployment. This feature is experimental and is subject to change.
   - name: Domains
-    description: "Domains represent a fully qualified domain name that is used for application routes."
+    description: |-
+      Domains represent a [fully qualified domain name](https://en.wikipedia.org/wiki/Fully_qualified_domain_name) that is used for application routes.
+
+      A domain can be scoped to an organization, meaning it can be used to create routes for spaces inside that organization, or be left unscoped to allow all organizations access.
   - name: Droplets
-    description: "Droplets are the result of staging an application package."
+    description: |-
+      Droplets are the result of staging an application package. There are two types
+      (lifecycles) of droplets: buildpack and docker. In the case of the buildpacks,
+      the droplet contains the bits produced by the buildpack, typically application
+      code and dependencies.
+
+      After an application is created and packages are uploaded, a droplet must be
+      created via a [build](#builds) in order for an application to be deployed or tasks to be run. 
+      The current droplet [must be assigned](#set-current-droplet) to an
+      application before it may be started. When [tasks are created](#create-a-task), 
+      they either use a specific droplet guid, or use the current droplet assigned to an application.
   - name: Environment Variable Groups
-    description: "There are two types of environment variable groups: running and staging."
+    description: |-
+      There are two types of environment variable groups: running and staging. They are designed to allow platform operators/admins to manage environment variables across all apps in a foundation.
+
+      Variables in a **running** environment variable group will be injected into all **running app containers**.
+
+      Variables in a **staging** environment variable group will be injected into the **staging container** for all apps while they are being staged.
   - name: Feature Flags
-    description: "Feature flags are runtime flags that enable or disable functionality on the API."
+    description: |-
+      Feature flags are runtime flags that enable or disable functionality on the API.
+
+      ### List of feature flags
+
+      | Name | Default | Description |
+      | ---- | ------- | ----------- |
+      | `app_bits_upload` | `true` | When enabled, space developers can upload app bits. When disabled, only admin users can upload app bits. |
+      | `app_scaling` | `true` | When enabled, space developers can perform scaling operations (i.e. change memory, disk, log rate, or instances). When disabled, only admins can perform scaling operations. |
+      | `diego_cnb (experimental)` | `false` | When enabled, the staging process using Cloud Native Buildpacks is supported. |
+      | `diego_docker` | `false` | When enabled, Docker applications are supported by Diego. When disabled, Docker applications will stop running. It will still be possible to stop and delete them and update their configurations. |
+      | `env_var_visibility` | `true` | When enabled, all users can see their environment variables. When disabled, no users can see environment variables. |
+      | `hash_based_routing` | `false` | When enabled, the `hash`, `hash_header`, and `hash_balance` route options may be set on a route to enable hash-based load balancing. When disabled, those route options are rejected. |
+      | `hide_marketplace_from_unauthenticated_users` | `false` | When enabled, service offerings available in the marketplace will be hidden from unauthenticated users. When disabled, unauthenticated users will be able to see the service offerings available in the marketplace. |
+      | `private_domain_creation` | `true` | When enabled, an organization manager can create private domains for that organization. When disabled, only admin users can create private domains. |
+      | `resource_matching` | `true` | When enabled, any user can create resource matches. When disabled, the [resource match endpoint](#resource-matches) always returns an empty array of matches. The [package upload endpoint](#upload-package-bits) will not cache any uploaded packages for resource matching. |
+      | `route_creation` | `true` | When enabled, a space developer can create routes in a space. When disabled, only admin users can create routes. |
+      | `route_sharing (experimental)` | `false` | When enabled, Space Developers can share routes between two spaces (even across orgs!) in which they have the Space Developer role. When disabled, Space Developers cannot share routes between two spaces. |
+      | `service_instance_creation` | `true` | When enabled, a space developer can create service instances in a space. When disabled, only admin users can create service instances. |
+      | `service_instance_sharing` | `false` | When enabled, Space Developers can share service instances between two spaces (even across orgs!) in which they have the Space Developer role. When disabled, Space Developers cannot share service instances between two spaces. |
+      | `set_roles_by_username` | `true` | When enabled, Org Managers or Space Managers can add access roles by username. In order for this feature to be enabled the CF operator must: <br>1) Enable the `/ids/users/` endpoint for UAA <br>2) Create a UAA `cloud_controller_username_lookup` client with the `scim.userids` authority |
+      | `space_developer_env_var_visibility` | `true` | When enabled, space developers can perform a get on the /v2/apps/:guid/env endpoint, and both space developers and space supporters can perform a get on the /v3/apps/:guid/env and /v3/apps/:guid/environment_variables endpoints. When disabled, neither space developers nor space supporters can access these endpoints. |
+      | `space_scoped_private_broker_creation` | `true` | When enabled, space developers can create space scoped private brokers. When disabled, only admin users can create create space scoped private brokers. |
+      | `task_creation` | `true` | When enabled, space developers can create tasks. When disabled, only admin users can create tasks. |
+      | `unset_roles_by_username` | `true` | When enabled, Org Managers or Space Managers can remove access roles by username. In order for this feature to be enabled the CF operator must: <br>1) Enable the `/ids/users/` endpoint for UAA <br>2) Create a UAA `cloud_controller_username_lookup` client with the `scim.userids` authority |
+      | `user_org_creation` | `false` | When enabled, any user can create an organization via the API. When disabled, only admin users can create organizations via the API. |
+
   - name: Info
-    description: "Info endpoints expose Cloud Controller configuration information."
-  - name: Internal
-    description: "Internal endpoints for system monitoring and metrics."
+    description: |-
+      Info endpoints expose Cloud Controller configuration information.
   - name: Isolation Segments
-    description: "Isolation Segments provide dedicated pools of resources to which apps can be deployed to isolate workloads."
+    description: |-
+      Isolation Segments provide dedicated pools of resources to which apps can be deployed to isolate workloads.
   - name: Jobs
-    description: "Jobs are created by the platform when performing certain asynchronous actions."
+    description: |-
+      Jobs are created by the platform when performing certain asynchronous actions.
   - name: Manifests
-    description: "A manifest is a method for applying bulk configurations to apps and their underlying processes."
+    description: |-
+      ## Manifests
   - name: Organizations
-    description: "An org is a development account that an individual or multiple collaborators can own and use."
+    description: |-
+      An org is a development account that an individual or multiple collaborators can own and use. All collaborators access an org with user accounts. Collaborators in an org share a resource quota plan, applications, services availability, and custom domains.
   - name: Organization Quotas
-    description: "Organization quotas are named sets of memory, log rate, service, and instance usage quotas."
+    description: |-
+      Organization quotas are named sets of memory, log rate, service, and instance usage quotas. For example, one organization quota might allow up to 10 services, 10 routes, and 2 GB of RAM, while another might offer 100 services, 100 routes, and 10 GB of RAM.
+
+      An organization has exactly one organization quota. If not specifically assigned a quota, it will have the default quota.
+
+      For more information, see the [Cloud Foundry docs](https://docs.cloudfoundry.org/adminguide/quota-plans.html).
   - name: Packages
-    description: "A package is an application’s ‘source code’; either raw bits for your application or a pointer to these bits."
+    description: |-
+      A package is an application's 'source code'; either raw bits for your application or a pointer to these bits.
+
+      In Cloud Foundry, packages are staged to produce an executable Droplet. We currently support raw bits and Docker packages.
   - name: Processes
-    description: "Processes define the runnable units of an app."
+    description: |-
+      Processes define the runnable units of an app. An app can have multiple process types, each with differing commands and scale.
+      Processes for an app are defined by the buildpack used to stage the app and can be customized by including a [Procfile](#procfiles) in the application source.
+
+      #### Web process type
+      * By default, a newly created app will come with one instance of the `web` process and all other process types are scaled to zero
+      * Scale the `web` process to zero if it is not required for your app
+      * Unless otherwise specified, all routes will be mapped to the `web` process by default
   - name: Resource Matches
-    description: "Resource Matches are used to determine if a resource has been previously uploaded to the Cloud Controller."
+    description: |-
+      This endpoint matches given resource SHA-1/file size pairs against the Cloud Controller cache
+      and reports the subset that describes already cached files.
+      This is usually used to avoid uploading duplicate files
+      when pushing an app which has only been partially changed.
+      The `path` and `mode` fields are not used when matching.
+
+      When [uploading package bits](#upload-package-bits),
+      the response from this endpoint should be used as the `resources` form field.
+      As such, it is useful to include the `path` and `mode` fields for each resource
+      even though they are not used when determining a resource match.
+
+      Cloud Foundry operators may set minimum/maximum file sizes to match against.
+      If the file size provided is outside this range,
+      it will not be matched against.
+
+      If the `resource_matching` [feature flag](#the-feature-flag-object) is disabled,
+      resource matching will always return an empty array.
   - name: Revisions
-    description: "Revisions represent code used by an application at a specific time."
+    description: |-
+      Revisions represent code used by an application at a specific time. The most recent revision for a running application represents code and configuration currently running in Cloud Foundry. Revisions are not created for Tasks.
+
+      Revision are created when the following is changed:
+
+      * A new droplet is deployed for an app
+
+      * An app is deployed with new environment variables
+
+      * The app is deployed with a new or changed custom start command
+
+      * An app rolls back to a prior revision
+
+      Each time a new revision is created the reason(s) for the revisions creation will be appended to its description field.
+
+      By default the cloud foundry API retains at most 100 revisions per app.
   - name: Roles
-    description: "Roles are used to control access to resources."
+    description: |-
+      Roles control access to resources in organizations and spaces.
+      Roles are assigned to users.
+
+      For example, a user with the `space_developer` role is able to push
+      applications to their space. A `space_manager` user can also add roles to users
+      within that space (e.g. making a user a `space_auditor`). An
+      `organization_manager` has wide-reaching privileges, able to create & delete
+      spaces, and assign & unassign roles to users.
+
+      ### Valid role types
+      - `organization_user`
+      - `organization_auditor`
+      - `organization_manager`
+      - `organization_billing_manager`
+      - `space_auditor`
+      - `space_developer`
+      - `space_manager`
+      - `space_supporter`
+        * Users with only the space supporter role are not authorized to use the **V2** API
   - name: Root
-    description: "Root API endpoints that provide entry points and API information."
+    description: |-
+      These endpoints link to other resources, endpoints, and external services that are relevant to API clients.
   - name: Routes
-    description: "Routes are used to map a URL to an app."
+    description: |-
+      Routes are addresses that direct matched network traffic to one or more destinations. Each route is based on a domain name with additional matching criteria (host (subdomain), path, etc). Matched traffic will be distributed across all destinations, based on their configuration (round-robin by default).
   - name: Route Policies
-    description: "Route policies control which callers can access routes on identity-aware domains."
+    description: |-
+      Route policies control which Cloud Foundry apps, spaces, or organizations can access routes on identity-aware domains. When a domain has `enforce_route_policies` enabled, GoRouter automatically enforces these access controls using mutual TLS (mTLS) to verify the identity of the calling application.
+
+      Route policies are defined using a `source` selector that specifies who can access the route:
+      - `cf:app:<uuid>` - Allow a specific app
+      - `cf:space:<uuid>` - Allow all apps in a space
+      - `cf:org:<uuid>` - Allow all apps in an organization
+      - `cf:any` - Allow any caller (cannot be combined with other sources on the same route)
+
+      **Note:** Route policies can only be created for routes on domains where `enforce_route_policies` is `true` and the domain is not internal (internal routes use container-to-container networking and bypass GoRouter).
+
+      **This feature is experimental and is subject to change.**
   - name: Security Groups
-    description: "Security groups are used to control access to apps."
+    description: |-
+      Security groups are collections of egress traffic rules that can be applied to the staging or running state of applications.
+
+      Security groups can either be applied globally or at the space-level.
+
+      Security groups can only allow (whitelist) traffic. They cannot be used to disallow (blacklist) traffic.
+
+      IPv6 security groups can be configured if `cc.enable_ipv6` is set to `true`.
   - name: Service Brokers
-    description: "Service brokers are used to manage services."
-  - name: Service Credential Bindings
-    description: "Service credential bindings are used to bind a service instance to an app."
-  - name: Service Instances
-    description: "Service instances are instances of a service."
+    description: |-
+      Service brokers manage the lifecycle of services. On behalf of users, Cloud Controller will interact with service brokers to provision, get access to and manage access to the service offerings and plans they offer.
+
+      Admins can create and manage service brokers that are globally available, i.e., the service broker and its associated resources (service offerings and plans) can be made available to all users.
+
+      Space Developers can create and manage space-scoped service brokers. A space-scoped broker and its associated resources will only be available in the space the service broker was created.
+
+      ### Service broker jobs
+
+      CRUD operations for service brokers are asynchronous. `create`, `update` and `delete` endpoints include a job URL in the `Location` header of the HTTP response.
+
+      These jobs are the only source of information about the progress of the operation. Therefore, the job must be polled to find out when the process ends and if it was successful.
+      There is no mechanism to link a service broker with its jobs, apart from the `Location` header in the API response.
+
+      When a failure occurs during a create job, the service broker won't be usable. It will still be included in the `GET` endpoints responses, hence the importance of querying the job to find out the end status.
+
+      When updating a service broker, catalog changes will be rolled-back in the event of the job failing. The service broker catalog will remain unchanged with no indication that the update operation failed. Querying the job will provide such information.
   - name: Service Offerings
-    description: "Service offerings are services that are available to be used."
+    description: |-
+      Service offerings represent the services offered by service brokers.
+      A service broker will have one or more service offerings.
+      A service offering will have one or more service plans.
+      Service offerings and service plans are created and updated when a service broker is registered or updated.
+
+      ### Visibility of service offerings
+
+      This table shows the service offerings that different roles can see.
+      The service offerings that a user can see relate to their space and organization roles,
+      regardless of which space or organization is being targeted.
+
+      A service offering can be seen when at least one of its service plans can be seen.
+      Service plans may be configured to be `public`,
+      or they may be configured with a relationship to a restricted list of organizations.
+
+      Service offerings and service plans from a space-scoped service broker cannot have their visibility configured.
+      They are only visible to members of that space.
+
+      Role | Public plans | Restricted plans | From space-scoped service brokers
+      --- | --- | --- | ---
+      Admin | All | All | All
+      Admin Read | All | All | All
+      Global Auditor | All | All | All
+      Org Manager | All | In organisation | None
+      Org Auditor | All | In organisation | None
+      Org Billing | All | In organisation | None
+      Space Manager | All | In organisation | In space
+      Space Developer | All | In organisation | In space
+      Space Auditor | All | In organisation | In space
+      Unauthenticated | All* | None | None
+
+      *Unless the `hide_marketplace_from_unauthenticated_users` feature flag is `true`
   - name: Service Plans
-    description: "Service plans are plans for a service."
+    description: |-
+      Service plans represent the service plans offered by a service offering.
+      A service offering will have one or more service plans.
+      Service offerings and service plans are created and updated when a service broker is registered or updated.
+  - name: Service Plan Visibility
+    description: |-
+      Service plan visibility is used to manage whether a role has access to a given service plan and its service offering.
+
+      ### List of visibility types
+
+      Name | Description
+      ---- | -----------
+      **public** | Everyone, including unauthenticated users can see the service plan
+      **admin** | Only Admin, Admin Read-Only and Global Auditor can see the service plan
+      **organization** | Restricted to members of a set of organizations
+      **space** | Restricted to members of a space; only possible if the plan comes from a space-scoped service broker
+  - name: Service Instances
+    description: |-
+      An instantiation of a service.
+
+      Service instances can be of type `managed` when it is an instantiation of a [service offering](#service-offerings) registered with CF
+      or `user-provided` when it describes an instance of an offering that is not registered with CF.
+  - name: Service Credential Bindings
+    description: |-
+      Service credential bindings are used to make the details of the connection to a service instance available to an app or a developer.
+
+      Service credential bindings can be of type `app` or `key`.
+
+      A service credential binding is of type `app` when it is a binding between a [service instance](#service-instances) and an [application](#apps).
+      Not all services support this binding, as some services deliver value to users directly without integration with an application. 
+      Field `broker_catalog.features.bindable` from [service plan](#the-service-plan-object) of the service instance can be used to determine if it is bindable.
+
+      A service credential binding is of type `key` when it only retrieves the details of the service instance and makes them available to the developer.
   - name: Service Route Bindings
-    description: "Service route bindings are used to bind a route to a service instance."
+    description: |-
+      Service route bindings are relations between a service instance and a route.
+
+      Not all service instances support route binding. 
+      In order to bind to a managed service instance, the service instance should be created from a service offering that has requires route forwarding (`requires=[route_forwarding]`). 
+      In order to bind to a user-provided service instance, the service instance must have `route_service_url` set.
   - name: Service Usage Events
-    description: "Service usage events are a record of changes in the usage of services."
+    description: |-
+      Service usage events are a record of changes in the usage of services. For
+      example, service usage events are recorded when a service instance is created,
+      updated, and deleted. They may contain information about the service instance in
+      question and the associated space, service broker, and service offering.
+
+      Usage events are typically used by billing and chargeback applications.
   - name: Sidecars
-    description: "Sidecars are used to run a process alongside an app."
+    description: |-
+      Sidecars are additional operating system processes that are run in the same container as a [process](#processes).
+
+      #### Use cases for sidecars
+
+      Sidecars are useful for any app processes that need to communicate with another within the same container or are otherwise dependent on each other. Some use cases are:
+
+      - Two or more processes that require access to a shared file
+      - An Application Performance Monitoring (APM) tool that attaches to a dependent app's processes
+      - Two or more processes that communicate via a local socket
+
+      #### Steps to create a sidecar
+      The recommended way to create sidecars for your app is with a [manifest](#manifests).
+
+      ```yaml
+       sidecars:
+        - name: authenticator
+          process_types: [ 'web', 'worker' ]
+          command: bundle exec run-authenticator
+        - name: performance monitor
+          process_types: [ 'web' ]
+          command: bundle exec run-performance-monitor
+          memory: 128M
+      ```
+
+      - **name** is a user defined identifier (unique per app)
+      - **process_types** is a list of app processes the sidecar will attach to. You can attach multiple sidecars to each process type your app uses
+      - **command** is the command used to start the sidecar
+      - **memory** is the memory reserved for the sidecar<sup>[1]</sup>
+
+      <sup>1 Applies for Java apps.  If you do not reserve memory for the sidecar, the JVM will consume all of the memory in the app container.  This value must be less thatn the process' reserved memory.</sup>
+
+      #### Current limitations
+      - Start and stop order of app processes and their sidecars is undefined
+      - App processes and sidecar processes are codependent: if either crashes or exits, the other will as well
+      - Sidecars are currently not independently scalable (memory / disk) and share resources with the main app process and other sidecars within that container
+      - Sidecars only support PID based health checks; HTTP health-checks for sidecars are not currently supported
+      - This has only been tested on Linux based systems
   - name: Spaces
-    description: "Spaces are used to group apps and services."
+    description: |-
+      Every application and service is scoped to a space. Each org contains at least one space. A space provides users with access to a shared location for application development, deployment, and maintenance.
+  - name: Space Features
+    description: |-
+      Space features are used to manage whether optional capabilities are enabled for
+      a given space.
+
+      Currently, the only space feature is SSH (`ssh`), which controls whether
+      applications in the space may be accessed via SSH.
+
+      **Note**: SSH must also be [enabled globally](https://docs.cloudfoundry.org/running/config-ssh.html) and on the [app](#supported-app-features).
   - name: Space Quotas
-    description: "Space quotas are named sets of memory, log rate, service, and instance usage quotas."
+    description: |-
+      Space quotas are named sets of quotas. Space quota names are unique within an organization. For example, an organization may only have one space quota named "production", but two organizations may have two distinct space quotas, both named "production".
+
+      Only one space quota may be applied to a given space at any given time.
+
+      Space quotas cannot be used to bypass organization quotas. When the organization's quota and the space's quota specify a different values for a given resource, the more restrictive of the two is used. In the event of permissions, the more restrictive permission is used.
   - name: Stacks
-    description: "Stacks are used to specify the operating system and runtime environment for an app."
+    description: |-
+      Stacks are the base operating system and file system that your application will execute in.
+      A stack is how you configure applications to run against different operating systems
+      (like Windows or Linux)
+      and different versions of those operating systems
+      (like Windows 2012 or Windows 2016).
+
+      An application's [lifecycle](#lifecycles) will specify which stack to execute the application in.
+      Buildpacks can also be associated with a particular stack if they contain stack-specific logic.
+      An application will automatically use buildpacks associated with the application's configured stack.
+
+      Stacks are not used for apps with a [Docker lifecycle](#docker-lifecycle).
+
+      Operators control stack availability through state management. The following states determine how a stack can be used:
+
+      *ACTIVE*: Default state. The stack is fully available for all operations.
+
+      *DEPRECATED*: The stack is nearing end-of-life. It remains fully functional,
+      but users should migrate to an ACTIVE stack.
+
+      *RESTRICTED*: A transitional state typically applied before deprecation or disabling.
+      New application creation is blocked; existing deployments continue to operate normally.
+
+      *DISABLED*: The stack has reached end-of-life. New application creation and restaging are prohibited. 
+      Running applications remain available.
   - name: Tasks
-    description: "Tasks are one-off commands that can be run against an app."
+    description: |-
+      Tasks are one-off jobs that are intended to perform a task, stop, and be cleaned up, freeing up resources.
+
+      Examples of this include database migrations, sending things, and batch jobs.
   - name: Users
-    description: "Users are the users of the Cloud Foundry platform."
+    description: |-
+      The user resource is used to manage access to organizations, spaces, and other
+      resources within Cloud Foundry. Cloud Controller is not the ultimate authority
+      on the users in the Cloud Foundry system; UAA and its configured identity
+      providers determine which users are able to sign in to Cloud Foundry.
+
+      To be functional, Cloud Controller users must "shadow" a corresponding user or
+      client in UAA. The Cloud Controller user resource's guid should match either a
+      UAA user or a UAA client id. However, Cloud Controller does not enforce that
+      a user's guid is a valid UAA user or client id.
+
+      Users can be assigned roles, which give them privileges to perform actions
+      within a given context. For example, the Space Developer role grants a user
+      permission to manage apps and services in a space (e.g. to push apps, scale
+      apps, delete apps).
 security:
   - oauth:
       - cloud_controller.read

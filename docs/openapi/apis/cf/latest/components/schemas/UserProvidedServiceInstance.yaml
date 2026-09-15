@@ -6,7 +6,7 @@ allOf:
         type: string
         enum:
           - user-provided
-        description: Type of service instance
+        description: Either `managed` or `user-provided`
       name:
         type: string
         description: Name of the service instance
@@ -14,38 +14,51 @@ allOf:
         type: array
         items:
           type: string
-        description: Tags for the service instance
+        description: Tags are used by apps to identify service instances; they are shown in the app VCAP_SERVICES env
       syslog_drain_url:
         type: [string, "null"]
         format: uri
-        description: URL for syslog drain
+        description: URL to which logs for bound applications will be streamed; only shown when type is `user-provided`
       route_service_url:
         type: [string, "null"]
         format: uri
-        description: URL for route service
+        description: URL to which requests for bound routes will be forwarded; only shown when type is `user-provided`
+      last_operation:
+        $ref: './ServiceInstanceLastOperation.yaml'
+        description: The last operation of this service instance
       relationships:
         type: object
         properties:
           space:
             $ref: './RelationshipToOne.yaml'
+            description: The space the service instance is contained in
         description: Relationships for the service instance
       links:
         type: object
         properties:
           self:
             $ref: './Link.yaml'
+            description: Link to this service instance
           space:
             $ref: './Link.yaml'
-          service_credential_bindings:
-            $ref: './Link.yaml'
-          service_route_bindings:
-            $ref: './Link.yaml'
+            description: Link to the space the service instance is contained in
           credentials:
             $ref: './Link.yaml'
+            description: Link to the credentials of this user-provided service instance
+          service_credential_bindings:
+            $ref: './Link.yaml'
+            description: Link to the service credential bindings for this service instance
+          service_route_bindings:
+            $ref: './Link.yaml'
+            description: Link to the service route bindings for this service instance
+        description: Links to related resources
       metadata:
         $ref: './Metadata.yaml'
+        description: Labels and annotations applied to the service instance
     required:
     - type
     - name
     - relationships
     - links
+description: |-
+  A user-provided service instance describes an instance of an offering that is not registered with CF.

@@ -2,7 +2,9 @@ type: object
 properties:
   pagination:
     $ref: './Pagination.yaml'
+    description: Pagination information for the list of app usage events
   resources:
     type: array
     items:
       $ref: './AppUsageEvent.yaml'
+    description: The list of app usage events
