@@ -155,6 +155,8 @@ components:
       $ref: './components/schemas/AuditEventList.yaml'
     App:
       $ref: './components/schemas/App.yaml'
+    AppBase:
+      $ref: './components/schemas/AppBase.yaml'
     AppList:
       $ref: './components/schemas/AppList.yaml'
     AppEnvironment:
@@ -167,6 +169,8 @@ components:
       $ref: './components/schemas/AppSshEnabled.yaml'
     Route:
       $ref: './components/schemas/Route.yaml'
+    RouteBase:
+      $ref: './components/schemas/RouteBase.yaml'
     RouteDestination:
       $ref: './components/schemas/RouteDestination.yaml'
     RouteDestinationList:
@@ -225,6 +229,8 @@ components:
       $ref: './components/schemas/SpaceQuota.yaml'
     Space:
       $ref: './components/schemas/Space.yaml'
+    SpaceBase:
+      $ref: './components/schemas/SpaceBase.yaml'
     Stack:
       $ref: './components/schemas/Stack.yaml'
   securitySchemes:

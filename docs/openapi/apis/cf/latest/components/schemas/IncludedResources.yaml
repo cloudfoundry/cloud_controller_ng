@@ -4,7 +4,7 @@ properties:
   spaces:
     type: array
     items:
-      $ref: './Space.yaml'
+      $ref: './SpaceBase.yaml'
     description: Array of included space resources
   organizations:
     type: array
@@ -36,12 +36,12 @@ properties:
   apps:
     type: array
     items:
-      $ref: './App.yaml'
+      $ref: './AppBase.yaml'
     description: Array of included app resources
   routes:
     type: array
     items:
-      $ref: './Route.yaml'
+      $ref: './RouteBase.yaml'
     description: Array of included route resources
   users:
     type: array
