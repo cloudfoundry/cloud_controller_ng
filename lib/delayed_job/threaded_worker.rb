@@ -1,5 +1,18 @@
 module Delayed
   class ThreadedWorker < Delayed::Worker
+    # Delayed::Plugin callbacks register against the base Delayed::Worker.lifecycle,
+    # but setup_lifecycle rebuilds the lifecycle on the class it is called on. On this
+    # subclass it would reset a different lifecycle than the one plugins append to,
+    # so every ThreadedWorker.new would leak another callback into the base lifecycle.
+    # Delegate to the base class so each instantiation rebuilds the same lifecycle.
+    def self.setup_lifecycle
+      Delayed::Worker.setup_lifecycle
+    end
+
+    def self.lifecycle
+      Delayed::Worker.lifecycle
+    end
+
     def initialize(options={})
       super
       @num_threads = options[:num_threads]

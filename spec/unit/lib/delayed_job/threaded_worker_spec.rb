@@ -22,6 +22,16 @@ RSpec.describe Delayed::ThreadedWorker do
       worker = Delayed::ThreadedWorker.new({ num_threads: 2 })
       expect(worker.instance_variable_get(:@grace_period_seconds)).to eq(30)
     end
+
+    it 'does not accumulate enqueue lifecycle callbacks across instantiations' do
+      before_enqueue_callbacks = lambda do
+        Delayed::Worker.lifecycle.instance_variable_get(:@callbacks)[:enqueue].instance_variable_get(:@before).size
+      end
+
+      baseline = before_enqueue_callbacks.call
+      5.times { Delayed::ThreadedWorker.new(options) }
+      expect(before_enqueue_callbacks.call).to eq(baseline)
+    end
   end
 
   describe '#start' do
