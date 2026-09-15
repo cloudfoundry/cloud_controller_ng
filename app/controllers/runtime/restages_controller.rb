@@ -49,7 +49,7 @@ module VCAP::CloudController
           'user-id' => current_user.guid
         }, {
           'lifecycle' => process.app.lifecycle_type,
-          'buildpacks' => process.app.lifecycle_data.buildpacks,
+          'buildpacks' => process.app.lifecycle_data.obfuscated_buildpacks,
           'stack' => process.app.lifecycle_data.stack
         }
       )

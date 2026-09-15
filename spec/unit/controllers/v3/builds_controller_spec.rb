@@ -742,6 +742,40 @@ RSpec.describe BuildsController, type: :controller do
           expect(response.body).to include('Unable to use package. Ensure that the package exists and you have access to it.')
         end
       end
+
+      context 'telemetry' do
+        let(:logger_spy) { spy('logger') }
+        let(:developer) { make_developer_for_space(space) }
+
+        before do
+          allow(VCAP::CloudController::TelemetryLogger).to receive(:logger).and_return(logger_spy)
+          set_current_user(developer)
+          allow_any_instance_of(VCAP::CloudController::Diego::Stager).to receive(:stage)
+        end
+
+        it 'redacts credentials from custom buildpack URLs in telemetry' do
+          req_body_with_creds = {
+            package: { guid: package.guid },
+            lifecycle: {
+              type: 'buildpack',
+              data: {
+                buildpacks: ['https://user:secret@github.com/myorg/private-buildpack'],
+                stack: VCAP::CloudController::Stack.default.name
+              }
+            }
+          }
+
+          post :create, params: req_body_with_creds, as: :json
+
+          expect(response).to have_http_status(:created)
+          expect(logger_spy).to have_received(:info) do |json_str|
+            logged = Oj.load(json_str)
+            buildpacks = logged['create-build']['buildpacks']
+            expect(buildpacks).to eq(['https://***:***@github.com/myorg/private-buildpack'])
+            expect(buildpacks.first).not_to include('secret')
+          end
+        end
+      end
     end
   end
 
