@@ -112,7 +112,7 @@ This is useful for:
 - Validating a mock server's implementation against the OpenAPI spec.
 - Quickly checking a live API for compliance without running the full `capi-bara-tests` suite.
 
-## Checking the description against the request specs (spike)
+## Checking the description against the request specs
 
 The Cloud Controller's rspec request specs drive the real rack app, so every
 example is already a request/response pair that this description either covers
@@ -133,10 +133,15 @@ and `out/openapi_coverage.html` (every route, with the ones nothing exercised).
 `OPENAPI_CONFORMANCE=strict` turns a non-conforming response into a spec
 failure instead of a line in the report.
 
-The `OpenAPI Conformance (spike)` GitHub Action runs this on pull requests and
-publishes the digest to the job summary. It is informational: the description
-covers part of the API and the request specs use synthetic fixtures, so it
-reports rather than gates.
+Violations reading `does not match format: uuid` are counted but not listed.
+Around 250 places in `spec/request` hand a model a literal guid such as
+`'app1_guid'` and then assert on it, so that check only has signal against
+recorded traffic, not against fixtures.
+
+The `OpenAPI Conformance` GitHub Action runs this on pull requests and
+publishes the digest to the job summary. It is informational -- the
+description already disagrees with the API in a handful of places, so there is
+nothing honest to gate on yet.
 
 ## Contributing
 
