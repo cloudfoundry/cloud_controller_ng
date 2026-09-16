@@ -46,7 +46,7 @@ module VCAP::CloudController::Presenters::V3
         it 'returns the app features' do
           result = AppManifestPresenter.new(app, service_bindings, route_mappings).to_hash
           application = result[:applications].first
-          expect(application[:features].keys).to contain_exactly(:ssh, :revisions, :'service-binding-k8s', :'file-based-vcap-services')
+          expect(application[:features].keys).to contain_exactly(:ssh, :revisions, :'service-binding-k8s', :'file-based-vcap-services', :gpu)
         end
 
         context 'when environment variables is an empty hash' do

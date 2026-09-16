@@ -1321,6 +1321,7 @@
             - revisions
             - service-binding-k8s
             - file-based-vcap-services
+            - gpu
     responses:
       '200':
         description: OK
@@ -1348,6 +1349,7 @@
             - revisions
             - service-binding-k8s
             - file-based-vcap-services
+            - gpu
     requestBody:
       content:
         application/json:

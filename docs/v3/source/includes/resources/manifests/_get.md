@@ -27,6 +27,7 @@ applications:
     revisions: true
     service-binding-k8s: false
     file-based-vcap-services: false
+    gpu: false
   services:
   - my-service
   routes:

@@ -9,13 +9,15 @@ RSpec.describe 'App Features' do
   let(:space) { create(:space, organization: org) }
   let(:service_binding_k8s_enabled) { true }
   let(:file_based_vcap_services_enabled) { false }
+  let(:gpu_enabled) { false }
   let(:request_body_enabled) { { body: { enabled: true } } }
   let(:app_model) do
     create(:app_model,
            space: space,
            enable_ssh: true,
            service_binding_k8s_enabled: service_binding_k8s_enabled,
-           file_based_vcap_services_enabled: file_based_vcap_services_enabled)
+           file_based_vcap_services_enabled: file_based_vcap_services_enabled,
+           gpu_enabled: gpu_enabled)
   end
 
   describe 'GET /v3/apps/:guid/features' do
@@ -43,11 +45,16 @@ RSpec.describe 'App Features' do
               'name' => 'file-based-vcap-services',
               'description' => 'Enable file-based VCAP service bindings for the app',
               'enabled' => false
+            },
+            {
+              'name' => 'gpu',
+              'description' => 'Require GPU support for the app',
+              'enabled' => false
             }
           ],
           'pagination' =>
             {
-              'total_results' => 4,
+              'total_results' => 5,
               'total_pages' => 1,
               'first' => { 'href' => "/v3/apps/#{app_model.guid}/features" },
               'last' => { 'href' => "/v3/apps/#{app_model.guid}/features" },
@@ -133,6 +140,19 @@ RSpec.describe 'App Features' do
         {
           'name' => 'file-based-vcap-services',
           'description' => 'Enable file-based VCAP service bindings for the app',
+          'enabled' => false
+        }
+      end
+
+      it_behaves_like 'permissions for single object endpoint', ALL_PERMISSIONS
+    end
+
+    context 'gpu app feature' do
+      let(:api_call) { ->(user_headers) { get "/v3/apps/#{app_model.guid}/features/gpu", nil, user_headers } }
+      let(:feature_response_object) do
+        {
+          'name' => 'gpu',
+          'description' => 'Require GPU support for the app',
           'enabled' => false
         }
       end
@@ -362,6 +382,26 @@ RSpec.describe 'App Features' do
           end
         end
       end
+    end
+
+    context 'gpu app feature' do
+      let(:api_call) { ->(user_headers) { patch "/v3/apps/#{app_model.guid}/features/gpu", request_body_enabled.to_json, user_headers } }
+      let(:feature_response_object) do
+        {
+          'name' => 'gpu',
+          'description' => 'Require GPU support for the app',
+          'enabled' => true
+        }
+      end
+
+      let(:expected_codes_and_responses) do
+        h = Hash.new({ code: 403, errors: CF_NOT_AUTHORIZED }.freeze)
+        %w[no_role org_auditor org_billing_manager].each { |r| h[r] = { code: 404 } }
+        %w[admin space_developer].each { |r| h[r] = { code: 200, response_object: feature_response_object } }
+        h
+      end
+
+      it_behaves_like 'permissions for single object endpoint', ALL_PERMISSIONS
     end
   end
 end

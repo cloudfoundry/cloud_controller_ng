@@ -51,7 +51,7 @@ module VCAP::CloudController
       end
 
       context "when 'features' are given in the right format" do
-        let(:params) { { features: { ssh: true } } }
+        let(:params) { { features: { ssh: true, gpu: true } } }
 
         it 'is valid' do
           expect(message).to be_valid

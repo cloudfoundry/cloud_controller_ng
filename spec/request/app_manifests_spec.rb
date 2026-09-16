@@ -97,7 +97,8 @@ RSpec.describe 'App Manifests' do
                 'ssh' => true,
                 'revisions' => true,
                 'service-binding-k8s' => false,
-                'file-based-vcap-services' => false
+                'file-based-vcap-services' => false,
+                'gpu' => false
               },
               'services' => [service_binding.service_instance_name, service_binding2.service_instance_name],
               'routes' => [
@@ -208,7 +209,8 @@ RSpec.describe 'App Manifests' do
                 'ssh' => true,
                 'revisions' => true,
                 'service-binding-k8s' => false,
-                'file-based-vcap-services' => false
+                'file-based-vcap-services' => false,
+                'gpu' => false
               },
               'services' => [service_binding.service_instance_name, service_binding2.service_instance_name],
               'routes' => [
@@ -289,7 +291,8 @@ RSpec.describe 'App Manifests' do
                 'ssh' => true,
                 'revisions' => true,
                 'service-binding-k8s' => false,
-                'file-based-vcap-services' => false
+                'file-based-vcap-services' => false,
+                'gpu' => false
               },
               'routes' => [
                 {

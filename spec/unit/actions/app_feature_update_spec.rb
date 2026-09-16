@@ -5,7 +5,10 @@ require 'messages/app_feature_update_message'
 module VCAP::CloudController
   RSpec.describe AppFeatureUpdate do
     subject(:app_feature_update) { AppFeatureUpdate }
-    let(:app) { create(:app_model, enable_ssh: false, revisions_enabled: false, service_binding_k8s_enabled: false, file_based_vcap_services_enabled: false) }
+    let(:app) do
+      create(:app_model, enable_ssh: false, revisions_enabled: false, service_binding_k8s_enabled: false,
+                         file_based_vcap_services_enabled: false, gpu_enabled: false)
+    end
 
     describe '.update' do
       let(:message) { AppFeatureUpdateMessage.new(enabled: true) }
@@ -41,6 +44,14 @@ module VCAP::CloudController
           end.to change { app.reload.file_based_vcap_services_enabled }.to(true)
         end
       end
+
+      context 'when the feature name is gpu' do
+        it 'updates the gpu_enabled column on the app' do
+          expect do
+            AppFeatureUpdate.update('gpu', app, message)
+          end.to change { app.reload.gpu_enabled }.to(true)
+        end
+      end
     end
 
     describe '.bulk_update' do
@@ -49,7 +60,8 @@ module VCAP::CloudController
           ssh: false,
           revisions: false,
           'service-binding-k8s': false,
-          'file-based-vcap-services': false
+          'file-based-vcap-services': false,
+          gpu: false
         }
       end
       let(:message) { ManifestFeaturesUpdateMessage.new(features:) }
@@ -99,6 +111,18 @@ module VCAP::CloudController
           expect do
             AppFeatureUpdate.bulk_update(app, message)
           end.to change { app.reload.file_based_vcap_services_enabled }.to(true)
+        end
+      end
+
+      context 'when the gpu feature is specified' do
+        before do
+          features[:gpu] = true
+        end
+
+        it 'updates the gpu_enabled column on the app' do
+          expect do
+            AppFeatureUpdate.bulk_update(app, message)
+          end.to change { app.reload.gpu_enabled }.to(true)
         end
       end
 

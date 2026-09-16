@@ -529,6 +529,7 @@ module VCAP::CloudController
         it 'does not show unspecified features' do
           expect(subject).not_to include(hash_including('path' => '/applications/0/features/revisions'))
           expect(subject).not_to include(hash_including('path' => '/applications/0/features/file-based-vcap-services'))
+          expect(subject).not_to include(hash_including('path' => '/applications/0/features/gpu'))
         end
       end
     end

@@ -2220,13 +2220,13 @@ module VCAP::CloudController
 
       context 'when features are specified' do
         let(:parsed_yaml) do
-          { name: 'app', features: { ssh: true, 'service-binding-k8s': false } }
+          { name: 'app', features: { ssh: true, 'service-binding-k8s': false, gpu: true } }
         end
 
         it 'returns a ManifestFeaturesUpdateMessage containing the features' do
           message = AppManifestMessage.create_from_yml(parsed_yaml)
           expect(message).to be_valid
-          expect(message.manifest_features_update_message.features).to eq({ ssh: true, 'service-binding-k8s': false })
+          expect(message.manifest_features_update_message.features).to eq({ ssh: true, 'service-binding-k8s': false, gpu: true })
         end
       end
 

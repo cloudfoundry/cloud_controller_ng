@@ -103,6 +103,7 @@ module VCAP::CloudController
           ),
           image_username: process.desired_droplet.docker_receipt_username,
           image_password: process.desired_droplet.docker_receipt_password,
+          # TODO: Add a GPU request when the Diego BBS API contract is available and process.app.gpu_enabled is true.
           volume_mounted_files: ServiceBindingFilesBuilder.build(process)
         }.compact
       rescue ServiceBindingFilesBuilder::IncompatibleBindings => e
