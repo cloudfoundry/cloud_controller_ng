@@ -27,6 +27,22 @@ module OpenapiConformance
   # and a step summary that long is unreadable anyway.
   MAX_ROWS = 50
 
+  # `format: uuid` failures are ours, not the API's: 248 places in
+  # spec/request hand a model a literal guid like 'app1_guid', and specs
+  # assert on those literals, so they can't just be swapped for real UUIDs.
+  # Real Cloud Controller guids are SecureRandom.uuid, so this check only has
+  # signal against recorded traffic, not against fixtures. Counted, not listed.
+  UUID_FORMAT_ERROR = /does not match format: uuid/
+
+  # Only suppress when every clause is a uuid complaint -- a compound error
+  # like "... format: uuid. value at `/x` is not an object" still matters.
+  def self.uuid_noise?(message)
+    return false if message.nil?
+
+    clauses = message.sub(/\A(Request body invalid|Response body is invalid|Path segment is invalid): /, '').split('. ')
+    clauses.all? { |clause| clause.match?(UUID_FORMAT_ERROR) }
+  end
+
   # openapi_first takes one reporter. This one writes the HTML report to read
   # after the fact, plus a short markdown digest for the CI log and the job
   # summary. The gem's own terminal reporter prints every untested route,
@@ -53,13 +69,15 @@ module OpenapiConformance
 
     def render_plan(plan)
       exercised = plan.routes.count { |route| route.requests.any?(&:requested?) }
-      violations = violations(plan)
+      violations, suppressed = partition_violations(plan)
 
       lines = [
         "- Coverage: **#{plan.coverage.round(2)}%**",
         "- Described routes exercised: **#{exercised}/#{plan.routes.size}**",
-        "- Conformance violations: **#{violations.size}**\n"
+        "- Conformance violations: **#{violations.size + suppressed.size}**"
       ]
+      lines << "  (#{suppressed.size} of them `format: uuid` vs. synthetic test guids, not listed)" if suppressed.any?
+      lines << ''
       return lines if violations.empty?
 
       lines << '| Route | What | Error |'
@@ -83,6 +101,10 @@ module OpenapiConformance
         bad_requests.map { |req| [label, 'request', req.last_error_message] } +
           bad_responses.map { |res| [label, "response #{res.status}", res.last_error_message] }
       end
+    end
+
+    def partition_violations(plan)
+      violations(plan).partition { |(_route, _what, error)| !OpenapiConformance.uuid_noise?(error) }
     end
   end
 
@@ -124,7 +146,12 @@ module OpenapiConformance
         # Default is to turn a non-conforming request or response into a spec
         # failure. Off unless asked, so one violation doesn't hide the rest of
         # the picture -- and so this can be added without breaking the suite.
-        unless strict?
+        if strict?
+          # Even here the uuid complaints stay out of the way -- they are test
+          # fixtures, so failing on them would make strict mode unusable.
+          test.ignore_request_error { |request| uuid_noise?(request.error&.message) }
+          test.ignore_response_error { |response, _rack_request| uuid_noise?(response.error&.message) }
+        else
           test.ignore_request_error { true }
           test.response_raise_error = false
         end

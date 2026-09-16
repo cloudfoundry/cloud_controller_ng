@@ -1,10 +1,10 @@
-# Spike: check the traffic our request specs already generate against the
-# OpenAPI description in docs/openapi, and report what it finds.
+# Check the traffic our request specs already generate against the OpenAPI
+# description in docs/openapi, and report what it finds.
 #
-# Informational by design. The description covers a subset of the API and the
-# request specs use synthetic fixtures, so the run records violations rather
-# than failing on them. Dispatch it with `strict` to see what gating would do.
-name: OpenAPI Conformance (spike)
+# Informational: the description already disagrees with the API in a handful
+# of places, so the run publishes a digest rather than failing. Dispatch it
+# with `strict` to see what gating would do.
+name: OpenAPI Conformance
 
 concurrency:
   group: '${{ github.workflow }}-${{ github.head_ref || github.run_id }}'
