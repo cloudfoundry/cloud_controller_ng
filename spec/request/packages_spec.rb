@@ -1260,31 +1260,4 @@ RSpec.describe 'Packages' do
       end
     end
   end
-
-  describe 'PATCH /internal/v4/packages/:guid' do
-    let!(:package_model) { create(:package_model, state: VCAP::CloudController::PackageModel::PENDING_STATE) }
-    let(:body) do
-      {
-        'state' => 'READY',
-        'checksums' => [
-          {
-            'type' => 'sha1',
-            'value' => 'potato'
-          },
-          {
-            'type' => 'sha256',
-            'value' => 'potatoest'
-          }
-        ]
-      }.to_json
-    end
-    let(:guid) { package_model.guid }
-
-    it 'updates a package' do
-      patch "/internal/v4/packages/#{guid}", body
-
-      expect(last_response.status).to eq(204)
-      expect(last_response.body).to eq('')
-    end
-  end
 end
