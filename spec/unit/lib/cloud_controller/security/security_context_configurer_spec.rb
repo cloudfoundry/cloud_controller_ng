@@ -207,7 +207,7 @@ module VCAP::CloudController
         end
 
         it 'sets the token without looking up the user in the DB' do
-          configurer.configure_token_only(auth_token)
+          expect { configurer.configure_token_only(auth_token) }.to have_queried_db_times(/select .* from .users./i, 0)
           expect(SecurityContext.token).to eq(token_information)
           expect(SecurityContext.auth_token).to eq(auth_token)
           expect(SecurityContext.current_user).to be_nil
@@ -232,10 +232,8 @@ module VCAP::CloudController
       end
 
       describe '#configure_user' do
-        let(:token_information) { { 'user_id' => 'user-id-1' } }
-
         before do
-          SecurityContext.set_token_only(token_information, 'auth-token')
+          SecurityContext.set(nil, { 'user_id' => 'user-id-1' }, 'auth-token')
         end
 
         context 'when user does not exist' do
@@ -255,7 +253,7 @@ module VCAP::CloudController
         end
 
         context 'when token is nil' do
-          before { SecurityContext.set_token_only(nil, nil) }
+          before { SecurityContext.set(nil, nil, nil) }
 
           it 'does not raise and leaves current_user nil' do
             expect { configurer.configure_user }.not_to raise_error

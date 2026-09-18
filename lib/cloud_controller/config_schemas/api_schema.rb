@@ -384,6 +384,8 @@ module VCAP::CloudController
             reset_interval_in_minutes: Integer
           },
           max_concurrent_service_broker_requests: Integer,
+          optional(:redis_connection_pool_size) => Integer,
+          optional(:redis_counter_ttl_seconds) => Integer,
           shared_isolation_segment_name: String,
 
           optional(:rate_limiter_v2_api) => {
@@ -398,9 +400,7 @@ module VCAP::CloudController
           optional(:concurrency_rate_limiter) => {
             enabled: bool,
             optional(:blocking_limit) => Integer,
-            optional(:logging_limit) => Integer,
-            optional(:redis_connection_pool_size) => Integer,
-            optional(:redis_counter_ttl_seconds) => Integer
+            optional(:logging_limit) => Integer
           },
 
           optional(:temporary_enable_v2) => bool,

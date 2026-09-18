@@ -110,7 +110,9 @@ module VCAP::CloudController
               anything,
               logger: instance_of(Steno::Logger),
               max_concurrent_requests: TestConfig.config_instance.get(:max_concurrent_service_broker_requests),
-              broker_timeout_seconds: TestConfig.config_instance.get(:broker_client_timeout_seconds)
+              broker_timeout_seconds: TestConfig.config_instance.get(:broker_client_timeout_seconds),
+              redis_connection_pool_size: TestConfig.config_instance.get(:redis_connection_pool_size),
+              redis_counter_ttl_seconds: TestConfig.config_instance.get(:redis_counter_ttl_seconds)
             )
           end
         end
@@ -231,9 +233,7 @@ module VCAP::CloudController
             builder.build(TestConfig.override(concurrency_rate_limiter: {
                                                 enabled: true,
                                                 blocking_limit: 10,
-                                                logging_limit: 5,
-                                                redis_connection_pool_size: 4,
-                                                redis_counter_ttl_seconds: 600
+                                                logging_limit: 5
                                               }), request_metrics, request_logs).to_app
           end
 
@@ -243,8 +243,8 @@ module VCAP::CloudController
               logger: instance_of(Steno::Logger),
               blocking_limit: 10,
               logging_limit: 5,
-              redis_connection_pool_size: 4,
-              redis_counter_ttl_seconds: 600
+              redis_connection_pool_size: TestConfig.config_instance.get(:redis_connection_pool_size),
+              redis_counter_ttl_seconds: TestConfig.config_instance.get(:redis_counter_ttl_seconds)
             )
           end
         end

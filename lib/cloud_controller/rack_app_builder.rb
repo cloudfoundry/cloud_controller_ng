@@ -36,8 +36,8 @@ module VCAP::CloudController
             logger: Steno.logger('cc.concurrency_rate_limiter'),
             blocking_limit: config.get(:concurrency_rate_limiter, :blocking_limit),
             logging_limit: config.get(:concurrency_rate_limiter, :logging_limit),
-            redis_connection_pool_size: config.get(:concurrency_rate_limiter, :redis_connection_pool_size),
-            redis_counter_ttl_seconds: config.get(:concurrency_rate_limiter, :redis_counter_ttl_seconds)
+            redis_connection_pool_size: config.get(:redis_connection_pool_size),
+            redis_counter_ttl_seconds: config.get(:redis_counter_ttl_seconds)
           }
         end
 
@@ -57,7 +57,9 @@ module VCAP::CloudController
           use CloudFoundry::Middleware::ServiceBrokerRateLimiter, {
             logger: Steno.logger('cc.service_broker_rate_limiter'),
             max_concurrent_requests: config.get(:max_concurrent_service_broker_requests),
-            broker_timeout_seconds: config.get(:broker_client_timeout_seconds)
+            broker_timeout_seconds: config.get(:broker_client_timeout_seconds),
+            redis_connection_pool_size: config.get(:redis_connection_pool_size),
+            redis_counter_ttl_seconds: config.get(:redis_counter_ttl_seconds)
           }
         end
         if config.get(:rate_limiter_v2_api, :enabled)

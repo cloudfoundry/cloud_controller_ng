@@ -279,9 +279,6 @@ concurrency_rate_limiter:
   enabled: false
   blocking_limit: 10
   logging_limit: 10
-  redis_connection_pool_size: 40
-  redis_counter_ttl_seconds: 60
-
 
 temporary_enable_v2: true
 
