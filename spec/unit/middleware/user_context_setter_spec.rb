@@ -29,7 +29,7 @@ module CloudFoundry
 
         it 'calls configure_user before the app' do
           expect(security_context_configurer).to receive(:configure_user).ordered
-          expect(app).to receive(:call).ordered.and_return([200, {}, 'a body'])
+          expect(app).to receive(:call).ordered
           middleware.call(env)
         end
       end
