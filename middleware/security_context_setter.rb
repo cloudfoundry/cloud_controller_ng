@@ -29,7 +29,7 @@ module CloudFoundry
           end
         end
 
-        security_context_configurer.configure(header_token)
+        security_context_configurer.configure_token_only(header_token)
 
         if VCAP::CloudController::SecurityContext.valid_token?
           env['cf.user_guid'] = id_from_token
