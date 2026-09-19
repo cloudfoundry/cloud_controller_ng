@@ -379,6 +379,7 @@
                 type:
                   - integer
                   - 'null'
+                format: int64
                 description: The log rate limit in bytes per second per instance
           examples:
             default:
@@ -592,6 +593,7 @@
                 type:
                   - integer
                   - 'null'
+                format: int64
                 description: The log rate limit in bytes per second per instance
     responses:
       '202':
