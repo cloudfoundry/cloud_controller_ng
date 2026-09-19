@@ -1,8 +1,11 @@
 require 'cloud_controller/diego/lifecycles/lifecycles'
 require 'presenters/helpers/censorship'
+require_relative '../helpers/lifecycle_data_model_mixin'
 
 module VCAP::CloudController
   class CNBLifecycleDataModel < Sequel::Model(:cnb_lifecycle_data)
+    include LifecycleDataModelMixin
+
     LIFECYCLE_TYPE = Lifecycles::CNB
     set_field_as_encrypted :registry_credentials_json, salt: :encrypted_registry_credentials_json_salt, column: :encrypted_registry_credentials_json
 
@@ -68,7 +71,7 @@ module VCAP::CloudController
 
     def to_hash
       hash = {
-        buildpacks: buildpacks.map { |buildpack| CloudController::UrlSecretObfuscator.obfuscate(buildpack) },
+        buildpacks: obfuscated_buildpacks,
         stack: stack
       }
       hash[:credentials] = Presenters::Censorship::REDACTED_CREDENTIAL unless credentials.nil?

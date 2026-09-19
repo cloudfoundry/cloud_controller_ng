@@ -39,7 +39,7 @@ module VCAP::CloudController
             'user-id' => build.created_by_user_guid
           }, {
             'lifecycle' => build.lifecycle_type,
-            'buildpacks' => build.lifecycle_data&.buildpacks,
+            'buildpacks' => build.lifecycle_data&.obfuscated_buildpacks,
             'stack' => build.lifecycle_data&.stack
           }
         )

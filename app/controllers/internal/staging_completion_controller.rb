@@ -78,7 +78,7 @@ module VCAP::CloudController
         },
         {
           'lifecycle' => build.lifecycle_type,
-          'buildpacks' => build.lifecycle_data&.buildpacks,
+          'buildpacks' => build.lifecycle_data&.obfuscated_buildpacks,
           'stack' => build.lifecycle_data.try(:stack)
         }
       )

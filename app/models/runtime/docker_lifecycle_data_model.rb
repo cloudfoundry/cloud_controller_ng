@@ -1,7 +1,10 @@
 require 'cloud_controller/diego/lifecycles/lifecycles'
+require_relative '../helpers/lifecycle_data_model_mixin'
 
 module VCAP::CloudController
   class DockerLifecycleDataModel
+    include LifecycleDataModelMixin
+
     LIFECYCLE_TYPE = Lifecycles::DOCKER
 
     def buildpacks
