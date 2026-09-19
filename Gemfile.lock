@@ -159,7 +159,7 @@ GEM
     mutex_m (0.3.0)
     mysql2 (0.5.7)
       bigdecimal
-    newrelic_rpm (10.7.1)
+    newrelic_rpm (10.8.0)
       logger
     nio4r (2.7.5)
     nokogiri (1.19.4)
