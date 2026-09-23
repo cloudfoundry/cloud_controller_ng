@@ -72,7 +72,7 @@ module VCAP::CloudController
         return unless config.dig(:concurrency_rate_limiter, :enabled) ||
                       (config[:max_concurrent_service_broker_requests] || 0) > 0
 
-        config[:redis_connection_pool_size] ||= config.dig(:puma, :max_threads)
+        config[:redis_connection_pool_size] = config.dig(:puma, :max_threads) || 1
         config[:redis_counter_ttl_seconds] ||= config[:request_timeout_in_seconds] + 1
       end
 
