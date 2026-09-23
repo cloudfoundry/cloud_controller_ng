@@ -208,6 +208,28 @@ module VCAP::CloudController
             expect(process.app.revisions.length).to eq(0)
           end
         end
+
+        context 'telemetry' do
+          let(:logger_spy) { spy('logger') }
+
+          before do
+            allow(VCAP::CloudController::TelemetryLogger).to receive(:logger).and_return(logger_spy)
+          end
+
+          it 'redacts credentials from custom buildpack URLs in telemetry' do
+            process.app.lifecycle_data.update(buildpack_url: 'https://user:secret@github.com/myorg/private-buildpack')
+
+            restage_request
+
+            expect(last_response.status).to eq(201)
+            expect(logger_spy).to have_received(:info) do |json_str|
+              logged = Oj.load(json_str)
+              buildpacks = logged['restage-app']['buildpacks']
+              expect(buildpacks).to eq(['https://***:***@github.com/myorg/private-buildpack'])
+              expect(buildpacks.first).not_to include('secret')
+            end
+          end
+        end
       end
     end
   end

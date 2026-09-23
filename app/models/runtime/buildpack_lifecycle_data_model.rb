@@ -1,8 +1,11 @@
 require 'cloud_controller/diego/lifecycles/lifecycles'
 require 'utils/uri_utils'
+require_relative '../helpers/lifecycle_data_model_mixin'
 
 module VCAP::CloudController
   class BuildpackLifecycleDataModel < Sequel::Model(:buildpack_lifecycle_data)
+    include LifecycleDataModelMixin
+
     LIFECYCLE_TYPE = Lifecycles::BUILDPACK
 
     set_field_as_encrypted :buildpack_url, salt: :encrypted_buildpack_url_salt, column: :encrypted_buildpack_url
@@ -84,7 +87,7 @@ module VCAP::CloudController
 
     def to_hash
       {
-        buildpacks: buildpacks.map { |buildpack| CloudController::UrlSecretObfuscator.obfuscate(buildpack) },
+        buildpacks: obfuscated_buildpacks,
         stack: stack
       }
     end

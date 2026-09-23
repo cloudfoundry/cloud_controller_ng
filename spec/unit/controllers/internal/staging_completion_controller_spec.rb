@@ -315,6 +315,31 @@ module VCAP::CloudController
           end
         end
 
+        it 'redacts credentials from custom buildpack URLs in telemetry' do
+          build.buildpack_lifecycle_data.update(buildpacks: ['https://user:secret@github.com/myorg/private-buildpack'])
+
+          Timecop.freeze do
+            expected_json = {
+              'telemetry-source' => 'cloud_controller_ng',
+              'telemetry-time' => Time.now.to_datetime.rfc3339,
+              'build-completed' => {
+                'api-version' => 'internal',
+                'lifecycle' => 'buildpack',
+                'buildpacks' => ['https://***:***@github.com/myorg/private-buildpack'],
+                'stack' => 'cflinuxfs4',
+                'app-id' => OpenSSL::Digest::SHA256.hexdigest(staged_app.guid),
+                'build-id' => OpenSSL::Digest::SHA256.hexdigest(build.guid)
+              }
+            }
+            expect_any_instance_of(ActiveSupport::Logger).to receive(:info).with(Oj.dump(expected_json))
+
+            allow_any_instance_of(BuildModel).to receive(:in_final_state?).and_return(false)
+            post url, Oj.dump(staging_response)
+
+            expect(last_response.status).to eq(200), last_response.body
+          end
+        end
+
         it 'emits metrics for staging success' do
           one_hour_in_nanoseconds = (1.hour.to_i * 1e9).to_i
           expect(statsd_updater).to receive(:report_staging_success_metrics).with(one_hour_in_nanoseconds)
