@@ -73,7 +73,7 @@ module VCAP::CloudController
                       (config[:max_concurrent_service_broker_requests] || 0) > 0
 
         config[:redis_connection_pool_size] = config.dig(:puma, :max_threads) || 1
-        config[:redis_counter_ttl_seconds] ||= config[:request_timeout_in_seconds] + 1
+        config[:redis_counter_ttl_seconds] = config[:request_timeout_in_seconds] + 1
       end
 
       def ensure_config_has_database_parts(config)
