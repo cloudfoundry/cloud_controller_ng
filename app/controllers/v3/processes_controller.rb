@@ -73,6 +73,8 @@ class ProcessesController < ApplicationController
     message = ProcessUpdateMessage.new(hashed_params[:body])
     unprocessable!(message.errors.full_messages) unless message.valid?
 
+    ensure_can_set_execution_fields!(message)
+
     ProcessUpdate.new(user_audit_info).update(@process, message, NonManifestStrategy)
 
     render status: :ok, json: Presenters::V3::ProcessPresenter.new(@process)
@@ -145,6 +147,12 @@ class ProcessesController < ApplicationController
   def ensure_can_write
     unauthorized! unless permission_queryer.can_manage_apps_in_active_space?(@space.id)
     require_writable_space!(@space)
+  end
+
+  def ensure_can_set_execution_fields!(message)
+    return unless message.requested?(:command) || message.requested?(:user)
+
+    unauthorized! unless permission_queryer.can_write_to_active_space?(@space.id)
   end
 
   def process_not_found!
