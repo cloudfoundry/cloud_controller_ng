@@ -2,6 +2,7 @@ require 'jobs/v3/services/update_broker_job'
 require 'actions/metadata_update'
 require 'jobs/enqueuer'
 require 'jobs/queues'
+require 'uri'
 
 module VCAP::CloudController
   module V3
@@ -30,6 +31,12 @@ module VCAP::CloudController
       end
 
       def enqueue_update
+        raise InvalidServiceBroker.new('Cannot update a broker when other operation is already in progress') if broker.in_transitional_state?
+
+        if message.requested?(:url) && !message.requested?(:authentication) && origin_changed?
+          raise InvalidServiceBroker.new('Authentication must be provided when changing the broker URL origin')
+        end
+
         params = {}
         params[:broker_url] = message.url if message.requested?(:url)
         params[:authentication] = message.authentication.to_json if message.requested?(:authentication)
@@ -39,8 +46,6 @@ module VCAP::CloudController
           unique_name! if ServiceBroker.where(name: message.name).exclude(guid: broker.guid).any?
           params[:name] = message.name
         end
-
-        raise InvalidServiceBroker.new('Cannot update a broker when other operation is already in progress') if broker.in_transitional_state?
 
         pollable_job = nil
         previous_broker_state = broker.state
@@ -70,6 +75,16 @@ module VCAP::CloudController
 
       def unique_name!
         raise InvalidServiceBroker.new('Name must be unique')
+      end
+
+      def origin_changed?
+        new_uri = URI.parse(message.url)
+        old_uri = URI.parse(broker.broker_url)
+        new_uri.scheme != old_uri.scheme ||
+          new_uri.host.to_s.downcase != old_uri.host.to_s.downcase ||
+          new_uri.port != old_uri.port
+      rescue URI::InvalidURIError
+        true
       end
     end
   end
