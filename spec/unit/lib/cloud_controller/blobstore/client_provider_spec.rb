@@ -5,20 +5,6 @@ module CloudController
     RSpec.describe ClientProvider do
       let(:options) { { blobstore_type: } }
 
-      context 'when webdav is requested' do
-        let(:blobstore_type) { 'webdav' }
-
-        before do
-          options.merge!(webdav_config: { private_endpoint: 'http://private.example.com', public_endpoint: 'http://public.example.com' })
-        end
-
-        it 'provides a webdav client' do
-          allow(DavClient).to receive(:new).and_call_original
-          ClientProvider.provide(options: options, directory_key: 'key')
-          expect(DavClient).to have_received(:new)
-        end
-      end
-
       context 'when storage-cli is requested' do
         let(:blobstore_type) { 'storage-cli' }
         let(:directory_key) { 'some-bucket' }
@@ -100,6 +86,15 @@ module CloudController
             max_size: 1000,
             use_temp_storage: true
           )
+        end
+      end
+
+      context 'when an unknown blobstore type is requested' do
+        let(:blobstore_type) { 'webdav' }
+
+        it 'raises a BlobstoreError' do
+          expect { ClientProvider.provide(options: options, directory_key: 'key') }.
+            to raise_error(BlobstoreError, /Unknown blobstore type/)
         end
       end
     end
