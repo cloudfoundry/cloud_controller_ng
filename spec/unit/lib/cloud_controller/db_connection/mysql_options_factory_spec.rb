@@ -63,4 +63,36 @@ RSpec.describe VCAP::CloudController::DbConnection::MysqlOptionsFactory do
       end
     end
   end
+
+  describe 'env vars' do
+    let(:env) { {} }
+
+    describe '.reset_env' do
+      it 'deletes MARIADB_TLS_DISABLE_PEER_VERIFICATION from env' do
+        env.merge!('MARIADB_TLS_DISABLE_PEER_VERIFICATION' => '1')
+        VCAP::CloudController::DbConnection::MysqlOptionsFactory.reset_env(env)
+        expect(env).not_to have_key('MARIADB_TLS_DISABLE_PEER_VERIFICATION')
+      end
+    end
+
+    describe '.set_env' do
+      it 'does not set MARIADB_TLS_DISABLE_PEER_VERIFICATION when there is a ca_cert_path' do
+        opts = { ca_cert_path: '/path/to/ca_cert' }
+        VCAP::CloudController::DbConnection::MysqlOptionsFactory.set_env(opts, env)
+        expect(env).not_to have_key('MARIADB_TLS_DISABLE_PEER_VERIFICATION')
+      end
+
+      it 'sets MARIADB_TLS_DISABLE_PEER_VERIFICATION when ca_cert_path is nil' do
+        opts = { ca_cert_path: nil }
+        VCAP::CloudController::DbConnection::MysqlOptionsFactory.set_env(opts, env)
+        expect(env['MARIADB_TLS_DISABLE_PEER_VERIFICATION']).to eq('1')
+      end
+
+      it 'sets MARIADB_TLS_DISABLE_PEER_VERIFICATION when there is no ca_cert_path' do
+        opts = {}
+        VCAP::CloudController::DbConnection::MysqlOptionsFactory.set_env(opts, env)
+        expect(env['MARIADB_TLS_DISABLE_PEER_VERIFICATION']).to eq('1')
+      end
+    end
+  end
 end

@@ -126,4 +126,27 @@ RSpec.describe VCAP::CloudController::DbConnection::OptionsFactory do
       end
     end
   end
+
+  describe '.set_env' do
+    let(:adapter) { 'mysql' }
+
+    before do
+      allow(VCAP::CloudController::DbConnection::MysqlOptionsFactory).to receive(:reset_env).with(anything)
+      allow(VCAP::CloudController::DbConnection::MysqlOptionsFactory).to receive(:set_env).with(anything, anything)
+      allow(VCAP::CloudController::DbConnection::PostgresOptionsFactory).to receive(:reset_env).with(anything)
+      allow(VCAP::CloudController::DbConnection::PostgresOptionsFactory).to receive(:set_env).with(anything, anything)
+    end
+
+    it 'calls reset_env on all adapters exactly once' do
+      expect(VCAP::CloudController::DbConnection::MysqlOptionsFactory).to receive(:reset_env).with(ENV).once
+      expect(VCAP::CloudController::DbConnection::PostgresOptionsFactory).to receive(:reset_env).with(ENV).once
+      VCAP::CloudController::DbConnection::OptionsFactory.set_env(required_options)
+    end
+
+    it 'calls set_env on the adapter factory' do
+      expect(VCAP::CloudController::DbConnection::MysqlOptionsFactory).to receive(:set_env).with(required_options, ENV).once
+      expect(VCAP::CloudController::DbConnection::PostgresOptionsFactory).not_to receive(:set_env).with(anything, anything)
+      VCAP::CloudController::DbConnection::OptionsFactory.set_env(required_options)
+    end
+  end
 end
