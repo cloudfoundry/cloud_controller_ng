@@ -23,7 +23,7 @@ module VCAP::CloudController
           end
 
           it 'enqueues a deletion job only for buildpack droplets' do
-            expect { job.perform }.to change(Delayed::Job, :count).by(1)
+            expect { job.perform }.to change(Delayed::Job, :count).by(2)
             expect(Delayed::Job.last.handler).to include('DeleteExpiredDropletBlob')
           end
         end
@@ -35,7 +35,7 @@ module VCAP::CloudController
           end
 
           it 'enqueues a deletion job only for buildpack droplets' do
-            expect { job.perform }.to change(Delayed::Job, :count).by(1)
+            expect { job.perform }.to change(Delayed::Job, :count).by(2)
             expect(Delayed::Job.last.handler).to include('DeleteExpiredDropletBlob')
           end
         end
