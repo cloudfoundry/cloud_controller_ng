@@ -1,0 +1,67 @@
+name: Unit Test Flakiness Report
+
+# Monthly re-trigger rate of the "Unit Tests" workflow on main, upserted into a data file
+# + README chart on the reports/unit-test-flakiness branch (survives ~400-day retention).
+
+on:
+  schedule:
+    - cron: "27 6 2 * *" # 2nd of each month, 06:27 UTC
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+concurrency:
+  group: unit-test-flakiness-report
+  cancel-in-progress: false
+
+env:
+  REPORT_BRANCH: reports/unit-test-flakiness
+
+jobs:
+  report:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: hmarr/debug-action@v3
+
+      - uses: actions/checkout@v7
+        with:
+          path: main-src
+
+      # The reports/unit-test-flakiness branch must exist (created once, like gh-pages).
+      - uses: actions/checkout@v7
+        with:
+          ref: ${{ env.REPORT_BRANCH }}
+          path: report-out
+
+      - name: Compute metric
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          mkdir -p report-out/data
+          bash main-src/.github/workflows/scripts/unit_test_retrigger_metric.sh > fresh.csv
+          cat fresh.csv
+
+      - name: Upsert into data file
+        run: |
+          bash main-src/.github/workflows/scripts/upsert_metric.sh \
+            report-out/data/retrigger_rate.csv fresh.csv
+
+      - name: Render README
+        run: |
+          bash main-src/.github/workflows/scripts/render_readme.sh \
+            report-out/data/retrigger_rate.csv > report-out/README.md
+          cat report-out/README.md >> "$GITHUB_STEP_SUMMARY"
+
+      - name: Commit & push
+        working-directory: report-out
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add data/retrigger_rate.csv README.md
+          if git diff --cached --quiet; then
+            echo "No changes to commit."
+          else
+            git commit -m "Update unit-test re-trigger metric ($(date -u +%Y-%m-%d))"
+            git push
+          fi
