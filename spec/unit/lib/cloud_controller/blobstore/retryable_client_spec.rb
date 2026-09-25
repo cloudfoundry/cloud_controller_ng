@@ -25,7 +25,7 @@ module CloudController
       end
 
       describe 'conforms to blobstore client interface' do
-        let(:deletable_blob) { instance_double(DavBlob, key: nil) }
+        let(:deletable_blob) { instance_double(Blob, key: nil) }
 
         it_behaves_like 'a blobstore client'
       end

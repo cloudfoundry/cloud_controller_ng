@@ -44,7 +44,6 @@ Lint/NonAtomicFileOperation:
   Exclude:
     - 'spec/support/integration/setup.rb'
     - 'spec/unit/lib/cloud_controller/blobstore/client_shared.rb'
-    - 'spec/unit/lib/cloud_controller/blobstore/webdav/dav_client_spec.rb'
 
 # Offense count: 15
 # This cop supports unsafe autocorrection (--autocorrect-all).
@@ -581,7 +580,6 @@ Style/HashSlice:
     - 'app/controllers/services/service_plans_controller.rb'
     - 'app/presenters/system_environment/service_binding_presenter.rb'
     - 'lib/cloud_controller/blobstore/storage_cli/storage_cli_blob.rb'
-    - 'lib/cloud_controller/blobstore/webdav/dav_blob.rb'
     - 'lib/cloud_controller/telemetry_logger.rb'
     - 'spec/unit/lib/cloud_controller/errands/rotate_database_key_spec.rb'
 

@@ -1,7 +1,6 @@
 require 'cloud_controller/blobstore/client'
 require 'cloud_controller/blobstore/retryable_client'
 require 'cloud_controller/blobstore/error_handling_client'
-require 'cloud_controller/blobstore/webdav/dav_client'
 require 'cloud_controller/blobstore/local/local_client'
 require 'cloud_controller/blobstore/safe_delete_client'
 require 'cloud_controller/blobstore/storage_cli/storage_cli_client'
@@ -18,7 +17,7 @@ module CloudController
         when 'storage-cli'
           provide_storage_cli(options, directory_key, root_dir, resource_type)
         else
-          provide_webdav(options, directory_key, root_dir)
+          raise BlobstoreError.new("Unknown blobstore type: #{options[:blobstore_type].inspect}")
         end
       end
 
@@ -36,22 +35,6 @@ module CloudController
           )
 
           logger = Steno.logger('cc.blobstore.local_client')
-          errors = [StandardError]
-          retryable_client = RetryableClient.new(client:, errors:, logger:)
-
-          Client.new(SafeDeleteClient.new(retryable_client, root_dir))
-        end
-
-        def provide_webdav(options, directory_key, root_dir)
-          client = DavClient.build(
-            options.fetch(:webdav_config),
-            directory_key,
-            root_dir,
-            options[:minimum_size],
-            options[:maximum_size]
-          )
-
-          logger = Steno.logger('cc.blobstore.dav_client')
           errors = [StandardError]
           retryable_client = RetryableClient.new(client:, errors:, logger:)
 
