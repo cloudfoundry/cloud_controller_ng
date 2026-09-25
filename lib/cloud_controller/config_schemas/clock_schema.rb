@@ -46,10 +46,7 @@ module VCAP::CloudController
           service_operations_binding_delete_stuck_in_progress_retry: {
             frequency_in_seconds: Integer
           },
-          # One-off backfill - to be removed in a future version.
-          lifecycle_type_backfill: {
-            frequency_in_seconds: Integer
-          },
+
           default_health_check_timeout: Integer,
 
           uaa: {
