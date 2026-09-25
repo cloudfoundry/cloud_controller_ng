@@ -15,6 +15,11 @@ Sequel.migration do
         VCAP::Migration.with_concurrent_timeout(self) do
           run("ALTER TABLE #{table} VALIDATE CONSTRAINT #{table}_lifecycle_type_not_null")
         end
+
+        transaction do
+          run("ALTER TABLE #{table} ALTER COLUMN lifecycle_type SET NOT NULL")
+          alter_table(table) { drop_constraint(:"#{table}_lifecycle_type_not_null") }
+        end
       else
         alter_table(table) { set_column_not_null :lifecycle_type }
       end
@@ -23,11 +28,7 @@ Sequel.migration do
 
   down do
     %i[apps droplets builds].each do |table|
-      if database_type == :postgres
-        alter_table(table) { drop_constraint(:"#{table}_lifecycle_type_not_null") }
-      else
-        alter_table(table) { set_column_allow_null :lifecycle_type }
-      end
+      alter_table(table) { set_column_allow_null :lifecycle_type }
     end
   end
 end
