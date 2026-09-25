@@ -1,9 +1,12 @@
 #!/usr/bin/env bash
 #
-# Monthly re-trigger rate of the "Unit Tests" workflow on main. A run is flaky when its
-# final run_attempt >= 2 and conclusion == success (re-run to green); still-failing
-# re-runs are excluded. Push events only, completed only. Emits CSV to stdout:
+# Monthly re-trigger rate of the "Unit Tests" workflow on main: share of runs that reached
+# green only on a re-run (final run_attempt >= 2 and conclusion == success). Still-failing
+# re-runs are excluded. Push events only, current month excluded. Emits CSV to stdout:
 # month,total_runs,retriggered,retrigger_pct
+#
+# Months are fetched one bounded range at a time (see gh_runs_lib.sh). START defaults to the
+# oldest month still retained; override for a shorter window.
 #
 # Usage: GH_TOKEN=$(gh auth token) unit_test_retrigger_metric.sh
 #
@@ -11,6 +14,9 @@ set -euo pipefail
 
 REPO="${REPO:-cloudfoundry/cloud_controller_ng}"
 WORKFLOW_NAME="${WORKFLOW_NAME:-Unit Tests}"
+START="${START:-2025-08}"
+
+. "$(dirname "$0")/gh_runs_lib.sh"
 
 # jq picks the first match, avoiding a head(1) that would SIGPIPE under pipefail.
 workflow_id="$(gh api --paginate "repos/${REPO}/actions/workflows" \
@@ -21,22 +27,26 @@ if [ -z "${workflow_id}" ] || [ "${workflow_id}" = "null" ]; then
   exit 1
 fi
 
+# Last completed month = the month before the current one.
+end_month="$(date -u -v-1m +%Y-%m 2>/dev/null || date -u -d 'last month' +%Y-%m)"
+
 {
   echo "month,total_runs,retriggered,retrigger_pct"
-  gh api --paginate \
-    "repos/${REPO}/actions/workflows/${workflow_id}/runs?event=push&per_page=100" \
-    --jq '.workflow_runs[]
-          | select(.status == "completed")
-          | {month: .created_at[0:7],
-             retrig: (if .run_attempt >= 2 and .conclusion == "success" then 1 else 0 end)}' \
-  | jq -rs '
-      group_by(.month)
-      | map({month: .[0].month, total: length, retrig: (map(.retrig) | add)})
-      | sort_by(.month)
-      | .[]
-      | [ .month,
-          .total,
-          .retrig,
-          ((.retrig * 1000 / .total | round) / 10) ]
-      | @csv'
-} | sed 's/"//g'
+  for month in $(enum_months "${START}" "${end_month}"); do
+    gh api --paginate \
+      "repos/${REPO}/actions/workflows/${workflow_id}/runs?event=push&created=${month}-01..${month}-$(last_day "$month")&per_page=100" \
+      --jq '.workflow_runs[]
+            | select(.status == "completed")
+            | [ .id,
+                (if .run_attempt >= 2 and .conclusion == "success" then 1 else 0 end) ]
+            | @tsv' \
+    | sort -u \
+    | awk -F'\t' -v m="${month}" '
+        { total++; retrig += $2 }
+        END {
+          if (total > 0)
+            printf "%s,%d,%d,%s\n", m, total, retrig,
+                   (int(retrig * 1000 / total + 0.5) / 10);
+        }'
+  done
+}

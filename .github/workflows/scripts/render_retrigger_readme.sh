@@ -1,11 +1,11 @@
 #!/usr/bin/env bash
 #
 # Render README.md (intro + Mermaid chart + table) from the CSV data file.
-# Usage: render_readme.sh <csv-path> > README.md
+# Usage: render_retrigger_readme.sh <csv-path> > README.md
 #
 set -euo pipefail
 
-CSV="${1:?usage: render_readme.sh <csv-path>}"
+CSV="${1:?usage: render_retrigger_readme.sh <csv-path>}"
 
 months="$(awk -F, 'NR>1 {printf "%s\"%s\"", sep, $1; sep=", "}' "${CSV}")"
 values="$(awk -F, 'NR>1 {printf "%s%s", sep, $4; sep=", "}' "${CSV}")"
@@ -13,7 +13,7 @@ values="$(awk -F, 'NR>1 {printf "%s%s", sep, $4; sep=", "}' "${CSV}")"
 cat <<EOF
 # Unit Tests — monthly re-trigger rate (main)
 
-How often the [\`Unit Tests\`](../../actions/workflows/unit_tests.yml) workflow on \`main\`
+How often the [\`Unit Tests\`](../../blob/main/.github/workflows/unit_tests.yml) workflow on \`main\`
 was **re-triggered** to green, as a percentage of runs per month.
 
 A run counts when its final \`run_attempt >= 2\` **and** it eventually succeeded — a proxy

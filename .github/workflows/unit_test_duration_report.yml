@@ -1,22 +1,22 @@
-name: Unit Test Flakiness Report
+name: Unit Test Duration Report
 
-# Monthly re-trigger rate of the "Unit Tests" workflow on main, upserted into a data file
-# + README chart on the reports/unit-test-flakiness branch (survives ~400-day retention).
+# Monthly median duration of each "Unit Tests" job on main, upserted into a data file
+# + README charts on the reports/unit-test-duration branch (survives ~400-day retention).
 
 on:
   schedule:
-    - cron: "27 6 2 * *" # 2nd of each month, 06:27 UTC
+    - cron: "33 6 2 * *" # 2nd of each month, 06:33 UTC
   workflow_dispatch:
 
 permissions:
   contents: write
 
 concurrency:
-  group: unit-test-flakiness-report
+  group: unit-test-duration-report
   cancel-in-progress: false
 
 env:
-  REPORT_BRANCH: reports/unit-test-flakiness
+  REPORT_BRANCH: reports/unit-test-duration
 
 jobs:
   report:
@@ -38,18 +38,18 @@ jobs:
           GH_TOKEN: ${{ github.token }}
         run: |
           mkdir -p report-out/data
-          bash main-src/.github/workflows/scripts/unit_test_retrigger_metric.sh > fresh.csv
+          bash main-src/.github/workflows/scripts/unit_test_duration_metric.sh > fresh.csv
           cat fresh.csv
 
       - name: Upsert into data file
         run: |
-          bash main-src/.github/workflows/scripts/upsert_retrigger.sh \
-            report-out/data/retrigger_rate.csv fresh.csv
+          bash main-src/.github/workflows/scripts/upsert_duration.sh \
+            report-out/data/job_duration.csv fresh.csv
 
       - name: Render README
         run: |
-          bash main-src/.github/workflows/scripts/render_retrigger_readme.sh \
-            report-out/data/retrigger_rate.csv > report-out/README.md
+          bash main-src/.github/workflows/scripts/render_duration_readme.sh \
+            report-out/data/job_duration.csv > report-out/README.md
           cat report-out/README.md >> "$GITHUB_STEP_SUMMARY"
 
       - name: Commit & push
@@ -57,10 +57,10 @@ jobs:
         run: |
           git config user.name "github-actions[bot]"
           git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
-          git add data/retrigger_rate.csv README.md
+          git add data/job_duration.csv README.md
           if git diff --cached --quiet; then
             echo "No changes to commit."
           else
-            git commit -m "Update unit-test re-trigger metric ($(date -u +%Y-%m-%d))"
+            git commit -m "Update unit-test job-duration metric ($(date -u +%Y-%m-%d))"
             git push
           fi
