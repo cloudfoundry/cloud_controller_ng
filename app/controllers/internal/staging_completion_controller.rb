@@ -16,39 +16,6 @@ module VCAP::CloudController
       @stagers = dependencies.fetch(:stagers)
     end
 
-    post '/internal/v3/staging/:staging_guid/droplet_completed', :droplet_completed # NOT USED, only for rolling deploys
-    def droplet_completed(staging_guid)
-      staging_response = read_body
-      droplet          = DropletModel.find(guid: staging_guid)
-      raise CloudController::Errors::ApiError.new_from_details('ResourceNotFound', 'Droplet not found') if droplet.nil?
-
-      build = BuildModel.create(package: droplet.package, app: droplet.app, state: DropletModel::STAGING_STATE)
-
-      BuildModel.db.transaction do
-        build.lock!
-        build.update(
-          droplet: droplet,
-          buildpack_lifecycle_data: droplet.buildpack_lifecycle_data
-        )
-      end
-
-      if staging_response.key?(:failed)
-        report_metrics(staging_response)
-        staging_response = parse_bbs_task_callback(staging_response)
-      end
-
-      begin
-        stagers.stager_for_build(build).staging_complete(build, staging_response, params['start'] == 'true')
-      rescue CloudController::Errors::ApiError => e
-        raise e
-      rescue StandardError => e
-        logger.error('diego.staging.completion-controller-error', error: e)
-        raise CloudController::Errors::ApiError.new_from_details('ServerError')
-      end
-
-      [200, '{}']
-    end
-
     post '/internal/v3/staging/:staging_guid/build_completed', :build_completed
     def build_completed(staging_guid)
       staging_response = read_body
