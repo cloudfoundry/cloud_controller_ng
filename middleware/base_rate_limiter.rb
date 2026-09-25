@@ -1,4 +1,6 @@
-require 'mixins/client_ip'
+require 'mixins/user_id'
+require 'mixins/too_many_requests'
+require 'mixins/basic_auth'
 require 'mixins/user_reset_interval'
 require 'redis'
 
@@ -89,7 +91,9 @@ module CloudFoundry
     end
 
     class BaseRateLimiter
-      include CloudFoundry::Middleware::ClientIp
+      include CloudFoundry::Middleware::UserId
+      include CloudFoundry::Middleware::TooManyRequests
+      include CloudFoundry::Middleware::BasicAuth
 
       def initialize(app, logger, expiring_request_counter, reset_interval, header_suffix=nil)
         @app = app
@@ -111,15 +115,11 @@ module CloudFoundry
           rate_limit_headers.reset = (Time.now.to_i + expires_in).to_s
           rate_limit_headers.remaining = estimate_remaining(env, count)
 
-          return too_many_requests!(expires_in, env, rate_limit_headers) if exceeded_rate_limit(count, env)
+          return too_many_requests!(env, rate_limit_error_name(env), retry_after: expires_in, extra_headers: rate_limit_headers.to_hash) if exceeded_rate_limit(count, env)
         end
 
         status, headers, body = @app.call(env)
         [status, headers.merge(rate_limit_headers.to_hash), body]
-      end
-
-      def get_user_id(env)
-        user_token?(env) ? env['cf.user_guid'] : client_ip(ActionDispatch::Request.new(env))
       end
 
       private
@@ -132,7 +132,7 @@ module CloudFoundry
         raise 'method should be implemented in concrete class'
       end
 
-      def rate_limit_error(_env)
+      def rate_limit_error_name(_env)
         raise 'method should be implemented in concrete class'
       end
 
@@ -153,26 +153,8 @@ module CloudFoundry
         [0, estimate].max.to_i.to_s
       end
 
-      def user_token?(env)
-        !!env['cf.user_guid']
-      end
-
-      def basic_auth?(env)
-        auth = Rack::Auth::Basic::Request.new(env)
-        auth.provided? && auth.basic?
-      end
-
       def admin?
         VCAP::CloudController::SecurityContext.admin? || VCAP::CloudController::SecurityContext.admin_read_only?
-      end
-
-      def too_many_requests!(expires_in, env, rate_limit_headers)
-        headers = {}
-        headers['Retry-After'] = expires_in.to_s
-        headers['Content-Type'] = 'text/plain; charset=utf-8'
-        message = rate_limit_error(env).to_json
-        headers['Content-Length'] = message.length.to_s
-        [429, rate_limit_headers.to_hash.merge(headers), [message]]
       end
     end
   end

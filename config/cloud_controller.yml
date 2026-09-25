@@ -284,6 +284,11 @@ rate_limiter_v2_api:
   global_admin_limit: 20000
   reset_interval_in_minutes: 60
 
+concurrency_rate_limiter:
+  enabled: false
+  blocking_limit: 10
+  logging_limit: 10
+
 temporary_enable_v2: true
 
 # Rollout gate: when enabled, DELETE of apps/service_instances uses the recursive root-job pipeline.
