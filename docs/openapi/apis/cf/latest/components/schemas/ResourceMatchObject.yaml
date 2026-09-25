@@ -1,0 +1,24 @@
+type: object
+properties:
+  checksum:
+    type: object
+    description: Checksum of the file
+    properties:
+      value:
+        type: string
+        description: SHA-1 hash of file
+    required:
+      - value
+  size_in_bytes:
+    type: integer
+    description: Size of file in bytes
+  path:
+    type: string
+    description: Path to the file, relative to app root
+  mode:
+    type: string
+    description: File mode, i.e. POSIX file permissions; defaults to 0744
+required:
+  - checksum
+  - size_in_bytes
+description: A fingerprint of an application file that has previously been pushed to Cloud Foundry

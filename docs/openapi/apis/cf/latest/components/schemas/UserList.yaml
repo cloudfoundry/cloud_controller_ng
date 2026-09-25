@@ -4,5 +4,7 @@ properties:
     $ref: './Pagination.yaml'
   resources:
     type: array
+    description: List of users
     items:
       $ref: './User.yaml'
+description: A paginated list of users

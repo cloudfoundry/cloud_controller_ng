@@ -1,7 +1,10 @@
 /v3/info:
   get:
     summary: Get platform info
-    description: Get information about the platform.
+    description: |-
+      Get information about the platform.
+
+      **Authentication:** No authentication required.
     operationId: getPlatformInfo
     tags:
       - Info
@@ -11,50 +14,32 @@
         content:
           application/json:
             schema:
-              type: object
-              properties:
-                name:
-                  type: string
-                  description: Name of the platform
-                build:
-                  type: string
-                  description: Build number of the platform
-                version:
-                  type: integer
-                  description: Version number of the platform
-                description:
-                  type: string
-                  description: Description of the platform
-                cli_version:
-                  type: object
-                  description: Minimum and recommended CLI versions
-                  properties:
-                    minimum:
-                      type: string
-                      description: Minimum CLI version
-                    recommended:
-                      type: string
-                      description: Recommended CLI version
-                custom:
-                  type: object
-                  description: Custom information about the platform
-                  additionalProperties:
-                    type: string
-                links:
-                  type: object
-                  description: Links to related resources
-                  properties:
-                    self:
-                      allOf:
-                        - $ref: ../components/schemas/Link.yaml
-                        - description: Link to the current endpoint
-                    support:
-                      allOf:
-                        - $ref: ../components/schemas/Link.yaml
-                        - description: Link to the support website for the platform
+              $ref: ../components/schemas/Info.yaml
             examples:
               default:
-                summary: default
+                summary: Response with configured values
+                value:
+                  build: afa73e3fe
+                  cli_version:
+                    minimum: 6.22.0
+                    recommended: latest
+                  custom:
+                    arbitrary: stuff
+                  description: Put your apps here!
+                  name: Cloud Foundry
+                  version: 123
+                  osbapi_version: '2.15'
+                  rate_limits:
+                    enabled: true
+                    general_limit: 2000
+                    reset_interval_in_minutes: 30
+                  links:
+                    self:
+                      href: http://api.example.com/v3/info
+                    support:
+                      href: http://support.example.com
+              unconfigured:
+                summary: Response with unconfigured values
                 value:
                   build: ''
                   cli_version:
@@ -74,26 +59,19 @@
                       href: http://api.example.com/v3/info
                     support:
                       href: ''
-      '400':
-        $ref: ../components/responses/BadRequest.yaml
-      '403':
-        $ref: ../components/responses/Forbidden.yaml
-      '404':
-        $ref: ../components/responses/NotFound.yaml
-      '409':
-        $ref: ../components/responses/Conflict.yaml
-      '422':
-        $ref: ../components/responses/UnprocessableEntity.yaml
+      '429':
+        $ref: ../components/responses/TooManyRequests.yaml
       '500':
         $ref: ../components/responses/500.yaml
-      '502':
-        $ref: ../components/responses/BadGateway.yaml
       '503':
         $ref: ../components/responses/ServiceUnavailable.yaml
 /v3/info/usage_summary:
   get:
     summary: Get platform usage summary
-    description: This endpoint retrieves a high-level summary of usage across the entire Cloud Foundry installation.
+    description: |-
+      This endpoint retrieves a high-level summary of usage across the entire Cloud Foundry installation.
+
+      **Permitted roles:** Admin, Admin Read-Only, Global Auditor
     operationId: getPlatformUsageSummary
     tags:
       - Info
@@ -103,44 +81,7 @@
         content:
           application/json:
             schema:
-              type: object
-              properties:
-                usage_summary:
-                  type: object
-                  description: Usage summary
-                  properties:
-                    started_instances:
-                      type: integer
-                      description: Total number of process instances in the STARTED state
-                    memory_in_mb:
-                      type: integer
-                      description: Sum of memory usage of all tasks in the RUNNING state and all process instances in the STARTED state
-                    routes:
-                      type: integer
-                      description: Total number of routes
-                    service_instances:
-                      type: integer
-                      description: Total number of managed service instances
-                    reserved_ports:
-                      type: integer
-                      description: Total number of reserved ports
-                    domains:
-                      type: integer
-                      description: Total number of private domains
-                    per_app_tasks:
-                      type: integer
-                      description: Total number of running tasks
-                    service_keys:
-                      type: integer
-                      description: Total number of service keys
-                links:
-                  type: object
-                  description: Links to related resources
-                  properties:
-                    self:
-                      allOf:
-                        - $ref: ../components/schemas/Link.yaml
-                        - description: Link to the current endpoint
+              $ref: ../components/schemas/InfoUsageSummary.yaml
             examples:
               default:
                 summary: default

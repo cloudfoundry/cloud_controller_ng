@@ -1,8 +1,13 @@
 type: object
 properties:
   pagination:
-    $ref: './Pagination.yaml'
+    allOf:
+      - $ref: './Pagination.yaml'
+      - description: Pagination information for the list of feature flags
   resources:
     type: array
+    description: A list of feature flags
     items:
       $ref: './FeatureFlag.yaml'
+description: >
+  A paginated list of feature flags.

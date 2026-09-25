@@ -1,0 +1,40 @@
+type: object
+properties:
+  usage_summary:
+    type: object
+    description: A high-level summary of usage across the entire Cloud Foundry installation
+    properties:
+      started_instances:
+        type: integer
+        description: Total number of process instances in the `STARTED` state
+      memory_in_mb:
+        type: integer
+        description: Sum of memory usage of all tasks in the `RUNNING` state and all process instances in the `STARTED` state
+      routes:
+        type: integer
+        description: Total number of routes
+      service_instances:
+        type: integer
+        description: Total number of managed service instances
+      reserved_ports:
+        type: integer
+        description: Total number of reserved ports
+      domains:
+        type: integer
+        description: Total number of private domains
+      per_app_tasks:
+        type: integer
+        description: Total number of running tasks
+      service_keys:
+        type: integer
+        description: Total number of service keys
+  links:
+    type: object
+    description: Links to related resources
+    properties:
+      self:
+        allOf:
+          - $ref: './Link.yaml'
+          - description: Link to the current endpoint
+description: |-
+  A high-level summary of usage across the entire Cloud Foundry installation.

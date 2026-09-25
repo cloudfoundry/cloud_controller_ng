@@ -2,68 +2,83 @@ type: object
 allOf:
   - $ref: './BaseSchema.yaml'
   - properties:
+      guid:
+        type: string
+        format: uuid
+        description: Unique identifier for the space quota
+      created_at:
+        type: string
+        format: date-time
+        description: The time with zone when the space quota was created
+      updated_at:
+        type: string
+        format: date-time
+        description: The time with zone when the space quota was last updated
       name:
         type: string
-        description: Name of the space quota
+        description: Name of the quota
       apps:
         type: object
+        description: Quotas that affect applications and application sub-resources
         properties:
           total_memory_in_mb:
             type: [integer, 'null']
-            description: Total memory allowed for all apps in MB
+            description: Total memory allowed for all the started processes and running tasks in a space; `null` means infinite
           per_process_memory_in_mb:
             type: [integer, 'null']
-            description: Maximum memory per process in MB
+            description: Maximum memory for a single process or task; `null` means infinite
           log_rate_limit_in_bytes_per_second:
             type: [integer, 'null']
-            description: Log rate limit in bytes per second
+            description: Total log rate limit allowed for all the started processes and running tasks in an organization; `null` means infinite
           total_instances:
             type: [integer, 'null']
-            description: Total number of app instances allowed
+            description: Total instances of all the started processes allowed in a space; `null` means infinite
           per_app_tasks:
             type: [integer, 'null']
-            description: Maximum number of tasks per app
-        description: App limits for the space quota
+            description: Maximum number of running tasks in a space; `null` means infinite
       services:
         type: object
+        description: Quotas that affect services
         properties:
           paid_services_allowed:
             type: boolean
-            description: Whether paid services are allowed
+            description: Specifies whether instances of paid service plans can be created
           total_service_instances:
             type: [integer, 'null']
-            description: Total number of service instances allowed
+            description: Total number of service instances allowed in a space; `null` means infinite
           total_service_keys:
             type: [integer, 'null']
-            description: Total number of service keys allowed
-        description: Service limits for the space quota
+            description: Total number of service keys allowed in a space; `null` means infinite
       routes:
         type: object
+        description: Quotas that affect routes
         properties:
           total_routes:
             type: [integer, 'null']
-            description: Total number of routes allowed
+            description: Total number of routes allowed in a space; `null` means infinite
           total_reserved_ports:
             type: [integer, 'null']
-            description: Total number of reserved ports allowed
-        description: Route limits for the space quota
+            description: Total number of ports that are reservable by routes in a space; `null` means infinite
       relationships:
         type: object
+        description: Relationships for the space quota
         properties:
           organization:
             $ref: './RelationshipToOne.yaml'
+            description: A relationship to the organization where the quota belongs
           spaces:
             $ref: './RelationshipToMany.yaml'
-        description: Relationships for the space quota
+            description: A relationship to the spaces where the quota is applied
       links:
         type: object
+        description: Links to related resources
         properties:
           self:
             $ref: './Link.yaml'
+            description: The URL to get this space quota
           organization:
             $ref: './Link.yaml'
-      metadata:
-        $ref: './Metadata.yaml'
+            description: The URL to get the organization where the quota belongs
     required:
     - name
     - apps
@@ -71,3 +86,7 @@ allOf:
     - routes
     - relationships
     - links
+description: |
+  Space quotas are named sets of quotas. Space quota names are unique within an organization.
+
+  Only one space quota may be applied to a given space at any given time. Space quotas cannot be used to bypass organization quotas; when the organization's quota and the space's quota specify different values for a given resource, the more restrictive of the two is used.

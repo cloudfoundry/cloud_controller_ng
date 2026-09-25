@@ -7,24 +7,36 @@ content:
       properties:
         name:
           type: string
-          description: The name of the buildpack
+          description: Name of the buildpack; must be unique per stack (case-sensitive)
         stack:
-          type: string
+          type: [string, 'null']
+          default: null
           description: The name of the stack that the buildpack will use
         position:
           type: integer
+          default: 1
           description: The order in which the buildpacks are checked during buildpack auto-detection
         lifecycle:
           type: string
+          default: buildpack
+          enum:
+            - buildpack
+            - cnb
           description: The version of buildpack the buildpack will use. `buildpack` indicates [Classic Buildpacks](https://docs.cloudfoundry.org/buildpacks/classic.html). `cnb` indicates [Cloud Native Buildpacks](https://docs.cloudfoundry.org/buildpacks/cnb/)
         enabled:
           type: boolean
+          default: true
           description: Whether or not the buildpack will be used for staging
         locked:
           type: boolean
+          default: false
           description: Whether or not the buildpack is locked to prevent updating the bits
         metadata:
           $ref: ../schemas/Metadata.yaml
+          description: |-
+            `labels`: Labels applied to the buildpack
+
+            `annotations`: Annotations applied to the buildpack
       required:
         - name
       description: Request schema for creating a buildpack

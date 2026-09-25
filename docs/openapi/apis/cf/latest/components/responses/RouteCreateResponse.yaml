@@ -3,3 +3,50 @@ content:
   application/json:
     schema:
       $ref: '../schemas/Route.yaml'
+    examples:
+      default:
+        summary: default
+        value:
+          guid: cbad697f-cac1-48f4-9017-ac08f39dfb31
+          protocol: tcp
+          port: 6666
+          created_at: '2019-05-10T17:17:48Z'
+          updated_at: '2019-05-10T17:17:48Z'
+          host: a-hostname
+          path: /some_path
+          url: a-hostname.a-domain.com/some_path
+          destinations: []
+          options:
+            loadbalancing: round-robin
+          metadata:
+            labels:
+              key: value
+            annotations:
+              note: detailed information
+          relationships:
+            space:
+              data:
+                guid: 885a8cb3-c07b-4856-b448-eeb10bf36236
+            domain:
+              data:
+                guid: 0b5f3633-194c-42d2-9408-972366617e0e
+          links:
+            self:
+              href: https://api.example.org/v3/routes/cbad697f-cac1-48f4-9017-ac08f39dfb31
+            space:
+              href: https://api.example.org/v3/spaces/885a8cb3-c07b-4856-b448-eeb10bf36236
+            domain:
+              href: https://api.example.org/v3/domains/0b5f3633-194c-42d2-9408-972366617e0e
+            destinations:
+              href: https://api.example.org/v3/routes/cbad697f-cac1-48f4-9017-ac08f39dfb31/destinations
+links:
+  space:
+    operationId: getSpace
+    parameters:
+      guid: $response.body#/relationships/space/data/guid
+    description: Retrieve the space for this route
+  domain:
+    operationId: getDomain
+    parameters:
+      guid: $response.body#/relationships/domain/data/guid
+    description: Retrieve the domain for this route

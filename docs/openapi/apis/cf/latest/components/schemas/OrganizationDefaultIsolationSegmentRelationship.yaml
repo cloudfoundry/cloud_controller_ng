@@ -1,0 +1,23 @@
+type: object
+properties:
+  data:
+    oneOf:
+      - $ref: './Relationship.yaml'
+      - type: 'null'
+    description: Isolation segment relationship; apps will run in this isolation segment; `null` when the organization has no default isolation segment
+  links:
+    type: object
+    description: Links to related resources
+    properties:
+      self:
+        $ref: './Link.yaml'
+        description: The URL of this default isolation segment relationship
+      related:
+        $ref: './Link.yaml'
+        description: The URL of the isolation segment that is the default for this organization
+required:
+  - data
+  - links
+description: |-
+  A to-one relationship between an organization and the isolation segment in which its apps run by default.
+  Only isolation segments that are entitled to the organization are eligible to be the default isolation segment.

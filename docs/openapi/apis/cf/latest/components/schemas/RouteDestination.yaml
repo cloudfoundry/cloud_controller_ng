@@ -2,39 +2,65 @@ type: object
 properties:
   guid:
     type: string
+    format: uuid
+    description: Unique identifier for the destination
   app:
     type: object
     properties:
       guid:
         type: string
+        format: uuid
+        description: Unique identifier for the app to route traffic to
       process:
         type: object
         properties:
           type:
             type: string
+            description: Type of the process belonging to the app to route traffic to
+        description: The process of the app to route traffic to
+    description: The app to route traffic to
+  port:
+    type: integer
+    description: Port on the destination process to route traffic to
   weight:
     type:
       - integer
       - 'null'
-  port:
-    type: integer
+    deprecated: true
+    description: 'Percentage of traffic which will be routed to this destination. **DEPRECATED:** this feature was only available via the experimental Service Mesh routing plane. It is no longer supported.'
   protocol:
     type: [string, "null"]
+    enum:
+      - http1
+      - http2
+      - tcp
+      - null
+    description: Protocol to use for this destination. Valid protocols are `http1` or `http2` if route protocol is `http`, `tcp` if route protocol is `tcp`. A `null` value will set it either `http1` or `tcp` based on the route protocol; this feature is only available if you turn it on in routing release
   created_at:
     type: string
     format: date-time
+    description: The time with zone when the object was created
   updated_at:
     type: [string, "null"]
     format: date-time
-  metadata:
-    $ref: './Metadata.yaml'
+    description: The time with zone when the object was last updated
   links:
     type: object
     properties:
-      self:
+      destinations:
         $ref: './Link.yaml'
-        description: The URL to get this route destination
+        description: The URL to get the destinations for the route this destination belongs to
       route:
         $ref: './Link.yaml'
         description: The URL to get the route for this destination
-description: A route destination is a specification for where traffic on a route should be directed.
+    description: Links to related resources
+description: |-
+  A destination represents the relationship between a route and a resource that can serve traffic (for example, the `web` process of an application).
+
+  When a route has destinations, that route will direct traffic to the processes represented by those destinations.
+
+  If a destination is created with a port specified, the route will direct traffic to that port on the process. A destination with port 9000 and process type `api` means traffic will be directed to the `api` process running on container port 9000.
+
+  Note that when using a custom port, the app process must be listening on the specified port for the mapping to work. Otherwise, visiting the route will result in a 404 error.
+
+  If a destination does not specify a port, the default port depends on the app lifecycle type. For buildpack apps, traffic will be directed to port 8080. For Docker apps, the first port specified in the Dockerfile will be used.

@@ -1,4 +1,5 @@
 type: object
+description: A list of service offerings
 properties:
   pagination:
     $ref: './Pagination.yaml'
@@ -6,3 +7,7 @@ properties:
     type: array
     items:
       $ref: './ServiceOffering.yaml'
+    description: List of service offerings
+  included:
+    $ref: './IncludedResources.yaml'
+    description: Additional related resources included in the response when using the fields parameter

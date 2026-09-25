@@ -7,18 +7,19 @@ properties:
     type: array
     items:
       type: string
-    description: Tags for the service instance
+    description: Tags are used by apps to identify service instances; they are shown in the app VCAP_SERVICES env
   credentials:
     type: object
-    description: Service credentials
+    description: A JSON object that is made available to apps bound to this service instance
   syslog_drain_url:
     type: [string, "null"]
     format: uri
-    description: URL for syslog drain
+    description: URL to which logs for bound applications will be streamed
   route_service_url:
-    type: string
+    type: [string, "null"]
     format: uri
-    description: URL for route service
+    description: URL to which requests for bound routes will be forwarded; must use the `https` protocol
   metadata:
     $ref: './Metadata.yaml'
+    description: Labels and annotations applied to the service_instance
 description: Schema for updating a user-provided service instance

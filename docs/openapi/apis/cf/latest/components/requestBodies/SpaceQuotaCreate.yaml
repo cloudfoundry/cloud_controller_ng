@@ -1,66 +1,80 @@
 description: Space quota to create
+required: true
 content:
   application/json:
     schema:
       type: object
+      required:
+        - name
+        - relationships
       properties:
         name:
           type: string
-          description: Name of the space quota
+          description: Name of the quota; must be unique within the organization (case-sensitive)
         apps:
           type: object
+          description: Quotas that affect applications and application sub-resources
           properties:
             total_memory_in_mb:
-              type: integer
-              description: Total memory allowed for all apps in MB
+              type: [integer, "null"]
+              default: null
+              description: Total memory allowed for all the started processes and running tasks in a space; defaults to `null` (infinite)
             per_process_memory_in_mb:
-              type: integer
-              description: Maximum memory per process in MB
+              type: [integer, "null"]
+              default: null
+              description: Maximum memory for a single process or task; defaults to `null` (infinite)
             log_rate_limit_in_bytes_per_second:
-              type: integer
-              description: Log rate limit in bytes per second
+              type: [integer, "null"]
+              default: null
+              description: Total log rate limit allowed for all the started processes and running tasks in an organization; defaults to `null` (infinite)
             total_instances:
-              type: integer
-              description: Total number of app instances allowed
+              type: [integer, "null"]
+              default: null
+              description: Total instances of all the started processes allowed in a space; defaults to `null` (infinite)
             per_app_tasks:
-              type: integer
-              description: Maximum number of tasks per app
-          description: App limits for the space quota
+              type: [integer, "null"]
+              default: null
+              description: Maximum number of running tasks in a space; defaults to `null` (infinite)
         services:
           type: object
+          description: Quotas that affect services
           properties:
             paid_services_allowed:
               type: boolean
-              description: Whether paid services are allowed
+              default: true
+              description: Specifies whether instances of paid service plans can be created
             total_service_instances:
-              type: integer
-              description: Total number of service instances allowed
+              type: [integer, "null"]
+              default: null
+              description: Total number of service instances allowed in a space; defaults to `null` (infinite)
             total_service_keys:
-              type: integer
-              description: Total number of service keys allowed
-          description: Service limits for the space quota
+              type: [integer, "null"]
+              default: null
+              description: Total number of service keys allowed in a space; defaults to `null` (infinite)
         routes:
           type: object
+          description: Quotas that affect routes
           properties:
             total_routes:
-              type: integer
-              description: Total number of routes allowed
+              type: [integer, "null"]
+              default: null
+              description: Total number of routes allowed in a space; defaults to `null` (infinite)
             total_reserved_ports:
-              type: integer
-              description: Total number of reserved ports allowed
-          description: Route limits for the space quota
+              type: [integer, "null"]
+              default: null
+              description: Total number of ports that are reservable by routes in a space; defaults to `null` (infinite)
         relationships:
           type: object
+          description: Relationships for the space quota
+          required:
+            - organization
           properties:
             organization:
               $ref: ../schemas/RelationshipToOne.yaml
+              description: A relationship to the organization where the quota belongs
             spaces:
               $ref: ../schemas/RelationshipToMany.yaml
-          description: Relationships for the space quota
-        metadata:
-          $ref: ../schemas/Metadata.yaml
-      required:
-        - name
+              description: A relationship to the spaces where the quota is applied
     examples:
       default:
         summary: default
@@ -69,4 +83,4 @@ content:
           relationships:
             organization:
               data:
-                guid: 123e4567-e89b-12d3-a456-426614174000
+                guid: 9b370018-c38e-44c9-86d6-155c76801104

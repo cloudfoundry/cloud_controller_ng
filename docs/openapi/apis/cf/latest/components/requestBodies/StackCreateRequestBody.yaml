@@ -7,13 +7,34 @@ content:
       properties:
         name:
           type: string
-          description: Name of the stack; must be unique and no longer than 250 characters
           maxLength: 250
+          description: Name of the stack; must be unique (case-sensitive) and no longer than 250 characters
         description:
           type: [string, "null"]
-          description: Description of the stack; must no longer than 250 characters
           maxLength: 250
+          default: null
+          description: Description of the stack; must no longer than 250 characters
+        state:
+          type: string
+          enum:
+            - ACTIVE
+            - RESTRICTED
+            - DEPRECATED
+            - DISABLED
+          description: 'The state of the stack; valid states are: `ACTIVE`, `RESTRICTED`, `DEPRECATED`, `DISABLED`'
+        state_reason:
+          type: [string, "null"]
+          description: Optional plain text describing the stack state change
         metadata:
           $ref: '../schemas/Metadata.yaml'
+          description: Labels and annotations applied to the stack
       required:
         - name
+    examples:
+      default:
+        summary: default
+        value:
+          name: my-stack
+          description: Here is my stack!
+          state: ACTIVE
+          state_reason: null

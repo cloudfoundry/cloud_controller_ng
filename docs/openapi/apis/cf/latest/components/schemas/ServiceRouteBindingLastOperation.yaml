@@ -1,0 +1,31 @@
+type: object
+properties:
+  type:
+    type: string
+    description: Either `create` or `delete`
+    enum:
+      - create
+      - delete
+  state:
+    type: string
+    description: |-
+      Either `initial`, `in progress`, `succeeded`, or `failed`
+
+      > **Note:** The `initial` state indicates that no response from the service broker has been received yet.
+    enum:
+      - initial
+      - in progress
+      - succeeded
+      - failed
+  description:
+    type: [string, "null"]
+    description: A textual explanation associated with this state
+  created_at:
+    type: string
+    format: date-time
+    description: The time with zone when the operation started
+  updated_at:
+    type: string
+    format: date-time
+    description: The time with zone when the operation was last updated
+description: The last operation object for service route binding

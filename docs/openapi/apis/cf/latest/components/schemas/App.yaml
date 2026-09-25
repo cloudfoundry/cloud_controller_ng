@@ -2,24 +2,49 @@ type: object
 allOf:
   - $ref: './BaseSchema.yaml'
   - properties:
+      guid:
+        type: string
+        format: uuid
+        description: Unique identifier for the app
+      created_at:
+        type: string
+        format: date-time
+        description: The time with zone when the object was created
+      updated_at:
+        type: string
+        format: date-time
+        description: The time with zone when the object was last updated
       name:
         type: string
-        description: The name of the app
+        description: Name of the app
       state:
         type: string
-        description: Current desired state of the app
+        description: Current desired state of the app; valid values are `STOPPED` or `STARTED`
         enum:
           - STOPPED
           - STARTED
       lifecycle:
         $ref: './Lifecycle.yaml'
-        description: Provides the default lifecycle object for the application. This lifecycle will be used when staging and running the application. The staging lifecycle can be overridden on builds
+        description: Provides the default lifecycle object for the application. This lifecycle will be used when staging and running the application. The staging lifecycle can be overridden on [builds](#builds)
       relationships:
-        $ref: './Relationships.yaml'
+        type: object
+        description: Relationships to other resources
+        properties:
+          space:
+            $ref: './RelationshipToOne.yaml'
+            description: The space the app is contained in
+          current_droplet:
+            $ref: './RelationshipToOne.yaml'
+            description: The current droplet used by the application
       metadata:
         $ref: './Metadata.yaml'
+        description: |-
+          `labels`: Labels applied to the app
+
+          `annotations`: Annotations added to the app
       links:
         type: object
+        description: Links to related resources
         properties:
           self:
             $ref: './Link.yaml'
@@ -64,4 +89,4 @@ allOf:
         $ref: './IncludedResources.yaml'
         description: Additional related resources included in the response when using the include parameter
 description: >
-  Apps represent the core entities in the Cloud Foundry environment. They are the deployable units that run your code. Each app can have multiple processes, routes, and services associated with it. Apps can be scaled horizontally by increasing the number of instances. They can also be updated and restarted as needed.
+  Apps are top-level objects that link together and contain configuration information for your packages, droplets, processes, tasks, and more.
