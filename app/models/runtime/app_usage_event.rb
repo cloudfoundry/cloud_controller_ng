@@ -9,6 +9,23 @@ module VCAP::CloudController
                       :buildpack_guid, :buildpack_name,
                       :package_state, :previous_package_state, :parent_app_guid,
                       :parent_app_name, :process_type, :task_name, :task_guid
+
+    def self.usage_lifecycles
+      [
+        {
+          beginning_states: [ProcessModel::STARTED, Repositories::AppUsageEventRepository::WAS_RUNNING_EVENT_STATE],
+          ending_state: ProcessModel::STOPPED,
+          guid_column: :app_guid
+        },
+        {
+          beginning_states: [Repositories::AppUsageEventRepository::TASK_STARTED_EVENT_STATE,
+                             Repositories::AppUsageEventRepository::TASK_WAS_RUNNING_EVENT_STATE],
+          ending_state: Repositories::AppUsageEventRepository::TASK_STOPPED_EVENT_STATE,
+          guid_column: :task_guid
+        }
+      ].freeze
+    end
+
     AppUsageEvent.dataset_module do
       def supports_window_functions?
         false
