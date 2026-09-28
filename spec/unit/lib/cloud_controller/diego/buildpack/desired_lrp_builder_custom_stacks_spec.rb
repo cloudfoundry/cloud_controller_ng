@@ -9,13 +9,13 @@ module VCAP::CloudController
         let(:stack) { 'cflinuxfs4' }
         let(:config) do
           Config.new({
-            diego: {
-              use_privileged_containers_for_running: false,
-              lifecycle_bundles: { "buildpack/#{stack}": 'http://lifecycle.example.com/bundle.tgz' },
-              droplet_destinations: { stack.to_sym => '/home/vcap' },
-              enable_declarative_asset_downloads: false
-            }
-          })
+                       diego: {
+                         use_privileged_containers_for_running: false,
+                         lifecycle_bundles: { "buildpack/#{stack}": 'http://lifecycle.example.com/bundle.tgz' },
+                         droplet_destinations: { stack.to_sym => '/home/vcap' },
+                         enable_declarative_asset_downloads: false
+                       }
+                     })
         end
         let(:opts) do
           {
@@ -49,13 +49,13 @@ module VCAP::CloudController
             let(:stack) { 'docker://docker.io/cloudfoundry/cflinuxfs4:1.268.0' }
             let(:config) do
               Config.new({
-                diego: {
-                  use_privileged_containers_for_running: false,
-                  lifecycle_bundles: { "buildpack/#{VCAP::CloudController::Stack.default.name}": 'http://lifecycle.example.com/bundle.tgz' },
-                  droplet_destinations: { 'default-stack-name': '/home/vcap' },
-                  enable_declarative_asset_downloads: false
-                }
-              })
+                           diego: {
+                             use_privileged_containers_for_running: false,
+                             lifecycle_bundles: { "buildpack/#{VCAP::CloudController::Stack.default.name}": 'http://lifecycle.example.com/bundle.tgz' },
+                             droplet_destinations: { 'default-stack-name': '/home/vcap' },
+                             enable_declarative_asset_downloads: false
+                           }
+                         })
             end
 
             it 'returns a docker:// rootfs URI in Diego format' do
@@ -67,13 +67,13 @@ module VCAP::CloudController
             let(:stack) { 'docker://registry.example.com/my-org/my-stack:v2.0' }
             let(:config) do
               Config.new({
-                diego: {
-                  use_privileged_containers_for_running: false,
-                  lifecycle_bundles: { "buildpack/#{VCAP::CloudController::Stack.default.name}": 'http://lifecycle.example.com/bundle.tgz' },
-                  droplet_destinations: { 'default-stack-name': '/home/vcap' },
-                  enable_declarative_asset_downloads: false
-                }
-              })
+                           diego: {
+                             use_privileged_containers_for_running: false,
+                             lifecycle_bundles: { "buildpack/#{VCAP::CloudController::Stack.default.name}": 'http://lifecycle.example.com/bundle.tgz' },
+                             droplet_destinations: { 'default-stack-name': '/home/vcap' },
+                             enable_declarative_asset_downloads: false
+                           }
+                         })
             end
 
             it 'returns a docker:// rootfs URI for the private registry' do
@@ -87,13 +87,13 @@ module VCAP::CloudController
             let(:stack) { 'docker://docker.io/cloudfoundry/cflinuxfs4:1.268.0' }
             let(:config) do
               Config.new({
-                diego: {
-                  use_privileged_containers_for_running: false,
-                  lifecycle_bundles: { "buildpack/#{VCAP::CloudController::Stack.default.name}": 'http://lifecycle.example.com/bundle.tgz' },
-                  droplet_destinations: { 'default-stack-name': '/home/vcap' },
-                  enable_declarative_asset_downloads: false
-                }
-              })
+                           diego: {
+                             use_privileged_containers_for_running: false,
+                             lifecycle_bundles: { "buildpack/#{VCAP::CloudController::Stack.default.name}": 'http://lifecycle.example.com/bundle.tgz' },
+                             droplet_destinations: { 'default-stack-name': '/home/vcap' },
+                             enable_declarative_asset_downloads: false
+                           }
+                         })
             end
 
             it 'uses the default stack lifecycle bundle' do
@@ -107,13 +107,13 @@ module VCAP::CloudController
         describe '#image_layers' do
           let(:config) do
             Config.new({
-              diego: {
-                use_privileged_containers_for_running: false,
-                lifecycle_bundles: { "buildpack/#{VCAP::CloudController::Stack.default.name}": 'http://lifecycle.example.com/bundle.tgz' },
-                droplet_destinations: { 'default-stack-name': '/home/vcap' },
-                enable_declarative_asset_downloads: true
-              }
-            })
+                         diego: {
+                           use_privileged_containers_for_running: false,
+                           lifecycle_bundles: { "buildpack/#{VCAP::CloudController::Stack.default.name}": 'http://lifecycle.example.com/bundle.tgz' },
+                           droplet_destinations: { 'default-stack-name': '/home/vcap' },
+                           enable_declarative_asset_downloads: true
+                         }
+                       })
           end
 
           context 'with a custom stack' do
