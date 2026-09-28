@@ -161,6 +161,7 @@
                     description: The amount of disk space in megabytes to allocate for the web process
                   log_rate_limit_in_bytes_per_second:
                     type: integer
+                    format: int64
                     description: The log rate limit in bytes per second for the web process. A value of -1 indicates unlimited, 0 prevents any logs from being emitted.
                   canary:
                     type: object
