@@ -138,6 +138,11 @@ Around 250 places in `spec/request` hand a model a literal guid such as
 `'app1_guid'` and then assert on it, so that check only has signal against
 recorded traffic, not against fixtures.
 
+5xx responses are left out of coverage. They are described on nearly every
+operation, but request specs almost never produce them, so they only drag the
+number down; the HTML report lists them as skipped. A skipped response isn't
+tracked, so a malformed 5xx body won't show up as a violation either.
+
 The `OpenAPI Conformance` GitHub Action runs this on pull requests and
 publishes the digest to the job summary. It is informational -- the
 description already disagrees with the API in a handful of places, so there is
