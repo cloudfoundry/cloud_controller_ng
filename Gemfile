@@ -35,7 +35,7 @@ gem 'uri', '~> 1.1'
 gem 'actionpack', '~> 8.1.2'
 gem 'actionview', '~> 8.1.3'
 gem 'activemodel', '~> 8.1.3'
-gem 'railties', '~> 8.1.1'
+gem 'railties', '~> 8.1.4'
 
 gem 'cf-uaa-lib', '~> 4.0.10'
 
