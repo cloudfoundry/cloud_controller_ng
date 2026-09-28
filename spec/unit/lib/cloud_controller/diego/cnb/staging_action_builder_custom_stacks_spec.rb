@@ -19,17 +19,17 @@ module VCAP::CloudController
         end
         let(:config) do
           Config.new({
-            diego: {
-              lifecycle_bundles: { 'cnb/default-stack-name': 'http://lifecycle.example.com/cnb-bundle.tgz' },
-              droplet_destinations: { 'default-stack-name': '/home/vcap' },
-              enable_declarative_asset_downloads: false,
-              cc_uploader_url: 'http://uploader.example.com'
-            },
-            staging: {
-              timeout_in_seconds: 900,
-              legacy_md5_buildpack_paths_enabled: false
-            }
-          })
+                       diego: {
+                         lifecycle_bundles: { 'cnb/default-stack-name': 'http://lifecycle.example.com/cnb-bundle.tgz' },
+                         droplet_destinations: { 'default-stack-name': '/home/vcap' },
+                         enable_declarative_asset_downloads: false,
+                         cc_uploader_url: 'http://uploader.example.com'
+                       },
+                       staging: {
+                         timeout_in_seconds: 900,
+                         legacy_md5_buildpack_paths_enabled: false
+                       }
+                     })
         end
         let(:staging_details) { instance_double(StagingDetails, staging_guid: 'staging-guid') }
 

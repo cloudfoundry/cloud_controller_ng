@@ -12,7 +12,7 @@ module VCAP::CloudController
 
       context 'when the diego_custom_stacks feature flag is enabled' do
         before do
-          FeatureFlag.make(name: 'diego_custom_stacks', enabled: true)
+          FeatureFlag.create(name: 'diego_custom_stacks', enabled: true)
         end
 
         it 'returns true' do
@@ -22,13 +22,13 @@ module VCAP::CloudController
 
       context 'when the diego_custom_stacks feature flag is disabled' do
         before do
-          FeatureFlag.make(name: 'diego_custom_stacks', enabled: false)
+          FeatureFlag.create(name: 'diego_custom_stacks', enabled: false)
         end
 
         it 'raises FeatureDisabled when raise_unless_enabled!' do
-          expect {
+          expect do
             FeatureFlag.raise_unless_enabled!(:diego_custom_stacks)
-          }.to raise_error(CloudController::Errors::ApiError) { |error|
+          end.to raise_error(CloudController::Errors::ApiError) { |error|
             expect(error.name).to eq('FeatureDisabled')
           }
         end

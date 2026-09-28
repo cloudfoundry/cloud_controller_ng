@@ -9,13 +9,13 @@ module VCAP::CloudController
         let(:stack_name) { 'cflinuxfs4' }
         let(:config) do
           Config.new({
-            diego: {
-              use_privileged_containers_for_running: false,
-              lifecycle_bundles: { "buildpack/#{VCAP::CloudController::Stack.default.name}": 'http://lifecycle.example.com/bundle.tgz' },
-              droplet_destinations: { 'default-stack-name': '/home/vcap' },
-              enable_declarative_asset_downloads: false
-            }
-          })
+                       diego: {
+                         use_privileged_containers_for_running: false,
+                         lifecycle_bundles: { "buildpack/#{VCAP::CloudController::Stack.default.name}": 'http://lifecycle.example.com/bundle.tgz' },
+                         droplet_destinations: { 'default-stack-name': '/home/vcap' },
+                         enable_declarative_asset_downloads: false
+                       }
+                     })
         end
         let(:lifecycle_data) do
           {
@@ -25,8 +25,8 @@ module VCAP::CloudController
         end
         let(:task) do
           instance_double(TaskModel,
-            name: 'my-task',
-            droplet: instance_double(DropletModel, sha256_checksum: 'abc123', droplet_hash: 'hash'))
+                          name: 'my-task',
+                          droplet: instance_double(DropletModel, sha256_checksum: 'abc123', droplet_hash: 'hash'))
         end
 
         subject(:builder) do
@@ -56,7 +56,7 @@ module VCAP::CloudController
         describe '#lifecycle_bundle_key' do
           context 'with a system stack' do
             it 'uses the stack name' do
-              expect(builder.lifecycle_bundle_key).to eq(:"buildpack/cflinuxfs4")
+              expect(builder.lifecycle_bundle_key).to eq(:'buildpack/cflinuxfs4')
             end
           end
 

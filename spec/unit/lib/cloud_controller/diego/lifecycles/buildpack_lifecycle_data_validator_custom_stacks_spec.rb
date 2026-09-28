@@ -3,7 +3,7 @@ require 'cloud_controller/diego/lifecycles/buildpack_lifecycle_data_validator'
 
 module VCAP::CloudController
   RSpec.describe BuildpackLifecycleDataValidator do
-    let(:stack) { Stack.make }
+    let(:stack) { create(:stack) }
     let(:buildpack_url) { 'https://github.com/my-org/my-buildpack.git' }
     let(:buildpack_info) { BuildpackInfo.new(buildpack_url, nil) }
     let(:buildpack_infos) { [buildpack_info] }
@@ -30,7 +30,7 @@ module VCAP::CloudController
 
       context 'when diego_custom_stacks feature flag is enabled' do
         before do
-          FeatureFlag.make(name: 'diego_custom_stacks', enabled: true)
+          FeatureFlag.create(name: 'diego_custom_stacks', enabled: true)
         end
 
         context 'with custom buildpacks (URL-based)' do
@@ -53,7 +53,7 @@ module VCAP::CloudController
 
       context 'when diego_custom_stacks feature flag is disabled' do
         before do
-          FeatureFlag.make(name: 'diego_custom_stacks', enabled: false)
+          FeatureFlag.create(name: 'diego_custom_stacks', enabled: false)
         end
 
         it 'is not valid (stack must exist in DB)' do

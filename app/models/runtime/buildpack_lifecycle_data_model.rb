@@ -103,7 +103,7 @@ module VCAP::CloudController
     end
 
     def credentials=(creds)
-      self.registry_credentials_json = creds ? Oj.dump(creds.deep_stringify_keys) : nil
+      self.registry_credentials_json = creds ? Oj.dump(creds) : nil
     end
 
     def validate
