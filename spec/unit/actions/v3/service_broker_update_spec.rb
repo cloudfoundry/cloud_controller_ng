@@ -206,6 +206,15 @@ module VCAP
             end
           end
 
+          context 'and the update also changes the broker URL origin without providing authentication' do
+            let(:state) { ServiceBrokerStateEnum::SYNCHRONIZING }
+            let(:request) { { url: 'http://attacker.example.com/broker' } }
+
+            it 'raises the transitional state error first' do
+              expect { action.enqueue_update }.to raise_error(V3::ServiceBrokerUpdate::InvalidServiceBroker, expected_error_message)
+            end
+          end
+
           context 'If broker is in DELETE_IN_PROGRESS state' do
             let(:state) { ServiceBrokerStateEnum::DELETE_IN_PROGRESS }
 
@@ -230,6 +239,51 @@ module VCAP
             it 'does not raise an error' do
               expect { action.enqueue_update }.not_to raise_error
             end
+          end
+        end
+
+        context 'when changing the broker URL origin without providing authentication' do
+          let(:request) { { url: 'http://attacker.example.com/broker' } }
+
+          it 'raises an InvalidServiceBroker error' do
+            expect { action.enqueue_update }.to raise_error(
+              V3::ServiceBrokerUpdate::InvalidServiceBroker,
+              'Authentication must be provided when changing the broker URL origin'
+            )
+          end
+        end
+
+        context 'when changing the broker URL origin together with authentication' do
+          let(:request) do
+            {
+              url: 'http://attacker.example.com/broker',
+              authentication: {
+                credentials: {
+                  username: 'new-admin',
+                  password: 'welcome'
+                }
+              }
+            }
+          end
+
+          it 'does not raise an error' do
+            expect { action.enqueue_update }.not_to raise_error
+          end
+        end
+
+        context 'when changing only the broker URL path (same origin)' do
+          let(:request) { { url: 'http://example.org/different-path' } }
+
+          it 'does not raise an error' do
+            expect { action.enqueue_update }.not_to raise_error
+          end
+        end
+
+        context 'when changing only the broker URL path with different hostname casing (same origin)' do
+          let(:request) { { url: 'http://EXAMPLE.ORG/different-path' } }
+
+          it 'does not raise an error' do
+            expect { action.enqueue_update }.not_to raise_error
           end
         end
 

@@ -667,6 +667,87 @@ RSpec.describe 'V3 service brokers' do
         end
       end
 
+      context 'for a space-scoped broker' do
+        let!(:broker) do
+          create(:service_broker,
+                 name: 'space-scoped broker',
+                 broker_url: 'http://example.org/old-broker-url',
+                 auth_username: 'old-admin',
+                 auth_password: 'not-welcome',
+                 state: VCAP::CloudController::ServiceBrokerStateEnum::AVAILABLE,
+                 space: space)
+        end
+        let(:space_developer_headers) do
+          org.add_user(user)
+          space.add_developer(user)
+          headers_for(user)
+        end
+
+        context 'when changing the broker URL origin without providing authentication' do
+          it 'returns 422 and does not enqueue an update job' do
+            patch "/v3/service_brokers/#{broker.guid}", { url: 'http://attacker.example.com/broker' }.to_json, space_developer_headers
+
+            expect_error(
+              status: 422,
+              error: 'UnprocessableEntity',
+              description: 'Authentication must be provided when changing the broker URL origin'
+            )
+
+            expect(VCAP::CloudController::PollableJobModel.count).to eq(0)
+            expect(broker.reload.broker_url).to eq('http://example.org/old-broker-url')
+            expect(broker.auth_username).to eq('old-admin')
+            expect(broker.auth_password).to eq('not-welcome')
+            expect(broker.state).to eq(VCAP::CloudController::ServiceBrokerStateEnum::AVAILABLE)
+          end
+        end
+
+        context 'when changing only the broker URL path on the same origin without providing authentication' do
+          before do
+            stub_request(:get, 'http://example.org/different-path/v2/catalog').
+              to_return(status: 200, body: catalog(space_broker_id).to_json, headers: {})
+          end
+
+          it 'accepts the update' do
+            patch "/v3/service_brokers/#{broker.guid}", { url: 'http://example.org/different-path' }.to_json, space_developer_headers
+
+            expect(last_response).to have_status_code(202)
+          end
+        end
+      end
+
+      context 'for a global broker' do
+        context 'when changing the broker URL origin without providing authentication' do
+          it 'returns 422 and does not enqueue an update job' do
+            patch "/v3/service_brokers/#{broker.guid}", { url: 'http://attacker.example.com/broker' }.to_json, admin_headers
+
+            expect_error(
+              status: 422,
+              error: 'UnprocessableEntity',
+              description: 'Authentication must be provided when changing the broker URL origin'
+            )
+
+            expect(VCAP::CloudController::PollableJobModel.count).to eq(0)
+            expect(broker.reload.broker_url).to eq('http://example.org/broker-url')
+            expect(broker.auth_username).to eq('admin')
+            expect(broker.auth_password).to eq('welcome')
+            expect(broker.state).to eq(VCAP::CloudController::ServiceBrokerStateEnum::AVAILABLE)
+          end
+        end
+
+        context 'when changing only the broker URL path on the same origin without providing authentication' do
+          before do
+            stub_request(:get, 'http://example.org/different-path/v2/catalog').
+              to_return(status: 200, body: { services: [] }.to_json, headers: {})
+          end
+
+          it 'accepts the update' do
+            patch "/v3/service_brokers/#{broker.guid}", { url: 'http://example.org/different-path' }.to_json, admin_headers
+
+            expect(last_response).to have_status_code(202)
+          end
+        end
+      end
+
       context 'when there is a sql validation error while syncing' do
         let!(:service_offering) { create(:service, service_broker: broker, unique_id: global_broker_id + '-1') }
         let!(:service_plan) { create(:service_plan, service: service_offering, name: 'plan_name-1', unique_id: Sham.guid) }
