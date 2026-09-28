@@ -73,3 +73,9 @@ month,job,runs,p50_min
 2026-07,Test-Postgres (postgres:14),60,12.5
 2026-07,Test-Postgres (postgres:15),60,12.2
 2026-07,Test-Postgres (postgres:17),60,12.3
+2026-08,Rubocop,51,2.3
+2026-08,Test-Mysql (mysql:8.0),51,15.7
+2026-08,Test-Mysql (mysql:8.2),51,15.3
+2026-08,Test-Postgres (postgres:14),51,13.4
+2026-08,Test-Postgres (postgres:15),51,13.7
+2026-08,Test-Postgres (postgres:17),51,13.2
