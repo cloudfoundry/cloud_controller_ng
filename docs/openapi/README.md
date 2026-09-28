@@ -144,7 +144,10 @@ number down; the HTML report lists them as skipped. A skipped response isn't
 tracked, so a malformed 5xx body won't show up as a violation either.
 
 The `OpenAPI Conformance` GitHub Action runs this on pull requests and
-publishes the digest to the job summary. It is informational -- the
+publishes the digest to the job summary. The step log carries the same digest
+plus, in a collapsed "OpenAPI coverage details" group, every route that isn't
+fully covered -- the HTML report is also uploaded as an artifact, but there is
+no need to download it. It is informational -- the
 description already disagrees with the API in a handful of places, so there is
 nothing honest to gate on yet.
 
