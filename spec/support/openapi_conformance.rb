@@ -74,6 +74,7 @@ module OpenapiConformance
       lines = [
         "- Coverage: **#{plan.coverage.round(2)}%**",
         "- Described routes exercised: **#{exercised}/#{plan.routes.size}**",
+        "- Responses skipped (5xx): #{plan.skipped_responses_count}",
         "- Conformance violations: **#{violations.size + suppressed.size}**"
       ]
       lines << "  (#{suppressed.size} of them `format: uuid` vs. synthetic test guids, not listed)" if suppressed.any?
@@ -155,6 +156,14 @@ module OpenapiConformance
           test.ignore_request_error { true }
           test.response_raise_error = false
         end
+
+        # 5xx responses are described on nearly every operation, but request
+        # specs almost never produce them -- 245 of the 950 untested responses
+        # in the first run. Skipping takes them out of the coverage number and
+        # the report shows them as skipped rather than untested. The cost: a
+        # skipped response isn't tracked at all, so a malformed 5xx body would
+        # not show up as a violation.
+        test.skip_response_coverage { |response| response.status.to_s.start_with?('5') }
 
         # :warn reports without the exit 2 that an incomplete description
         # would otherwise trigger. Finding out what the number actually is is
