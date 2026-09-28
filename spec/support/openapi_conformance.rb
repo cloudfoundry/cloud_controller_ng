@@ -45,8 +45,8 @@ module OpenapiConformance
 
   # openapi_first takes one reporter. This one writes the HTML report to read
   # after the fact, plus a short markdown digest for the CI log and the job
-  # summary. The gem's own terminal reporter prints every untested route,
-  # which on a partially-written description is thousands of lines.
+  # summary. The gem's own terminal reporter prints every route not fully
+  # covered -- around a thousand lines -- so it only runs in CI, folded away.
   class Reporter
     def initialize(**_options); end
 
@@ -57,9 +57,20 @@ module OpenapiConformance
       markdown = render(coverage_result)
       File.write(MARKDOWN_REPORT, markdown)
       puts markdown
+      print_details(coverage_result) if ENV['GITHUB_ACTIONS'] == 'true'
     end
 
     private
+
+    # The per-route detail otherwise only exists in the HTML artifact. In
+    # GitHub Actions it goes into a collapsed log group, so it can be read in
+    # the job log without downloading anything and doesn't bury the digest.
+    # Local runs skip it: the HTML report is right there in out/.
+    def print_details(coverage_result)
+      puts '::group::OpenAPI coverage details (every route not fully covered)'
+      OpenapiFirst::Test::Coverage::TerminalReporter.new.report(coverage_result)
+      puts '::endgroup::'
+    end
 
     def render(coverage_result)
       lines = ["## OpenAPI conformance\n"]
