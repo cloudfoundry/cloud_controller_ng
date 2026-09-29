@@ -17,6 +17,10 @@ class WorkPool
     @queue << [block, args]
   end
 
+  def queue_size
+    @queue.size
+  end
+
   def replenish
     @threads.each_with_index do |thread, index|
       @threads[index] = create_workpool_thread unless thread.status

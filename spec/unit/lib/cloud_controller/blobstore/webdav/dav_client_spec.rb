@@ -444,7 +444,7 @@ module CloudController
           it 'reraises a BlobstoreError' do
             allow(httpclient).to receive(:put).and_raise(OpenSSL::SSL::SSLError.new)
             expect { client.cp_r_to_blobstore(source_dir) }.to raise_error BlobstoreError, /SSL verification failed/
-            expect(logger).to have_received(:error).with(/^SSL verification failed: OpenSSL::SSL::SSLError/)
+            expect(logger).to have_received(:error).with(/^SSL verification failed: OpenSSL::SSL::SSLError/).at_least(:once)
           end
         end
 
@@ -452,7 +452,7 @@ module CloudController
           it 'raises a BlobstoreError' do
             allow(httpclient).to receive(:put).and_raise(Errno::EHOSTUNREACH.new)
             expect { client.cp_r_to_blobstore(source_dir) }.to raise_error BlobstoreError
-            expect(logger).to have_received(:error).with(/^Error with blobstore: No route to host/)
+            expect(logger).to have_received(:error).with(/^Error with blobstore: No route to host/).at_least(:once)
           end
         end
       end

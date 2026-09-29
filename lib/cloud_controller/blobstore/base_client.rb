@@ -1,20 +1,34 @@
 require 'cloud_controller/blobstore/blob'
 require 'cloud_controller/blobstore/blob_key_generator'
+require 'utils/workpool'
 
 module CloudController
   module Blobstore
     class BaseClient
       def cp_r_to_blobstore(source_dir)
+        workpool_size = 25
+        workpool = WorkPool.new(workpool_size, store_exceptions: true)
+
         Find.find(source_dir).each do |path|
-          next unless File.file?(path)
-          next unless within_limits?(File.size(path))
-          next unless File.stat(path).mode.to_s(8)[3..5].to_i(8) >= 0o600
+          # Throttle submission if queue is getting too large to prevent unbounded memory growth.
+          while workpool.queue_size >= workpool_size * 2
+            sleep 0.01
+          end
 
-          sha1 = Digester.new.digest_path(path)
-          next if exists?(sha1)
+          workpool.submit(path) do |file_path|
+            next unless File.file?(file_path)
+            next unless within_limits?(File.size(file_path))
+            next unless File.stat(file_path).mode.to_s(8)[3..5].to_i(8) >= 0o600
 
-          cp_to_blobstore(path, sha1)
+            sha1 = Digester.new.digest_path(file_path)
+            next if exists?(sha1)
+
+            cp_to_blobstore(file_path, sha1)
+          end
         end
+
+        workpool.drain
+        raise workpool.exceptions.first if workpool.exceptions.any?
       end
 
       def cp_to_blobstore(_, _)
