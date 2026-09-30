@@ -103,15 +103,15 @@ module VCAP::CloudController
           certificate_properties: ::Diego::Bbs::Models::CertificateProperties.new(
             organizational_unit: ["organization:#{process.organization.guid}", "space:#{process.space.guid}", "app:#{process.app_guid}"]
           ),
-          image_username: lrp_image_credentials(process)[0],
-          image_password: lrp_image_credentials(process)[1],
+          image_username: lrp_image_credentials[0],
+          image_password: lrp_image_credentials[1],
           volume_mounted_files: ServiceBindingFilesBuilder.build(process)
         }.compact
       rescue ServiceBindingFilesBuilder::IncompatibleBindings => e
         raise CloudController::Errors::ApiError.new_from_details('UnprocessableEntity', "Cannot build service binding files for app - #{e.message}")
       end
 
-      def lrp_image_credentials(process)
+      def lrp_image_credentials
         @lrp_image_credentials ||= begin
           droplet = process.desired_droplet
           ImageCredentialResolver.resolve(

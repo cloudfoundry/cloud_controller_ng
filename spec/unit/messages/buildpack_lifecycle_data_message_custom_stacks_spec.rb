@@ -66,6 +66,49 @@ module VCAP::CloudController
                                                     })
         expect(message).to be_valid
       end
+
+      it 'is invalid with a token keyed to the stack registry host (Diego cannot use a token to pull the stack)' do
+        message = BuildpackLifecycleDataMessage.new({
+                                                      stack: 'docker://docker.io/my-org/my-stack:latest',
+                                                      credentials: {
+                                                        'docker.io' => { 'token' => 'a-token' }
+                                                      }
+                                                    })
+        expect(message).not_to be_valid
+        expect(message.errors[:credentials]).to include("for registry 'docker.io' must include 'username' and 'password'")
+      end
+
+      it 'is valid with a token keyed to a registry other than the stack host (used for CNB buildpack images)' do
+        message = BuildpackLifecycleDataMessage.new({
+                                                      stack: 'docker://docker.io/my-org/my-stack:latest',
+                                                      credentials: {
+                                                        'ghcr.io' => { 'token' => 'a-token' }
+                                                      }
+                                                    })
+        expect(message).to be_valid
+      end
+
+      it 'is valid when the stack registry uses username/password and another registry uses a token' do
+        message = BuildpackLifecycleDataMessage.new({
+                                                      stack: 'docker://docker.io/my-org/my-stack:latest',
+                                                      credentials: {
+                                                        'docker.io' => { 'username' => 'user', 'password' => 'pass' },
+                                                        'ghcr.io' => { 'token' => 'a-token' }
+                                                      }
+                                                    })
+        expect(message).to be_valid
+      end
+
+      it 'is invalid when the stack registry entry has neither a username/password pair nor a token' do
+        message = BuildpackLifecycleDataMessage.new({
+                                                      stack: 'docker://docker.io/my-org/my-stack:latest',
+                                                      credentials: {
+                                                        'docker.io' => {}
+                                                      }
+                                                    })
+        expect(message).not_to be_valid
+        expect(message.errors[:credentials]).to include("for registry 'docker.io' must include 'username' and 'password'")
+      end
     end
 
     describe 'stack_id field' do
@@ -97,6 +140,34 @@ module VCAP::CloudController
       it 'accepts a docker:// URI as stack value' do
         message = BuildpackLifecycleDataMessage.new({
                                                       stack: 'docker://docker.io/cloudfoundry/cflinuxfs4:1.268.0',
+                                                      buildpacks: ['https://github.com/my-org/my-buildpack.git']
+                                                    })
+        expect(message).to be_valid
+      end
+    end
+
+    describe 'credentials embedded in the stack URI' do
+      it 'is invalid when the URI contains a username and password' do
+        message = BuildpackLifecycleDataMessage.new({
+                                                      stack: 'docker://user:pass@registry.example.com/cloudfoundry/cflinuxfs4:1.0.0',
+                                                      buildpacks: ['https://github.com/my-org/my-buildpack.git']
+                                                    })
+        expect(message).not_to be_valid
+        expect(message.errors[:stack]).to include('must not include credentials in the URI')
+      end
+
+      it 'is invalid when the URI contains only a username' do
+        message = BuildpackLifecycleDataMessage.new({
+                                                      stack: 'docker://user@registry.example.com/cloudfoundry/cflinuxfs4:1.0.0',
+                                                      buildpacks: ['https://github.com/my-org/my-buildpack.git']
+                                                    })
+        expect(message).not_to be_valid
+        expect(message.errors[:stack]).to include('must not include credentials in the URI')
+      end
+
+      it 'is valid when the URI has no embedded credentials' do
+        message = BuildpackLifecycleDataMessage.new({
+                                                      stack: 'docker://registry.example.com/cloudfoundry/cflinuxfs4:1.0.0',
                                                       buildpacks: ['https://github.com/my-org/my-buildpack.git']
                                                     })
         expect(message).to be_valid
