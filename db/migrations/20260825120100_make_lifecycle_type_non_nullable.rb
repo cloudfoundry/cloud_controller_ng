@@ -5,6 +5,7 @@ Sequel.migration do
     %i[apps droplets builds].each do |table|
       if database_type == :postgres
         transaction do
+          run("ALTER TABLE #{table} ALTER COLUMN lifecycle_type SET DEFAULT 'buildpack'")
           alter_table(table) do
             add_constraint({ name: :"#{table}_lifecycle_type_not_null", not_valid: true }) do
               Sequel.lit('lifecycle_type IS NOT NULL')
@@ -18,7 +19,6 @@ Sequel.migration do
 
         transaction do
           run("ALTER TABLE #{table} ALTER COLUMN lifecycle_type SET NOT NULL")
-          run("ALTER TABLE #{table} ALTER COLUMN lifecycle_type SET DEFAULT 'buildpack'")
           alter_table(table) { drop_constraint(:"#{table}_lifecycle_type_not_null") }
         end
       else
