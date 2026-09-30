@@ -1,5 +1,18 @@
 module Delayed
   class ThreadedWorker < Delayed::Worker
+    # Plugin callbacks register against the base Delayed::Worker.lifecycle, so
+    # delegate to the base class to avoid rebuilding a separate lifecycle here
+    # (which would leak a callback per ThreadedWorker.new). Use superclass, not
+    # the Delayed::Worker constant, which tests may reassign to this subclass and
+    # cause infinite recursion.
+    def self.setup_lifecycle
+      superclass.setup_lifecycle
+    end
+
+    def self.lifecycle
+      superclass.lifecycle
+    end
+
     def initialize(options={})
       super
       @num_threads = options[:num_threads]
