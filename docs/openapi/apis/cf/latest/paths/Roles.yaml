@@ -1,17 +1,29 @@
 /v3/roles:
   get:
     summary: List roles
-    description: This endpoint lists roles that the user has access to.
+    description: |-
+      This endpoint lists roles that the user has access to.
+
+      **Permitted roles:** All Roles
     operationId: listRoles
     tags:
       - Roles
     parameters:
       - $ref: ../components/parameters/Page.yaml
       - $ref: ../components/parameters/PerPage.yaml
-      - $ref: ../components/parameters/OrderBy.yaml
+      - name: order_by
+        in: query
+        required: false
+        schema:
+          type: string
+          enum:
+            - created_at
+            - -created_at
+            - updated_at
+            - -updated_at
+        description: Value to sort by. Defaults to ascending; prepend with `-` to sort descending. Valid values are `created_at`, `updated_at`
       - $ref: ../components/parameters/CreatedAts.yaml
       - $ref: ../components/parameters/UpdatedAts.yaml
-      - $ref: ../components/parameters/LabelSelector.yaml
       - name: guids
         in: query
         description: Comma-delimited list of role guids to filter by
@@ -21,7 +33,7 @@
             type: string
       - name: types
         in: query
-        description: Comma-delimited list of role types to filter by
+        description: Comma-delimited list of [role types](#valid-role-types) to filter by
         schema:
           type: array
           items:
@@ -35,16 +47,16 @@
               - space_developer
               - space_manager
               - space_supporter
-      - name: organization_guids
+      - name: space_guids
         in: query
-        description: Comma-delimited list of organization guids to filter by
+        description: Comma-delimited list of space guids to filter by
         schema:
           type: array
           items:
             type: string
-      - name: space_guids
+      - name: organization_guids
         in: query
-        description: Comma-delimited list of space guids to filter by
+        description: Comma-delimited list of organization guids to filter by
         schema:
           type: array
           items:
@@ -58,7 +70,7 @@
             type: string
       - name: include
         in: query
-        description: Optionally include additional related resources in the response; valid values are `user`, `space`, and `organization`.
+        description: Optionally include a list of unique related resources in the response; valid values are `user`, `space`, and `organization`
         schema:
           type: array
           items:
@@ -97,9 +109,12 @@
 
       For a user to be assigned a space role, the user must already have an organization role in the parent organization.
 
-      If the associated user is valid but does not exist in Cloud Controller’s database, a user resource will be created automatically.
+      If the associated user does not exist in Cloud Controller's database, a user resource will be created automatically. This user may correspond to a UAA user or client. See the [user resource](#users) for more details.
 
-      If CAPI property `cc.allow_user_creation_by_org_manager` is enabled, the organization role is being created by username + origin and the user does not exist in UAA yet, the user will be created. The origin must be different from `uaa` in this case.
+      If CAPI property `cc.allow_user_creation_by_org_manager` is enabled, the organization role is being created by username + origin and the user does not exist in UAA yet, the user will be created.
+      The origin must be different from `uaa` in this case.
+
+      **Permitted roles:** Admin, Org Manager *(Can create roles in managed organizations and spaces within those organizations; can also create roles for users outside of managed organizations when `set_roles_by_username` [feature_flag](#list-of-feature-flags) is enabled; this requires identifying users by username and origin)*, Space Manager *(Can create roles in managed spaces for users in their org)*
     operationId: createRole
     tags:
       - Roles
@@ -116,19 +131,17 @@
               by_user_guid:
                 summary: by user guid
                 value:
-                  guid: 123e4567-e89b-12d3-a456-426614174000
+                  guid: 40557c70-d1bd-4976-a2ab-a85f5e882418
                   created_at: '2019-10-10T17:19:12Z'
                   updated_at: '2019-10-10T17:19:12Z'
                   type: organization_auditor
                   relationships:
                     user:
                       data:
-                        guid: 123e4567-e89b-12d3-a456-426614174000
-                    user_group:
-                      data: null
+                        guid: 59eadb5f-fc13-414f-84ba-77a35e239cc8
                     organization:
                       data:
-                        guid: 123e4567-e89b-12d3-a456-426614174000
+                        guid: 05c5da3b-6cbc-421c-87c3-20bb3c41ab7c
                     space:
                       data: null
                   links:
@@ -141,19 +154,17 @@
               by_username_and_origin:
                 summary: by username and origin
                 value:
-                  guid: 123e4567-e89b-12d3-a456-426614174000
+                  guid: 40557c70-d1bd-4976-a2ab-a85f5e882418
                   created_at: '2019-10-10T17:19:12Z'
                   updated_at: '2019-10-10T17:19:12Z'
                   type: organization_auditor
                   relationships:
                     user:
                       data:
-                        guid: 123e4567-e89b-12d3-a456-426614174000
-                    user_group:
-                      data: null
+                        guid: 59eadb5f-fc13-414f-84ba-77a35e239cc8
                     organization:
                       data:
-                        guid: 123e4567-e89b-12d3-a456-426614174000
+                        guid: 05c5da3b-6cbc-421c-87c3-20bb3c41ab7c
                     space:
                       data: null
                   links:
@@ -198,7 +209,10 @@
 /v3/roles/{guid}:
   get:
     summary: Get a role
-    description: This endpoint gets an individual role resource.
+    description: |-
+      This endpoint gets an individual role resource.
+
+      **Permitted roles:** Admin, Admin Read-Only, Global Auditor, Org Manager *(Can see roles in managed organizations or spaces in those organizations)*, Org Auditor *(Can only see organization roles in audited organizations)*, Org Billing Manager *(Can only see organization roles in billing-managed organizations)*, Space Auditor *(Can see roles in audited spaces or parent organizations)*, Space Developer *(Can see roles in developed spaces or parent organizations)*, Space Manager *(Can see roles in managed spaces or parent organizations)*, Space Supporter *(Can see roles in supported spaces or parent organizations)*
     operationId: getRole
     tags:
       - Roles
@@ -206,7 +220,7 @@
       - $ref: ../components/parameters/Guid.yaml
       - name: include
         in: query
-        description: Optionally include additional related resources in the response; valid values are `user`, `space`, and `organization`.
+        description: Optionally include a list of unique related resources in the response; valid values are `user`, `space`, and `organization`
         schema:
           type: array
           items:
@@ -226,19 +240,17 @@
               default:
                 summary: default
                 value:
-                  guid: 123e4567-e89b-12d3-a456-426614174000
+                  guid: 40557c70-d1bd-4976-a2ab-a85f5e882418
                   created_at: '2019-10-10T17:19:12Z'
                   updated_at: '2019-10-10T17:19:12Z'
                   type: organization_auditor
                   relationships:
                     user:
                       data:
-                        guid: 123e4567-e89b-12d3-a456-426614174000
-                    user_group:
-                      data: null
+                        guid: 59eadb5f-fc13-414f-84ba-77a35e239cc8
                     organization:
                       data:
-                        guid: 123e4567-e89b-12d3-a456-426614174000
+                        guid: 05c5da3b-6cbc-421c-87c3-20bb3c41ab7c
                     space:
                       data: null
                   links:
@@ -272,7 +284,10 @@
         $ref: ../components/responses/NotFound.yaml
   delete:
     summary: Delete a role
-    description: This endpoint deletes an individual role.
+    description: |-
+      This endpoint deletes an individual role.
+
+      **Permitted roles:** Admin, Org Manager *(Can delete roles in managed organizations or spaces in those organizations)*, Space Manager *(Can delete roles in managed spaces)*
     operationId: deleteRole
     tags:
       - Roles

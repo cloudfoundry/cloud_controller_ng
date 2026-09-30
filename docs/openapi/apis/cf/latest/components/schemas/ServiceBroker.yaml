@@ -1,4 +1,6 @@
 type: object
+description: |-
+  Service brokers manage the lifecycle of services. On behalf of users, Cloud Controller will interact with service brokers to provision, get access to and manage access to the service offerings and plans they offer.
 allOf:
   - $ref: './BaseSchema.yaml'
   - properties:
@@ -11,21 +13,27 @@ allOf:
         description: URL of the service broker
       relationships:
         type: object
+        description: Relationships for the service broker
         properties:
           space:
             $ref: './RelationshipToOne.yaml'
-        description: Relationships for the service broker
+            description: The space the service broker is restricted to; omitted for globally available service brokers
+      metadata:
+        $ref: './Metadata.yaml'
+        description: Labels and annotations applied to the service broker
       links:
         type: object
+        description: Links to related resources
         properties:
           self:
             $ref: './Link.yaml'
-          space:
-            $ref: './Link.yaml'
+            description: The URL of this service broker
           service_offerings:
             $ref: './Link.yaml'
-      metadata:
-        $ref: './Metadata.yaml'
+            description: The URL to list the service offerings provided by this service broker
+          space:
+            $ref: './Link.yaml'
+            description: The URL of the space the service broker is restricted to; only present for space-scoped service brokers
     required:
     - name
     - url

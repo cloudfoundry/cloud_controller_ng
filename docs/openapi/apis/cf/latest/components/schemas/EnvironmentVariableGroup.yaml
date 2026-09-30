@@ -3,17 +3,21 @@ properties:
   updated_at:
     type: string
     format: date-time
-    description: The time the environment variable group was last updated
+    description: The time of last update
   name:
-    type: [string, "null"]
-    description: The name of the group; can only be "running" or "staging"
+    type: string
+    enum:
+      - running
+      - staging
+    description: The name of the group; can only be `running` or `staging`
   var:
     type: object
     additionalProperties:
-      type: [string, "null"]
+      type: string
     description: Environment variables to inject; keys and values must be strings
   links:
     type: object
+    description: Links to related resources
     properties:
       self:
         $ref: './Link.yaml'

@@ -7,25 +7,31 @@ content:
       properties:
         name:
           type: string
-          description: Name of the app
-        environment_variables:
-          type: object
-          description: Environment variables to be used for the App when running
-          additionalProperties:
-            type: string
-        lifecycle:
-          $ref: ../schemas/Lifecycle.yaml
-          description: Provides the lifecycle object for the application
+          description: Name of the app; must be unique within the space (case-insensitive)
         relationships:
           type: object
+          description: Relationships to other resources
           properties:
             space:
               $ref: ../schemas/RelationshipToOne.yaml
               description: A relationship to a space
           required:
             - space
+        environment_variables:
+          type: object
+          description: Environment variables to be used for the App when running
+          default: {}
+          additionalProperties:
+            type: string
+        lifecycle:
+          $ref: ../schemas/Lifecycle.yaml
+          description: Provides the lifecycle object for the application; defaults to the [buildpack lifecycle](#buildpack-lifecycle-object)
         metadata:
           $ref: ../schemas/Metadata.yaml
+          description: |-
+            `labels`: Labels applied to the app
+
+            `annotations`: Annotations applied to the app
       required:
         - name
         - relationships
@@ -38,4 +44,4 @@ content:
           relationships:
             space:
               data:
-                guid: 123e4567-e89b-12d3-a456-426614174000
+                guid: 2f35885d-0c9d-4423-83ad-fd05066f8576

@@ -5,31 +5,46 @@ allOf:
       route_service_url:
         type: [string, "null"]
         format: uri
-        description: URL for the route service
+        description: The URL for the route service
       last_operation:
-        $ref: './ServiceCredentialBindingLastOperation.yaml'
+        oneOf:
+          - $ref: './ServiceRouteBindingLastOperation.yaml'
+          - type: "null"
+        description: The last operation of this binding
       relationships:
         type: object
         properties:
           route:
             $ref: './RelationshipToOne.yaml'
+            description: The route that the service instance is bound to
           service_instance:
             $ref: './RelationshipToOne.yaml'
+            description: The service instance that the route is bound to
         description: Relationships for the service route binding
       links:
         type: object
         properties:
           self:
             $ref: './Link.yaml'
+            description: Link to this service route binding
           route:
             $ref: './Link.yaml'
+            description: Link to the route that the service instance is bound to
           service_instance:
             $ref: './Link.yaml'
+            description: Link to the service instance that the route is bound to
+          parameters:
+            $ref: './Link.yaml'
+            description: Link to the parameters that this binding was created with; only present for bindings to managed service instances
+        description: Links to related resources
       metadata:
         $ref: './Metadata.yaml'
+        description: Labels and annotations applied to the service route binding
       included:
         $ref: './IncludedResources.yaml'
-        description: Additional related resources included in the response when using the include parameter
+        description: Additional related resources included in the response when using the `include` parameter
     required:
-    - relationships
-    - links
+      - relationships
+      - links
+description: |-
+  A service route binding; a relation between a [service instance](#service-instances) and a [route](#routes).

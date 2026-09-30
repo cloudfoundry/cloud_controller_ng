@@ -1,24 +1,46 @@
 /v3/stacks:
   get:
     summary: List stacks
-    description: Retrieve all stacks.
+    description: |-
+      Retrieve all stacks.
+
+      **Permitted roles:** All Roles
     operationId: listStacks
     tags:
       - Stacks
     parameters:
       - $ref: ../components/parameters/Page.yaml
       - $ref: ../components/parameters/PerPage.yaml
-      - $ref: ../components/parameters/OrderBy.yaml
+      - name: order_by
+        in: query
+        required: false
+        schema:
+          type: string
+          enum:
+            - created_at
+            - -created_at
+            - updated_at
+            - -updated_at
+            - name
+            - -name
+        description: Value to sort by. Defaults to ascending; prepend with `-` to sort descending. Valid values are `created_at`, `updated_at`, and `name`
       - $ref: ../components/parameters/CreatedAts.yaml
       - $ref: ../components/parameters/UpdatedAts.yaml
       - $ref: ../components/parameters/LabelSelector.yaml
       - name: names
         in: query
+        required: false
         schema:
           type: array
           items:
             type: string
-        description: Comma-delimited list of stack names to filter by
+        description: Comma-delimited list of stack names to filter by (case-sensitive)
+      - name: default
+        in: query
+        required: false
+        schema:
+          type: boolean
+        description: If true, only return the default stack
     responses:
       '200':
         description: OK
@@ -34,14 +56,14 @@
                     total_results: 3
                     total_pages: 2
                     first:
-                      href: https://api.example.org?page=1&per_page=2
+                      href: https://api.example.org/v3/stacks?page=1&per_page=2
                     last:
-                      href: https://api.example.org?page=2&per_page=2
+                      href: https://api.example.org/v3/stacks?page=2&per_page=2
                     next:
-                      href: https://api.example.org?page=2&per_page=2
+                      href: https://api.example.org/v3/stacks?page=2&per_page=2
                     previous: null
                   resources:
-                    - guid: 123e4567-e89b-12d3-a456-426614174000
+                    - guid: 11c916c9-c2f9-440e-8e73-102e79c4704d
                       created_at: '2018-11-09T22:43:28Z'
                       updated_at: '2018-11-09T22:43:28Z'
                       name: my-stack-1
@@ -56,8 +78,8 @@
                         annotations: {}
                       links:
                         self:
-                          href: https://api.example.org/11c916c9-c2f9-440e-8e73-102e79c4704d
-                    - guid: 123e4567-e89b-12d3-a456-426614174000
+                          href: https://api.example.org/v3/stacks/11c916c9-c2f9-440e-8e73-102e79c4704d
+                    - guid: 81c916c9-c2f9-440e-8e73-102e79c4704b
                       created_at: '2018-11-09T22:43:29Z'
                       updated_at: '2018-11-09T22:43:29Z'
                       name: my-stack-2
@@ -72,7 +94,7 @@
                         annotations: {}
                       links:
                         self:
-                          href: https://api.example.org/81c916c9-c2f9-440e-8e73-102e79c4704h
+                          href: https://api.example.org/v3/stacks/81c916c9-c2f9-440e-8e73-102e79c4704b
       '400':
         $ref: ../components/responses/BadRequest.yaml
       '401':
@@ -91,7 +113,10 @@
         $ref: ../components/responses/ServiceUnavailable.yaml
   post:
     summary: Create a stack
-    description: Create a stack.
+    description: |-
+      Create a stack.
+
+      **Permitted roles:** Admin
     operationId: createStack
     tags:
       - Stacks
@@ -104,6 +129,26 @@
           application/json:
             schema:
               $ref: ../components/schemas/Stack.yaml
+            examples:
+              default:
+                summary: default
+                value:
+                  guid: 11c916c9-c2f9-440e-8e73-102e79c4704d
+                  created_at: '2018-11-09T22:43:28Z'
+                  updated_at: '2018-11-09T22:43:28Z'
+                  name: my-stack
+                  description: Here is my stack!
+                  state: ACTIVE
+                  state_reason: null
+                  build_rootfs_image: my-stack
+                  run_rootfs_image: my-stack
+                  default: true
+                  metadata:
+                    labels: {}
+                    annotations: {}
+                  links:
+                    self:
+                      href: https://api.example.org/v3/stacks/11c916c9-c2f9-440e-8e73-102e79c4704d
       '400':
         $ref: ../components/responses/BadRequest.yaml
       '401':
@@ -121,7 +166,10 @@
 /v3/stacks/{guid}:
   get:
     summary: Get a stack
-    description: Get a stack.
+    description: |-
+      Retrieve a stack.
+
+      **Permitted roles:** All Roles
     operationId: getStack
     tags:
       - Stacks
@@ -134,6 +182,26 @@
           application/json:
             schema:
               $ref: ../components/schemas/Stack.yaml
+            examples:
+              default:
+                summary: default
+                value:
+                  guid: 11c916c9-c2f9-440e-8e73-102e79c4704d
+                  created_at: '2018-11-09T22:43:28Z'
+                  updated_at: '2018-11-09T22:43:28Z'
+                  name: my-stack
+                  description: Here is my stack!
+                  state: ACTIVE
+                  state_reason: null
+                  build_rootfs_image: my-stack
+                  run_rootfs_image: my-stack
+                  default: true
+                  metadata:
+                    labels: {}
+                    annotations: {}
+                  links:
+                    self:
+                      href: https://api.example.org/v3/stacks/11c916c9-c2f9-440e-8e73-102e79c4704d
       '401':
         $ref: ../components/responses/Unauthorized.yaml
       '403':
@@ -142,19 +210,36 @@
         $ref: ../components/responses/NotFound.yaml
   patch:
     summary: Update a stack
-    description: Update a stack.
+    description: |-
+      Update a stack.
+
+      **Permitted roles:** Admin
     operationId: updateStack
     tags:
       - Stacks
     parameters:
       - $ref: ../components/parameters/Guid.yaml
     requestBody:
+      required: true
       content:
         application/json:
           schema:
+            type: object
             properties:
               metadata:
                 $ref: ../components/schemas/Metadata.yaml
+                description: Labels and annotations applied to the stack
+              state:
+                type: string
+                enum:
+                  - ACTIVE
+                  - RESTRICTED
+                  - DEPRECATED
+                  - DISABLED
+                description: 'The state of the stack; valid states are: `ACTIVE`, `RESTRICTED`, `DEPRECATED`, `DISABLED`'
+              state_reason:
+                type: [string, "null"]
+                description: Optional plain text describing the stack state change
           examples:
             default:
               summary: default
@@ -173,6 +258,28 @@
           application/json:
             schema:
               $ref: ../components/schemas/Stack.yaml
+            examples:
+              default:
+                summary: default
+                value:
+                  guid: 11c916c9-c2f9-440e-8e73-102e79c4704d
+                  created_at: '2018-11-09T22:43:28Z'
+                  updated_at: '2018-11-09T22:43:28Z'
+                  name: my-stack
+                  description: Here is my stack!
+                  state: DISABLED
+                  state_reason: Stack disabled and cannot be used for staging new application
+                  build_rootfs_image: my-stack
+                  run_rootfs_image: my-stack
+                  default: true
+                  metadata:
+                    labels:
+                      key: value
+                    annotations:
+                      note: detailed information
+                  links:
+                    self:
+                      href: https://api.example.org/v3/stacks/11c916c9-c2f9-440e-8e73-102e79c4704d
       '400':
         $ref: ../components/responses/BadRequest.yaml
       '401':
@@ -191,7 +298,10 @@
         $ref: ../components/responses/ServiceUnavailable.yaml
   delete:
     summary: Delete a stack
-    description: Delete a stack.
+    description: |-
+      Delete a stack.
+
+      **Permitted roles:** Admin
     operationId: deleteStack
     tags:
       - Stacks
@@ -213,7 +323,10 @@
 /v3/stacks/{guid}/apps:
   get:
     summary: List apps on a stack
-    description: Retrieve all apps using a given stack.
+    description: |-
+      Retrieve all apps using a given stack.
+
+      **Permitted roles:** All Roles
     operationId: listAppsOnStack
     tags:
       - Stacks
@@ -221,7 +334,19 @@
       - $ref: ../components/parameters/Guid.yaml
       - $ref: ../components/parameters/Page.yaml
       - $ref: ../components/parameters/PerPage.yaml
-      - $ref: ../components/parameters/OrderBy.yaml
+      - name: order_by
+        in: query
+        required: false
+        schema:
+          type: string
+          enum:
+            - created_at
+            - -created_at
+            - updated_at
+            - -updated_at
+            - name
+            - -name
+        description: Value to sort by. Defaults to ascending; prepend with `-` to sort descending. Valid values are `created_at`, `updated_at`, and `name`
       - $ref: ../components/parameters/CreatedAts.yaml
       - $ref: ../components/parameters/UpdatedAts.yaml
       - $ref: ../components/parameters/LabelSelector.yaml
@@ -312,7 +437,7 @@
                         space:
                           data:
                             guid: 123e4567-e89b-12d3-a456-426614174000
-                        droplet:
+                        current_droplet:
                           data:
                             guid: 123e4567-e89b-12d3-a456-426614174000
                       links:

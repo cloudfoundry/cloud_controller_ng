@@ -1,9 +1,18 @@
 type: object
 properties:
-  pagination:
-    $ref: './Pagination.yaml'
   destinations:
     type: array
     items:
       $ref: './RouteDestination.yaml'
+    description: List of destinations for the route
+  links:
+    type: object
+    properties:
+      self:
+        $ref: './Link.yaml'
+        description: The URL to get the destinations for this route
+      route:
+        $ref: './Link.yaml'
+        description: The URL to get the route these destinations belong to
+    description: Links to related resources
 description: A list of route destinations

@@ -2,7 +2,10 @@ type: object
 properties:
   pagination:
     $ref: './Pagination.yaml'
+    description: Pagination information for the list of deployments
   resources:
     type: array
     items:
       $ref: './Deployment.yaml'
+    description: List of deployments
+description: A paginated list of deployments

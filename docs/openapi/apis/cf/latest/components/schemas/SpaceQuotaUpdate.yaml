@@ -1,49 +1,49 @@
 type: object
 properties:
   name:
-    type: [string, "null"]
-    description: Name of the space quota
+    type: string
+    description: Name of the quota
   apps:
     type: object
+    description: Quotas that affect applications and application sub-resources
     properties:
       total_memory_in_mb:
         type: [integer, "null"]
-        description: Total memory allowed for all apps in MB
+        description: Total memory of all the started processes and running tasks in a space
       per_process_memory_in_mb:
         type: [integer, "null"]
-        description: Maximum memory per process in MB
+        description: Maximum memory for a single process or task
       log_rate_limit_in_bytes_per_second:
         type: [integer, "null"]
-        description: Log rate limit in bytes per second
+        description: Total log rate limit allowed for all the started processes and running tasks in an organization
       total_instances:
         type: [integer, "null"]
-        description: Total number of app instances allowed
+        description: Total instances of all the started processes in a space
       per_app_tasks:
         type: [integer, "null"]
-        description: Maximum number of tasks per app
-    description: App limits for the space quota
+        description: Maximum number of running tasks in a space
   services:
     type: object
+    description: Quotas that affect services
     properties:
       paid_services_allowed:
         type: boolean
-        description: Whether paid services are allowed
+        description: If instances of paid service plans can be created
       total_service_instances:
         type: [integer, "null"]
-        description: Total number of service instances allowed
+        description: Total number of service instances in a space
       total_service_keys:
         type: [integer, "null"]
-        description: Total number of service keys allowed
-    description: Service limits for the space quota
+        description: Total number of service keys in a space
   routes:
     type: object
+    description: Quotas that affect routes
     properties:
       total_routes:
         type: [integer, "null"]
-        description: Total number of routes allowed
+        description: Total number of routes that a space can have
       total_reserved_ports:
         type: [integer, "null"]
-        description: Total number of reserved ports allowed
-    description: Route limits for the space quota
-  metadata:
-    $ref: ./Metadata.yaml
+        description: Total number of ports that all routes in a space can reserve
+description: |
+  Only the parameters specified in the request body are updated; any unspecified parameters retain their existing values.
