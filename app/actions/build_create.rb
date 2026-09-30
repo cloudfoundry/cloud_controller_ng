@@ -183,6 +183,7 @@ module VCAP::CloudController
 
     def validate_stack_state!(lifecycle, app)
       return [] if lifecycle.type == Lifecycles::DOCKER
+      return [] if UriUtils.is_custom_stack_uri?(lifecycle.staging_stack)
 
       stack = Stack.find(name: lifecycle.staging_stack)
       return [] unless stack

@@ -11,7 +11,8 @@ module VCAP::CloudController
       db_result       = BuildpackLifecycleFetcher.fetch(buildpacks, stack, type)
       @validator      = BuildpackLifecycleDataValidator.new({
                                                               buildpack_infos: db_result[:buildpack_infos],
-                                                              stack: db_result[:stack]
+                                                              stack: db_result[:stack],
+                                                              stack_name: stack
                                                             })
     end
 
@@ -19,9 +20,10 @@ module VCAP::CloudController
 
     def create_lifecycle_data_model(app)
       app.buildpack_lifecycle_data = BuildpackLifecycleDataModel.create(
-        buildpacks:,
-        stack:,
-        app:
+        buildpacks: buildpacks,
+        stack: stack,
+        credentials: credentials_from_message,
+        app: app
       )
     end
 
@@ -32,5 +34,9 @@ module VCAP::CloudController
     private
 
     attr_reader :validator
+
+    def credentials_from_message
+      message.buildpack_data.requested?(:credentials) ? message.buildpack_data.credentials : nil
+    end
   end
 end

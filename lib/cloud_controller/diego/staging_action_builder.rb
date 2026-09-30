@@ -1,12 +1,15 @@
 require 'credhub/config_helpers'
 require 'diego/action_builder'
 require 'digest/xxhash'
+require 'cloud_controller/diego/custom_stack_uri_converter'
+require 'cloud_controller/diego/custom_stack_fallback'
 
 module VCAP::CloudController
   module Diego
     class StagingActionBuilder
       include ::Credhub::ConfigHelpers
       include ::Diego::ActionBuilder
+      include CustomStackFallback
 
       attr_reader :config, :lifecycle_data, :staging_details
 
@@ -130,10 +133,14 @@ module VCAP::CloudController
       end
 
       def stack
-        @stack ||= Stack.find(name: lifecycle_stack)
-        raise CloudController::Errors::ApiError.new_from_details('StackNotFound', lifecycle_stack) unless @stack
+        @stack ||= if UriUtils.is_custom_stack_uri?(lifecycle_stack)
+                     CustomStackUriConverter.convert(lifecycle_stack)
+                   else
+                     stack_obj = Stack.find(name: lifecycle_stack)
+                     raise CloudController::Errors::ApiError.new_from_details('StackNotFound', lifecycle_stack) unless stack_obj
 
-        "preloaded:#{@stack.build_rootfs_image}"
+                     "preloaded:#{stack_obj.build_rootfs_image}"
+                   end
       end
 
       def lifecycle_stack
@@ -172,21 +179,25 @@ module VCAP::CloudController
       end
 
       def upload_actions
-        [
+        actions = [
           ::Diego::Bbs::Models::UploadAction.new(
             user: 'vcap',
             artifact: 'droplet',
             from: '/tmp/droplet',
             to: upload_droplet_uri.to_s
-          ),
+          )
+        ]
 
-          ::Diego::Bbs::Models::UploadAction.new(
+        unless UriUtils.is_custom_stack_uri?(lifecycle_data[:stack])
+          actions << ::Diego::Bbs::Models::UploadAction.new(
             user: 'vcap',
             artifact: 'build artifacts cache',
             from: @cache_source,
             to: upload_buildpack_artifacts_cache_uri.to_s
           )
-        ]
+        end
+
+        actions
       end
 
       def skip_detect?
@@ -194,7 +205,7 @@ module VCAP::CloudController
       end
 
       def lifecycle_bundle_key
-        :"#{@prefix}/#{lifecycle_data[:stack]}"
+        :"#{@prefix}/#{resolved_stack_name(lifecycle_data[:stack])}"
       end
 
       def upload_buildpack_artifacts_cache_uri

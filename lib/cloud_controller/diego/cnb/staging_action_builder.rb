@@ -15,14 +15,23 @@ module VCAP::CloudController
           env = [
             ::Diego::Bbs::Models::EnvironmentVariable.new(name: 'CNB_USER_ID', value: '2000'),
             ::Diego::Bbs::Models::EnvironmentVariable.new(name: 'CNB_GROUP_ID', value: '2000'),
-            ::Diego::Bbs::Models::EnvironmentVariable.new(name: 'CNB_STACK_ID', value: lifecycle_stack),
             ::Diego::Bbs::Models::EnvironmentVariable.new(name: 'LANG', value: STAGING_DEFAULT_LANG)
           ]
+          cnb_stack_id = resolve_cnb_stack_id
+          env.push(::Diego::Bbs::Models::EnvironmentVariable.new(name: 'CNB_STACK_ID', value: cnb_stack_id)) if cnb_stack_id
           env.push(::Diego::Bbs::Models::EnvironmentVariable.new(name: 'CNB_REGISTRY_CREDS', value: lifecycle_data[:credentials])) if lifecycle_data[:credentials]
           env
         end
 
         private
+
+        def resolve_cnb_stack_id
+          if UriUtils.is_custom_stack_uri?(lifecycle_stack)
+            lifecycle_data[:stack_id] # nil means auto-detect
+          else
+            lifecycle_stack
+          end
+        end
 
         def stage_action
           args = [

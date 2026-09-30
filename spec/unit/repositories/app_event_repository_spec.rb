@@ -528,6 +528,27 @@ module VCAP::CloudController
             end
           end
         end
+
+        context 'v3 lifecycle registry credentials' do
+          let(:app) { create(:app_model) }
+          let(:attrs) do
+            {
+              'lifecycle' => {
+                'type' => 'buildpack',
+                'data' => {
+                  'stack' => 'docker://registry.example.com/cloudfoundry/cflinuxfs4:1.0.0',
+                  'credentials' => { 'registry.example.com' => { 'username' => 'user', 'password' => 'pass' } }
+                }
+              }
+            }
+          end
+
+          it 'redacts the credentials in the recorded event' do
+            event = app_event_repository.record_app_create(app, space, user_audit_info, attrs).reload
+
+            expect(event.metadata.dig('request', 'lifecycle', 'data', 'credentials')).to eq(Presenters::Censorship::PRIVATE_DATA_HIDDEN)
+          end
+        end
       end
 
       context 'with a v3 app' do
