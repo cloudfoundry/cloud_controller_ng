@@ -1,4 +1,4 @@
-require 'spec_helper'
+require 'migration_spec_helper'
 require 'migrations/helpers/migration_shared_context'
 
 RSpec.describe "migration to remove foreign key constraint on table 'job_warnings' and column 'fk_jobs_id'", isolation: :truncation, type: :migration do
