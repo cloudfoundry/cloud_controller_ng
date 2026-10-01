@@ -13,6 +13,10 @@ module VCAP::CloudController
       Buildpack.db.transaction do
         Locking[name: 'buildpacks'].lock!
 
+        # The buildpack was loaded before this lock, so its in-memory position may be stale.
+        # Re-read under the lock so move_to's shift range is correct; removing this reintroduces
+        # duplicate/missing positions.
+        buildpack.refresh
         MetadataUpdate.update(buildpack, message)
 
         buildpack.move_to(message.position) if message.requested?(:position)
