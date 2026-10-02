@@ -218,10 +218,6 @@ module CloudController
         ENV['STORAGE_CLI_PATH'] || '/var/vcap/packages/storage-cli/bin/storage-cli'
       end
 
-      def build_config(connection_config)
-        raise NotImplementedError
-      end
-
       def tmpdir
         VCAP::CloudController::Config.config.get(:directories, :tmpdir)
       rescue StandardError

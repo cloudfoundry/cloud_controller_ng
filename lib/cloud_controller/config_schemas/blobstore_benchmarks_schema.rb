@@ -11,7 +11,6 @@ module VCAP::CloudController
 
           optional(:local_blobstore_path) => String,
           optional(:connection_config) => Hash,
-          optional(:webdav_config) => Hash,
 
           optional(:resource_directory_key) => String,
           optional(:buildpack_directory_key) => String,
