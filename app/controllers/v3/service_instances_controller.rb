@@ -241,7 +241,7 @@ class ServiceInstancesV3Controller < ApplicationController
 
   def show_permissions
     service_instance = ServiceInstance.first(guid: hashed_params[:guid])
-    service_instance_not_found! unless service_instance
+    service_instance_not_found! unless service_instance && can_read_service_instance?(service_instance)
 
     render status: :ok, json: {
       manage: is_space_active?(service_instance.space) ? can_write_to_active_space?(service_instance.space) : admin?,
