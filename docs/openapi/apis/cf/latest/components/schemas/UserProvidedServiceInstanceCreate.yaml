@@ -1,0 +1,46 @@
+type: object
+required:
+  - type
+  - name
+  - relationships
+properties:
+  type:
+    type: string
+    enum:
+      - user-provided
+    description: Must be `user-provided`
+  name:
+    type: string
+    description: Name of the service instance; must be unique within the space (case-sensitive)
+  tags:
+    type: array
+    items:
+      type: string
+    description: Tags are used by apps to identify service instances; they are shown in the app VCAP_SERVICES env
+  credentials:
+    type: object
+    description: A JSON object that is made available to apps bound to this service instance
+  syslog_drain_url:
+    type: string
+    format: uri
+    description: URL to which logs for bound applications will be streamed
+  route_service_url:
+    type: string
+    format: uri
+    description: URL to which requests for bound routes will be forwarded; must use the `https` protocol
+  relationships:
+    type: object
+    required:
+      - space
+    properties:
+      space:
+        $ref: './RelationshipToOne.yaml'
+        description: The space in which to create the service instance
+    description: Relationships for the service instance
+  metadata:
+    $ref: './Metadata.yaml'
+    description: Labels and annotations applied to the service instance
+description: |-
+  Parameters for creating a user-provided service instance.
+
+  User provided service instances do not require interactions with service brokers.
