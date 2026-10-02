@@ -17,6 +17,10 @@ module CloudController
         when 'storage-cli'
           provide_storage_cli(options, directory_key, root_dir, resource_type)
         else
+          if options[:blobstore_type] == 'webdav'
+            raise BlobstoreError.new("blobstore_type 'webdav' is no longer supported; use 'storage-cli' with provider 'dav'")
+          end
+
           raise BlobstoreError.new("Unknown blobstore type: #{options[:blobstore_type].inspect}")
         end
       end
