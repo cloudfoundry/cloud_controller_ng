@@ -89,8 +89,17 @@ module CloudController
         end
       end
 
-      context 'when an unknown blobstore type is requested' do
+      context 'when webdav blobstore type is requested' do
         let(:blobstore_type) { 'webdav' }
+
+        it 'raises a BlobstoreError with migration guidance' do
+          expect { ClientProvider.provide(options: options, directory_key: 'key') }.
+            to raise_error(BlobstoreError, /no longer supported/)
+        end
+      end
+
+      context 'when an unknown blobstore type is requested' do
+        let(:blobstore_type) { 'unknown-type' }
 
         it 'raises a BlobstoreError' do
           expect { ClientProvider.provide(options: options, directory_key: 'key') }.
