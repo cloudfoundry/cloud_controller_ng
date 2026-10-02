@@ -7,6 +7,7 @@ module VCAP::CloudController
       DELETED_EVENT_STATE = 'DELETED'.freeze
       CREATED_EVENT_STATE = 'CREATED'.freeze
       UPDATED_EVENT_STATE = 'UPDATED'.freeze
+      WAS_RUNNING_EVENT_STATE = 'WAS_RUNNING'.freeze
 
       def find(guid)
         ServiceUsageEvent.find(guid:)
@@ -92,7 +93,7 @@ module VCAP::CloudController
       end
 
       def delete_events_older_than(cutoff_age_in_days)
-        Database::OldRecordCleanup.new(ServiceUsageEvent, cutoff_age_in_days, keep_at_least_one_record: true).delete
+        Database::OldRecordCleanup.new(ServiceUsageEvent, cutoff_age_in_days: cutoff_age_in_days, keep_at_least_one_record: true, keep_running_records: true).delete
       end
     end
   end

@@ -10,6 +10,7 @@ module VCAP::CloudController
           optional(:migration_psql_concurrent_statement_timeout_in_seconds) => Integer,
           optional(:migration_psql_worker_memory_kb) => Integer,
           optional(:skip_bigint_id_migration) => bool,
+          optional(:skip_was_running_backfill) => bool,
 
           db: {
             optional(:database) => Hash, # db connection hash for sequel
