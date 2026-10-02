@@ -43,6 +43,8 @@ class BuildsController < ApplicationController
     unprocessable_package! unless package && permission_queryer.can_manage_apps_in_active_space?(package.space.id)
     require_writable_space!(package.space)
 
+    ensure_can_set_custom_staging_input!(message, package.space)
+
     FeatureFlag.raise_unless_enabled!(:diego_docker) if package.type == PackageModel::DOCKER_TYPE
 
     lifecycle = LifecycleProvider.provide(package, message)
@@ -110,6 +112,21 @@ class BuildsController < ApplicationController
 
   def can_read_build?(space)
     permission_queryer.can_update_build_state? || permission_queryer.can_read_from_space?(space.id, space.organization_id)
+  end
+
+  def ensure_can_set_custom_staging_input!(message, space)
+    return unless custom_staging_input?(message)
+
+    unauthorized! unless permission_queryer.can_write_to_active_space?(space.id)
+  end
+
+  def custom_staging_input?(message)
+    return true if message.requested?(:environment_variables)
+
+    lifecycle_data = message.lifecycle_data
+    return false unless lifecycle_data.is_a?(Hash)
+
+    %i[buildpacks stack credentials].any? { |key| lifecycle_data.key?(key) }
   end
 
   def create_valid_update_message

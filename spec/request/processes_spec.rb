@@ -952,7 +952,7 @@ RSpec.describe 'Processes' do
         h = Hash.new({ code: 403, errors: CF_NOT_AUTHORIZED }.freeze)
         h['admin'] = { code: 200, response_object: expected_response }
         h['space_developer'] = { code: 200, response_object: expected_response }
-        h['space_supporter'] = { code: 200, response_object: expected_response }
+        h['space_supporter'] = { code: 403, errors: CF_NOT_AUTHORIZED }
         h['org_auditor'] = { code: 404 }
         h['org_billing_manager'] = { code: 404 }
         h['no_role'] = { code: 404 }
@@ -974,6 +974,47 @@ RSpec.describe 'Processes' do
 
         it_behaves_like 'permissions for single object endpoint', ALL_PERMISSIONS
       end
+    end
+
+    context 'permissions when the update does not set command or user' do
+      let(:update_request) do
+        {
+          health_check: {
+            type: 'process',
+            data: {
+              timeout: 20,
+              interval: 5
+            }
+          },
+          readiness_health_check: {
+            type: 'port',
+            data: {
+              invocation_timeout: 10,
+              interval: 6
+            }
+          },
+          metadata: metadata
+        }.to_json
+      end
+
+      let(:expected_response_without_command) do
+        expected_response.merge('command' => 'rackup')
+      end
+
+      let(:api_call) { ->(user_headers) { patch "/v3/processes/#{process.guid}", update_request, user_headers } }
+
+      let(:expected_codes_and_responses) do
+        h = Hash.new({ code: 403, errors: CF_NOT_AUTHORIZED }.freeze)
+        h['admin'] = { code: 200, response_object: expected_response_without_command }
+        h['space_developer'] = { code: 200, response_object: expected_response_without_command }
+        h['space_supporter'] = { code: 200, response_object: expected_response_without_command }
+        h['org_auditor'] = { code: 404 }
+        h['org_billing_manager'] = { code: 404 }
+        h['no_role'] = { code: 404 }
+        h
+      end
+
+      it_behaves_like 'permissions for single object endpoint', ALL_PERMISSIONS
     end
 
     it 'updates the process' do
