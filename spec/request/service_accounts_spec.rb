@@ -89,4 +89,61 @@ RSpec.describe 'Service accounts' do
     post '/v3/service_accounts', body.to_json, headers('space_manager')
     expect(last_response.status).to eq(403)
   end
+
+  it 'creates and updates description and metadata using normal merge/remove semantics' do
+    auth = headers('space_manager')
+    post '/v3/service_accounts', body.merge(description: 'Batch payments', metadata: { labels: { team: 'payments' }, annotations: { note: 'original' } }).to_json, auth
+    expect(last_response.status).to eq(201)
+    result = Oj.load(last_response.body)
+    expect(result['description']).to eq('Batch payments')
+    patch "/v3/service_accounts/#{result['guid']}", { description: 'Revised', metadata: { labels: { team: nil, owner: 'finance' } } }.to_json, auth
+    expect(last_response.status).to eq(200)
+    result = Oj.load(last_response.body)
+    expect(result['description']).to eq('Revised')
+    expect(result['metadata']).to eq('labels' => { 'owner' => 'finance' }, 'annotations' => { 'note' => 'original' })
+  end
+
+  it 'lists only readable accounts with pagination and space/name filters' do
+    own = VCAP::CloudController::ServiceAccountModel.create(name: 'payments-worker', space: space)
+    VCAP::CloudController::ServiceAccountModel.create(name: 'hidden-worker', space: create(:space))
+    get '/v3/service_accounts?per_page=1&names=payments-worker', nil, headers('space_developer')
+    expect(last_response.status).to eq(200)
+    result = Oj.load(last_response.body)
+    expect(result.dig('pagination', 'total_results')).to eq(1)
+    expect(result['resources'].map { |r| r['guid'] }).to eq([own.guid])
+    get "/v3/service_accounts?space_guids=#{space.guid}", nil, headers('admin')
+    expect(Oj.load(last_response.body)['resources'].map { |r| r['guid'] }).to eq([own.guid])
+  end
+
+  it 'lists assigned apps only for account readers' do
+    own = VCAP::CloudController::ServiceAccountModel.create(name: 'payments-worker', space: space)
+    app = create(:app_model, space: space, service_account: own)
+    get "/v3/service_accounts/#{own.guid}/apps", nil, headers('space_auditor')
+    expect(last_response.status).to eq(200)
+    expect(Oj.load(last_response.body)['resources'].map { |r| r['guid'] }).to eq([app.guid])
+  end
+
+  it 'denies developers updates and hides unreadable resources' do
+    own = VCAP::CloudController::ServiceAccountModel.create(name: 'payments-worker', space: space)
+    patch "/v3/service_accounts/#{own.guid}", { description: 'unauthorized' }.to_json, headers('space_developer')
+    expect(last_response.status).to eq(403)
+    hidden = VCAP::CloudController::ServiceAccountModel.create(name: 'hidden-worker', space: create(:space))
+    patch "/v3/service_accounts/#{hidden.guid}", { description: 'unauthorized' }.to_json, headers('space_manager')
+    expect(last_response.status).to eq(404)
+  end
+
+  %i[name relationships status client_id certificate_dns_san].each do |key|
+    it "rejects mutation of platform-owned #{key}" do
+      own = VCAP::CloudController::ServiceAccountModel.create(name: 'payments-worker', space: space)
+      patch "/v3/service_accounts/#{own.guid}", { key => 'injected' }.to_json, headers('space_manager')
+      expect(last_response.status).to eq(422)
+    end
+  end
+
+  it 'rejects invalid metadata and list parameters' do
+    post '/v3/service_accounts', body.merge(metadata: { labels: { 'invalid/key/key' => 'value' } }).to_json, headers('admin')
+    expect(last_response.status).to eq(422)
+    get '/v3/service_accounts?unknown=value', nil, headers('admin')
+    expect(last_response.status).to eq(400)
+  end
 end
