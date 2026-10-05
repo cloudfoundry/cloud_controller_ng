@@ -126,6 +126,8 @@ RSpec.describe 'Service accounts' do
     get "/v3/service_accounts/#{own.guid}/apps", nil, headers('space_auditor')
     expect(last_response.status).to eq(200)
     expect(Oj.load(last_response.body)['resources'].pluck('guid')).to eq([app.guid])
+    get "/v3/service_accounts/#{own.guid}/apps?names=missing-app", nil, headers('space_auditor')
+    expect(Oj.load(last_response.body)['resources']).to eq([])
   end
 
   it 'denies developers updates and hides unreadable resources' do
