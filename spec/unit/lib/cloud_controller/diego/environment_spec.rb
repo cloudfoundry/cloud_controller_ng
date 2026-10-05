@@ -43,6 +43,7 @@ module VCAP::CloudController::Diego
       TestConfig.override(service_account_runtime_enabled: true, service_account_token_endpoint: 'https://uaa.example.test/oauth/token/mtls')
       account = VCAP::CloudController::ServiceAccountModel.create(name: 'payments-worker', space: process.space, status: 'ready')
       process.app.update(service_account: account)
+      process.update(service_account_guid: account.guid, service_account_snapshot: true)
       environment['VCAP_SERVICE_ACCOUNT'] = 'injected'
       value = Environment.new(process).as_json.find { |entry| entry['name'] == 'VCAP_SERVICE_ACCOUNT' }['value']
       expect(Oj.load(value)).to include('name' => account.name, 'client_id' => account.client_id)
