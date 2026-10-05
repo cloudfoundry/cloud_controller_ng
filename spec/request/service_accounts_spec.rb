@@ -233,7 +233,8 @@ RSpec.describe 'Service accounts' do
 
     it 'rejects deletion while an unbound app still has the account in a running launch snapshot' do
       app = create(:app_model, space: space)
-      create(:process_model, app: app, state: 'STARTED', service_account_guid: account.guid, service_account_snapshot: true)
+      process = create(:process_model, app: app, state: 'STARTED')
+      process.update(service_account_guid: account.guid, service_account_snapshot: true)
       delete account_path, nil, headers('space_manager')
       expect(last_response.status).to eq(409)
       expect(Delayed::Job.count).to eq(0)

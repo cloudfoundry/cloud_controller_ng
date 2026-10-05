@@ -1,3 +1,5 @@
+require 'uri'
+
 module VCAP::CloudController
   module Diego
     class ServiceAccountIdentity
@@ -19,9 +21,7 @@ module VCAP::CloudController
         return {} unless account
 
         endpoint = @config.get(:service_account_token_endpoint)
-        unless endpoint.is_a?(String) && endpoint.start_with?('https://')
-          raise CloudController::Errors::ApiError.new_from_details('UnprocessableEntity', 'Service account token endpoint is not configured')
-        end
+        raise CloudController::Errors::ApiError.new_from_details('UnprocessableEntity', 'Service account token endpoint is not configured') unless valid_endpoint?(endpoint)
 
         { 'VCAP_SERVICE_ACCOUNT' => {
           guid: account.guid, name: account.name, client_id: account.client_id,
@@ -30,6 +30,15 @@ module VCAP::CloudController
       end
 
       private
+
+      def valid_endpoint?(endpoint)
+        return false unless endpoint.is_a?(String)
+
+        uri = URI.parse(endpoint)
+        uri.is_a?(URI::HTTPS) && uri.host.present? && uri.userinfo.nil? && uri.query.nil? && uri.fragment.nil?
+      rescue URI::InvalidURIError
+        false
+      end
 
       def ready_account
         return unless @account_guid

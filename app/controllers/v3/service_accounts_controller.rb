@@ -80,7 +80,7 @@ class ServiceAccountsController < ApplicationController
     job = nil
     account.db.transaction do
       account.lock!
-      lifecycle_conflict!('service account is still assigned') if account.apps_dataset.any?
+      lifecycle_conflict!('service account is still assigned or in use') if account.in_use?
       reject_active_operation!(account)
       account.update(enabled: false, status: 'deleting')
       job = enqueue_lifecycle(account, 'delete')

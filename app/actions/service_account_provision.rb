@@ -44,7 +44,7 @@ module VCAP::CloudController
       account.db.transaction(savepoint: true) do
         account.lock!
         raise Conflict.new('service account was enabled again') if account.enabled
-        raise Conflict.new('service account is still assigned') if delete && account.apps_dataset.any?
+        raise Conflict.new('service account is still assigned or in use') if delete && account.in_use?
 
         begin
           account.db.transaction(savepoint: true) do
