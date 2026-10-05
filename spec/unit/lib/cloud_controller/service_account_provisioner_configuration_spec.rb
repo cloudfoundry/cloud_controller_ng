@@ -19,6 +19,11 @@ module VCAP::CloudController
       expect { ConfigSchemas::WorkerSchema.validate(worker_config) }.not_to raise_error
     end
 
+    it 'validates provisioning configuration for API-hosted local workers too' do
+      api_config = Config.read_file('config/cloud_controller.yml').merge(service_account_provisioning: settings.except(:identity_ca))
+      expect { ConfigSchemas::ApiSchema.validate(api_config) }.to raise_error(Membrane::SchemaValidationError, /identity_ca => Missing key/)
+    end
+
     %i[client_id client_secret identity_ca].each do |key|
       it "rejects worker configuration missing #{key}" do
         worker_config[:service_account_provisioning] = settings.except(key)
