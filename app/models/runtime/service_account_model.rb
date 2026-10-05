@@ -32,6 +32,12 @@ module VCAP::CloudController
       "cf:service-account:#{name}"
     end
 
+    def in_use?
+      apps_dataset.any? ||
+        ProcessModel.where(service_account_guid: guid, state: ProcessModel::STARTED).any? ||
+        TaskModel.where(service_account_guid: guid, state: [TaskModel::PENDING_STATE, TaskModel::RUNNING_STATE, TaskModel::CANCELING_STATE]).any?
+    end
+
     def certificate_dns_san
       "#{name}.svc.identity"
     end
