@@ -33,6 +33,11 @@ module VCAP::CloudController
           optional(:service_account_provisioning_enabled) => bool,
           optional(:service_account_runtime_enabled) => bool,
           optional(:service_account_token_endpoint) => String,
+          optional(:service_account_provisioning) => {
+            client_id: String,
+            client_secret: String,
+            identity_ca: String
+          },
 
           system_domain: String,
           optional(:system_domain_organization) => enum(String, NilClass),
