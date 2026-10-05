@@ -18,7 +18,7 @@ class AppServiceAccountsController < ApplicationController
 
     account = ServiceAccountModel.where(guid: message.account_guid).first if message.account_guid
     resource_not_found!(:service_account) if message.account_guid && !account
-    job = AppAssignServiceAccount.new(permission_queryer).assign(app, account, provision: Config.config.get(:service_account_provisioning_enabled) == true)
+    job = AppAssignServiceAccount.new(permission_queryer, actor: user_audit_info).assign(app, account, provision: Config.config.get(:service_account_provisioning_enabled) == true)
     add_warning_headers(["Restart #{app.name} for the service-account assignment change to take effect."])
     return head :accepted, 'Location' => url_builder.build_url(path: "/v3/jobs/#{job.guid}") if job.is_a?(PollableJobModel)
 
