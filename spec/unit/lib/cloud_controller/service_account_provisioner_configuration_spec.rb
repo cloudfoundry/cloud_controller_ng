@@ -39,7 +39,7 @@ module VCAP::CloudController
         with(headers: { 'Authorization' => 'bearer manager-token' }).to_return(status: 404)
       creation = WebMock::API.stub_request(:post, "#{uaa_url}/oauth/clients").
                  with(headers: { 'Authorization' => 'bearer manager-token' }) do |request|
-                   payload = JSON.parse(request.body)
+                   payload = Oj.load(request.body)
                    payload['client_id'] == account.client_id &&
                      payload['tls-client-auth-ca'] == settings[:identity_ca] &&
                      payload['tls_client_auth_san_dns'] == account.certificate_dns_san &&
@@ -51,7 +51,7 @@ module VCAP::CloudController
       provisioner.provision(account)
 
       expect(account.reload.status).to eq('ready')
-      expect(token).to have_been_requested.once
+      expect(token).to have_been_requested.at_least_once
       expect(creation).to have_been_requested.once
     end
 

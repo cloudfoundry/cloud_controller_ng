@@ -26,6 +26,8 @@ require 'credhub/client'
 require 'cloud_controller/metrics/prometheus_updater'
 require 'statsd/instrument'
 require 'cloud_controller/execution_context'
+require 'cloud_controller/uaa/service_account_client'
+require 'actions/service_account_provision'
 
 module CloudController
   class DependencyLocator
@@ -306,7 +308,20 @@ module CloudController
     end
 
     def service_account_provisioner
-      @dependencies[:service_account_provisioner] || raise('service account provisioning is not configured')
+      return @dependencies[:service_account_provisioner] if @dependencies[:service_account_provisioner]
+
+      settings = config.get(:service_account_provisioning)
+      unless settings.is_a?(Hash) && %i[client_id client_secret identity_ca].all? { |key| settings[key].is_a?(String) && settings[key].present? }
+        raise 'service account provisioning is not configured'
+      end
+
+      clients = ServiceAccountClient.new(
+        uaa_target: config.get(:uaa, :internal_url),
+        client_id: settings[:client_id],
+        secret: settings[:client_secret],
+        ca_file: config.get(:uaa, :ca_file)
+      )
+      register(:service_account_provisioner, ServiceAccountProvision.new(clients, identity_ca: settings[:identity_ca]))
     end
 
     def uaa_shadow_user_creation_client

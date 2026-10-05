@@ -29,6 +29,12 @@ module VCAP::CloudController
             client_timeout: Integer
           },
 
+          optional(:service_account_provisioning) => {
+            client_id: String,
+            client_secret: String,
+            identity_ca: String
+          },
+
           logging: {
             level: String, # debug, info, etc.
             file: String # Log file to use
