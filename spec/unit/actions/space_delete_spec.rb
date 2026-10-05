@@ -27,6 +27,15 @@ module VCAP::CloudController
         expect { space.refresh }.to raise_error Sequel::Error, 'Record not found'
       end
 
+      it 'reports owned accounts before deleting apps or other space resources' do
+        account = ServiceAccountModel.create(name: 'payments-worker', space: space)
+        errors = space_delete.delete([space])
+        expect(errors.map(&:message).join).to include('service accounts')
+        expect(AppModel.first(guid: app.guid)).not_to be_nil
+        expect(ServiceAccountModel.first(guid: account.guid)).not_to be_nil
+        expect(Space.first(guid: space.guid)).not_to be_nil
+      end
+
       it 'creates audit events for recursive app deletion and space deletion' do
         space_delete.delete([space])
         expect(VCAP::CloudController::Event.count).to eq(2)
