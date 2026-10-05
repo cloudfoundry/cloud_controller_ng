@@ -23,8 +23,7 @@ module VCAP::CloudController
           merge(SystemEnvPresenter.new(app).system_env.stringify_keys)
 
         task_env = task_env.except('VCAP_SERVICE_ACCOUNT', :VCAP_SERVICE_ACCOUNT).
-                   merge(ServiceAccountIdentity.new(app, Config.config, account_guid: task.service_account_snapshot ? task.service_account_guid : app.service_account_guid).
-                         environment)
+                   merge(ServiceAccountIdentity.new(app, Config.config, account_guid: task.runtime_service_account_guid).environment)
 
         task_env = task_env.merge('VCAP_PLATFORM_OPTIONS' => credhub_url) if credhub_url.present? && cred_interpolation_enabled?
 

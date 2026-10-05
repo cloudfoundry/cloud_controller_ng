@@ -29,7 +29,7 @@ module VCAP::CloudController
     serializes_via_json :environment_variables
 
     def runtime_service_account_guid
-      service_account_snapshot ? service_account_guid : app.service_account_guid
+      service_account_snapshot ? service_account_guid : nil
     end
 
     def after_update
