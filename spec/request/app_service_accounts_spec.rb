@@ -152,6 +152,17 @@ RSpec.describe 'App service account relationship' do
       expect(Delayed::Job.count).to eq(0)
     end
 
+    it 'does not bind an account while a delete operation is retrying' do
+      account.update(status: 'failed')
+      VCAP::CloudController::PollableJobModel.create(
+        delayed_job_guid: SecureRandom.uuid, operation: 'service_account.delete',
+        resource_guid: account.guid, resource_type: 'service_account', state: 'PROCESSING'
+      )
+      patch path, { data: { guid: account.guid } }.to_json, headers('space_developer')
+      expect(last_response.status).to eq(409)
+      expect(app_model.reload.service_account_guid).to be_nil
+    end
+
     it 'rolls back desired binding and state if enqueueing fails' do
       error = CloudController::Errors::ApiError.new_from_details('ServerError')
       allow_any_instance_of(VCAP::CloudController::Jobs::Enqueuer).to receive(:enqueue_pollable).and_raise(error)
