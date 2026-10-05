@@ -500,6 +500,13 @@ module VCAP::CloudController
         end
 
         context 'with a buildpack backend' do
+          it 'propagates a ready service account as typed task certificate properties' do
+            config.config_hash[:service_account_runtime_enabled] = true
+            account = ServiceAccountModel.create(name: 'payments-worker', space: app.space, status: 'ready')
+            app.update(service_account: account)
+            expect(task_recipe_builder.build_app_task(config, task).certificate_properties.service_account.name).to eq(account.name)
+          end
+
           let(:droplet) { create(:droplet_model, app:) }
 
           let(:task_action_builder) do
