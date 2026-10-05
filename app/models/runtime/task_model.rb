@@ -28,6 +28,10 @@ module VCAP::CloudController
     set_field_as_encrypted :environment_variables, column: :encrypted_environment_variables
     serializes_via_json :environment_variables
 
+    def runtime_service_account_guid
+      service_account_snapshot ? service_account_guid : app.service_account_guid
+    end
+
     def after_update
       super
 
