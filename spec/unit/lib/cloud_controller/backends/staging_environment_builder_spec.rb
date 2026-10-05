@@ -60,6 +60,13 @@ module VCAP::CloudController
                                                })
       end
 
+      it 'never exposes account discovery in staging even when supplied by a staging request' do
+        account = ServiceAccountModel.create(name: 'payments-worker', space: app.space, status: 'ready')
+        app.update(service_account: account)
+        result = builder.build(app, space, lifecycle, memory_limit, staging_disk_in_mb, { 'VCAP_SERVICE_ACCOUNT' => 'injected' })
+        expect(result).not_to have_key('VCAP_SERVICE_ACCOUNT')
+      end
+
       context 'when the app has a route associated with it' do
         it 'includes the uris as part of vcap_application' do
           route1 = create(:route, space:)
