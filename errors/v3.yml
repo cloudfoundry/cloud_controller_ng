@@ -8,6 +8,11 @@
   http_code: 409
   message: "Service account name is already reserved"
 
+10018:
+  name: ServiceAccountAssignmentConflict
+  http_code: 409
+  message: "%s"
+
 270010:
   name: ServiceBrokerNotRemovable
   http_code: 422
