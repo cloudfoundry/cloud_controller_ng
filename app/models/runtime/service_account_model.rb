@@ -4,6 +4,9 @@ module VCAP::CloudController
 
     many_to_one :space, key: :space_guid, primary_key: :guid, without_guid_generation: true
     one_to_many :apps, class: 'VCAP::CloudController::AppModel', key: :service_account_guid, primary_key: :guid
+    one_to_many :labels, class: 'VCAP::CloudController::ServiceAccountLabelModel', key: :resource_guid, primary_key: :guid
+    one_to_many :annotations, class: 'VCAP::CloudController::ServiceAccountAnnotationModel', key: :resource_guid, primary_key: :guid
+    add_association_dependencies labels: :destroy, annotations: :destroy
 
     def validate
       super
