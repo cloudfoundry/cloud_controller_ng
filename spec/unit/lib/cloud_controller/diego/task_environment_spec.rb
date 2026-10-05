@@ -37,17 +37,17 @@ module VCAP::CloudController::Diego
     end
 
     describe '#build' do
+      before do
+        TestConfig.config[:instance_file_descriptor_limit] = 100
+        TestConfig.config[:default_app_disk_in_mb]         = staging_disk_in_mb
+      end
+
       it 'inherits the ready platform account discovery and overrides injected values' do
         TestConfig.override(service_account_runtime_enabled: true, service_account_token_endpoint: 'https://uaa.example.test/oauth/token/mtls')
         account = VCAP::CloudController::ServiceAccountModel.create(name: 'payments-worker', space: app.space, status: 'ready')
         app.update(service_account: account)
         env = TaskEnvironment.new(app, task, space, { 'VCAP_SERVICE_ACCOUNT' => 'injected' }).build
         expect(env['VCAP_SERVICE_ACCOUNT']).to include(name: account.name, client_id: account.client_id)
-      end
-
-      before do
-        TestConfig.config[:instance_file_descriptor_limit] = 100
-        TestConfig.config[:default_app_disk_in_mb]         = staging_disk_in_mb
       end
 
       it 'returns the correct environment hash for a v3 app' do
