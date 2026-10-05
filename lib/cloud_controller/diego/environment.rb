@@ -45,7 +45,7 @@ module VCAP::CloudController
           merge(SystemEnvPresenter.new(process).system_env)
 
         diego_env = diego_env.except('VCAP_SERVICE_ACCOUNT', :VCAP_SERVICE_ACCOUNT).
-                    merge(ServiceAccountIdentity.new(process.app, Config.config).environment)
+                    merge(ServiceAccountIdentity.new(process.app, Config.config, account_guid: process.runtime_service_account_guid).environment)
 
         diego_env = diego_env.merge(DATABASE_URL: process.database_uri) if process.database_uri
 
