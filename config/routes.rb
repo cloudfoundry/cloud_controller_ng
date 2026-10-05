@@ -8,6 +8,7 @@ Rails.application.routes.draw do
   post '/service_accounts', to: 'service_accounts#create'
   get '/service_accounts', to: 'service_accounts#index'
   patch '/service_accounts/:guid', to: 'service_accounts#update'
+  delete '/service_accounts/:guid', to: 'service_accounts#destroy'
   get '/service_accounts/:guid/apps', to: 'service_accounts#apps'
   get '/service_accounts/:guid', to: 'service_accounts#show'
   get '/apps/:app_guid/relationships/service_account', to: 'app_service_accounts#show'

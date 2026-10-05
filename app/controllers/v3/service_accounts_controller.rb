@@ -54,14 +54,56 @@ class ServiceAccountsController < ApplicationController
     authorize_management!(account.space)
     message = ServiceAccountUpdateMessage.new(hashed_params[:body])
     unprocessable!(message.errors.full_messages) unless message.valid?
+    job = nil
     account.db.transaction do
       account.lock!
       apply_metadata(account, message)
+      if message.requested?(:enabled)
+        require_provisioning!
+        reject_active_operation!(account)
+        account.update(enabled: message.enabled, status: 'reconciling')
+        job = enqueue_lifecycle(account, message.enabled ? 'provision' : 'disable')
+      end
     end
+    return head :accepted, 'Location' => url_builder.build_url(path: "/v3/jobs/#{job.guid}") if job
+
     render status: :ok, json: Presenters::V3::ServiceAccountPresenter.new(account.reload)
   end
 
+  def destroy
+    account = readable_account
+    authorize_management!(account.space)
+    require_provisioning!
+    job = nil
+    account.db.transaction do
+      account.lock!
+      lifecycle_conflict!('service account is still assigned') if account.apps_dataset.any?
+      reject_active_operation!(account)
+      account.update(enabled: false, status: 'deleting')
+      job = enqueue_lifecycle(account, 'delete')
+    end
+    head :accepted, 'Location' => url_builder.build_url(path: "/v3/jobs/#{job.guid}")
+  end
+
   private
+
+  def require_provisioning!
+    lifecycle_conflict!('service account provisioning is not enabled') unless Config.config.get(:service_account_provisioning_enabled) == true
+  end
+
+  def reject_active_operation!(account)
+    return unless PollableJobModel.where(resource_guid: account.guid, resource_type: 'service_account', state: %w[PROCESSING POLLING]).any?
+
+    lifecycle_conflict!('service account operation is already in progress')
+  end
+
+  def lifecycle_conflict!(detail)
+    raise CloudController::Errors::V3::ApiError.new_from_details('ServiceAccountAssignmentConflict', detail)
+  end
+
+  def enqueue_lifecycle(account, operation)
+    Jobs::Enqueuer.new(queue: Jobs::Queues.generic).enqueue_pollable(Jobs::V3::ServiceAccountProvision.new(account.guid, operation: operation))
+  end
 
   def readable_account
     account = ServiceAccountModel.first(guid: hashed_params[:guid])
