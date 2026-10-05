@@ -3,6 +3,7 @@ require 'presenters/v3/service_account_presenter'
 require 'messages/service_account_update_message'
 require 'messages/service_accounts_list_message'
 require 'messages/apps_list_message'
+require 'fetchers/app_list_fetcher'
 require 'presenters/v3/app_presenter'
 require 'repositories/service_account_event_repository'
 
@@ -21,7 +22,8 @@ class ServiceAccountsController < ApplicationController
     account = readable_account
     message = AppsListMessage.from_params(query_params)
     invalid_param!(message.errors.full_messages) unless message.valid?
-    render_list(account.apps_dataset, message, Presenters::V3::AppPresenter, "/v3/service_accounts/#{account.guid}/apps")
+    dataset = AppListFetcher.fetch(message, [account.space_guid]).where(service_account_guid: account.guid)
+    render_list(dataset, message, Presenters::V3::AppPresenter, "/v3/service_accounts/#{account.guid}/apps")
   end
 
   def show
