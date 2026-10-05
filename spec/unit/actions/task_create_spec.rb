@@ -72,6 +72,14 @@ module VCAP::CloudController
         expect(TaskModel.count).to eq(1)
       end
 
+      it 'snapshots the app account on task creation so later unbind cannot change task identity' do
+        account = ServiceAccountModel.create(name: 'payments-worker', space: app.space, status: 'ready')
+        app.update(service_account: account)
+        task = task_create_action.create(app, message, user_audit_info)
+        app.update(service_account: nil)
+        expect(task.reload.service_account_guid).to eq(account.guid)
+      end
+
       it "sets the task state to 'RUNNING'" do
         task = task_create_action.create(app, message, user_audit_info)
 
