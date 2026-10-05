@@ -19,6 +19,10 @@ RSpec.describe 'Service accounts' do
                               'client_id' => 'cf:service-account:payments-worker', 'certificate_dns_san' => 'payments-worker.svc.identity')
     expect(result.dig('relationships', 'space', 'data', 'guid')).to eq(space.guid)
     expect(VCAP::CloudController::ServiceAccountModel.where(guid: result['guid']).first.space_guid).to eq(space.guid)
+    event = VCAP::CloudController::Event.first(type: 'audit.service_account.create', actee: result['guid'])
+    expect(event).not_to be_nil
+    expect(event.actor).to eq(user.guid)
+    expect(event.space_guid).to eq(space.guid)
   end
 
   it 'allows a platform administrator to create an account' do
@@ -101,6 +105,7 @@ RSpec.describe 'Service accounts' do
     result = Oj.load(last_response.body)
     expect(result['description']).to eq('Revised')
     expect(result['metadata']).to eq('labels' => { 'owner' => 'finance' }, 'annotations' => { 'note' => 'original' })
+    expect(VCAP::CloudController::Event.where(type: 'audit.service_account.update', actee: result['guid']).count).to eq(1)
   end
 
   it 'lists only readable accounts with pagination and space/name filters' do

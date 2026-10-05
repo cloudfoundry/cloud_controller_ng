@@ -18,6 +18,9 @@ RSpec.describe 'App service account relationship' do
     expect(last_response.headers['X-Cf-Warnings']).to include('Restart')
     expect(app_model.reload.service_account).to eq(account)
     expect(app_model.desired_state).to eq('STARTED')
+    event = VCAP::CloudController::Event.first(type: 'audit.app.service_account.assign', actee: app_model.guid)
+    expect(event).not_to be_nil
+    expect(event.metadata['service_account_guid']).to eq(account.guid)
   end
 
   it 'shows an empty relationship for an unbound app' do
@@ -53,6 +56,7 @@ RSpec.describe 'App service account relationship' do
     expect(last_response.status).to eq(200)
     expect(app_model.reload.service_account).to be_nil
     expect(last_response.headers['X-Cf-Warnings']).to include('Restart')
+    expect(VCAP::CloudController::Event.where(type: 'audit.app.service_account.unassign', actee: app_model.guid).count).to eq(1)
   end
 
   it 'rejects assignment while the space is suspended' do
