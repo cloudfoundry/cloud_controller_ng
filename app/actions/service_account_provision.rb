@@ -39,6 +39,39 @@ module VCAP::CloudController
       account
     end
 
+    def deprovision(account, delete: false)
+      failure = nil
+      account.db.transaction(savepoint: true) do
+        account.lock!
+        raise Conflict.new('service account was enabled again') if account.enabled
+        raise Conflict.new('service account is still assigned') if delete && account.apps_dataset.any?
+
+        begin
+          account.db.transaction(savepoint: true) do
+            principal = User.first(guid: account.client_id)
+            raise Conflict.new('principal identity collision') if principal && !principal.is_oauth_client
+
+            existing = existing_client(account.client_id)
+            if existing
+              raise Conflict.new('client identity collision') unless matching_registration?(existing, registration(account))
+
+              @clients.delete(:client, account.client_id)
+            end
+            if delete
+              principal&.destroy
+              account.destroy
+            else
+              account.update(status: 'disabled')
+            end
+          end
+        rescue StandardError => e
+          failure = e
+          account.reload.update(status: 'failed')
+        end
+      end
+      raise failure if failure
+    end
+
     private
 
     def matching_registration?(existing, desired)

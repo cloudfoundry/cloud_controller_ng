@@ -13,5 +13,11 @@ module VCAP::CloudController
 
       with_cache_retry { scim.add(type, registration) }
     end
+
+    def delete(type, id)
+      raise ArgumentError.new('only client resources are supported') unless type == :client
+
+      with_cache_retry { scim.delete(type, id) }
+    end
   end
 end
