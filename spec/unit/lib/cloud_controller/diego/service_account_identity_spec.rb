@@ -22,10 +22,11 @@ module VCAP::CloudController::Diego
     end
 
     it 'exposes non-secret discovery information' do
-      expect(identity.environment).to eq('VCAP_SERVICE_ACCOUNT' => {
+      metadata = {
         guid: account.guid, name: account.name, client_id: account.client_id, certificate_dns_san: account.certificate_dns_san,
         token_endpoint: 'https://uaa.example.test/oauth/token/mtls'
-      })
+      }
+      expect(identity.environment).to eq('VCAP_SERVICE_ACCOUNT' => metadata)
     end
 
     %w[reserved reconciling failed disabled deleting].each do |state|
@@ -39,7 +40,7 @@ module VCAP::CloudController::Diego
       account.update(enabled: false)
       expect { identity.certificate_properties }.to raise_error(CloudController::Errors::ApiError, /not ready/)
       account.update(enabled: true)
-      TestConfig.override(service_account_runtime_enabled: false)
+      TestConfig.config[:service_account_runtime_enabled] = false
       expect { identity.certificate_properties }.to raise_error(CloudController::Errors::ApiError, /runtime is not enabled/)
     end
 

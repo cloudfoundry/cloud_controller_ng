@@ -31,6 +31,8 @@ module VCAP::CloudController
           },
           optional(:custom_root_links) => Array,
           optional(:service_account_provisioning_enabled) => bool,
+          optional(:service_account_runtime_enabled) => bool,
+          optional(:service_account_token_endpoint) => String,
 
           system_domain: String,
           optional(:system_domain_organization) => enum(String, NilClass),

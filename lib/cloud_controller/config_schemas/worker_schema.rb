@@ -34,6 +34,8 @@ module VCAP::CloudController
             client_secret: String,
             identity_ca: String
           },
+          optional(:service_account_runtime_enabled) => bool,
+          optional(:service_account_token_endpoint) => String,
 
           logging: {
             level: String, # debug, info, etc.
