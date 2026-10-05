@@ -21,7 +21,7 @@ module VCAP::CloudController
             desired = registration(account)
             existing = existing_client(account.client_id)
             if existing
-              raise Conflict.new('client identity collision') unless desired.all? { |key, value| existing[key] == value }
+              raise Conflict.new('client identity collision') unless matching_registration?(existing, desired)
             else
               @clients.add(:client, desired)
             end
@@ -40,6 +40,21 @@ module VCAP::CloudController
     end
 
     private
+
+    def matching_registration?(existing, desired)
+      tls_keys = existing.keys.select { |key| key.start_with?('tls-client-auth-', 'tls_client_auth_') }
+      return false unless tls_keys.sort == desired.keys.grep(/\Atls[-_]/).sort
+
+      desired.all? do |key, value|
+        actual = existing[key]
+        actual = [] if key == 'scope' && !existing.key?(key)
+        if value.is_a?(Array)
+          actual.is_a?(Array) && actual.all? { |entry| entry.is_a?(String) } && actual.sort == value.sort
+        else
+          actual == value
+        end
+      end
+    end
 
     def existing_client(client_id)
       @clients.get(:client, client_id)
