@@ -3,6 +3,11 @@
   http_code: 422
   message: "%s"
 
+10017:
+  name: ServiceAccountNameReserved
+  http_code: 409
+  message: "Service account name is already reserved"
+
 270010:
   name: ServiceBrokerNotRemovable
   http_code: 422
