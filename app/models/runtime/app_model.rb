@@ -17,6 +17,7 @@ module VCAP::CloudController
     one_to_many :tasks, class: 'VCAP::CloudController::TaskModel', key: :app_guid, primary_key: :guid
 
     many_to_one :space, class: 'VCAP::CloudController::Space', key: :space_guid, primary_key: :guid, without_guid_generation: true
+    many_to_one :service_account, class: 'VCAP::CloudController::ServiceAccountModel', key: :service_account_guid, primary_key: :guid, without_guid_generation: true
     one_through_one :organization, join_table: Space.table_name, left_key: :guid, left_primary_key: :space_guid, right_primary_key: :id, right_key: :organization_id
 
     one_to_many :processes, class: 'VCAP::CloudController::ProcessModel', key: :app_guid, primary_key: :guid do |dataset|
@@ -93,6 +94,8 @@ module VCAP::CloudController
       validates_format APP_NAME_REGEX, :name
       validate_environment_variables
       validate_droplet_is_staged
+
+      errors.add(:service_account, 'must belong to the app owning space') if service_account && service_account.space_guid != space_guid
 
       validates_includes Lifecycles::TYPES, :lifecycle_type
     end
