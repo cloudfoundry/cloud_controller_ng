@@ -30,6 +30,7 @@ module VCAP::CloudController
             optional(:custom) => Hash
           },
           optional(:custom_root_links) => Array,
+          optional(:service_account_provisioning_enabled) => bool,
 
           system_domain: String,
           optional(:system_domain_organization) => enum(String, NilClass),
