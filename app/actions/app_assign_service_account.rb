@@ -1,11 +1,14 @@
+require 'repositories/service_account_event_repository'
+
 module VCAP::CloudController
   class AppAssignServiceAccount
     class Error < StandardError; end
     class Unauthorized < Error; end
     class Conflict < Error; end
 
-    def initialize(permissions)
+    def initialize(permissions, actor: nil)
       @permissions = permissions
+      @actor = actor
     end
 
     def assign(app, account, provision: false)
@@ -24,12 +27,23 @@ module VCAP::CloudController
           job = provision_account(account) unless account.status == 'ready'
         end
 
-        app.update(service_account: account) unless app.service_account_guid == account&.guid
+        unless app.service_account_guid == account&.guid
+          previous_guid = app.service_account_guid
+          app.update(service_account: account)
+          record_assignment(app, account, previous_guid) if @actor
+        end
       end
       provision ? job : app
     end
 
     private
+
+    def record_assignment(app, account, previous_guid)
+      Repositories::ServiceAccountEventRepository.record(
+        app, account ? 'assign' : 'unassign', @actor,
+        service_account_guid: account&.guid || previous_guid
+      )
+    end
 
     def validate_ready!(account, provision)
       raise Conflict.new('service account is not ready or enabled') unless account.enabled && (account.status == 'ready' || provision)

@@ -4,6 +4,7 @@ require 'messages/service_account_update_message'
 require 'messages/service_accounts_list_message'
 require 'messages/apps_list_message'
 require 'presenters/v3/app_presenter'
+require 'repositories/service_account_event_repository'
 
 class ServiceAccountsController < ApplicationController
   def index
@@ -41,6 +42,7 @@ class ServiceAccountsController < ApplicationController
     ServiceAccountModel.db.transaction do
       account = ServiceAccountModel.create(name: message.name, space: space)
       apply_metadata(account, message)
+      Repositories::ServiceAccountEventRepository.record(account, 'create', user_audit_info)
     end
     render status: :created, json: Presenters::V3::ServiceAccountPresenter.new(account)
   rescue Sequel::ValidationFailed => e
@@ -64,6 +66,7 @@ class ServiceAccountsController < ApplicationController
         account.update(enabled: message.enabled, status: 'reconciling')
         job = enqueue_lifecycle(account, message.enabled ? 'provision' : 'disable')
       end
+      Repositories::ServiceAccountEventRepository.record(account, 'update', user_audit_info, message.audit_hash)
     end
     return head :accepted, 'Location' => url_builder.build_url(path: "/v3/jobs/#{job.guid}") if job
 
@@ -81,6 +84,7 @@ class ServiceAccountsController < ApplicationController
       reject_active_operation!(account)
       account.update(enabled: false, status: 'deleting')
       job = enqueue_lifecycle(account, 'delete')
+      Repositories::ServiceAccountEventRepository.record(account, 'delete', user_audit_info)
     end
     head :accepted, 'Location' => url_builder.build_url(path: "/v3/jobs/#{job.guid}")
   end
