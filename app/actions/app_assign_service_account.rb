@@ -47,6 +47,10 @@ module VCAP::CloudController
 
     def validate_ready!(account, provision)
       raise Conflict.new('service account is not ready or enabled') unless account.enabled && (account.status == 'ready' || provision)
+
+      if PollableJobModel.where(resource_guid: account.guid, resource_type: 'service_account', state: %w[PROCESSING POLLING]).exclude(operation: 'service_account.provision').any?
+        raise Conflict.new('service account lifecycle operation is in progress')
+      end
     end
 
     def provision_account(account)
