@@ -46,5 +46,24 @@ module VCAP::CloudController
       account.update(enabled: true, status: 'reserved')
       expect { action.assign(app, account) }.to raise_error(AppAssignServiceAccount::Conflict, /not ready/)
     end
+
+    it 'serializes concurrent first binds to two apps into a single provisioning job', isolation: :truncation do
+      account.update(status: 'reserved')
+      other_app = create(:app_model, space: space)
+      ids = [app.guid, other_app.guid]
+      writer = create(:user)
+      space.organization.add_user(writer)
+      space.add_developer(writer)
+      permission_queryer = Permissions.new(writer)
+      threads = ids.map do |guid|
+        Thread.new do
+          AppAssignServiceAccount.new(permission_queryer).assign(AppModel.first(guid: guid), ServiceAccountModel.first(guid: account.guid), provision: true)
+        end
+      end
+      jobs = threads.map(&:value)
+      expect(jobs.map(&:guid).uniq.size).to eq(1)
+      expect(PollableJobModel.where(resource_guid: account.guid).count).to eq(1)
+      expect(AppModel.where(guid: ids).select_map(:service_account_guid)).to eq([account.guid, account.guid])
+    end
   end
 end
