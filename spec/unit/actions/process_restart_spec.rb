@@ -49,6 +49,17 @@ module VCAP::CloudController
       end
 
       context 'when the process is STARTED' do
+        it 'captures account identity only at restart and preserves it after delayed assignment changes' do
+          account = ServiceAccountModel.create(name: 'payments-worker', space: app.space, status: 'ready')
+          app.update(service_account: account)
+          ProcessRestart.restart(process: process, config: config, stop_in_runtime: true)
+          expect(process.reload.runtime_service_account_guid).to eq(account.guid)
+          app.update(service_account: nil)
+          expect(process.reload.runtime_service_account_guid).to eq(account.guid)
+          ProcessRestart.restart(process: process, config: config, stop_in_runtime: true)
+          expect(process.reload.runtime_service_account_guid).to be_nil
+        end
+
         it 'keeps process state as STARTED' do
           ProcessRestart.restart(process: process, config: config, stop_in_runtime: true)
           expect(process.reload.state).to eq('STARTED')
