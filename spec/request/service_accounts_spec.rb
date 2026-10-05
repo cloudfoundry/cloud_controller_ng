@@ -146,4 +146,84 @@ RSpec.describe 'Service accounts' do
     get '/v3/service_accounts?unknown=value', nil, headers('admin')
     expect(last_response.status).to eq(400)
   end
+
+  context 'account lifecycle' do
+    let(:account) { VCAP::CloudController::ServiceAccountModel.create(name: 'payments-worker', space: space) }
+    let(:clients) { instance_double(CF::UAA::Scim) }
+    let(:provisioner) { VCAP::CloudController::ServiceAccountProvision.new(clients, identity_ca: 'identity-ca') }
+    let(:account_path) { "/v3/service_accounts/#{account.guid}" }
+
+    before do
+      TestConfig.override(service_account_provisioning_enabled: true)
+      CloudController::DependencyLocator.instance.register(:service_account_provisioner, provisioner)
+      allow(clients).to receive(:get).and_raise(CF::UAA::NotFound)
+      allow(clients).to receive(:add)
+      allow(clients).to receive(:delete)
+    end
+
+    it 'disables new authentication and enables again while retaining explicit principal roles' do
+      provisioner.provision(account)
+      principal = VCAP::CloudController::User.first(guid: account.client_id)
+      org.add_user(principal)
+      space.add_developer(principal)
+      registration = provisioner.send(:registration, account)
+      allow(clients).to receive(:get).and_return(registration)
+      auth = headers('space_manager')
+
+      patch account_path, { enabled: false }.to_json, auth
+      expect(last_response.status).to eq(202)
+      expect(account.reload.enabled).to be(false)
+      expect(Delayed::Worker.new.work_off).to eq([1, 0])
+      expect(clients).to have_received(:delete).with(:client, account.client_id).once
+      expect(account.reload.status).to eq('disabled')
+      expect(principal.reload.spaces).to include(space)
+
+      allow(clients).to receive(:get).and_raise(CF::UAA::NotFound)
+      patch account_path, { enabled: true }.to_json, auth
+      expect(last_response.status).to eq(202)
+      expect(Delayed::Worker.new.work_off).to eq([1, 0])
+      expect(account.reload.status).to eq('ready')
+      expect(principal.reload.spaces).to include(space)
+    end
+
+    it 'deletes an unused account asynchronously and keeps its name permanently reserved' do
+      provisioner.provision(account)
+      allow(clients).to receive(:get).and_return(provisioner.send(:registration, account))
+      guid = account.guid
+      auth = headers('space_manager')
+      delete account_path, nil, auth
+      expect(last_response.status).to eq(202)
+      expect(account.reload.status).to eq('deleting')
+      expect(account.enabled).to be(false)
+      expect(Delayed::Worker.new.work_off).to eq([1, 0])
+      expect(VCAP::CloudController::ServiceAccountModel.first(guid: guid)).to be_nil
+      expect(VCAP::CloudController::User.first(guid: account.client_id)).to be_nil
+      post '/v3/service_accounts', body.to_json, auth
+      expect(last_response.status).to eq(409)
+    end
+
+    it 'rejects deleting an account still assigned to an app' do
+      create(:app_model, space: space, service_account: account)
+      delete account_path, nil, headers('space_manager')
+      expect(last_response.status).to eq(409)
+      expect(account.reload.status).to eq('reserved')
+      expect(Delayed::Job.count).to eq(0)
+    end
+
+    it 'denies developer deletion and rejects non-boolean enabled values' do
+      delete account_path, nil, headers('space_developer')
+      expect(last_response.status).to eq(403)
+      patch account_path, { enabled: 'false' }.to_json, headers('space_manager')
+      expect(last_response.status).to eq(422)
+    end
+
+    it 'refuses to delete an unmanaged colliding client' do
+      allow(clients).to receive(:get).and_return('client_id' => account.client_id)
+      delete account_path, nil, headers('space_manager')
+      expect(last_response.status).to eq(202)
+      expect(Delayed::Worker.new.work_off).to eq([0, 1])
+      expect(clients).not_to have_received(:delete)
+      expect(account.reload.status).to eq('failed')
+    end
+  end
 end
