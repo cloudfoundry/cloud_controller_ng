@@ -6,6 +6,7 @@ require 'cloud_controller/diego/bbs_environment_builder'
 require 'cloud_controller/diego/task_completion_callback_generator'
 require 'cloud_controller/diego/task_cpu_weight_calculator'
 require 'cloud_controller/diego/service_binding_files_builder'
+require 'cloud_controller/diego/service_account_identity'
 
 module VCAP::CloudController
   module Diego
@@ -45,13 +46,7 @@ module VCAP::CloudController
           root_fs: task_action_builder.stack,
           environment_variables: task_action_builder.task_environment_variables,
           placement_tags: [VCAP::CloudController::IsolationSegmentSelector.for_space(task.space)].compact,
-          certificate_properties: ::Diego::Bbs::Models::CertificateProperties.new(
-            organizational_unit: [
-              "organization:#{task.app.organization.guid}",
-              "space:#{task.app.space_guid}",
-              "app:#{task.app_guid}"
-            ]
-          ),
+          certificate_properties: ServiceAccountIdentity.new(task.app, config).certificate_properties,
           image_username: task.droplet.docker_receipt_username,
           image_password: task.droplet.docker_receipt_password,
           volume_mounted_files: ServiceBindingFilesBuilder.build(task.app)

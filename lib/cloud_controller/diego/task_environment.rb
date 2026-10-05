@@ -1,4 +1,5 @@
 require 'credhub/config_helpers'
+require 'cloud_controller/diego/service_account_identity'
 
 module VCAP::CloudController
   module Diego
@@ -20,6 +21,9 @@ module VCAP::CloudController
           merge(app_env).
           merge('VCAP_APPLICATION' => vcap_application, 'MEMORY_LIMIT' => "#{task.memory_in_mb}m").
           merge(SystemEnvPresenter.new(app).system_env.stringify_keys)
+
+        task_env = task_env.except('VCAP_SERVICE_ACCOUNT', :VCAP_SERVICE_ACCOUNT).
+                   merge(ServiceAccountIdentity.new(app, Config.config).environment)
 
         task_env = task_env.merge('VCAP_PLATFORM_OPTIONS' => credhub_url) if credhub_url.present? && cred_interpolation_enabled?
 

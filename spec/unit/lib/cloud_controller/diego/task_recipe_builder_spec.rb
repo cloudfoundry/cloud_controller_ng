@@ -500,13 +500,6 @@ module VCAP::CloudController
         end
 
         context 'with a buildpack backend' do
-          it 'propagates a ready service account as typed task certificate properties' do
-            config.config_hash[:service_account_runtime_enabled] = true
-            account = ServiceAccountModel.create(name: 'payments-worker', space: app.space, status: 'ready')
-            app.update(service_account: account)
-            expect(task_recipe_builder.build_app_task(config, task).certificate_properties.service_account.name).to eq(account.name)
-          end
-
           let(:droplet) { create(:droplet_model, app:) }
 
           let(:task_action_builder) do
@@ -529,6 +522,13 @@ module VCAP::CloudController
             allow(LifecycleProtocol).to receive(:protocol_for_type).with('buildpack').and_return(lifecycle_protocol)
             calculator = instance_double(TaskCpuWeightCalculator, calculate: 25)
             allow(TaskCpuWeightCalculator).to receive(:new).with(memory_in_mb: task.memory_in_mb).and_return(calculator)
+          end
+
+          it 'propagates a ready service account as typed task certificate properties' do
+            config.config_hash[:service_account_runtime_enabled] = true
+            account = ServiceAccountModel.create(name: 'payments-worker', space: app.space, status: 'ready')
+            app.update(service_account: account)
+            expect(task_recipe_builder.build_app_task(config, task).certificate_properties.service_account.name).to eq(account.name)
           end
 
           it 'constructs a TaskDefinition with app task instructions' do

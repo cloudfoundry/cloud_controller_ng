@@ -10,6 +10,7 @@ require 'cloud_controller/diego/service_binding_files_builder'
 require 'credhub/config_helpers'
 require 'models/helpers/health_check_types'
 require 'cloud_controller/diego/main_lrp_action_builder'
+require 'cloud_controller/diego/service_account_identity'
 
 module VCAP::CloudController
   module Diego
@@ -98,9 +99,7 @@ module VCAP::CloudController
           check_definition: generate_healthcheck_definition(desired_lrp_builder),
           routes: ::Diego::Bbs::Models::ProtoRoutes.new(routes:),
           max_pids: @config.get(:diego, :pid_limit),
-          certificate_properties: ::Diego::Bbs::Models::CertificateProperties.new(
-            organizational_unit: ["organization:#{process.organization.guid}", "space:#{process.space.guid}", "app:#{process.app_guid}"]
-          ),
+          certificate_properties: ServiceAccountIdentity.new(process.app, config).certificate_properties,
           image_username: process.desired_droplet.docker_receipt_username,
           image_password: process.desired_droplet.docker_receipt_password,
           volume_mounted_files: ServiceBindingFilesBuilder.build(process)
