@@ -33,7 +33,28 @@ module VCAP::CloudController
       raise ApiError.new_from_details('BlobstoreNotLocal') unless package_blobstore.local?
 
       package = PackageModel.find(guid:)
-      raise ApiError.new_from_details('NotFound', guid) if package.nil?
+      if package.nil?
+        # FLAKE_DEBUG: temporary instrumentation for the intermittent 404 on this
+        # endpoint (a just-created package un-findable by its own guid). Fires only
+        # on the nil path, so it is silent in normal operation. Captures, on the
+        # connection the SELECT actually used, whether the row is physically present
+        # (raw_match), how many package rows are visible at all (total_count), whether
+        # the surrounding transaction is still open (in_txn), and the identity of the
+        # db/connection/thread so a swap vs. the inserting side is detectable.
+        # Revert once CI has logged one occurrence. See the test-side counterpart in
+        # spec/unit/controllers/runtime/stagings_controller_spec.rb.
+        db = PackageModel.db
+        raw_match = db[:packages].where(guid:).count
+        total_count = db[:packages].count
+        conn_id = db.synchronize(&:object_id)
+        logger.error(
+          "FLAKE_DEBUG stagings-404 guid=#{guid} raw_match=#{raw_match} " \
+          "total_count=#{total_count} in_txn=#{db.in_transaction?} " \
+          "db_id=#{db.object_id} conn_id=#{conn_id} " \
+          "thread_id=#{Thread.current.object_id}"
+        )
+        raise ApiError.new_from_details('NotFound', guid)
+      end
 
       blob = package_blobstore.blob(guid)
       if blob.nil?
