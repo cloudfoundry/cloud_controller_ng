@@ -1,8 +1,9 @@
-require 'messages/base_message'
+require 'messages/metadata_base_message'
 
 module VCAP::CloudController
-  class ServiceAccountCreateMessage < BaseMessage
-    register_allowed_keys %i[name relationships]
+  class ServiceAccountCreateMessage < MetadataBaseMessage
+    register_allowed_keys %i[name relationships description]
+    validates :description, string: true, allow_nil: true, length: { maximum: 250 }
     validates_with NoAdditionalKeysValidator, RelationshipValidator
     validates :name, presence: true, string: true,
                      format: { with: ->(_) { ServiceAccountModel::NAME_PATTERN } }, length: { in: 3..63 }

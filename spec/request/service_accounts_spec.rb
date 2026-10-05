@@ -110,9 +110,9 @@ RSpec.describe 'Service accounts' do
     expect(last_response.status).to eq(200)
     result = Oj.load(last_response.body)
     expect(result.dig('pagination', 'total_results')).to eq(1)
-    expect(result['resources'].map { |r| r['guid'] }).to eq([own.guid])
+    expect(result['resources'].pluck('guid')).to eq([own.guid])
     get "/v3/service_accounts?space_guids=#{space.guid}", nil, headers('admin')
-    expect(Oj.load(last_response.body)['resources'].map { |r| r['guid'] }).to eq([own.guid])
+    expect(Oj.load(last_response.body)['resources'].pluck('guid')).to eq([own.guid])
   end
 
   it 'lists assigned apps only for account readers' do
@@ -120,7 +120,7 @@ RSpec.describe 'Service accounts' do
     app = create(:app_model, space: space, service_account: own)
     get "/v3/service_accounts/#{own.guid}/apps", nil, headers('space_auditor')
     expect(last_response.status).to eq(200)
-    expect(Oj.load(last_response.body)['resources'].map { |r| r['guid'] }).to eq([app.guid])
+    expect(Oj.load(last_response.body)['resources'].pluck('guid')).to eq([app.guid])
   end
 
   it 'denies developers updates and hides unreadable resources' do

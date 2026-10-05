@@ -1,10 +1,30 @@
 require 'messages/service_account_create_message'
 require 'presenters/v3/service_account_presenter'
+require 'messages/service_account_update_message'
+require 'messages/service_accounts_list_message'
+require 'messages/apps_list_message'
+require 'presenters/v3/app_presenter'
 
 class ServiceAccountsController < ApplicationController
+  def index
+    message = ServiceAccountsListMessage.from_params(query_params)
+    invalid_param!(message.errors.full_messages) unless message.valid?
+    dataset = ServiceAccountModel.dataset
+    dataset = dataset.where(space_guid: permission_queryer.readable_space_guids_query) unless permission_queryer.can_read_globally?
+    dataset = dataset.where(name: message.names) if message.requested?(:names)
+    dataset = dataset.where(space_guid: message.space_guids) if message.requested?(:space_guids)
+    render_list(dataset, message, Presenters::V3::ServiceAccountPresenter, '/v3/service_accounts')
+  end
+
+  def apps
+    account = readable_account
+    message = AppsListMessage.from_params(query_params)
+    invalid_param!(message.errors.full_messages) unless message.valid?
+    render_list(account.apps_dataset, message, Presenters::V3::AppPresenter, "/v3/service_accounts/#{account.guid}/apps")
+  end
+
   def show
-    account = ServiceAccountModel.where(guid: hashed_params[:guid]).first
-    resource_not_found!(:service_account) unless account && permission_queryer.can_read_from_space?(account.space.id, account.space.organization_id)
+    account = readable_account
 
     render status: :ok, json: Presenters::V3::ServiceAccountPresenter.new(account)
   end
@@ -15,14 +35,56 @@ class ServiceAccountsController < ApplicationController
 
     space = Space.where(guid: message.space_guid).first
     unprocessable!('Space not found') unless space && permission_queryer.can_read_from_space?(space.id, space.organization_id)
-    unauthorized! unless permission_queryer.can_write_globally? || space.managers_dataset.where(id: current_user.id).any?
-    require_writable_space!(space)
+    authorize_management!(space)
 
-    account = ServiceAccountModel.create(name: message.name, space: space)
+    account = nil
+    ServiceAccountModel.db.transaction do
+      account = ServiceAccountModel.create(name: message.name, space: space)
+      apply_metadata(account, message)
+    end
     render status: :created, json: Presenters::V3::ServiceAccountPresenter.new(account)
   rescue Sequel::ValidationFailed => e
     raise CloudController::Errors::V3::ApiError.new_from_details('ServiceAccountNameReserved') if e.message.include?('is already reserved')
 
     unprocessable!(e.message)
+  end
+
+  def update
+    account = readable_account
+    authorize_management!(account.space)
+    message = ServiceAccountUpdateMessage.new(hashed_params[:body])
+    unprocessable!(message.errors.full_messages) unless message.valid?
+    account.db.transaction do
+      account.lock!
+      apply_metadata(account, message)
+    end
+    render status: :ok, json: Presenters::V3::ServiceAccountPresenter.new(account.reload)
+  end
+
+  private
+
+  def readable_account
+    account = ServiceAccountModel.first(guid: hashed_params[:guid])
+    resource_not_found!(:service_account) unless account && permission_queryer.can_read_from_space?(account.space.id, account.space.organization_id)
+    account
+  end
+
+  def authorize_management!(space)
+    unauthorized! unless permission_queryer.can_write_globally? || space.managers_dataset.where(id: current_user.id).any?
+    require_writable_space!(space)
+  end
+
+  def apply_metadata(account, message)
+    account.update(description: message.description || '') if message.requested?(:description)
+    LabelsUpdate.update(account, message.labels, ServiceAccountLabelModel)
+    AnnotationsUpdate.update(account, message.annotations, ServiceAccountAnnotationModel)
+  end
+
+  def render_list(dataset, message, presenter, path)
+    render status: :ok, json: Presenters::V3::PaginatedListPresenter.new(
+      presenter: presenter,
+      paginated_result: SequelPaginator.new.get_page(dataset, message.pagination_options),
+      path: path, message: message
+    )
   end
 end
