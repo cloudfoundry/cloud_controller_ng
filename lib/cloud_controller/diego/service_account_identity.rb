@@ -1,9 +1,10 @@
 module VCAP::CloudController
   module Diego
     class ServiceAccountIdentity
-      def initialize(app, config)
+      def initialize(app, config, account_guid: app.service_account_guid)
         @app = app
         @config = config
+        @account_guid = account_guid
       end
 
       def certificate_properties
@@ -31,13 +32,13 @@ module VCAP::CloudController
       private
 
       def ready_account
-        return unless @app.service_account_guid
+        return unless @account_guid
 
         unless @config.get(:service_account_runtime_enabled) == true
           raise CloudController::Errors::ApiError.new_from_details('UnprocessableEntity', 'Service account runtime is not enabled')
         end
 
-        account = ServiceAccountModel.first(guid: @app.service_account_guid)
+        account = ServiceAccountModel.first(guid: @account_guid)
         unless account && account.enabled && account.status == 'ready' && account.space_guid == @app.space_guid
           raise CloudController::Errors::ApiError.new_from_details('UnprocessableEntity', 'Service account is not ready for runtime credentials')
         end

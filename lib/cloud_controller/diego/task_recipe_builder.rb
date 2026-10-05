@@ -46,7 +46,7 @@ module VCAP::CloudController
           root_fs: task_action_builder.stack,
           environment_variables: task_action_builder.task_environment_variables,
           placement_tags: [VCAP::CloudController::IsolationSegmentSelector.for_space(task.space)].compact,
-          certificate_properties: ServiceAccountIdentity.new(task.app, config).certificate_properties,
+          certificate_properties: ServiceAccountIdentity.new(task.app, config, account_guid: task.runtime_service_account_guid).certificate_properties,
           image_username: task.droplet.docker_receipt_username,
           image_password: task.droplet.docker_receipt_password,
           volume_mounted_files: ServiceBindingFilesBuilder.build(task.app)
