@@ -10,6 +10,11 @@ module VCAP::CloudController
 
     def delete(dataset)
       dataset.each_with_object([]) do |space_model, errors|
+        if ServiceAccountModel.where(space_guid: space_model.guid).any?
+          errors << CloudController::Errors::ApiError.new_from_details('SpaceDeletionFailed', space_model.name, 'Delete owned service accounts before deleting the space.')
+          next
+        end
+
         instance_delete_errors = delete_service_instances(space_model)
         err = accumulate_space_deletion_error(instance_delete_errors, space_model.name)
         errors << err unless err.nil?
