@@ -528,6 +528,7 @@ module VCAP::CloudController
             config.config_hash[:service_account_runtime_enabled] = true
             account = ServiceAccountModel.create(name: 'payments-worker', space: app.space, status: 'ready')
             app.update(service_account: account)
+            task.update(service_account_guid: account.guid, service_account_snapshot: true)
             expect(task_recipe_builder.build_app_task(config, task).certificate_properties.service_account.name).to eq(account.name)
           end
 
