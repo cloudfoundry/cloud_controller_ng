@@ -153,11 +153,26 @@ RSpec.describe 'App service account relationship' do
     end
 
     it 'rolls back desired binding and state if enqueueing fails' do
-      allow_any_instance_of(VCAP::CloudController::Jobs::Enqueuer).to receive(:enqueue_pollable).and_raise('queue unavailable')
+      error = CloudController::Errors::ApiError.new_from_details('ServerError')
+      allow_any_instance_of(VCAP::CloudController::Jobs::Enqueuer).to receive(:enqueue_pollable).and_raise(error)
       patch path, { data: { guid: account.guid } }.to_json, headers('space_developer')
       expect(last_response.status).to eq(500)
       expect(app_model.reload.service_account_guid).to be_nil
       expect(account.reload.status).to eq('reserved')
+    end
+
+    it 'retries a failed bind through the same pollable job and then reports completion' do
+      allow(clients).to receive(:add).and_raise(CF::UAA::BadTarget, 'unavailable')
+      patch path, { data: { guid: account.guid } }.to_json, headers('space_developer')
+      expect(last_response.status).to eq(202)
+      location = last_response.headers['Location']
+      expect(Delayed::Worker.new.work_off).to eq([0, 1])
+      expect(account.reload.status).to eq('failed')
+      allow(clients).to receive(:add)
+      Delayed::Job.first.update(run_at: Time.now.utc - 1)
+      expect(Delayed::Worker.new.work_off).to eq([1, 0])
+      get URI(location).path, nil, headers('space_developer')
+      expect(Oj.load(last_response.body)['state']).to eq('COMPLETE')
     end
   end
 
