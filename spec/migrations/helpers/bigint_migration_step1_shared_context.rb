@@ -10,6 +10,10 @@ RSpec.shared_context 'bigint migration step1' do
   let(:skip_bigint_id_migration) { nil }
 
   before do
+    # The migration spec harness replays ALL migrations in an after-hook, including other
+    # features' (e.g. the WAS_RUNNING backfill, which reads config in skip?). This default
+    # lets those config reads pass through instead of tripping the strict matchers below.
+    allow_any_instance_of(VCAP::CloudController::Config).to receive(:get).and_call_original
     allow_any_instance_of(VCAP::CloudController::Config).to receive(:get).with(:skip_bigint_id_migration).and_return(skip_bigint_id_migration)
     allow_any_instance_of(VCAP::CloudController::Config).to receive(:get).with(:migration_psql_concurrent_statement_timeout_in_seconds).and_return(300)
   end
