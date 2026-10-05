@@ -77,5 +77,56 @@ module VCAP::CloudController
       expect { action.provision(account) }.to raise_error(/disabled/)
       expect(account.reload.status).to eq('reserved')
     end
+
+    context 'with the real UAA client library' do
+      let(:uaa_url) { 'https://service-account-uaa.example.test' }
+      let(:clients) { CF::UAA::Scim.new(uaa_url, 'bearer test-token') }
+      let(:client_url) { "#{uaa_url}/oauth/clients/#{account.client_id}" }
+      let(:response_headers) { { 'content-type' => 'application/json' } }
+
+      it 'serializes the canonical secretless registration over HTTP' do
+        WebMock::API.stub_request(:get, client_url).to_return(status: 404)
+        creation = WebMock::API.stub_request(:post, "#{uaa_url}/oauth/clients").
+                   with(body: registration.to_json, headers: { 'Authorization' => 'bearer test-token' }).
+                   to_return(status: 201, headers: response_headers, body: registration.to_json)
+
+        action.provision(account)
+
+        expect(creation).to have_been_requested.once
+        expect(account.reload.status).to eq('ready')
+      end
+
+      it 'reuses a client with omitted empty scopes and reordered authorities on repeated reconciliation' do
+        response = registration.except('scope').merge('authorities' => registration['authorities'].reverse)
+        WebMock::API.stub_request(:get, client_url).
+          to_return(headers: response_headers, body: response.to_json)
+
+        action.provision(account)
+        action.provision(account)
+
+        expect(account.reload.status).to eq('ready')
+        expect(User.where(guid: account.client_id).count).to eq(1)
+        expect(WebMock::API.a_request(:post, "#{uaa_url}/oauth/clients")).not_to have_been_made
+      end
+
+      [
+        { 'scope' => ['clients.admin'] },
+        { 'authorities' => %w[cloud_controller.read cloud_controller.write cloud_controller.admin] },
+        { 'tls-client-auth-sub-template' => 'admin' },
+        { 'tls-client-auth-aud-templates' => ['other-api'] },
+        { 'tls_client_auth_subject_dn' => 'CN=other' }
+      ].each do |altered_policy|
+        it "refuses an existing client with altered #{altered_policy.keys.first}" do
+          WebMock::API.stub_request(:get, client_url).
+            to_return(headers: response_headers, body: registration.merge(altered_policy).to_json)
+
+          expect { action.provision(account) }.to raise_error(ServiceAccountProvision::Conflict, 'client identity collision')
+
+          expect(account.reload.status).to eq('failed')
+          expect(User.first(guid: account.client_id)).to be_nil
+          expect(WebMock::API.a_request(:post, "#{uaa_url}/oauth/clients")).not_to have_been_made
+        end
+      end
+    end
   end
 end
