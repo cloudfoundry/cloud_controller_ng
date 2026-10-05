@@ -49,5 +49,10 @@ module VCAP::CloudController::Diego
       expect(identity.certificate_properties.to_h).not_to have_key(:service_account)
       expect(identity.environment).to eq({})
     end
+
+    it 'rejects token discovery endpoints containing embedded credentials' do
+      TestConfig.config[:service_account_token_endpoint] = 'https://user:secret@uaa.example.test/oauth/token/mtls'
+      expect { identity.environment }.to raise_error(CloudController::Errors::ApiError, /endpoint/)
+    end
   end
 end
