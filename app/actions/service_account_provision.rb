@@ -81,6 +81,7 @@ module VCAP::CloudController
       desired.all? do |key, value|
         actual = existing[key]
         actual = [] if key == 'scope' && !existing.key?(key)
+        actual = [] if key == 'scope' && actual == ['uaa.none']
         if value.is_a?(Array)
           actual.is_a?(Array) && actual.all? { |entry| entry.is_a?(String) } && actual.sort == value.sort
         else
