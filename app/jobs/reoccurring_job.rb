@@ -38,6 +38,24 @@ module VCAP::CloudController
         @polling_interval = interval.clamp(default_polling_interval_seconds, maximum_polling_interval)
       end
 
+      # Non-sensitive identifying fields for structured job logging.
+      def hash_for_logs
+        audit_info = __send__(:user_audit_info) if respond_to?(:user_audit_info, true)
+        {
+          operation: (operation if respond_to?(:operation)),
+          operation_type: (operation_type if respond_to?(:operation_type)),
+          resource_type: (resource_type if respond_to?(:resource_type)),
+          resource_guid: (resource_guid if respond_to?(:resource_guid)),
+          start_time: start_time,
+          finished: finished,
+          retry_number: retry_number,
+          maximum_duration_seconds: maximum_duration_seconds,
+          polling_interval_seconds: polling_interval_seconds,
+          first_time: (instance_variable_get(:@first_time) if instance_variable_defined?(:@first_time)),
+          user_audit_info: (audit_info.hash_for_logs if audit_info.respond_to?(:hash_for_logs))
+        }.compact
+      end
+
       private
 
       def initialize

@@ -92,6 +92,19 @@ module VCAP::CloudController::Jobs
         Enqueuer.new(opts).enqueue(wrapped_job)
       end
 
+      it 'logs the created background job without any handler payload' do
+        logger = instance_double(Steno::Logger, info: nil)
+        allow(Steno).to receive(:logger).and_call_original
+        allow(Steno).to receive(:logger).with('cc.background').and_return(logger)
+
+        Enqueuer.new(opts).enqueue(wrapped_job)
+
+        expect(logger).to have_received(:info).with(
+          'enqueued background job',
+          hash_including(job_guid: an_instance_of(String), queue: 'my-queue', job_class: 'VCAP::CloudController::Jobs::Runtime::ModelDeletion')
+        )
+      end
+
       context 'when run_at is provided' do
         it 'enqueues the job with the specified run_at time' do
           original_enqueue = Delayed::Job.method(:enqueue)

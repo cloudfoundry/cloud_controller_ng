@@ -199,6 +199,40 @@ module VCAP::CloudController
         end
       end
 
+      describe '#hash_for_logs' do
+        context 'when the handler exposes identifying fields' do
+          let(:handler) { double(:job, display_name: 'service_instance.create', resource_type: 'service_instances', resource_guid: 'si-guid') }
+
+          it 'returns the job class and identifying fields' do
+            job = WrappingJob.new(handler)
+            expect(job.hash_for_logs).to eq(
+              job_class: handler.class.name,
+              display_name: 'service_instance.create',
+              resource_type: 'service_instances',
+              resource_guid: 'si-guid'
+            )
+          end
+        end
+
+        context 'when the handler exposes nothing' do
+          it 'returns just the job class, dropping nil fields' do
+            handler = Object.new
+            job = WrappingJob.new(handler)
+            expect(job.hash_for_logs).to eq(job_class: 'Object', display_name: 'Object')
+          end
+        end
+
+        context 'when the handler carries arbitrary parameters' do
+          let(:handler) { double(:job, display_name: 'd', resource_type: 't', resource_guid: 'g', arbitrary_parameters: { systempassword: 's3cr3t' }) }
+
+          it 'never includes user-supplied payload' do
+            job = WrappingJob.new(handler)
+            expect(job.hash_for_logs.to_s).not_to include('s3cr3t')
+            expect(job.hash_for_logs).not_to have_key(:arbitrary_parameters)
+          end
+        end
+      end
+
       describe '#recover_from_failure' do
         context 'when the wrapped job has the recover_from_failure method defined' do
           it 'delegates to the handler' do

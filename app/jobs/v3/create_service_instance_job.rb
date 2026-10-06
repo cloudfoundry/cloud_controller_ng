@@ -6,6 +6,10 @@ module VCAP::CloudController
     class CreateServiceInstanceJob < VCAP::CloudController::Jobs::ReoccurringJob
       attr_reader :warnings
 
+      def hash_for_logs
+        super.merge(warnings: warnings).compact
+      end
+
       def initialize(
         service_instance_guid,
         user_audit_info:, audit_hash:, arbitrary_parameters: {}
