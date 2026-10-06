@@ -26,7 +26,7 @@ We do not recommend using internal API endpoints for anything other than their i
 
 **Intended Consumer:** SSH Proxy
 
-**Auth Mechanism:** OAuth
+**Auth Mechanism:** mTLS and OAuth. The endpoint is served on the mutual-TLS listener (`cc.tls_port`, default `9023`), where the SSH Proxy authenticates with a client certificate. For backwards compatibility it also remains available over OAuth on the public listeners (`cc.external_port`, default `9022`, and `cc.public_tls.port`, default `9024`).
 
 ### GET /v2/buildpacks/:guid/download
 **Description:** Download a buildpack file
