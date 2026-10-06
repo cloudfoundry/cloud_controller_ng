@@ -82,12 +82,12 @@ module VCAP
       end.from_self.freeze
 
       class View < Sequel::Model(VIEW)
-        plugin :single_table_inheritance,
-               :type,
-               model_map: {
-                 'app' => 'VCAP::CloudController::ServiceBinding',
-                 'key' => 'VCAP::CloudController::ServiceKey'
-               }
+        def self.call(values)
+          case values[:type]
+          when Types::SERVICE_KEY then ServiceKey.call(values)
+          when Types::SERVICE_BINDING then ServiceBinding.call(values)
+          end
+        end
 
         # Custom eager loading: https://github.com/jeremyevans/sequel/blob/master/doc/advanced_associations.rdoc#label-Custom+Eager+Loaders
         many_to_one :service_instance_sti_eager_load,
