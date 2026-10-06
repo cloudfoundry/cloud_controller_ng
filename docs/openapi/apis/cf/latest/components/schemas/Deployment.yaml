@@ -80,7 +80,7 @@ allOf:
       type: object
       properties:
         guid:
-          type: string
+          type: [string, "null"]
           format: uuid
       description: "The app\u2019s [current droplet guid](#get-current-droplet-association-for-an-app) before the deployment was created"
     new_processes:
