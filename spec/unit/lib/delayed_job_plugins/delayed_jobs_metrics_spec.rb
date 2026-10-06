@@ -19,6 +19,9 @@ RSpec.describe DelayedJobMetrics::Plugin do
 
   it 'processes a job and updates Prometheus metrics with simulated time delay' do
     Timecop.freeze(Time.now) do
+      # Clear leaked jobs so work_off picks the one enqueued below.
+      Delayed::Job.delete_all
+
       events_cleanup_job = VCAP::CloudController::Jobs::Runtime::EventsCleanup.new(10_000)
       VCAP::CloudController::Jobs::Enqueuer.new({ queue: VCAP::CloudController::Jobs::Queues.generic }).enqueue(events_cleanup_job)
 
