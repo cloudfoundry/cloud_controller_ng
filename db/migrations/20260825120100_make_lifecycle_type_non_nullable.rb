@@ -7,7 +7,7 @@ Sequel.migration do
         transaction do
           run("ALTER TABLE #{table} ALTER COLUMN lifecycle_type SET DEFAULT 'buildpack'")
           alter_table(table) do
-            add_constraint({ name: :"#{table}_lifecycle_type_not_null", not_valid: true }) do
+            add_constraint({ name: :"#{table}_lifecycle_type_not_null", not_valid: true, if_not_exists: true }) do
               Sequel.lit('lifecycle_type IS NOT NULL')
             end
           end
@@ -19,7 +19,7 @@ Sequel.migration do
 
         transaction do
           run("ALTER TABLE #{table} ALTER COLUMN lifecycle_type SET NOT NULL")
-          alter_table(table) { drop_constraint(:"#{table}_lifecycle_type_not_null") }
+          alter_table(table) { drop_constraint(:"#{table}_lifecycle_type_not_null", if_exists: true) }
         end
       else
         alter_table(table) do

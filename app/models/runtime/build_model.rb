@@ -55,17 +55,6 @@ module VCAP::CloudController
       validates_includes Lifecycles::TYPES, :lifecycle_type
     end
 
-    def before_create
-      # Inherit lifecycle_type from associated app if not explicitly set
-      self[:lifecycle_type] = app&.lifecycle_type if self[:lifecycle_type].blank?
-
-      super
-    end
-
-    def lifecycle_type
-      self[:lifecycle_type]
-    end
-
     def buildpack_lifecycle?
       lifecycle_type == BuildpackLifecycleDataModel::LIFECYCLE_TYPE
     end

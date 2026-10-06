@@ -49,13 +49,6 @@ module VCAP::CloudController
     serializes_via_json :process_types
     serializes_via_json :sidecars
 
-    def before_create
-      # Inherit lifecycle_type from associated app if not explicitly set
-      self[:lifecycle_type] = app&.lifecycle_type if self[:lifecycle_type].blank?
-
-      super
-    end
-
     def around_destroy
       yield
     rescue Sequel::ForeignKeyConstraintViolation => e
@@ -173,10 +166,6 @@ module VCAP::CloudController
       self.error_id = reason
       self.error_description = CloudController::Errors::ApiError.new_from_details(reason, details).message
       save_changes(raise_on_save_failure: true)
-    end
-
-    def lifecycle_type
-      self[:lifecycle_type]
     end
 
     def lifecycle_data

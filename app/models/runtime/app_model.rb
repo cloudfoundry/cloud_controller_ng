@@ -97,10 +97,6 @@ module VCAP::CloudController
       validates_includes Lifecycles::TYPES, :lifecycle_type
     end
 
-    def lifecycle_type
-      self[:lifecycle_type]
-    end
-
     def lifecycle_data
       # The lifecycle_data row can be destroyed independently of this
       # app; fall back to a frozen empty instance so callers never see
