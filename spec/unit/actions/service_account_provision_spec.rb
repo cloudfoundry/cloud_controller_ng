@@ -39,6 +39,14 @@ module VCAP::CloudController
       expect(User.where(guid: account.client_id).count).to eq(1)
     end
 
+    it 'accepts UAA normalized inert scope during disable reconciliation' do
+      account.update(enabled: false)
+      allow(clients).to receive(:get).and_return(registration.merge('scope' => ['uaa.none']))
+      expect(clients).to receive(:delete).with(:client, account.client_id)
+      action.deprovision(account)
+      expect(account.reload.status).to eq('disabled')
+    end
+
     it 'does not adopt an existing unmanaged client even if its SAN matches' do
       allow(clients).to receive(:get).and_return(registration.except('cf_service_account_guid'))
       expect(clients).not_to receive(:add)
