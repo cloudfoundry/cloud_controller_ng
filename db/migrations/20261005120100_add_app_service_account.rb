@@ -2,8 +2,18 @@ Sequel.migration do
   no_transaction
 
   up do
+    options = { size: 255 }
+    if database_type == :mysql
+      parent = fetch("SHOW FULL COLUMNS FROM service_accounts LIKE 'guid'").first
+      options[:collate] = parent[:Collation] || parent[:collation]
+    end
+    existing_column = schema(:apps).any? { |name, _| name == :service_account_guid }
     alter_table :apps do
-      add_column :service_account_guid, String, size: 255
+      if existing_column
+        set_column_type :service_account_guid, String, **options, size: 255
+      else
+        add_column :service_account_guid, String, **options, size: 255
+      end
       add_foreign_key [:service_account_guid], :service_accounts, key: :guid, name: :fk_apps_service_account_guid
     end
     VCAP::Migration.with_concurrent_timeout(self) do
