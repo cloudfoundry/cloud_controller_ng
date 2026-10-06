@@ -16,7 +16,7 @@ module Sequel::DelayedJobsLogRedaction
 
     sql = sql.gsub(/("?handler"?\s*=\s*)'(?:[^']|'')*'/i, "\\1#{REDACTED}")
 
-    sql.gsub(/'--- !ruby\/object:(?:[^']|'')*'/, REDACTED)
+    sql.gsub(%r{'--- !ruby/object:(?:[^']|'')*'}, REDACTED)
   end
 end
 
