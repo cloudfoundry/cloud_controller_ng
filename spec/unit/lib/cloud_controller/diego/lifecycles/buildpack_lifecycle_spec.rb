@@ -3,7 +3,7 @@ require_relative 'lifecycle_shared'
 
 module VCAP::CloudController
   RSpec.describe BuildpackLifecycle do
-    let(:app) { AppModel.create(name: 'some-app', space: create(:space)) }
+    let(:app) { AppModel.create(name: 'some-app', space: create(:space), lifecycle_type: 'buildpack') }
     let!(:package) { create(:package_model, type: PackageModel::BITS_TYPE, app: app) }
     let(:staging_message) { BuildCreateMessage.new(lifecycle: { data: request_data, type: 'buildpack' }) }
     let(:request_data) { {} }

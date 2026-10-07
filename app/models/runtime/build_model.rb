@@ -55,24 +55,6 @@ module VCAP::CloudController
       validates_includes Lifecycles::TYPES, :lifecycle_type
     end
 
-    def before_create
-      # Inherit lifecycle_type from associated app if not explicitly set
-      self[:lifecycle_type] = app&.lifecycle_type if self[:lifecycle_type].blank?
-
-      super
-    end
-
-    def lifecycle_type
-      return self[:lifecycle_type] if self[:lifecycle_type].present?
-
-      # Fallback for records written before the lifecycle_type column
-      # existed. Remove once existing rows are backfilled (see #5067).
-      return BuildpackLifecycleDataModel::LIFECYCLE_TYPE if buildpack_lifecycle_data
-      return CNBLifecycleDataModel::LIFECYCLE_TYPE if cnb_lifecycle_data
-
-      DockerLifecycleDataModel::LIFECYCLE_TYPE
-    end
-
     def buildpack_lifecycle?
       lifecycle_type == BuildpackLifecycleDataModel::LIFECYCLE_TYPE
     end
