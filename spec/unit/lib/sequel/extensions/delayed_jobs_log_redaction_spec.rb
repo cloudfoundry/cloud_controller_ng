@@ -50,6 +50,16 @@ RSpec.describe Sequel::DelayedJobsLogRedaction do
       expect(logs.string).not_to include('s3cr3t-value')
     end
 
+    it 'redacts handlers serialized with a non-object ruby tag (e.g. !ruby/struct)' do
+      handler = "--- !ruby/struct:SomeJob\n  :systempassword: s3cr3t-value\n"
+      sql = %(INSERT INTO "delayed_jobs" ("queue", "handler") ) +
+            %(VALUES ('cc-generic', '#{handler}'))
+      db.log_connection_yield(sql, nil) {}
+
+      expect(logs.string).to include('[REDACTED]')
+      expect(logs.string).not_to include('s3cr3t-value')
+    end
+
     it 'redacts the handler value on UPDATE (retry path) but keeps other columns' do
       sql = %(UPDATE "delayed_jobs" SET "handler" = ) +
             %('--- !ruby/object:Foo :systempassword: s3cr3t-value', "attempts" = 7 WHERE "id" = 71)

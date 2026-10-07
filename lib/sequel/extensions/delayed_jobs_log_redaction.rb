@@ -21,7 +21,8 @@ module Sequel::DelayedJobsLogRedaction
 
     sql = sql.gsub(/("?handler"?\s*=\s*)'(?:[^']|'')*'/i, "\\1#{REDACTED}")
 
-    sql.gsub(%r{'--- !ruby/object:(?:[^']|'')*'}, REDACTED)
+    # INSERT: the handler always starts with the '--- !ruby' document marker.
+    sql.gsub(/'--- !ruby(?:[^']|'')*'/, REDACTED)
   end
 
   # Replace a bound-args value whose inspected form contains a serialized handler.
