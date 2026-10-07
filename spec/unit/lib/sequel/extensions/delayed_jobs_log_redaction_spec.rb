@@ -60,6 +60,33 @@ RSpec.describe Sequel::DelayedJobsLogRedaction do
       expect(logs.string).not_to include('s3cr3t-value')
     end
 
+    it 'redacts MySQL backtick-quoted delayed_jobs statements' do
+      sql = %(INSERT INTO `delayed_jobs` (`queue`, `handler`) ) +
+            %(VALUES ('cc-generic', '--- !ruby/object:Foo systempassword: s3cr3t-value'))
+      db.log_connection_yield(sql, nil) {}
+
+      expect(logs.string).to include('[REDACTED]')
+      expect(logs.string).not_to include('s3cr3t-value')
+    end
+
+    it 'redacts MySQL backtick-quoted UPDATE handler column' do
+      sql = %(UPDATE `delayed_jobs` SET `handler` = ) +
+            %('--- !ruby/object:Foo systempassword: s3cr3t-value', `attempts` = 7)
+      db.log_connection_yield(sql, nil) {}
+
+      expect(logs.string).to include('[REDACTED]')
+      expect(logs.string).not_to include('s3cr3t-value')
+    end
+
+    it 'redacts schema-qualified delayed_jobs statements' do
+      sql = %(UPDATE "public"."delayed_jobs" SET "handler" = ) +
+            %('--- !ruby/object:Foo systempassword: s3cr3t-value')
+      db.log_connection_yield(sql, nil) {}
+
+      expect(logs.string).to include('[REDACTED]')
+      expect(logs.string).not_to include('s3cr3t-value')
+    end
+
     it 'redacts the handler value on UPDATE (retry path) but keeps other columns' do
       sql = %(UPDATE "delayed_jobs" SET "handler" = ) +
             %('--- !ruby/object:Foo :systempassword: s3cr3t-value', "attempts" = 7 WHERE "id" = 71)
