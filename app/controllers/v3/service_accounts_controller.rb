@@ -6,6 +6,7 @@ require 'messages/apps_list_message'
 require 'fetchers/app_list_fetcher'
 require 'presenters/v3/app_presenter'
 require 'repositories/service_account_event_repository'
+require 'actions/service_account_creation_budget'
 
 class ServiceAccountsController < ApplicationController
   def index
@@ -42,9 +43,11 @@ class ServiceAccountsController < ApplicationController
 
     account = nil
     ServiceAccountModel.db.transaction do
-      account = ServiceAccountModel.create(name: message.name, space: space)
-      apply_metadata(account, message)
-      Repositories::ServiceAccountEventRepository.record(account, 'create', user_audit_info)
+      ServiceAccountCreationBudget.consume(current_user, exempt: permission_queryer.can_write_globally?) do
+        account = ServiceAccountModel.create(name: message.name, space: space)
+        apply_metadata(account, message)
+        Repositories::ServiceAccountEventRepository.record(account, 'create', user_audit_info)
+      end
     end
     render status: :created, json: Presenters::V3::ServiceAccountPresenter.new(account)
   rescue Sequel::ValidationFailed => e

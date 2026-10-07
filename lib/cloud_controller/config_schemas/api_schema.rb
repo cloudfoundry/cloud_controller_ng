@@ -32,6 +32,7 @@ module VCAP::CloudController
           optional(:custom_root_links) => Array,
           optional(:service_account_provisioning_enabled) => bool,
           optional(:service_account_runtime_enabled) => bool,
+          optional(:service_account_creation_limit) => Integer,
           optional(:service_account_token_endpoint) => String,
           optional(:service_account_provisioning) => {
             client_id: String,

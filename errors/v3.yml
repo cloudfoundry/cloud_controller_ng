@@ -13,6 +13,11 @@
   http_code: 409
   message: "%s"
 
+10019:
+  name: ServiceAccountCreationLimitExceeded
+  http_code: 429
+  message: "Service account creation budget exhausted for this principal; retry when creations leave the rolling seven-day window"
+
 270010:
   name: ServiceBrokerNotRemovable
   http_code: 422

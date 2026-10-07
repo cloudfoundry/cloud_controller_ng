@@ -40,6 +40,15 @@ Minimal creation body (permitted roles: owning-space manager or platform admin):
 Optional creation fields are `description` and standard `metadata.labels` and
 `metadata.annotations`. Metadata updates use the normal merge/removal semantics.
 
+Operators can set `service_account_creation_limit` in API configuration to a
+nonnegative maximum successful creations per authenticated principal over a rolling
+seven-day window. Omitted or `-1` means unlimited; `0` disables non-admin creation.
+The budget spans all spaces and includes automation clients, but platform admins
+and admin automation are exempt. Exhaustion returns 429
+`CF-ServiceAccountCreationLimitExceeded`. Failed creation consumes nothing;
+deletion does not refund the budget. Accounting is independent of account deletion
+and audit-event retention, and concurrent requests share one atomic budget.
+
 Example account object:
 
 ```json
