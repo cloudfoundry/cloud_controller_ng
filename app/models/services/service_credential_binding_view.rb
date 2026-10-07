@@ -85,8 +85,8 @@ module VCAP
         plugin :single_table_inheritance,
                :type,
                model_map: {
-                 'app' => 'VCAP::CloudController::ServiceBinding',
-                 'key' => 'VCAP::CloudController::ServiceKey'
+                 'app' => VCAP::CloudController::ServiceBinding,
+                 'key' => VCAP::CloudController::ServiceKey
                }
 
         # Custom eager loading: https://github.com/jeremyevans/sequel/blob/master/doc/advanced_associations.rdoc#label-Custom+Eager+Loaders
