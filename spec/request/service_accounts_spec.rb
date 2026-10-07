@@ -30,6 +30,99 @@ RSpec.describe 'Service accounts' do
     expect(last_response.status).to eq(201)
   end
 
+  context 'weekly creation budget' do
+    before { TestConfig.override(service_account_creation_limit: 1) }
+
+    it 'limits a principal across spaces without refunding deleted accounts' do
+      auth = headers('space_manager')
+      post '/v3/service_accounts', body.to_json, auth
+      expect(last_response.status).to eq(201)
+      VCAP::CloudController::ServiceAccountModel.first.destroy
+      other_space = create(:space, organization: org)
+      other_space.add_manager(user)
+      other_body = { name: 'other-worker', relationships: { space: { data: { guid: other_space.guid } } } }
+
+      post '/v3/service_accounts', other_body.to_json, auth
+
+      expect(last_response.status).to eq(429)
+      expect(Oj.load(last_response.body).dig('errors', 0, 'title')).to eq('CF-ServiceAccountCreationLimitExceeded')
+      expect(VCAP::CloudController::ServiceAccountModel.count).to eq(0)
+    end
+
+    it 'uses a rolling seven-day window' do
+      auth = headers('space_manager')
+      Timecop.freeze(Time.utc(2026, 10, 1)) do
+        post '/v3/service_accounts', body.to_json, auth
+        expect(last_response.status).to eq(201)
+      end
+      Timecop.freeze(Time.utc(2026, 10, 7, 23, 59, 59)) do
+        post '/v3/service_accounts', body.merge(name: 'second-worker').to_json, auth
+        expect(last_response.status).to eq(429)
+      end
+      Timecop.freeze(Time.utc(2026, 10, 8)) do
+        post '/v3/service_accounts', body.merge(name: 'second-worker').to_json, auth
+        expect(last_response.status).to eq(201)
+      end
+    end
+
+    it 'does not consume budget on a failed creation' do
+      auth = headers('space_manager')
+      VCAP::CloudController::ServiceAccountModel.create(name: body[:name], space: space)
+      post '/v3/service_accounts', body.to_json, auth
+      expect(last_response.status).to eq(409)
+      post '/v3/service_accounts', body.merge(name: 'second-worker').to_json, auth
+      expect(last_response.status).to eq(201)
+      post '/v3/service_accounts', body.merge(name: 'third-worker').to_json, auth
+      expect(last_response.status).to eq(429)
+    end
+
+    it 'does not share budget between principals' do
+      post '/v3/service_accounts', body.to_json, headers('space_manager')
+      expect(last_response.status).to eq(201)
+      other_user = create(:user)
+      auth = set_user_with_header_as_role(role: 'space_manager', org: org, space: space, user: other_user)
+      post '/v3/service_accounts', body.merge(name: 'second-worker').to_json, auth
+      expect(last_response.status).to eq(201)
+    end
+
+    it 'supports explicit unlimited configuration' do
+      TestConfig.override(service_account_creation_limit: -1)
+      auth = headers('space_manager')
+      %w[first-worker second-worker].each do |name|
+        post '/v3/service_accounts', body.merge(name: name).to_json, auth
+        expect(last_response.status).to eq(201)
+      end
+    end
+
+    it 'exempts platform admins even when the configured budget is zero' do
+      TestConfig.override(service_account_creation_limit: 0)
+      auth = headers('admin')
+      %w[first-worker second-worker].each do |name|
+        post '/v3/service_accounts', body.merge(name: name).to_json, auth
+        expect(last_response.status).to eq(201)
+      end
+      post '/v3/service_accounts', body.to_json, headers('space_manager')
+      expect(last_response.status).to eq(429)
+    end
+
+    it 'applies to non-admin automation clients and exempts admin automation' do
+      user.update(is_oauth_client: true)
+      org.add_user(user)
+      space.add_manager(user)
+      coder = CF::UAA::TokenCoder.new(audience_ids: TestConfig.config[:uaa][:resource_id], skey: TestConfig.config[:uaa][:symmetric_secret], pkey: nil)
+      token = { client_id: user.guid, scope: %w[cloud_controller.read cloud_controller.write], jti: 'automation', iss: UAAIssuer::ISSUER }
+      auth = base_json_headers('HTTP_AUTHORIZATION' => "bearer #{coder.encode(token)}")
+      post '/v3/service_accounts', body.to_json, auth
+      expect(last_response.status).to eq(201)
+      post '/v3/service_accounts', body.merge(name: 'second-worker').to_json, auth
+      expect(last_response.status).to eq(429)
+      token[:scope] << 'cloud_controller.admin'
+      admin_auth = base_json_headers('HTTP_AUTHORIZATION' => "bearer #{coder.encode(token)}")
+      post '/v3/service_accounts', body.merge(name: 'second-worker').to_json, admin_auth
+      expect(last_response.status).to eq(201)
+    end
+  end
+
   it 'denies a space developer account-creation authority' do
     post '/v3/service_accounts', body.to_json, headers('space_developer')
     expect(last_response.status).to eq(403)
