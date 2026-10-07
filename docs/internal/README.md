@@ -42,7 +42,7 @@ Auth mechanisms below:
 
 **Intended Consumer:** SSH Proxy
 
-**Auth Mechanism:** OAuth
+**Auth Mechanism:** mTLS and OAuth. The endpoint is served on the mutual-TLS listener (`cc.tls_port`, default `9023`), where the SSH Proxy authenticates with a client certificate. For backwards compatibility it also remains available over OAuth on the public listeners (`cc.external_port`, default `9022`, and `cc.public_tls.port`, default `9024`).
 
 **Routing:** Public listeners (`cc.public_tls.port` 9024; also `cc.external_port` 9022). The path `/internal/apps/...` does not match the public listener's `/internal/v` forbid rule, so it is proxied to CC and authenticated in-app.
 
