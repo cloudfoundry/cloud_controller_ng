@@ -46,7 +46,7 @@ module VCAP::CloudController
         it 'includes non-sensitive identifying fields' do
           h = job.hash_for_logs
           expect(h).to include(
-            operation: :provision,
+            operation: 'provision',
             operation_type: 'create',
             resource_type: 'service_instances',
             resource_guid: service_instance.guid,

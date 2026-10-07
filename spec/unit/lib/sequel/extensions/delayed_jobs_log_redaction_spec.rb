@@ -97,13 +97,23 @@ RSpec.describe Sequel::DelayedJobsLogRedaction do
       expect(logs.string).to include('"attempts" = 7')
     end
 
-    it 'leaves last_error intact for debugging' do
-      sql = %(UPDATE "delayed_jobs" SET "last_error" = 'RuntimeError: broker returned 500\nbacktrace line 1', ) +
+    it 'redacts last_error but keeps non-sensitive columns' do
+      sql = %(UPDATE "delayed_jobs" SET "last_error" = 'broker 400: systempassword=s3cr3t-value', ) +
             %("attempts" = 2 WHERE "id" = 71)
       db.log_connection_yield(sql, nil) {}
 
-      expect(logs.string).to include('RuntimeError: broker returned 500')
-      expect(logs.string).not_to include('[REDACTED]')
+      expect(logs.string).to include('[REDACTED]')
+      expect(logs.string).not_to include('s3cr3t-value')
+      expect(logs.string).to include('"attempts" = 2')
+    end
+
+    it 'redacts cf_api_error (broker/API errors can echo submitted parameters)' do
+      sql = %(UPDATE "delayed_jobs" SET "cf_api_error" = 'provision failed: systempassword=s3cr3t-value' ) +
+            %(WHERE "id" = 71)
+      db.log_connection_yield(sql, nil) {}
+
+      expect(logs.string).to include('[REDACTED]')
+      expect(logs.string).not_to include('s3cr3t-value')
     end
 
     it 'leaves statements for other tables untouched' do
@@ -121,6 +131,29 @@ RSpec.describe Sequel::DelayedJobsLogRedaction do
 
       expect(logs.string).to include('[REDACTED]')
       expect(logs.string).not_to include('s3cr3t-value')
+    end
+
+    # The base Sequel logger appends "; #{args.inspect}" when a statement is logged with
+    # bound args (prepared statements). Redact there too, for any !ruby tag.
+    ['!ruby/object:', '!ruby/struct:', '!ruby/hash:'].each do |tag|
+      it "redacts a serialized handler passed via bound args (#{tag})" do
+        sql = 'INSERT INTO "delayed_jobs" ("handler") VALUES ($1)'
+        db.log_connection_yield(sql, nil, ["--- #{tag}Foo systempassword: s3cr3t-value"]) {}
+
+        expect(logs.string).to include('[REDACTED]')
+        expect(logs.string).not_to include('s3cr3t-value')
+      end
+    end
+
+    it 'redacts only the handler element of bound args, keeping other values' do
+      sql = 'INSERT INTO "delayed_jobs" ("queue","guid","handler","run_at") VALUES ($1,$2,$3,$4)'
+      args = ['cc-generic', 'guid-123', '--- !ruby/object:Foo systempassword: s3cr3t-value', '2026-10-07 11:00:00']
+      db.log_connection_yield(sql, nil, args) {}
+
+      expect(logs.string).not_to include('s3cr3t-value')
+      expect(logs.string).to include('cc-generic')
+      expect(logs.string).to include('guid-123')
+      expect(logs.string).to include('2026-10-07 11:00:00')
     end
   end
 end

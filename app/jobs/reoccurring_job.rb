@@ -42,7 +42,7 @@ module VCAP::CloudController
       def hash_for_logs
         audit_info = __send__(:user_audit_info) if respond_to?(:user_audit_info, true)
         {
-          operation: (operation if respond_to?(:operation)),
+          operation: (operation.to_s if respond_to?(:operation)),
           operation_type: (operation_type if respond_to?(:operation_type)),
           resource_type: (resource_type if respond_to?(:resource_type)),
           resource_guid: (resource_guid if respond_to?(:resource_guid)),
