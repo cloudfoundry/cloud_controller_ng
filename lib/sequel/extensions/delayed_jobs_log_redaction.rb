@@ -5,7 +5,12 @@ module Sequel::DelayedJobsLogRedaction
   REDACTED = "'[REDACTED]'"
 
   def log_connection_yield(sql, conn, args=nil)
-    sql = redact_delayed_jobs(sql) if @loggers.any? && sql.include?('delayed_jobs')
+    if @loggers.any? && sql.include?('delayed_jobs')
+      sql = redact_delayed_jobs(sql)
+      # Sequel's base logger appends "; #{args.inspect}" to the logged line. If bound args
+      # carry the serialized handler, redact there too.
+      args = redact_args(args) if args && args.inspect.include?('!ruby/object:')
+    end
     super
   end
 
@@ -17,6 +22,12 @@ module Sequel::DelayedJobsLogRedaction
     sql = sql.gsub(/("?handler"?\s*=\s*)'(?:[^']|'')*'/i, "\\1#{REDACTED}")
 
     sql.gsub(%r{'--- !ruby/object:(?:[^']|'')*'}, REDACTED)
+  end
+
+  # Replace a bound-args value whose inspected form contains a serialized handler.
+  # Returns a plain string so the base logger's args.inspect cannot expose the payload.
+  def redact_args(_args)
+    '[REDACTED]'
   end
 end
 

@@ -231,6 +231,29 @@ module VCAP::CloudController
             expect(job.hash_for_logs).not_to have_key(:arbitrary_parameters)
           end
         end
+
+        context 'when the handler itself responds to hash_for_logs' do
+          let(:handler) { double(:job, display_name: 'd', resource_type: 't', resource_guid: 'g', hash_for_logs: { operation: :provision, retry_number: 2 }) }
+
+          it 'merges the handler fields into the result' do
+            job = WrappingJob.new(handler)
+            expect(job.hash_for_logs).to include(
+              job_class: handler.class.name,
+              display_name: 'd',
+              operation: :provision,
+              retry_number: 2
+            )
+          end
+        end
+
+        context 'when the handler returns a key that also exists on the base hash' do
+          let(:handler) { double(:job, display_name: 'd', resource_type: 't', resource_guid: 'base-g', hash_for_logs: { resource_guid: 'inner-g' }) }
+
+          it 'lets the inner handler value win' do
+            job = WrappingJob.new(handler)
+            expect(job.hash_for_logs[:resource_guid]).to eq('inner-g')
+          end
+        end
       end
 
       describe '#recover_from_failure' do
