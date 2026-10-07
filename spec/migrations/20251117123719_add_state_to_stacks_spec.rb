@@ -2,8 +2,6 @@ require 'spec_helper'
 require 'migrations/helpers/migration_shared_context'
 
 RSpec.describe 'migration to add state column to stacks table', isolation: :truncation, type: :migration do
-  subject(:run_migration) { Sequel::Migrator.run(db, migrations_path, target: current_migration_index, allow_missing_migration_files: true) }
-
   include_context 'migration' do
     let(:migration_filename) { '20251117123719_add_state_to_stacks.rb' }
   end
@@ -33,14 +31,14 @@ RSpec.describe 'migration to add state column to stacks table', isolation: :trun
     end
 
     # Verify UP is idempotent
-    expect { Sequel::Migrator.run(db, migrations_path, target: current_migration_index, allow_missing_migration_files: true) }.not_to raise_error
+    test_up_migration_idempotency
 
     # Run migration DOWN
-    Sequel::Migrator.run(db, migrations_path, target: current_migration_index - 1, allow_missing_migration_files: true)
+    revert_migration
     expect(db[:stacks].columns).not_to include(:state)
 
     # Verify DOWN is idempotent
-    expect { Sequel::Migrator.run(db, migrations_path, target: current_migration_index - 1, allow_missing_migration_files: true) }.not_to raise_error
+    test_down_migration_idempotency
     expect(db[:stacks].columns).not_to include(:state)
   end
 end

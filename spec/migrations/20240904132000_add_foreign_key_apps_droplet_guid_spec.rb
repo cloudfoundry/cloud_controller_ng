@@ -21,7 +21,7 @@ RSpec.describe "migration to add foreign key on column 'droplet_guid' in table '
       db[:apps].insert(guid: 'app_guid', droplet_guid: 'droplet_guid')
       db[:apps].insert(guid: 'another_app_guid', droplet_guid: 'not_exists')
 
-      Sequel::Migrator.run(db, migrations_path, target: current_migration_index, allow_missing_migration_files: true)
+      run_migration
 
       # After migration: prevents inserts with non-existent droplet_guid
       expect { db[:apps].insert(guid: 'app_guid_new', droplet_guid: 'not_exists') }.to raise_error(Sequel::ForeignKeyConstraintViolation)

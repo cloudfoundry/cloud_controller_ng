@@ -14,7 +14,7 @@ RSpec.describe 'migration to add composite indexes to events table', isolation: 
       expect(db.indexes(:events)).not_to include(:events_organization_guid_created_at_guid_index)
 
       # Test up migration
-      expect { Sequel::Migrator.run(db, migrations_path, target: current_migration_index, allow_missing_migration_files: true) }.not_to raise_error
+      expect { run_migration }.not_to raise_error
 
       expect(db.indexes(:events)).to include(:events_actee_created_at_guid_index)
       expect(db.indexes(:events)).to include(:events_space_guid_created_at_guid_index)
@@ -26,19 +26,19 @@ RSpec.describe 'migration to add composite indexes to events table', isolation: 
       expect(db.indexes(:events)[:events_organization_guid_created_at_guid_index][:columns]).to eq(%i[organization_guid created_at guid])
 
       # Test up migration idempotency: running again should not fail
-      expect { Sequel::Migrator.run(db, migrations_path, target: current_migration_index, allow_missing_migration_files: true) }.not_to raise_error
+      test_up_migration_idempotency
       expect(db.indexes(:events)).to include(:events_actee_created_at_guid_index)
       expect(db.indexes(:events)).to include(:events_space_guid_created_at_guid_index)
       expect(db.indexes(:events)).to include(:events_organization_guid_created_at_guid_index)
 
       # Test down migration
-      expect { Sequel::Migrator.run(db, migrations_path, target: current_migration_index - 1, allow_missing_migration_files: true) }.not_to raise_error
+      expect { revert_migration }.not_to raise_error
       expect(db.indexes(:events)).not_to include(:events_actee_created_at_guid_index)
       expect(db.indexes(:events)).not_to include(:events_space_guid_created_at_guid_index)
       expect(db.indexes(:events)).not_to include(:events_organization_guid_created_at_guid_index)
 
       # Test down migration idempotency: running again should not fail
-      expect { Sequel::Migrator.run(db, migrations_path, target: current_migration_index - 1, allow_missing_migration_files: true) }.not_to raise_error
+      test_down_migration_idempotency
       expect(db.indexes(:events)).not_to include(:events_actee_created_at_guid_index)
       expect(db.indexes(:events)).not_to include(:events_space_guid_created_at_guid_index)
       expect(db.indexes(:events)).not_to include(:events_organization_guid_created_at_guid_index)

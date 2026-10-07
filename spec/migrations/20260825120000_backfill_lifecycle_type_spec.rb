@@ -36,7 +36,7 @@ RSpec.describe 'migration to backfill lifecycle_type on apps, droplets, and buil
   end
 
   it 'backfills lifecycle_type for apps, droplets, and builds, does not overwrite existing values, and prefers buildpack over cnb' do
-    Sequel::Migrator.run(db, migrations_path, target: current_migration_index, allow_missing_migration_files: true)
+    run_migration
 
     expect(db[:apps].first(guid: 'buildpack-app-guid')[:lifecycle_type]).to eq('buildpack')
     expect(db[:apps].first(guid: 'cnb-app-guid')[:lifecycle_type]).to eq('cnb')
@@ -52,6 +52,6 @@ RSpec.describe 'migration to backfill lifecycle_type on apps, droplets, and buil
     expect(db[:builds].first(guid: 'cnb-build-guid')[:lifecycle_type]).to eq('cnb')
     expect(db[:builds].first(guid: 'docker-build-guid')[:lifecycle_type]).to eq('docker')
 
-    expect { Sequel::Migrator.run(db, migrations_path, target: current_migration_index, allow_missing_migration_files: true) }.not_to raise_error
+    test_up_migration_idempotency
   end
 end

@@ -21,7 +21,7 @@ RSpec.describe 'migration to add status column to spaces table', isolation: :tru
 
       expect(db[:spaces].columns).not_to include(:status)
 
-      Sequel::Migrator.run(db, migrations_path, target: current_migration_index, allow_missing_migration_files: true)
+      run_migration
 
       expect(db[:spaces].columns).to include(:status)
 
@@ -30,16 +30,12 @@ RSpec.describe 'migration to add status column to spaces table', isolation: :tru
       db[:spaces].insert(guid: 'new-space-guid', name: 'new-space', organization_id: org_id)
       expect(db[:spaces].first(guid: 'new-space-guid')[:status]).to eq('active')
 
-      expect do
-        Sequel::Migrator.run(db, migrations_path, target: current_migration_index, allow_missing_migration_files: true)
-      end.not_to raise_error
+      test_up_migration_idempotency
 
-      Sequel::Migrator.run(db, migrations_path, target: current_migration_index - 1, allow_missing_migration_files: true)
+      revert_migration
       expect(db[:spaces].columns).not_to include(:status)
 
-      expect do
-        Sequel::Migrator.run(db, migrations_path, target: current_migration_index - 1, allow_missing_migration_files: true)
-      end.not_to raise_error
+      test_down_migration_idempotency
     end
   end
 end

@@ -13,16 +13,21 @@ RSpec.describe 'migration to make lifecycle_type non-nullable on apps, droplets,
   end
 
   it 'makes lifecycle_type non-nullable, is reversible, and is idempotent' do
-    Sequel::Migrator.run(db, migrations_path, target: current_migration_index, allow_missing_migration_files: true)
+    run_migration
 
     expect(db.schema(:apps).find { |col| col[0] == :lifecycle_type }[1][:allow_null]).to be false
     expect(db.schema(:droplets).find { |col| col[0] == :lifecycle_type }[1][:allow_null]).to be false
     expect(db.schema(:builds).find { |col| col[0] == :lifecycle_type }[1][:allow_null]).to be false
 
-    expect { Sequel::Migrator.run(db, migrations_path, target: current_migration_index, allow_missing_migration_files: true) }.not_to raise_error
+    test_up_migration_idempotency
 
-    Sequel::Migrator.run(db, migrations_path, target: current_migration_index - 1, allow_missing_migration_files: true)
+    revert_migration
 
+    expect(db.schema(:apps).find { |col| col[0] == :lifecycle_type }[1][:allow_null]).to be true
+    expect(db.schema(:droplets).find { |col| col[0] == :lifecycle_type }[1][:allow_null]).to be true
+    expect(db.schema(:builds).find { |col| col[0] == :lifecycle_type }[1][:allow_null]).to be true
+
+    test_down_migration_idempotency
     expect(db.schema(:apps).find { |col| col[0] == :lifecycle_type }[1][:allow_null]).to be true
     expect(db.schema(:droplets).find { |col| col[0] == :lifecycle_type }[1][:allow_null]).to be true
     expect(db.schema(:builds).find { |col| col[0] == :lifecycle_type }[1][:allow_null]).to be true

@@ -11,7 +11,7 @@ RSpec.describe 'migration to add lifecycle_type to apps', isolation: :truncation
     expect(db.indexes(:apps)).not_to have_key(:apps_lifecycle_type_index)
 
     # up
-    Sequel::Migrator.run(db, migrations_path, target: current_migration_index, allow_missing_migration_files: true)
+    run_migration
 
     expect(db.schema(:apps).map(&:first)).to include(:lifecycle_type)
     expect(db.indexes(:apps)).to have_key(:apps_lifecycle_type_index)
@@ -21,15 +21,15 @@ RSpec.describe 'migration to add lifecycle_type to apps', isolation: :truncation
     expect(lifecycle_type_column[1][:allow_null]).to be true
 
     # up is idempotent
-    expect { Sequel::Migrator.run(db, migrations_path, target: current_migration_index, allow_missing_migration_files: true) }.not_to raise_error
+    test_up_migration_idempotency
 
     # down
-    Sequel::Migrator.run(db, migrations_path, target: current_migration_index - 1, allow_missing_migration_files: true)
+    revert_migration
 
     expect(db.schema(:apps).map(&:first)).not_to include(:lifecycle_type)
     expect(db.indexes(:apps)).not_to have_key(:apps_lifecycle_type_index)
 
     # down is idempotent
-    expect { Sequel::Migrator.run(db, migrations_path, target: current_migration_index - 1, allow_missing_migration_files: true) }.not_to raise_error
+    test_down_migration_idempotency
   end
 end
