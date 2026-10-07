@@ -15,26 +15,26 @@ RSpec.describe 'migration to allow multiple service bindings', isolation: :trunc
       expect(db.indexes(:service_bindings)).not_to include(:service_bindings_app_guid_name_index)
 
       # === UP MIGRATION ===
-      expect { Sequel::Migrator.run(db, migrations_path, target: current_migration_index, allow_missing_migration_files: true) }.not_to raise_error
+      expect { run_migration }.not_to raise_error
       expect(db.indexes(:service_bindings)).not_to include(:unique_service_binding_app_guid_name)
       expect(db.indexes(:service_bindings)).not_to include(:unique_service_binding_service_instance_guid_app_guid)
       expect(db.indexes(:service_bindings)).to include(:service_bindings_app_guid_service_instance_guid_index)
       expect(db.indexes(:service_bindings)).to include(:service_bindings_app_guid_name_index)
 
       # Test up migration idempotency
-      expect { Sequel::Migrator.run(db, migrations_path, target: current_migration_index, allow_missing_migration_files: true) }.not_to raise_error
+      test_up_migration_idempotency
       expect(db.indexes(:service_bindings)).to include(:service_bindings_app_guid_service_instance_guid_index)
       expect(db.indexes(:service_bindings)).to include(:service_bindings_app_guid_name_index)
 
       # === DOWN MIGRATION ===
-      expect { Sequel::Migrator.run(db, migrations_path, target: current_migration_index - 1, allow_missing_migration_files: true) }.not_to raise_error
+      expect { revert_migration }.not_to raise_error
       expect(db.indexes(:service_bindings)).to include(:unique_service_binding_service_instance_guid_app_guid)
       expect(db.indexes(:service_bindings)).to include(:unique_service_binding_app_guid_name)
       expect(db.indexes(:service_bindings)).not_to include(:service_bindings_app_guid_service_instance_guid_index)
       expect(db.indexes(:service_bindings)).not_to include(:service_bindings_app_guid_name_index)
 
       # Test down migration idempotency
-      expect { Sequel::Migrator.run(db, migrations_path, target: current_migration_index - 1, allow_missing_migration_files: true) }.not_to raise_error
+      test_down_migration_idempotency
       expect(db.indexes(:service_bindings)).to include(:unique_service_binding_service_instance_guid_app_guid)
       expect(db.indexes(:service_bindings)).to include(:unique_service_binding_app_guid_name)
     end
