@@ -27,13 +27,88 @@ module VCAP::CloudController
         expect { space.refresh }.to raise_error Sequel::Error, 'Record not found'
       end
 
-      it 'reports owned accounts before deleting apps or other space resources' do
-        account = ServiceAccountModel.create(name: 'payments-worker', space: space)
-        errors = space_delete.delete([space])
-        expect(errors.map(&:message).join).to include('service accounts')
-        expect(AppModel.first(guid: app.guid)).not_to be_nil
-        expect(ServiceAccountModel.first(guid: account.guid)).not_to be_nil
-        expect(Space.first(guid: space.guid)).not_to be_nil
+      context 'owned service accounts' do
+        let!(:account) { ServiceAccountModel.create(name: 'payments-worker', space: space) }
+        let(:clients) { instance_double(CF::UAA::Scim) }
+        let(:provisioner) { ServiceAccountProvision.new(clients, identity_ca: 'identity-ca') }
+
+        before do
+          TestConfig.override(service_account_provisioning_enabled: true)
+          CloudController::DependencyLocator.instance.register(:service_account_provisioner, provisioner)
+          allow(clients).to receive(:get).and_raise(CF::UAA::NotFound)
+          allow(clients).to receive(:add)
+          allow(clients).to receive(:delete)
+        end
+
+        it 'deletes assigned workloads, managed clients and principals with explicit roles, retaining names' do
+          provisioner.provision(account)
+          principal = User.first(guid: account.client_id)
+          space.organization.add_user(principal)
+          space.add_auditor(principal)
+          app.update(service_account: account)
+          process = create(:process_model, app: app, state: ProcessModel::STARTED, service_account_guid: account.guid, service_account_snapshot: true)
+          task = create(:task, app: app, state: TaskModel::RUNNING_STATE, service_account_guid: account.guid, service_account_snapshot: true)
+          allow(clients).to receive(:get).and_return(provisioner.send(:registration, account))
+          allow(clients).to receive(:delete) do
+            expect(AppModel.first(guid: app.guid)).to be_nil
+            expect(ProcessModel.first(guid: process.guid)).to be_nil
+            expect(TaskModel.first(guid: task.guid)).to be_nil
+            expect(Space.first(guid: space.guid)).not_to be_nil
+          end
+
+          expect(space_delete.delete([space])).to be_empty
+
+          expect(clients).to have_received(:delete).with(:client, account.client_id)
+          expect(ServiceAccountModel.first(guid: account.guid)).to be_nil
+          expect(User.first(guid: principal.guid)).to be_nil
+          expect(Space.first(guid: space.guid)).to be_nil
+          expect(ServiceAccountModel.db[:service_account_names].where(name: account.name).count).to eq(1)
+          expect(Event.where(type: 'audit.service_account.delete', actee: account.guid).count).to eq(1)
+        end
+
+        it 'retains the space on UAA failure and allows cleanup to be retried' do
+          provisioner.provision(account)
+          app.update(service_account: account)
+          allow(clients).to receive(:get).and_return(provisioner.send(:registration, account))
+          allow(clients).to receive(:delete).and_raise('UAA unavailable')
+
+          errors = space_delete.delete([space])
+
+          expect(errors.map(&:message).join).to include('UAA unavailable')
+          expect(Space.first(guid: space.guid)).not_to be_nil
+          expect(account.reload.enabled).to be(false)
+          expect(account.status).to eq('failed')
+          allow(clients).to receive(:delete)
+          expect(space_delete.delete([space])).to be_empty
+          expect(Space.first(guid: space.guid)).to be_nil
+        end
+
+        it 'reports active account reconciliation before deleting workloads' do
+          PollableJobModel.create(resource_guid: account.guid, resource_type: 'service_account', operation: 'service_account.provision', state: 'POLLING')
+          errors = space_delete.delete([space])
+          expect(errors.map(&:message).join).to include('operation is already in progress')
+          expect(AppModel.first(guid: app.guid)).not_to be_nil
+          expect(Space.first(guid: space.guid)).not_to be_nil
+          expect(clients).not_to have_received(:delete)
+        end
+
+        it 'does not adopt or remove an unrelated UAA client' do
+          allow(clients).to receive(:get).and_return('client_id' => account.client_id, 'cf_service_account_guid' => 'someone-else')
+          errors = space_delete.delete([space])
+          expect(errors.map(&:message).join).to include('client identity collision')
+          expect(ServiceAccountModel.first(guid: account.guid)).not_to be_nil
+          expect(Space.first(guid: space.guid)).not_to be_nil
+          expect(clients).not_to have_received(:delete)
+        end
+
+        it 'retains the account and space if workload deletion fails' do
+          allow_any_instance_of(AppDelete).to receive(:delete).and_raise('workload cleanup failed')
+          errors = space_delete.delete([space])
+          expect(errors.map(&:message).join).to include('workload cleanup failed')
+          expect(ServiceAccountModel.first(guid: account.guid)).not_to be_nil
+          expect(Space.first(guid: space.guid)).not_to be_nil
+          expect(clients).not_to have_received(:delete)
+        end
       end
 
       it 'creates audit events for recursive app deletion and space deletion' do
