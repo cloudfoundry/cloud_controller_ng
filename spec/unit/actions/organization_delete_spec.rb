@@ -73,6 +73,38 @@ module VCAP::CloudController
       end
 
       describe 'recursive deletion' do
+        context 'service accounts' do
+          let!(:account) { ServiceAccountModel.create(name: 'org-worker', space: space) }
+          let(:clients) { instance_double(CF::UAA::Scim) }
+          let(:provisioner) { ServiceAccountProvision.new(clients, identity_ca: 'identity-ca') }
+
+          before do
+            TestConfig.override(service_account_provisioning_enabled: true)
+            CloudController::DependencyLocator.instance.register(:service_account_provisioner, provisioner)
+            allow(clients).to receive(:get).and_raise(CF::UAA::NotFound)
+            allow(clients).to receive(:delete)
+          end
+
+          it 'cascades account deletion through spaces and retains the name tombstone' do
+            app.update(service_account: account)
+            expect(org_delete.delete(org_dataset)).to be_empty
+            expect(ServiceAccountModel.first(guid: account.guid)).to be_nil
+            expect(Organization.first(guid: org_1.guid)).to be_nil
+            expect(ServiceAccountModel.db[:service_account_names].where(name: account.name).count).to eq(1)
+          end
+
+          it 'keeps the organization until account cleanup succeeds' do
+            allow(clients).to receive(:get).and_raise('UAA unavailable')
+            errors = org_delete.delete(org_dataset)
+            expect(errors.map(&:message).join).to include('UAA unavailable')
+            expect(Organization.first(guid: org_1.guid)).not_to be_nil
+            expect(Space.first(guid: space.guid)).not_to be_nil
+            allow(clients).to receive(:get).and_raise(CF::UAA::NotFound)
+            expect(org_delete.delete(org_dataset)).to be_empty
+            expect(Organization.first(guid: org_1.guid)).to be_nil
+          end
+        end
+
         it 'deletes any spaces in the org' do
           expect do
             org_delete.delete(org_dataset)
