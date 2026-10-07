@@ -72,10 +72,10 @@ module VCAP::CloudController
         local_opts[:run_at] = run_at if run_at
 
         delayed_job = Delayed::Job.enqueue(logging_context_job, @opts.merge(local_opts))
-        Steno.logger('cc.background').debug('enqueued background job',
-                                            job_guid: @opts['guid'],
-                                            queue: @opts[:queue],
-                                            **logging_context_job.hash_for_logs)
+        Steno.logger('cc.background').info('enqueued background job',
+                                           job_guid: @opts['guid'],
+                                           queue: @opts[:queue],
+                                           **logging_context_job.hash_for_logs)
         delayed_job
       end
 
