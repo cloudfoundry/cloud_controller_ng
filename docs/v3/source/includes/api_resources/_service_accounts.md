@@ -110,9 +110,11 @@ task snapshots. The worker rechecks usage and registration trust before removing
 the client, principal and account. The name reservation is retained permanently.
 Concurrent lifecycle operations return 409. All asynchronous operations use the
 standard job polling endpoint.
-Delete owned accounts explicitly before deleting their space. Recursive space
-deletion reports an error before deleting that space's apps or service resources
-when an account remains.
+Space/org deletion cascades owned accounts: service bindings and workloads are
+deleted before managed clients, principals/roles and accounts; name reservations
+remain. Active account operations and cleanup failures prevent final parent
+deletion and are reported by the deletion job. Retry the parent deletion after
+resolving the failure; completed cleanup is not rolled back.
 
 ## Runtime and rollout
 
