@@ -97,23 +97,14 @@ RSpec.describe Sequel::DelayedJobsLogRedaction do
       expect(logs.string).to include('"attempts" = 7')
     end
 
-    it 'redacts last_error but keeps non-sensitive columns' do
-      sql = %(UPDATE "delayed_jobs" SET "last_error" = 'broker 400: systempassword=s3cr3t-value', ) +
-            %("attempts" = 2 WHERE "id" = 71)
+    it 'leaves last_error and cf_api_error intact (needed for debugging)' do
+      sql = %(UPDATE "delayed_jobs" SET "last_error" = 'RuntimeError: broker returned 500\nbacktrace line 1', ) +
+            %("cf_api_error" = 'provision failed', "attempts" = 2 WHERE "id" = 71)
       db.log_connection_yield(sql, nil) {}
 
-      expect(logs.string).to include('[REDACTED]')
-      expect(logs.string).not_to include('s3cr3t-value')
-      expect(logs.string).to include('"attempts" = 2')
-    end
-
-    it 'redacts cf_api_error (broker/API errors can echo submitted parameters)' do
-      sql = %(UPDATE "delayed_jobs" SET "cf_api_error" = 'provision failed: systempassword=s3cr3t-value' ) +
-            %(WHERE "id" = 71)
-      db.log_connection_yield(sql, nil) {}
-
-      expect(logs.string).to include('[REDACTED]')
-      expect(logs.string).not_to include('s3cr3t-value')
+      expect(logs.string).to include('RuntimeError: broker returned 500')
+      expect(logs.string).to include('provision failed')
+      expect(logs.string).not_to include('[REDACTED]')
     end
 
     it 'leaves statements for other tables untouched' do

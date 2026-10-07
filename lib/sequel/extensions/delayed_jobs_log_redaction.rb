@@ -1,12 +1,15 @@
 # frozen_string_literal: true
 
 module Sequel::DelayedJobsLogRedaction
-  # Redact column values from any logged SQL that writes the delayed_jobs table.
+  # Redact the serialized job payload (handler) from any logged SQL that writes the
+  # delayed_jobs table. The handler is the only value whose sole log path is the SQL
+  # statement log and that carries user-submitted parameters; it has no debugging value
+  # in a log line. The error columns (cf_api_error/last_error) are intentionally NOT
+  # redacted here — they are needed for debugging and only reach the SQL log when
+  # log_db_queries is enabled.
   REDACTED = "'[REDACTED]'"
   DELAYED_JOBS_TABLE = /(?:[`"]?\w+[`"]?\.)?[`"]?delayed_jobs[`"]?/i
-  # Columns that can carry user/broker content: the serialized job payload (handler) and
-  # the error columns (a broker/API error can echo submitted parameters).
-  SENSITIVE_COLUMNS = /[`"]?(?:handler|cf_api_error|last_error)[`"]?/i
+  HANDLER_COLUMN = /[`"]?handler[`"]?/i
 
   def log_connection_yield(sql, conn, args=nil)
     if @loggers.any? && sql.downcase.include?('delayed_jobs')
@@ -23,8 +26,8 @@ module Sequel::DelayedJobsLogRedaction
   def redact_delayed_jobs(sql)
     return sql unless /\b(?:INSERT INTO|UPDATE)\s+#{DELAYED_JOBS_TABLE}/io.match?(sql)
 
-    # UPDATE "col" = '...' for any sensitive column.
-    sql = sql.gsub(/(#{SENSITIVE_COLUMNS}\s*=\s*)'(?:[^']|'')*'/io, "\\1#{REDACTED}")
+    # UPDATE "handler" = '...'
+    sql = sql.gsub(/(#{HANDLER_COLUMN}\s*=\s*)'(?:[^']|'')*'/io, "\\1#{REDACTED}")
     # INSERT: the handler is a Psych-serialized Ruby object graph, which always starts
     # with the '--- !ruby' document marker regardless of the inner tag.
     sql.gsub(/'--- !ruby(?:[^']|'')*'/i, REDACTED)
