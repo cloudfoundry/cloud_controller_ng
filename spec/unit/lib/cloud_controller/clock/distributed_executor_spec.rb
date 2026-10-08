@@ -116,12 +116,12 @@ module VCAP::CloudController
 
               DistributedExecutor.new.execute_job name: job_name, interval: 1.minute, fudge: 1.second, timeout: 5.minutes do
                 Delayed::Job.create!(queue: job_name, failed_at: nil, locked_at: Time.now)
-                counter += 1
-                Timecop.travel(Time.now.utc + 1.minute + 2.seconds)
-
-                DistributedExecutor.new.execute_job name: job_name, interval: 1.minute, fudge: 1.second, timeout: 5.minutes do
-                  counter += 2
-                end
+                  counter += 1
+                  Timecop.travel(Time.now.utc + 1.minute + 2.seconds) do
+                    DistributedExecutor.new.execute_job name: job_name, interval: 1.minute, fudge: 1.second, timeout: 5.minutes do
+                      counter += 2
+                    end
+                  end
               end
 
               expect(counter).to eq(1)
@@ -139,11 +139,12 @@ module VCAP::CloudController
                 counter = 0
 
                 DistributedExecutor.new.execute_job name: 'diego_sync', interval: 1.minute, fudge: 1.second, timeout: 5.minutes do
-                  Timecop.travel(Time.now.utc + 1.minute + 1.second)
-                  counter += 1
+                  Timecop.travel(Time.now.utc + 1.minute + 1.second) do
+                    counter += 1
 
-                  DistributedExecutor.new.execute_job name: 'diego_sync', interval: 1.minute, fudge: 1.second, timeout: 5.minutes do
-                    counter += 2
+                    DistributedExecutor.new.execute_job name: 'diego_sync', interval: 1.minute, fudge: 1.second, timeout: 5.minutes do
+                      counter += 2
+                    end
                   end
                 end
 
@@ -162,12 +163,13 @@ module VCAP::CloudController
 
                 DistributedExecutor.new.execute_job name: job_name, interval: 1.minute, fudge: 1.second, timeout: 5.minutes do
                   Delayed::Job.create!(queue: job_name, failed_at: nil, locked_at: Time.now)
-                  Timecop.travel(Time.now.utc + 1.minute + 1.second)
-                  counter += 1
+                    Timecop.travel(Time.now.utc + 1.minute + 1.second) do
+                      counter += 1
 
-                  DistributedExecutor.new.execute_job name: job_name, interval: 1.minute, fudge: 1.second, timeout: 5.minutes do
-                    counter += 2
-                  end
+                      DistributedExecutor.new.execute_job name: job_name, interval: 1.minute, fudge: 1.second, timeout: 5.minutes do
+                        counter += 2
+                      end
+                    end
                 end
 
                 expect(counter).to eq(1)
