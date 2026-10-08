@@ -194,15 +194,6 @@ Auth mechanisms below:
 
 These endpoints are deprecated and have no known live consumer. They are removal candidates.
 
-### POST /internal/v3/staging/:staging_guid/droplet_completed
-**Description:** (Deprecated) Legacy endpoint used to mark droplet staging as complete. Use `POST /internal/v3/staging/:staging_guid/build_completed` instead. **No live consumer** — CC has generated only the `build_completed` callback since 2015.
-
-**Intended Consumer:** Diego staging task completion callback (historical)
-
-**Auth Mechanism:** mTLS
-
-**Routing:** mTLS internal listener (`cc.tls_port`, 9023)
-
 ### GET /internal/v2/droplets/:guid/:droplet_checksum/download
 **Description:** (Deprecated) Non-mTLS (HTTP) permalink for downloading a droplet. Use `GET /internal/v4/droplets/:guid/:droplet_checksum/download` instead. **No live consumer, and effectively unreachable through nginx** — CC only generates this URL when `tls_port` is blank (never in a standard deploy, so it always emits the v4/mTLS URL instead). Even if generated, the path is `/internal/v2/droplets/...` on `external_port` (plain HTTP), which every nginx listener rejects: the public listeners 403 any `/internal/v` path, and the mTLS listener has no matching `location` (404).
 
@@ -211,12 +202,3 @@ These endpoints are deprecated and have no known live consumer. They are removal
 **Auth Mechanism:** None enforced at the nginx layer — this is the plain-HTTP (non-mTLS) branch of the droplet URL generator (built with `external_port`). Contrast the v4 permalink, which is the HTTPS/mTLS path.
 
 **Routing:** No nginx listener serves this path (public listeners 403 `/internal/v`; mTLS listener has no matching location). Reachable only by bypassing nginx and hitting the CC app socket directly.
-
-### PATCH /internal/v4/packages/:guid
-**Description:** (Deprecated) Marks package as uploaded. **No live consumer** — the only consumer was bits-service, whose release repo is archived/unmaintained and has no wiring in capi-release or cf-deployment.
-
-**Intended Consumer:** Bits Service (archived)
-
-**Auth Mechanism:** mTLS
-
-**Routing:** mTLS internal listener (`cc.tls_port`, 9023)
