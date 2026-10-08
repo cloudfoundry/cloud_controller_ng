@@ -123,16 +123,14 @@ module VCAP::CloudController
             resource_directory_key: String,
             optional(:blobstore_type) => String,
             optional(:local_blobstore_path) => String,
-            optional(:connection_config) => Hash,
-            optional(:webdav_config) => Hash
+            optional(:connection_config) => Hash
           },
 
           buildpacks: {
             buildpack_directory_key: String,
             optional(:blobstore_type) => String,
             optional(:local_blobstore_path) => String,
-            optional(:connection_config) => Hash,
-            optional(:webdav_config) => Hash
+            optional(:connection_config) => Hash
           },
 
           packages: {
@@ -140,16 +138,14 @@ module VCAP::CloudController
             app_package_directory_key: String,
             optional(:blobstore_type) => String,
             optional(:local_blobstore_path) => String,
-            optional(:connection_config) => Hash,
-            optional(:webdav_config) => Hash
+            optional(:connection_config) => Hash
           },
 
           droplets: {
             droplet_directory_key: String,
             optional(:blobstore_type) => String,
             optional(:local_blobstore_path) => String,
-            optional(:connection_config) => Hash,
-            optional(:webdav_config) => Hash
+            optional(:connection_config) => Hash
           },
 
           stacks_file: String,

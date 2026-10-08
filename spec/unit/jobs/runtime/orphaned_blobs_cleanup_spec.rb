@@ -44,10 +44,10 @@ module VCAP::CloudController
       end
 
       describe '#cleanup' do
-        let(:droplet_blobstore) { instance_double(CloudController::Blobstore::DavClient, files_for: droplet_files, root_dir: droplet_root_dir) }
+        let(:droplet_blobstore) { instance_double(CloudController::Blobstore::Client, files_for: droplet_files, root_dir: droplet_root_dir) }
         let(:droplet_files) { [] }
         let(:droplet_root_dir) { nil }
-        let(:package_blobstore) { instance_double(CloudController::Blobstore::DavClient, files_for: package_files, root_dir: package_root_dir) }
+        let(:package_blobstore) { instance_double(CloudController::Blobstore::Client, files_for: package_files, root_dir: package_root_dir) }
         let(:package_files) { [] }
         let(:package_root_dir) { nil }
         let(:buildpack_blobstore) { instance_double(CloudController::Blobstore::Client, files_for: buildpack_files, root_dir: buildpack_root_dir) }
