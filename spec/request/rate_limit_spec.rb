@@ -23,15 +23,18 @@ RSpec.describe 'Rate Limiting' do
     end
 
     it 'uses the general limit' do
-      10.times do |n|
-        get '/v3/spaces', nil, user_headers
-        expect(last_response.status).to eq(200), "rate limited after #{n} requests"
-      end
+      # Freeze time so the reset window cannot roll over mid-test.
+      Timecop.freeze do
+        10.times do |n|
+          get '/v3/spaces', nil, user_headers
+          expect(last_response.status).to eq(200), "rate limited after #{n} requests"
+        end
 
-      get '/v3/spaces', nil, user_headers
-      expect(last_response.status).to eq(429)
-      parsed_response = Oj.load(last_response.body)
-      expect(parsed_response['errors'].first['detail']).to eq('Rate Limit Exceeded')
+        get '/v3/spaces', nil, user_headers
+        expect(last_response.status).to eq(429)
+        parsed_response = Oj.load(last_response.body)
+        expect(parsed_response['errors'].first['detail']).to eq('Rate Limit Exceeded')
+      end
     end
   end
 
@@ -48,15 +51,17 @@ RSpec.describe 'Rate Limiting' do
     end
 
     it 'uses the general limit' do
-      10.times do |n|
-        get '/v3/spaces', nil, client_headers
-        expect(last_response.status).to eq(200), "rate limited after #{n} requests"
-      end
+      Timecop.freeze do
+        10.times do |n|
+          get '/v3/spaces', nil, client_headers
+          expect(last_response.status).to eq(200), "rate limited after #{n} requests"
+        end
 
-      get '/v3/spaces', nil, client_headers
-      expect(last_response.status).to eq(429)
-      parsed_response = Oj.load(last_response.body)
-      expect(parsed_response['errors'].first['detail']).to eq('Rate Limit Exceeded')
+        get '/v3/spaces', nil, client_headers
+        expect(last_response.status).to eq(429)
+        parsed_response = Oj.load(last_response.body)
+        expect(parsed_response['errors'].first['detail']).to eq('Rate Limit Exceeded')
+      end
     end
   end
 
