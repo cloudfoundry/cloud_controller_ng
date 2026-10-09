@@ -616,6 +616,31 @@ module VCAP::CloudController
                                          })
           end
         end
+
+        context 'when the params contain urls with credentials' do
+          let(:params) do
+            {
+              'name' => 'my-upsi',
+              'space_guid' => instance.space.guid,
+              'syslog_drain_url' => 'https://drain-user:drain-password@drain.example.com/logs',
+              'route_service_url' => 'https://route-user:route-password@route.example.com/proxy'
+            }
+          end
+
+          it 'obfuscates the credentials in the syslog_drain_url' do
+            repository.record_user_provided_service_instance_event(:create, instance, params)
+            event = Event.first(type: 'audit.user_provided_service_instance.create')
+
+            expect(event.metadata.dig('request', 'syslog_drain_url')).to eq('https://***:***@drain.example.com/logs')
+          end
+
+          it 'obfuscates the credentials in the route_service_url' do
+            repository.record_user_provided_service_instance_event(:create, instance, params)
+            event = Event.first(type: 'audit.user_provided_service_instance.create')
+
+            expect(event.metadata.dig('request', 'route_service_url')).to eq('https://***:***@route.example.com/proxy')
+          end
+        end
       end
 
       describe '#record_service_key_event' do
