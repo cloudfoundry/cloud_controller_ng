@@ -419,10 +419,11 @@ module CloudFoundry
             end
 
             it 'returns count=2 and expires_in minus the elapsed time for a recurring user' do
-              expiring_request_counter.increment(user_guid, reset_interval_in_minutes, logger)
-
               elapsed_seconds = 10
-              Timecop.travel(Time.now + elapsed_seconds.seconds) do
+              Timecop.freeze do
+                expiring_request_counter.increment(user_guid, reset_interval_in_minutes, logger)
+                Timecop.freeze(elapsed_seconds.seconds.from_now)
+
                 count, expires_in = expiring_request_counter.increment(user_guid, reset_interval_in_minutes, logger)
                 expect(count).to eq(2)
                 expect(expires_in).to eq(stubbed_expires_in - elapsed_seconds)
