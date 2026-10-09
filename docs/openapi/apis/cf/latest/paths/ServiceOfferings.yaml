@@ -1,60 +1,103 @@
 /v3/service_offerings:
   get:
     summary: List service offerings
-    description: This endpoint retrieves the service offerings the user has access to.
+    description: |-
+      This endpoint retrieves the service offerings the user has access to.
+
+      **Permitted roles:** All Roles, Unauthenticated Users *(for service offerings with public plans, unless `hide_marketplace_from_unauthenticated_users` is set)*
     operationId: listServiceOfferings
     tags:
       - Service Offerings
     parameters:
-      - $ref: ../components/parameters/Page.yaml
-      - $ref: ../components/parameters/PerPage.yaml
-      - $ref: ../components/parameters/OrderBy.yaml
       - name: names
         in: query
+        required: false
         schema:
           type: array
           items:
             type: string
-        description: Comma-delimited list of service offering names to filter by
+        description: Comma-delimited list of names to filter by (case-insensitive)
       - name: available
         in: query
+        required: false
         schema:
           type: boolean
         description: Filter by the `available` property; valid values are `true` or `false`
+      - name: broker_catalog_ids
+        in: query
+        required: false
+        schema:
+          type: array
+          items:
+            type: string
+        description: Comma-delimited list of IDs provided by the service broker for the service offering to filter by
       - name: service_broker_guids
         in: query
+        required: false
         schema:
           type: array
           items:
             type: string
         description: Comma-delimited list of service broker GUIDs to filter by
-      - name: space_guids
-        in: query
-        schema:
-          type: array
-          items:
-            type: string
-        description: Comma-delimited list of space guids to filter by
-      - name: organization_guids
-        in: query
-        schema:
-          type: array
-          items:
-            type: string
-        description: Comma-delimited list of organization guids to filter by
       - name: service_broker_names
         in: query
+        required: false
         schema:
           type: array
           items:
             type: string
-        description: Comma-delimited list of service broker names to filter by
+        description: Comma-delimited list of service broker names to filter by (case-sensitive)
+      - name: space_guids
+        in: query
+        required: false
+        schema:
+          type: array
+          items:
+            type: string
+        description: Comma-delimited list of space GUIDs to filter by
+      - name: organization_guids
+        in: query
+        required: false
+        schema:
+          type: array
+          items:
+            type: string
+        description: Comma-delimited list of organization GUIDs to filter by
       - $ref: ../components/parameters/LabelSelector.yaml
       - name: fields
         in: query
+        required: false
+        style: deepObject
+        explode: true
         schema:
           type: object
-        description: Fields to include in the response
+          properties:
+            service_broker:
+              type: string
+              description: Comma-delimited list of keys; valid values are `guid`, `name`
+        description: |-
+          [Fields parameter](#fields-parameter) used to include specific fields of related resources in the response.
+
+          Service offerings list fields:
+
+          Resource | Allowed Keys
+          --- | ---
+          `service_broker` | `guid`, `name`
+      - $ref: ../components/parameters/Page.yaml
+      - $ref: ../components/parameters/PerPage.yaml
+      - name: order_by
+        in: query
+        required: false
+        schema:
+          type: string
+          enum:
+            - created_at
+            - -created_at
+            - updated_at
+            - -updated_at
+            - name
+            - -name
+        description: Value to sort by. Defaults to ascending; prepend with `-` to sort descending. Valid values are `created_at`, `updated_at` and `name`
       - $ref: ../components/parameters/CreatedAts.yaml
       - $ref: ../components/parameters/UpdatedAts.yaml
     responses:
@@ -72,14 +115,14 @@
                     total_results: 3
                     total_pages: 2
                     first:
-                      href: https://api.example.org?page=1&per_page=2
+                      href: https://api.example.org/v3/service_offerings?page=1&per_page=2
                     last:
-                      href: https://api.example.org?page=2&per_page=2
+                      href: https://api.example.org/v3/service_offerings?page=2&per_page=2
                     next:
-                      href: https://api.example.org?page=2&per_page=2
+                      href: https://api.example.org/v3/service_offerings?page=2&per_page=2
                     previous: null
                   resources:
-                    - guid: 123e4567-e89b-12d3-a456-426614174000
+                    - guid: bf7eb420-11e5-11ea-b7db-4b5d5e7976a9
                       name: my_service_offering
                       description: Provides my service
                       available: true
@@ -104,7 +147,7 @@
                       relationships:
                         service_broker:
                           data:
-                            guid: 123e4567-e89b-12d3-a456-426614174000
+                            guid: 13c60e38-11e7-11ea-9106-33ee3c5bd4d7
                       metadata:
                         labels: {}
                         annotations: {}
@@ -115,7 +158,7 @@
                           href: https://api.example.org/v3/service_plans?service_offering_guids=bf7eb420-11e5-11ea-b7db-4b5d5e7976a
                         service_broker:
                           href: https://api.example.org/v3/service_brokers/13c60e38-11e7-11ea-9106-33ee3c5bd4d7
-                    - guid: 123e4567-e89b-12d3-a456-426614174000
+                    - guid: 20e6cd62-12bb-11ea-90d1-7bfec2c75bcd
                       name: other_service_offering
                       description: Provides another service
                       available: true
@@ -139,7 +182,7 @@
                       relationships:
                         service_broker:
                           data:
-                            guid: 123e4567-e89b-12d3-a456-426614174000
+                            guid: 13c60e38-11e7-11ea-9106-33ee3c5bd4d7
                       metadata:
                         labels: {}
                         annotations: {}
@@ -169,12 +212,35 @@
 /v3/service_offerings/{guid}:
   get:
     summary: Get a service offering
-    description: This endpoint retrieves the service offering by GUID.
+    description: |-
+      This endpoint retrieves the service offering by GUID.
+
+      **Permitted roles:** All Roles, Unauthenticated Users *(for service offerings with public plans, unless `hide_marketplace_from_unauthenticated_users` is set)*
     operationId: getServiceOffering
     tags:
       - Service Offerings
     parameters:
       - $ref: ../components/parameters/Guid.yaml
+        description: The GUID of the service offering
+      - name: fields
+        in: query
+        required: false
+        style: deepObject
+        explode: true
+        schema:
+          type: object
+          properties:
+            service_broker:
+              type: string
+              description: Comma-delimited list of keys; valid values are `guid`, `name`
+        description: |-
+          [Fields parameter](#fields-parameter) used to include specific fields of related resources in the response.
+
+          Service offering fields:
+
+          Resource | Allowed Keys
+          --- | ---
+          `service_broker` | `guid`, `name`
     responses:
       '200':
         description: OK
@@ -186,7 +252,7 @@
               default:
                 summary: default
                 value:
-                  guid: 123e4567-e89b-12d3-a456-426614174000
+                  guid: bf7eb420-11e5-11ea-b7db-4b5d5e7976a9
                   name: my_service_offering
                   description: Provides my service
                   available: true
@@ -211,7 +277,7 @@
                   relationships:
                     service_broker:
                       data:
-                        guid: 123e4567-e89b-12d3-a456-426614174000
+                        guid: 13c60e38-11e7-11ea-9106-33ee3c5bd4d7
                   metadata:
                     labels: {}
                     annotations: {}
@@ -230,19 +296,27 @@
         $ref: ../components/responses/NotFound.yaml
   patch:
     summary: Update a service offering
-    description: This endpoint updates a service offering with labels and annotations.
+    description: |-
+      This endpoint updates a service offering with labels and annotations.
+
+      **Permitted roles:** Admin, Space Developer *(only for service offerings from space-scoped brokers)*
     operationId: updateServiceOffering
     tags:
       - Service Offerings
     parameters:
       - $ref: ../components/parameters/Guid.yaml
+        description: The GUID of the service offering
     requestBody:
+      description: Metadata to apply to the service offering
+      required: true
       content:
         application/json:
           schema:
+            type: object
             properties:
               metadata:
                 $ref: ../components/schemas/Metadata.yaml
+                description: Labels and annotations applied to the service offering
           examples:
             default:
               summary: default
@@ -263,7 +337,7 @@
               default:
                 summary: default
                 value:
-                  guid: 123e4567-e89b-12d3-a456-426614174000
+                  guid: bf7eb420-11e5-11ea-b7db-4b5d5e7976a9
                   name: my_service_offering
                   description: Provides my service
                   available: true
@@ -288,7 +362,7 @@
                   relationships:
                     service_broker:
                       data:
-                        guid: 123e4567-e89b-12d3-a456-426614174000
+                        guid: 13c60e38-11e7-11ea-9106-33ee3c5bd4d7
                   metadata:
                     labels: {}
                     annotations: {}
@@ -321,13 +395,17 @@
       This endpoint deletes a service offering. This is typically used to remove orphan service offerings from the Cloud Foundry database when they have been removed from the service broker catalog, or when the service broker has been removed.
 
       Note that this operation only affects the Cloud Foundry database, and no attempt is made to contact the service broker.
+
+      **Permitted roles:** Admin, Space Developer *(only service offerings from space-scoped brokers)*
     operationId: deleteServiceOffering
     tags:
       - Service Offerings
     parameters:
       - $ref: ../components/parameters/Guid.yaml
+        description: The GUID of the service offering
       - name: purge
         in: query
+        required: false
         schema:
           type: boolean
         description: If `true`, any service plans, instances, and bindings associated with this service offering will also be deleted

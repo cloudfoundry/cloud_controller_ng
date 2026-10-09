@@ -1,12 +1,16 @@
 /v3/revisions/{guid}:
   get:
     summary: Get a revision
-    description: Retrieve a revision.
+    description: |-
+      Retrieve a revision.
+
+      **Permitted roles:** Admin, Admin Read-Only, Global Auditor, Org Manager, Space Auditor, Space Developer, Space Manager, Space Supporter
     operationId: getRevision
     tags:
       - Revisions
     parameters:
       - $ref: ../components/parameters/Guid.yaml
+        description: The GUID of the revision
     responses:
       '200':
         description: Successfully retrieved revision
@@ -14,6 +18,41 @@
           application/json:
             schema:
               $ref: ../components/schemas/Revision.yaml
+            examples:
+              default:
+                summary: default
+                value:
+                  guid: 123e4567-e89b-12d3-a456-426614174000
+                  version: 1
+                  droplet:
+                    guid: 123e4567-e89b-12d3-a456-426614174000
+                  processes:
+                    web:
+                      command: bundle exec rackup
+                  sidecars:
+                    - name: auth-sidecar
+                      command: bundle exec sidecar
+                      process_types:
+                        - web
+                      memory_in_mb: 300
+                  description: Initial revision.
+                  deployable: true
+                  relationships:
+                    app:
+                      data:
+                        guid: 123e4567-e89b-12d3-a456-426614174000
+                  created_at: '2017-02-01T01:33:58Z'
+                  updated_at: '2017-02-01T01:33:58Z'
+                  metadata:
+                    labels: {}
+                    annotations: {}
+                  links:
+                    self:
+                      href: https://api.example.org/v3/revisions/885735b5-aea4-4cf5-8e44-961af0e41920
+                    app:
+                      href: https://api.example.org/v3/apps/1cb006ee-fb05-47e1-b541-c34179ddc446
+                    environment_variables:
+                      href: https://api.example.org/v3/revisions/885735b5-aea4-4cf5-8e44-961af0e41920/environment_variables
         links:
           app:
             operationId: getApp
@@ -40,12 +79,16 @@
         $ref: ../components/responses/ServiceUnavailable.yaml
   patch:
     summary: Update a revision
-    description: Update a revision.
+    description: |-
+      Update a revision.
+
+      **Permitted roles:** Admin, Space Developer
     operationId: updateRevision
     tags:
       - Revisions
     parameters:
       - $ref: ../components/parameters/Guid.yaml
+        description: The GUID of the revision
     requestBody:
       description: Revision object that needs to be updated
       required: true
@@ -56,6 +99,10 @@
             properties:
               metadata:
                 $ref: ../components/schemas/Metadata.yaml
+                description: |-
+                  `labels`: Labels applied to the revision
+
+                  `annotations`: Annotations applied to the revision
             description: Request schema for updating a revision
           examples:
             default:
@@ -73,6 +120,43 @@
           application/json:
             schema:
               $ref: ../components/schemas/Revision.yaml
+            examples:
+              default:
+                summary: default
+                value:
+                  guid: 123e4567-e89b-12d3-a456-426614174000
+                  version: 1
+                  droplet:
+                    guid: 123e4567-e89b-12d3-a456-426614174000
+                  processes:
+                    web:
+                      command: bundle exec rackup
+                  sidecars:
+                    - name: auth-sidecar
+                      command: bundle exec sidecar
+                      process_types:
+                        - web
+                      memory_in_mb: 300
+                  description: Initial revision.
+                  deployable: true
+                  relationships:
+                    app:
+                      data:
+                        guid: 123e4567-e89b-12d3-a456-426614174000
+                  created_at: '2017-02-01T01:33:58Z'
+                  updated_at: '2017-02-01T01:33:58Z'
+                  metadata:
+                    labels:
+                      key: value
+                    annotations:
+                      note: detailed information
+                  links:
+                    self:
+                      href: https://api.example.org/v3/revisions/885735b5-aea4-4cf5-8e44-961af0e41920
+                    app:
+                      href: https://api.example.org/v3/apps/1cb006ee-fb05-47e1-b541-c34179ddc446
+                    environment_variables:
+                      href: https://api.example.org/v3/revisions/885735b5-aea4-4cf5-8e44-961af0e41920/environment_variables
         links:
           app:
             operationId: getApp
@@ -98,12 +182,16 @@
 /v3/revisions/{guid}/environment_variables:
   get:
     summary: Get environment variables for a revision
-    description: Retrieve the environment variables that are associated with the revision.
+    description: |-
+      Retrieve the environment variables that are associated with the revision.
+
+      **Permitted roles:** Admin, Admin Read-Only, Space Developer
     operationId: getRevisionEnvironmentVariables
     tags:
       - Revisions
     parameters:
       - $ref: ../components/parameters/Guid.yaml
+        description: The GUID of the revision
     responses:
       '200':
         description: Successfully retrieved revision environment variables
@@ -111,21 +199,26 @@
           application/json:
             schema:
               type: object
+              description: The environment variables associated with the revision
               properties:
                 var:
                   type: object
-                  description: Environment variables for the revision
+                  description: The environment variables that were set on the app at this revision
                   additionalProperties:
                     type: string
                 links:
                   type: object
+                  description: Links to related resources
                   properties:
                     self:
                       $ref: ../components/schemas/Link.yaml
+                      description: The URL to get the environment variables for this revision
                     revision:
                       $ref: ../components/schemas/Link.yaml
+                      description: The URL to get the revision
                     app:
                       $ref: ../components/schemas/Link.yaml
+                      description: The URL to get the app the revision is associated with
             examples:
               default:
                 summary: default
@@ -148,25 +241,46 @@
 /v3/apps/{guid}/revisions:
   get:
     summary: List revisions for an app
-    description: Retrieve revisions for an app the user has access to.
+    description: |-
+      Retrieve revisions for an app the user has access to.
+
+      **Permitted roles:** Admin, Admin Read-Only, Global Auditor, Org Manager, Space Auditor, Space Developer, Space Manager, Space Supporter
     operationId: listRevisionsForApp
     tags:
       - Revisions
     parameters:
       - $ref: ../components/parameters/Guid.yaml
-      - $ref: ../components/parameters/Page.yaml
-      - $ref: ../components/parameters/PerPage.yaml
-      - $ref: ../components/parameters/OrderBy.yaml
-      - $ref: ../components/parameters/LabelSelector.yaml
-      - $ref: ../components/parameters/CreatedAts.yaml
-      - $ref: ../components/parameters/UpdatedAts.yaml
+        description: The GUID of the app
       - name: versions
         in: query
+        required: false
         schema:
           type: array
           items:
             type: string
         description: Comma-delimited list of revision versions to filter by
+      - $ref: ../components/parameters/LabelSelector.yaml
+      - $ref: ../components/parameters/Page.yaml
+      - $ref: ../components/parameters/PerPage.yaml
+      - name: order_by
+        in: query
+        required: false
+        schema:
+          type: string
+          enum:
+            - created_at
+            - -created_at
+            - updated_at
+            - -updated_at
+        description: Value to sort by. Defaults to ascending; prepend with `-` to sort descending. Valid values are `created_at`, `updated_at`
+      - $ref: ../components/parameters/CreatedAts.yaml
+      - $ref: ../components/parameters/UpdatedAts.yaml
+      - name: deployable
+        in: query
+        required: false
+        schema:
+          type: boolean
+        description: Filter by whether the revision's droplet is staged and the revision can be used to [create a deployment](#create-a-deployment); valid values are `true` and `false`
     responses:
       '200':
         description: Successfully retrieved revisions for app
@@ -228,15 +342,30 @@
 /v3/apps/{guid}/revisions/deployed:
   get:
     summary: List deployed revisions for an app
-    description: Retrieve deployed revisions for an app the user has access to. Deployed revisions are revisions that are linked to started processes in the app.
+    description: |-
+      Retrieve deployed revisions for an app the user has access to.
+      Deployed revisions are revisions that are linked to started processes in the app.
+
+      **Permitted roles:** Admin, Admin Read-Only, Global Auditor, Org Manager, Space Auditor, Space Developer, Space Manager, Space Supporter
     operationId: listDeployedRevisionsForApp
     tags:
       - Revisions
     parameters:
       - $ref: ../components/parameters/Guid.yaml
+        description: The GUID of the app
       - $ref: ../components/parameters/Page.yaml
       - $ref: ../components/parameters/PerPage.yaml
-      - $ref: ../components/parameters/OrderBy.yaml
+      - name: order_by
+        in: query
+        required: false
+        schema:
+          type: string
+          enum:
+            - created_at
+            - -created_at
+            - updated_at
+            - -updated_at
+        description: Value to sort by. Defaults to ascending, prepend with `-` to sort descending. Valid values are `created_at`, `updated_at`
     responses:
       '200':
         description: Successfully retrieved deployed revisions for app
@@ -252,9 +381,9 @@
                     total_results: 1
                     total_pages: 1
                     first:
-                      href: https://api.example.org/v3/apps/1cb006ee-fb05-47e1-b541-c34179ddc446/revisions?page=1&per_page=50
+                      href: https://api.example.org/v3/apps/1cb006ee-fb05-47e1-b541-c34179ddc446/revisions/deployed?page=1&per_page=50
                     last:
-                      href: https://api.example.org/v3/apps/1cb006ee-fb05-47e1-b541-c34179ddc446/revisions?page=1&per_page=50
+                      href: https://api.example.org/v3/apps/1cb006ee-fb05-47e1-b541-c34179ddc446/revisions/deployed?page=1&per_page=50
                     next: null
                     previous: null
                   resources:

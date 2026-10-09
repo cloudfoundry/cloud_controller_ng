@@ -4,90 +4,80 @@ content:
   application/json:
     schema:
       type: object
+      description: Request schema for creating an organization quota
       properties:
         name:
           type: string
-          description: Name of the quota
+          description: Name of the quota (case-insensitive)
         apps:
           type: object
           description: Quotas that affect applications and application sub-resources
           properties:
             per_process_memory_in_mb:
-              type:
-                - integer
-                - 'null'
-              description: Maximum memory for a single process or task
+              type: [integer, "null"]
+              default: null
+              description: Maximum memory for a single process or task; defaults to `null` (infinite)
             total_memory_in_mb:
-              type:
-                - integer
-                - 'null'
-              description: Total memory allowed for all the started processes and running tasks in an organization
+              type: [integer, "null"]
+              default: null
+              description: Total memory allowed for all the started processes and running tasks in an organization; defaults to `null` (infinite)
             total_instances:
-              type:
-                - integer
-                - 'null'
-              description: Total instances of all the started processes allowed in an organization
+              type: [integer, "null"]
+              default: null
+              description: Total instances of all the started processes allowed in an organization; defaults to `null` (infinite)
             log_rate_limit_in_bytes_per_second:
-              type:
-                - integer
-                - 'null'
-              description: Total log rate limit allowed for all the started processes and running tasks in an organization
+              type: [integer, "null"]
+              default: null
+              description: Total log rate limit allowed for all the started processes and running tasks in an organization; defaults to `null` (infinite)
             per_app_tasks:
-              type:
-                - integer
-                - 'null'
-              description: Maximum number of running tasks in an organization
+              type: [integer, "null"]
+              default: null
+              description: Maximum number of running tasks in an organization; defaults to `null` (infinite)
         services:
           type: object
           description: Quotas that affect services
           properties:
             paid_services_allowed:
               type: boolean
-              description: Specifies whether instances of paid service plans can be created
+              default: true
+              description: Specifies whether instances of paid service plans can be created; defaults to `true`
             total_service_instances:
-              type:
-                - integer
-                - 'null'
-              description: Total number of service instances allowed in an organization
+              type: [integer, "null"]
+              default: null
+              description: Total number of service instances allowed in an organization; defaults to `null` (infinite)
             total_service_keys:
-              type:
-                - integer
-                - 'null'
-              description: Total number of service keys allowed in an organization
+              type: [integer, "null"]
+              default: null
+              description: Total number of service keys allowed in an organization; defaults to `null` (infinite)
         routes:
           type: object
           description: Quotas that affect routes
           properties:
             total_routes:
-              type:
-                - integer
-                - 'null'
-              description: Total number of routes allowed in an organization
+              type: [integer, "null"]
+              default: null
+              description: Total number of routes allowed in an organization; defaults to `null` (infinite)
             total_reserved_ports:
-              type:
-                - integer
-                - 'null'
-              description: Total number of ports that are reservable by routes in an organization
+              type: [integer, "null"]
+              default: null
+              description: Total number of ports that are reservable by routes in an organization; defaults to `null` (infinite)
         domains:
           type: object
           description: Quotas that affect domains
           properties:
             total_domains:
-              type:
-                - integer
-                - 'null'
-              description: Total number of domains that can be scoped to an organization
+              type: [integer, "null"]
+              default: null
+              description: Total number of domains that can be scoped to an organization; defaults to `null` (infinite)
         relationships:
           type: object
+          description: Relationships for the organization quota
           properties:
             organizations:
               $ref: ../schemas/RelationshipToMany.yaml
-              description: A relationship to the organizations where the quota is applied
-        metadata:
-          $ref: ../schemas/Metadata.yaml
+              description: A relationship to the organizations where the quota is applied; defaults to an empty list
       required:
         - name
-      description: Request schema for creating an organization quota
     examples:
       default:
         summary: default

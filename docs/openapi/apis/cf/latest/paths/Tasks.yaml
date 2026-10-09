@@ -1,19 +1,17 @@
 /v3/tasks:
   get:
     summary: List tasks
-    description: Retrieve all tasks the user has access to. The `command` field is excluded in the response.
+    description: |-
+      Retrieve all tasks the user has access to. The `command` field is excluded in the response.
+
+      **Permitted roles:** All Roles
     operationId: listTasks
     tags:
       - Tasks
     parameters:
-      - $ref: ../components/parameters/Page.yaml
-      - $ref: ../components/parameters/PerPage.yaml
-      - $ref: ../components/parameters/OrderBy.yaml
-      - $ref: ../components/parameters/CreatedAts.yaml
-      - $ref: ../components/parameters/UpdatedAts.yaml
-      - $ref: ../components/parameters/LabelSelector.yaml
       - name: guids
         in: query
+        required: false
         schema:
           type: array
           items:
@@ -21,13 +19,15 @@
         description: Comma-delimited list of task guids to filter by
       - name: names
         in: query
+        required: false
         schema:
           type: array
           items:
             type: string
-        description: Comma-delimited list of task names to filter by
+        description: Comma-delimited list of task names to filter by (case-insensitive)
       - name: states
         in: query
+        required: false
         schema:
           type: array
           items:
@@ -41,6 +41,7 @@
         description: Comma-delimited list of task states to filter by
       - name: app_guids
         in: query
+        required: false
         schema:
           type: array
           items:
@@ -48,6 +49,7 @@
         description: Comma-delimited list of app guids to filter by
       - name: space_guids
         in: query
+        required: false
         schema:
           type: array
           items:
@@ -55,18 +57,28 @@
         description: Comma-delimited list of space guids to filter by
       - name: organization_guids
         in: query
+        required: false
         schema:
           type: array
           items:
             type: string
         description: Comma-delimited list of organization guids to filter by
-      - name: sequence_ids
+      - $ref: ../components/parameters/Page.yaml
+      - $ref: ../components/parameters/PerPage.yaml
+      - name: order_by
         in: query
+        required: false
         schema:
-          type: array
-          items:
-            type: integer
-        description: Comma-delimited list of sequence ids to filter by
+          type: string
+          enum:
+            - created_at
+            - "-created_at"
+            - updated_at
+            - "-updated_at"
+        description: Value to sort by. Defaults to ascending; prepend with `-` to sort descending. Valid values are `created_at`, `updated_at`
+      - $ref: ../components/parameters/LabelSelector.yaml
+      - $ref: ../components/parameters/CreatedAts.yaml
+      - $ref: ../components/parameters/UpdatedAts.yaml
     responses:
       '200':
         description: OK
@@ -74,6 +86,81 @@
           application/json:
             schema:
               $ref: ../components/schemas/TaskList.yaml
+            examples:
+              default:
+                summary: default
+                value:
+                  pagination:
+                    total_results: 3
+                    total_pages: 2
+                    first:
+                      href: https://api.example.org/v3/tasks?page=1&per_page=2
+                    last:
+                      href: https://api.example.org/v3/tasks?page=2&per_page=2
+                    next:
+                      href: https://api.example.org/v3/tasks?page=2&per_page=2
+                    previous: null
+                  resources:
+                    - guid: d5cc22ec-99a3-4e6a-af91-a44b4ab7b6fa
+                      sequence_id: 1
+                      name: hello
+                      user: vcap
+                      state: SUCCEEDED
+                      memory_in_mb: 512
+                      disk_in_mb: 1024
+                      log_rate_limit_in_bytes_per_second: 1024
+                      result:
+                        failure_reason: null
+                      droplet_guid: 740ebd2b-162b-469a-bd72-3edb96fabd9a
+                      metadata:
+                        labels: {}
+                        annotations: {}
+                      created_at: '2016-05-04T17:00:41Z'
+                      updated_at: '2016-05-04T17:00:42Z'
+                      relationships:
+                        app:
+                          data:
+                            guid: ccc25a0f-c8f4-4b39-9f1b-de9f328d0ee5
+                      links:
+                        self:
+                          href: https://api.example.org/v3/tasks/d5cc22ec-99a3-4e6a-af91-a44b4ab7b6fa
+                        app:
+                          href: https://api.example.org/v3/apps/ccc25a0f-c8f4-4b39-9f1b-de9f328d0ee5
+                        cancel:
+                          href: https://api.example.org/v3/tasks/d5cc22ec-99a3-4e6a-af91-a44b4ab7b6fa/actions/cancel
+                          method: POST
+                        droplet:
+                          href: https://api.example.org/v3/droplets/740ebd2b-162b-469a-bd72-3edb96fabd9a
+                    - guid: 63b4cd89-fd8b-4bf1-a311-7174fcc907d6
+                      sequence_id: 2
+                      name: migrate
+                      user: vcap
+                      state: FAILED
+                      memory_in_mb: 512
+                      disk_in_mb: 1024
+                      log_rate_limit_in_bytes_per_second: 1024
+                      result:
+                        failure_reason: Exited with status 1
+                      droplet_guid: 740ebd2b-162b-469a-bd72-3edb96fabd9a
+                      metadata:
+                        labels: {}
+                        annotations: {}
+                      created_at: '2016-05-04T17:00:41Z'
+                      updated_at: '2016-05-04T17:00:42Z'
+                      relationships:
+                        app:
+                          data:
+                            guid: ccc25a0f-c8f4-4b39-9f1b-de9f328d0ee5
+                      links:
+                        self:
+                          href: https://api.example.org/v3/tasks/63b4cd89-fd8b-4bf1-a311-7174fcc907d6
+                        app:
+                          href: https://api.example.org/v3/apps/ccc25a0f-c8f4-4b39-9f1b-de9f328d0ee5
+                        cancel:
+                          href: https://api.example.org/v3/tasks/63b4cd89-fd8b-4bf1-a311-7174fcc907d6/actions/cancel
+                          method: POST
+                        droplet:
+                          href: https://api.example.org/v3/droplets/740ebd2b-162b-469a-bd72-3edb96fabd9a
       '400':
         $ref: ../components/responses/BadRequest.yaml
       '401':
@@ -93,20 +180,24 @@
 /v3/apps/{guid}/tasks:
   get:
     summary: List tasks for an app
-    description: Retrieve tasks for an app.
+    description: |-
+      Retrieve tasks for an app the user has access to. The `command` field may be excluded in the response based on the user's role.
+
+      **Permitted roles:** Admin, Admin Read-Only, Global Auditor *(`command` field redacted)*, Org Manager *(`command` field redacted)*, Space Auditor *(`command` field redacted)*, Space Developer, Space Manager *(`command` field redacted)*, Space Supporter *(`command` field redacted)*
     operationId: listAppTasks
     tags:
       - Tasks
     parameters:
-      - $ref: ../components/parameters/Guid.yaml
-      - $ref: ../components/parameters/Page.yaml
-      - $ref: ../components/parameters/PerPage.yaml
-      - $ref: ../components/parameters/OrderBy.yaml
-      - $ref: ../components/parameters/CreatedAts.yaml
-      - $ref: ../components/parameters/UpdatedAts.yaml
-      - $ref: ../components/parameters/LabelSelector.yaml
+      - name: guid
+        in: path
+        required: true
+        schema:
+          type: string
+          format: uuid
+        description: The unique identifier for the app
       - name: guids
         in: query
+        required: false
         schema:
           type: array
           items:
@@ -114,13 +205,15 @@
         description: Comma-delimited list of task guids to filter by
       - name: names
         in: query
+        required: false
         schema:
           type: array
           items:
             type: string
-        description: Comma-delimited list of task names to filter by
+        description: Comma-delimited list of task names to filter by (case-insensitive)
       - name: states
         in: query
+        required: false
         schema:
           type: array
           items:
@@ -134,11 +227,28 @@
         description: Comma-delimited list of task states to filter by
       - name: sequence_ids
         in: query
+        required: false
         schema:
           type: array
           items:
             type: integer
-        description: Comma-delimited list of sequence ids to filter by
+        description: Comma delimited list of sequence ids to filter by Valid values are integers >= 1
+      - $ref: ../components/parameters/Page.yaml
+      - $ref: ../components/parameters/PerPage.yaml
+      - name: order_by
+        in: query
+        required: false
+        schema:
+          type: string
+          enum:
+            - created_at
+            - "-created_at"
+            - updated_at
+            - "-updated_at"
+        description: Value to sort by. Defaults to ascending; prepend with `-` to sort descending. Valid values are `created_at`, `updated_at`
+      - $ref: ../components/parameters/LabelSelector.yaml
+      - $ref: ../components/parameters/CreatedAts.yaml
+      - $ref: ../components/parameters/UpdatedAts.yaml
     responses:
       '200':
         description: OK
@@ -146,20 +256,108 @@
           application/json:
             schema:
               $ref: ../components/schemas/TaskList.yaml
+            examples:
+              default:
+                summary: default
+                value:
+                  pagination:
+                    total_results: 3
+                    total_pages: 2
+                    first:
+                      href: https://api.example.org/v3/apps/ccc25a0f-c8f4-4b39-9f1b-de9f328d0ee5/tasks?page=1&per_page=2
+                    last:
+                      href: https://api.example.org/v3/apps/ccc25a0f-c8f4-4b39-9f1b-de9f328d0ee5/tasks?page=2&per_page=2
+                    next:
+                      href: https://api.example.org/v3/apps/ccc25a0f-c8f4-4b39-9f1b-de9f328d0ee5/tasks?page=2&per_page=2
+                    previous: null
+                  resources:
+                    - guid: d5cc22ec-99a3-4e6a-af91-a44b4ab7b6fa
+                      sequence_id: 1
+                      name: hello
+                      user: vcap
+                      state: SUCCEEDED
+                      memory_in_mb: 512
+                      disk_in_mb: 1024
+                      log_rate_limit_in_bytes_per_second: 1024
+                      result:
+                        failure_reason: null
+                      droplet_guid: 740ebd2b-162b-469a-bd72-3edb96fabd9a
+                      metadata:
+                        labels: {}
+                        annotations: {}
+                      created_at: '2016-05-04T17:00:41Z'
+                      updated_at: '2016-05-04T17:00:42Z'
+                      relationships:
+                        app:
+                          data:
+                            guid: ccc25a0f-c8f4-4b39-9f1b-de9f328d0ee5
+                      links:
+                        self:
+                          href: https://api.example.org/v3/tasks/d5cc22ec-99a3-4e6a-af91-a44b4ab7b6fa
+                        app:
+                          href: https://api.example.org/v3/apps/ccc25a0f-c8f4-4b39-9f1b-de9f328d0ee5
+                        cancel:
+                          href: https://api.example.org/v3/tasks/d5cc22ec-99a3-4e6a-af91-a44b4ab7b6fa/actions/cancel
+                          method: POST
+                        droplet:
+                          href: https://api.example.org/v3/droplets/740ebd2b-162b-469a-bd72-3edb96fabd9a
+                    - guid: 63b4cd89-fd8b-4bf1-a311-7174fcc907d6
+                      sequence_id: 2
+                      name: migrate
+                      user: vcap
+                      state: FAILED
+                      memory_in_mb: 512
+                      disk_in_mb: 1024
+                      log_rate_limit_in_bytes_per_second: 1024
+                      result:
+                        failure_reason: Exited with status 1
+                      droplet_guid: 740ebd2b-162b-469a-bd72-3edb96fabd9a
+                      metadata:
+                        labels: {}
+                        annotations: {}
+                      created_at: '2016-05-04T17:00:41Z'
+                      updated_at: '2016-05-04T17:00:42Z'
+                      relationships:
+                        app:
+                          data:
+                            guid: ccc25a0f-c8f4-4b39-9f1b-de9f328d0ee5
+                      links:
+                        self:
+                          href: https://api.example.org/v3/tasks/63b4cd89-fd8b-4bf1-a311-7174fcc907d6
+                        app:
+                          href: https://api.example.org/v3/apps/ccc25a0f-c8f4-4b39-9f1b-de9f328d0ee5
+                        cancel:
+                          href: https://api.example.org/v3/tasks/63b4cd89-fd8b-4bf1-a311-7174fcc907d6/actions/cancel
+                          method: POST
+                        droplet:
+                          href: https://api.example.org/v3/droplets/740ebd2b-162b-469a-bd72-3edb96fabd9a
+      '400':
+        $ref: ../components/responses/BadRequest.yaml
       '401':
         $ref: ../components/responses/Unauthorized.yaml
       '403':
         $ref: ../components/responses/Forbidden.yaml
       '404':
         $ref: ../components/responses/NotFound.yaml
+      '422':
+        $ref: ../components/responses/UnprocessableEntity.yaml
   post:
     summary: Create a task
-    description: Create a task.
+    description: |-
+      Create a task for an app.
+
+      **Permitted roles:** Admin, Space Developer
     operationId: createTask
     tags:
       - Tasks
     parameters:
-      - $ref: ../components/parameters/Guid.yaml
+      - name: guid
+        in: path
+        required: true
+        schema:
+          type: string
+          format: uuid
+        description: The unique identifier for the app
     requestBody:
       $ref: ../components/requestBodies/TaskCreateRequestBody.yaml
     responses:
@@ -169,6 +367,41 @@
           application/json:
             schema:
               $ref: ../components/schemas/Task.yaml
+            examples:
+              default:
+                summary: default
+                value:
+                  guid: d5cc22ec-99a3-4e6a-af91-a44b4ab7b6fa
+                  sequence_id: 1
+                  name: migrate
+                  command: rake db:migrate
+                  user: vcap
+                  state: RUNNING
+                  memory_in_mb: 512
+                  disk_in_mb: 1024
+                  log_rate_limit_in_bytes_per_second: 1024
+                  result:
+                    failure_reason: null
+                  droplet_guid: 740ebd2b-162b-469a-bd72-3edb96fabd9a
+                  metadata:
+                    labels: {}
+                    annotations: {}
+                  created_at: '2016-05-04T17:00:41Z'
+                  updated_at: '2016-05-04T17:00:42Z'
+                  relationships:
+                    app:
+                      data:
+                        guid: ccc25a0f-c8f4-4b39-9f1b-de9f328d0ee5
+                  links:
+                    self:
+                      href: https://api.example.org/v3/tasks/d5cc22ec-99a3-4e6a-af91-a44b4ab7b6fa
+                    app:
+                      href: https://api.example.org/v3/apps/ccc25a0f-c8f4-4b39-9f1b-de9f328d0ee5
+                    cancel:
+                      href: https://api.example.org/v3/tasks/d5cc22ec-99a3-4e6a-af91-a44b4ab7b6fa/actions/cancel
+                      method: POST
+                    droplet:
+                      href: https://api.example.org/v3/droplets/740ebd2b-162b-469a-bd72-3edb96fabd9a
         links:
           app:
             operationId: getApp
@@ -199,12 +432,21 @@
 /v3/tasks/{guid}:
   get:
     summary: Get a task
-    description: Retrieve a task. The `command` field may be excluded in the response based on the user’s role.
+    description: |-
+      Retrieve a specific task. The `command` field may be excluded in the response based on the user's role.
+
+      **Permitted roles:** Admin, Admin Read-Only, Global Auditor *(`command` field redacted)*, Org Manager *(`command` field redacted)*, Space Auditor *(`command` field redacted)*, Space Developer, Space Manager *(`command` field redacted)*, Space Supporter *(`command` field redacted)*
     operationId: getTask
     tags:
       - Tasks
     parameters:
-      - $ref: ../components/parameters/Guid.yaml
+      - name: guid
+        in: path
+        required: true
+        schema:
+          type: string
+          format: uuid
+        description: The unique identifier for the task
     responses:
       '200':
         description: OK
@@ -212,6 +454,41 @@
           application/json:
             schema:
               $ref: ../components/schemas/Task.yaml
+            examples:
+              default:
+                summary: default
+                value:
+                  guid: d5cc22ec-99a3-4e6a-af91-a44b4ab7b6fa
+                  sequence_id: 1
+                  name: migrate
+                  command: rake db:migrate
+                  user: vcap
+                  state: RUNNING
+                  memory_in_mb: 512
+                  disk_in_mb: 1024
+                  log_rate_limit_in_bytes_per_second: 1024
+                  result:
+                    failure_reason: null
+                  droplet_guid: 740ebd2b-162b-469a-bd72-3edb96fabd9a
+                  metadata:
+                    labels: {}
+                    annotations: {}
+                  created_at: '2016-05-04T17:00:41Z'
+                  updated_at: '2016-05-04T17:00:42Z'
+                  relationships:
+                    app:
+                      data:
+                        guid: ccc25a0f-c8f4-4b39-9f1b-de9f328d0ee5
+                  links:
+                    self:
+                      href: https://api.example.org/v3/tasks/d5cc22ec-99a3-4e6a-af91-a44b4ab7b6fa
+                    app:
+                      href: https://api.example.org/v3/apps/ccc25a0f-c8f4-4b39-9f1b-de9f328d0ee5
+                    cancel:
+                      href: https://api.example.org/v3/tasks/d5cc22ec-99a3-4e6a-af91-a44b4ab7b6fa/actions/cancel
+                      method: POST
+                    droplet:
+                      href: https://api.example.org/v3/droplets/740ebd2b-162b-469a-bd72-3edb96fabd9a
         links:
           app:
             operationId: getApp
@@ -231,19 +508,36 @@
         $ref: ../components/responses/NotFound.yaml
   patch:
     summary: Update a task
-    description: Update a task.
+    description: |-
+      Update a task's metadata.
+
+      **Permitted roles:** Admin, Space Developer
     operationId: updateTask
     tags:
       - Tasks
     parameters:
-      - $ref: ../components/parameters/Guid.yaml
+      - name: guid
+        in: path
+        required: true
+        schema:
+          type: string
+          format: uuid
+        description: The unique identifier for the task
     requestBody:
+      description: The task fields to update
+      required: true
       content:
         application/json:
           schema:
+            type: object
             properties:
               metadata:
                 $ref: ../components/schemas/Metadata.yaml
+                description: |-
+                  `labels`: Labels applied to the task
+
+                  `annotations`: Annotations applied to the task
+            description: Request schema for updating a task
           examples:
             default:
               summary: default
@@ -260,6 +554,43 @@
           application/json:
             schema:
               $ref: ../components/schemas/Task.yaml
+            examples:
+              default:
+                summary: default
+                value:
+                  guid: d5cc22ec-99a3-4e6a-af91-a44b4ab7b6fa
+                  sequence_id: 1
+                  name: migrate
+                  command: rake db:migrate
+                  user: vcap
+                  state: RUNNING
+                  memory_in_mb: 512
+                  disk_in_mb: 1024
+                  log_rate_limit_in_bytes_per_second: 1024
+                  result:
+                    failure_reason: null
+                  droplet_guid: 740ebd2b-162b-469a-bd72-3edb96fabd9a
+                  metadata:
+                    labels:
+                      key: value
+                    annotations:
+                      note: detailed information
+                  created_at: '2016-05-04T17:00:41Z'
+                  updated_at: '2016-05-04T17:00:42Z'
+                  relationships:
+                    app:
+                      data:
+                        guid: ccc25a0f-c8f4-4b39-9f1b-de9f328d0ee5
+                  links:
+                    self:
+                      href: https://api.example.org/v3/tasks/d5cc22ec-99a3-4e6a-af91-a44b4ab7b6fa
+                    app:
+                      href: https://api.example.org/v3/apps/ccc25a0f-c8f4-4b39-9f1b-de9f328d0ee5
+                    cancel:
+                      href: https://api.example.org/v3/tasks/d5cc22ec-99a3-4e6a-af91-a44b4ab7b6fa/actions/cancel
+                      method: POST
+                    droplet:
+                      href: https://api.example.org/v3/droplets/740ebd2b-162b-469a-bd72-3edb96fabd9a
       '400':
         $ref: ../components/responses/BadRequest.yaml
       '401':
@@ -279,19 +610,69 @@
 /v3/tasks/{guid}/actions/cancel:
   post:
     summary: Cancel a task
-    description: Cancels a running task. Canceled tasks will initially be in state `CANCELING` and will move to state `FAILED` once the cancel request has been processed. Cancel requests are idempotent and will be processed according to the state of the task when the request is executed. Canceling a task that is in `SUCCEEDED` or `FAILED` state will return an error.
+    description: |-
+      Cancels a running task.
+
+      Canceled tasks will initially be in state `CANCELING` and will move to state `FAILED` once the cancel request has been processed.
+
+      Cancel requests are idempotent and will be processed according to the state of the task when the request is executed.
+
+      Canceling a task that is in `SUCCEEDED` or `FAILED` state will return an error.
+
+      **Permitted roles:** Admin, Space Developer, Space Supporter
     operationId: cancelTask
     tags:
       - Tasks
     parameters:
-      - $ref: ../components/parameters/Guid.yaml
+      - name: guid
+        in: path
+        required: true
+        schema:
+          type: string
+          format: uuid
+        description: The unique identifier for the task
     responses:
       '202':
-        description: OK
+        description: Accepted
         content:
           application/json:
             schema:
               $ref: ../components/schemas/Task.yaml
+            examples:
+              default:
+                summary: default
+                value:
+                  guid: d5cc22ec-99a3-4e6a-af91-a44b4ab7b6fa
+                  sequence_id: 1
+                  name: migrate
+                  command: rake db:migrate
+                  user: vcap
+                  state: CANCELING
+                  memory_in_mb: 512
+                  disk_in_mb: 1024
+                  log_rate_limit_in_bytes_per_second: 1024
+                  result:
+                    failure_reason: null
+                  droplet_guid: 740ebd2b-162b-469a-bd72-3edb96fabd9a
+                  metadata:
+                    labels: {}
+                    annotations: {}
+                  created_at: '2016-05-04T17:00:41Z'
+                  updated_at: '2016-05-04T17:00:42Z'
+                  relationships:
+                    app:
+                      data:
+                        guid: ccc25a0f-c8f4-4b39-9f1b-de9f328d0ee5
+                  links:
+                    self:
+                      href: https://api.example.org/v3/tasks/d5cc22ec-99a3-4e6a-af91-a44b4ab7b6fa
+                    app:
+                      href: https://api.example.org/v3/apps/ccc25a0f-c8f4-4b39-9f1b-de9f328d0ee5
+                    cancel:
+                      href: https://api.example.org/v3/tasks/d5cc22ec-99a3-4e6a-af91-a44b4ab7b6fa/actions/cancel
+                      method: POST
+                    droplet:
+                      href: https://api.example.org/v3/droplets/740ebd2b-162b-469a-bd72-3edb96fabd9a
       '401':
         $ref: ../components/responses/Unauthorized.yaml
       '403':
@@ -300,21 +681,75 @@
         $ref: ../components/responses/NotFound.yaml
       '422':
         $ref: ../components/responses/UnprocessableEntity.yaml
+/v3/tasks/{guid}/cancel:
   put:
-    summary: Cancel a task (PUT)
-    description: Cancels a running task using PUT method. Canceled tasks will initially be in state `CANCELING` and will move to state `FAILED` once the cancel request has been processed. Cancel requests are idempotent and will be processed according to the state of the task when the request is executed. Canceling a task that is in `SUCCEEDED` or `FAILED` state will return an error.
-    operationId: cancelTaskPut
+    summary: Cancel a task (deprecated)
+    description: |-
+      Cancels a running task.
+
+      Canceled tasks will initially be in state `CANCELING` and will move to state `FAILED` once the cancel request has been processed.
+
+      Cancel requests are idempotent and will be processed according to the state of the task when the request is executed.
+
+      Canceling a task that is in `SUCCEEDED` or `FAILED` state will return an error.
+
+      > **Warning:** This endpoint is deprecated. Use `POST /v3/tasks/:guid/actions/cancel` instead.
+
+      **Permitted roles:** Admin, Space Developer, Space Supporter
+    operationId: cancelTaskShort
     tags:
       - Tasks
+    deprecated: true
     parameters:
-      - $ref: ../components/parameters/Guid.yaml
+      - name: guid
+        in: path
+        required: true
+        schema:
+          type: string
+          format: uuid
+        description: The unique identifier for the task
     responses:
       '202':
-        description: OK
+        description: Accepted
         content:
           application/json:
             schema:
               $ref: ../components/schemas/Task.yaml
+            examples:
+              default:
+                summary: default
+                value:
+                  guid: d5cc22ec-99a3-4e6a-af91-a44b4ab7b6fa
+                  sequence_id: 1
+                  name: migrate
+                  command: rake db:migrate
+                  user: vcap
+                  state: CANCELING
+                  memory_in_mb: 512
+                  disk_in_mb: 1024
+                  log_rate_limit_in_bytes_per_second: 1024
+                  result:
+                    failure_reason: null
+                  droplet_guid: 740ebd2b-162b-469a-bd72-3edb96fabd9a
+                  metadata:
+                    labels: {}
+                    annotations: {}
+                  created_at: '2016-05-04T17:00:41Z'
+                  updated_at: '2016-05-04T17:00:42Z'
+                  relationships:
+                    app:
+                      data:
+                        guid: ccc25a0f-c8f4-4b39-9f1b-de9f328d0ee5
+                  links:
+                    self:
+                      href: https://api.example.org/v3/tasks/d5cc22ec-99a3-4e6a-af91-a44b4ab7b6fa
+                    app:
+                      href: https://api.example.org/v3/apps/ccc25a0f-c8f4-4b39-9f1b-de9f328d0ee5
+                    cancel:
+                      href: https://api.example.org/v3/tasks/d5cc22ec-99a3-4e6a-af91-a44b4ab7b6fa/actions/cancel
+                      method: POST
+                    droplet:
+                      href: https://api.example.org/v3/droplets/740ebd2b-162b-469a-bd72-3edb96fabd9a
       '400':
         $ref: ../components/responses/BadRequest.yaml
       '401':
@@ -327,27 +762,3 @@
         $ref: ../components/responses/UnprocessableEntity.yaml
       '500':
         $ref: ../components/responses/500.yaml
-/v3/tasks/{guid}/cancel:
-  put:
-    summary: DEPRECATED - Cancel a task (short path)
-    description: DEPRECATED - Use /v3/tasks/{guid}/actions/cancel instead.
-    operationId: cancelTaskShort
-    tags:
-      - Tasks
-    parameters:
-      - $ref: ../components/parameters/Guid.yaml
-    responses:
-      '202':
-        description: OK
-        content:
-          application/json:
-            schema:
-              $ref: ../components/schemas/Task.yaml
-      '401':
-        $ref: ../components/responses/Unauthorized.yaml
-      '403':
-        $ref: ../components/responses/Forbidden.yaml
-      '404':
-        $ref: ../components/responses/NotFound.yaml
-      '422':
-        $ref: ../components/responses/UnprocessableEntity.yaml

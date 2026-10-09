@@ -1,0 +1,16 @@
+type: object
+properties:
+  index:
+    type: integer
+    description: The zero-based index of the process instance
+  state:
+    type: string
+    enum: ["RUNNING", "CRASHED", "STARTING", "STOPPING", "DOWN"]
+    description: 'The state of the process instance (possible values: `RUNNING`, `CRASHED`, `STARTING`, `STOPPING`, `DOWN`)'
+  since:
+    type: integer
+    description: Number of seconds since the process instance entered its current state
+description: |-
+  The process instance object (experimental)
+
+  A lightweight view of a process instance state, containing only the `index`, `state`, and `since` fields.

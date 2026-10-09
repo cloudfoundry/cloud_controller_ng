@@ -1,28 +1,45 @@
 /v3/service_brokers:
   get:
     summary: List service brokers
-    description: This endpoint retrieves the service brokers the user has access to.
+    description: |-
+      This endpoint retrieves the service brokers the user has access to.
+
+      **Permitted roles:** Admin, Admin Read-Only, Global Auditor, Space Developer *(only space-scoped brokers)*, Space Supporter *(only space-scoped brokers)*, Other *(will receive an empty list)*
     operationId: listServiceBrokers
     tags:
       - Service Brokers
     parameters:
-      - $ref: ../components/parameters/Page.yaml
-      - $ref: ../components/parameters/PerPage.yaml
-      - $ref: ../components/parameters/OrderBy.yaml
       - name: names
         in: query
+        required: false
         schema:
           type: array
           items:
             type: string
-        description: Comma-delimited list of service broker names to filter by
+        description: Comma-delimited list of service broker names to filter by (case-sensitive)
+      - $ref: ../components/parameters/Page.yaml
+      - $ref: ../components/parameters/PerPage.yaml
       - name: space_guids
         in: query
+        required: false
         schema:
           type: array
           items:
             type: string
-        description: Comma-delimited list of space guids to filter by
+        description: Comma-delimited list of space GUIDs to filter by
+      - name: order_by
+        in: query
+        required: false
+        schema:
+          type: string
+          enum:
+            - created_at
+            - -created_at
+            - updated_at
+            - -updated_at
+            - name
+            - -name
+        description: Value to sort by. Defaults to ascending; prepend with `-` to sort descending. Valid values are `created_at`, `updated_at`, `name`
       - $ref: ../components/parameters/LabelSelector.yaml
       - $ref: ../components/parameters/CreatedAts.yaml
       - $ref: ../components/parameters/UpdatedAts.yaml
@@ -41,14 +58,14 @@
                     total_results: 3
                     total_pages: 2
                     first:
-                      href: https://api.example.org?page=1&per_page=2
+                      href: https://api.example.org/v3/service_brokers?page=1&per_page=2
                     last:
-                      href: https://api.example.org?page=2&per_page=2
+                      href: https://api.example.org/v3/service_brokers?page=2&per_page=2
                     next:
-                      href: https://api.example.org?page=2&per_page=2
+                      href: https://api.example.org/v3/service_brokers?page=2&per_page=2
                     previous: null
                   resources:
-                    - guid: 123e4567-e89b-12d3-a456-426614174000
+                    - guid: dde5ad2a-d8f4-44dc-a56f-0452d744f1c3
                       name: my_service_broker
                       url: https://example.service-broker.com
                       created_at: '2015-11-13T17:02:56Z'
@@ -62,7 +79,7 @@
                           href: https://api.example.org/v3/service_brokers/dde5ad2a-d8f4-44dc-a56f-0452d744f1c3
                         service_offerings:
                           href: https://api.example.org/v3/service_offerings?service_broker_guids=dde5ad2a-d8f4-44dc-a56f-0452d744f1c3
-                    - guid: 123e4567-e89b-12d3-a456-426614174000
+                    - guid: 7aa37bad-6ccb-4ef9-ba48-9ce3a91b2b62
                       name: another_service_broker
                       url: https://another-example.service-broker.com
                       created_at: '2015-11-13T17:02:56Z'
@@ -70,7 +87,7 @@
                       relationships:
                         space:
                           data:
-                            guid: 123e4567-e89b-12d3-a456-426614174000
+                            guid: 2f35885d-0c9d-4423-83ad-fd05066f8576
                       metadata:
                         labels: {}
                         annotations: {}
@@ -99,7 +116,11 @@
         $ref: ../components/responses/ServiceUnavailable.yaml
   post:
     summary: Create a service broker
-    description: This endpoint creates a new service broker and a job to synchronize the service offerings and service plans with those in the broker’s catalog. The `Location` header refers to the created job which syncs the broker with the catalog. See [_Service broker jobs_](#service-broker-jobs) for more information and limitations.
+    description: |-
+      This endpoint creates a new service broker and a job to synchronize the service offerings and service plans with those in the broker's catalog.
+      The `Location` header refers to the created job which syncs the broker with the catalog. See [_Service broker jobs_](#service-broker-jobs) for more information and limitations.
+
+      **Permitted roles:** Admin, Space Developer *(Space Developers can only create space-scoped brokers; space-scoped brokers can only be created when the `space_scoped_private_broker_creation` feature flag is `true`)*
     operationId: createServiceBroker
     tags:
       - Service Brokers
@@ -110,7 +131,7 @@
         description: Accepted
         headers:
           Location:
-            description: URL of the job that is creating the service broker
+            description: URL of the job that is creating the service broker and synchronizing its catalog
             schema:
               type: string
               format: uri
@@ -131,12 +152,16 @@
 /v3/service_brokers/{guid}:
   get:
     summary: Get a service broker
-    description: This endpoint retrieves the service broker by GUID.
+    description: |-
+      This endpoint retrieves the service broker by GUID.
+
+      **Permitted roles:** Admin, Admin Read-Only, Global Auditor, Space Developer *(only space-scoped brokers)*, Space Supporter *(only space-scoped brokers)*
     operationId: getServiceBroker
     tags:
       - Service Brokers
     parameters:
       - $ref: ../components/parameters/Guid.yaml
+        description: The GUID of the service broker
     responses:
       '200':
         description: OK
@@ -148,7 +173,7 @@
               default:
                 summary: default
                 value:
-                  guid: 123e4567-e89b-12d3-a456-426614174000
+                  guid: dde5ad2a-d8f4-44dc-a56f-0452d744f1c3
                   name: my_service_broker
                   url: https://example.service-broker.com
                   created_at: '2015-11-13T17:02:56Z'
@@ -156,7 +181,7 @@
                   relationships:
                     space:
                       data:
-                        guid: 123e4567-e89b-12d3-a456-426614174000
+                        guid: 2f35885d-0c9d-4423-83ad-fd05066f8576
                   metadata:
                     labels:
                       type: dev
@@ -183,19 +208,30 @@
   patch:
     summary: Update a service broker
     description: |-
-      This endpoint updates a service broker. Depending on the parameters specified, the endpoint may respond with a background job, and it may synchronize the service offerings and service plans with those in the broker’s catalog.
+      This endpoint updates a service broker. Depending on the parameters specified, the endpoint may respond with a background job, and it may synchronize the service offerings and service plans with those in the broker's catalog.
 
       When a service broker has a synchronization job in progress, only updates with `metadata` are permitted until the synchronization job is complete.
+
+      Parameter | Updates Catalog | Responds with job
+      --------- | --------------- | -----------------
+      **name** | No | Yes
+      **url** | Yes | Yes
+      **authentication** | Yes | Yes
+      **metadata.labels** | No | No
+      **metadata.annotations** | No | No
+
+      **Permitted roles:** Admin, Space Developer *(only space-scoped brokers)*
     operationId: updateServiceBroker
     tags:
       - Service Brokers
     parameters:
       - $ref: ../components/parameters/Guid.yaml
+        description: The GUID of the service broker
     requestBody:
       $ref: ../components/requestBodies/ServiceBrokerUpdateRequestBody.yaml
     responses:
       '200':
-        description: OK
+        description: OK; returned when the update did not require a synchronization job
         content:
           application/json:
             schema:
@@ -204,7 +240,7 @@
               default:
                 summary: default
                 value:
-                  guid: 123e4567-e89b-12d3-a456-426614174000
+                  guid: dde5ad2a-d8f4-44dc-a56f-0452d744f1c3
                   name: my_service_broker
                   url: https://example.service-broker.com
                   created_at: '2015-11-13T17:02:56Z'
@@ -212,7 +248,7 @@
                   relationships:
                     space:
                       data:
-                        guid: 123e4567-e89b-12d3-a456-426614174000
+                        guid: 2f35885d-0c9d-4423-83ad-fd05066f8576
                   metadata:
                     labels:
                       type: dev
@@ -231,7 +267,7 @@
               guid: $response.body#/relationships/space/data/guid
             description: Retrieve the space for this service broker (space-scoped brokers only)
       '202':
-        description: Accepted
+        description: Accepted; returned when the update requires a synchronization job
         headers:
           Location:
             description: URL of the job that is updating the service broker
@@ -256,12 +292,16 @@
         $ref: ../components/responses/ServiceUnavailable.yaml
   delete:
     summary: Delete a service broker
-    description: This endpoint creates a job to delete an existing service broker. The `Location` header refers to the created job. See [_Service broker jobs_](#service-broker-jobs) for more information and limitations.
+    description: |-
+      This endpoint creates a job to delete an existing service broker. The `Location` header refers to the created job. See [_Service broker jobs_](#service-broker-jobs) for more information and limitations.
+
+      **Permitted roles:** Admin, Space Developer *(only space-scoped brokers)*
     operationId: deleteServiceBroker
     tags:
       - Service Brokers
     parameters:
       - $ref: ../components/parameters/Guid.yaml
+        description: The GUID of the service broker
     responses:
       '202':
         description: Accepted

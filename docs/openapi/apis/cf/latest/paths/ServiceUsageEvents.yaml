@@ -1,30 +1,42 @@
 /v3/service_usage_events:
   get:
     summary: List service usage events
-    description: Retrieve all service usage events the user has access to.
+    description: |-
+      Retrieve all service usage events the user has access to.
+
+      **Permitted roles:** All Roles
     operationId: listServiceUsageEvents
     tags:
       - Service Usage Events
     parameters:
       - $ref: ../components/parameters/Page.yaml
       - $ref: ../components/parameters/PerPage.yaml
-      - $ref: ../components/parameters/OrderBy.yaml
-      - $ref: ../components/parameters/CreatedAts.yaml
-      - name: after_guid
+      - name: order_by
         in: query
-        description: Filters out events before and including the event with the given guid.
+        required: false
         schema:
           type: string
+          enum:
+            - created_at
+            - -created_at
+        description: Value to sort by. Defaults to ascending; prepend with `-` to sort descending; valid value is `created_at`
+      - name: after_guid
+        in: query
+        required: false
+        schema:
+          type: string
+        description: Filters out events before and including the event with the given guid
       - name: guids
         in: query
-        description: Comma-delimited list of usage event guids to filter by.
+        required: false
         schema:
           type: array
           items:
             type: string
+        description: Comma-delimited list of usage event guids to filter by
       - name: service_instance_types
         in: query
-        description: Comma-delimited list of service instance types to filter by; valid values are `managed_service_instance` and `user_provided_service_instance`
+        required: false
         schema:
           type: array
           items:
@@ -32,13 +44,16 @@
             enum:
               - managed_service_instance
               - user_provided_service_instance
+        description: Comma-delimited list of service instance types to filter by; valid values are `managed_service_instance` and `user_provided_service_instance`
       - name: service_offering_guids
         in: query
-        description: Comma-delimited list of service offering guids to filter by
+        required: false
         schema:
           type: array
           items:
             type: string
+        description: Comma-delimited list of service offering guids to filter by
+      - $ref: ../components/parameters/CreatedAts.yaml
     responses:
       '200':
         description: OK
@@ -54,11 +69,11 @@
                     total_results: 2
                     total_pages: 2
                     first:
-                      href: https://api.example.org<%= path %>?page=1&per_page=1
+                      href: https://api.example.org/v3/service_usage_events?page=1&per_page=1
                     last:
-                      href: https://api.example.org<%= path %>?page=2&per_page=1
+                      href: https://api.example.org/v3/service_usage_events?page=2&per_page=1
                     next:
-                      href: https://api.example.org<%= path %>?page=2&per_page=1
+                      href: https://api.example.org/v3/service_usage_events?page=2&per_page=1
                     previous: null
                   resources:
                     - guid: 123e4567-e89b-12d3-a456-426614174000
@@ -105,12 +120,21 @@
 /v3/service_usage_events/{guid}:
   get:
     summary: Get a service usage event
-    description: Retrieve a service usage event.
+    description: |-
+      Retrieve a service usage event.
+
+      **Permitted roles:** Admin, Admin Read-Only, Global Auditor
     operationId: getServiceUsageEvent
     tags:
       - Service Usage Events
     parameters:
-      - $ref: ../components/parameters/Guid.yaml
+      - name: guid
+        in: path
+        required: true
+        schema:
+          type: string
+          format: uuid
+        description: The unique identifier for the service usage event
     responses:
       '200':
         description: OK
@@ -156,13 +180,24 @@
 /v3/service_usage_events/actions/destructively_purge_all_and_reseed:
   post:
     summary: Purge and seed service usage events
-    description: Destroys all existing events. Populates new usage events, one for each existing service instance. All populated events will have a `created_at` value of current time. There is the potential race condition if service instances are currently being created or deleted. The seeded usage events will have the same guid as the service instance.
+    description: |-
+      Destroys all existing events. Populates new usage events, one for each existing service instance. All populated events will have a `created_at` value of current time. There is the potential race condition if service instances are currently being created or deleted. The seeded usage events will have the same guid as the service instance.
+
+      **Permitted roles:** Admin
     operationId: purgeAndSeedServiceUsageEvents
     tags:
       - Service Usage Events
     responses:
       '200':
         description: OK
+        content:
+          application/json:
+            schema:
+              type: object
+            examples:
+              default:
+                summary: default
+                value: {}
       '400':
         $ref: ../components/responses/BadRequest.yaml
       '401':

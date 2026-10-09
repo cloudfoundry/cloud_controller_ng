@@ -1,42 +1,60 @@
 /v3/security_groups:
   get:
     summary: List security groups
-    description: List security groups.
+    description: |-
+      Retrieve all security groups the user has access to.
+
+      **Permitted roles:** Admin *(can see all security groups)*, Admin Read-Only *(can see all security groups)*, Global Auditor *(can see all security groups)*, Org Auditor *(can see globally–enabled security groups)*, Org Billing Manager *(can see globally–enabled security groups)*, Org Manager *(can see globally–enabled security groups or groups associated with a space they can see)*, Space Auditor *(can see globally–enabled security groups or groups associated with a space they can see)*, Space Developer *(can see globally–enabled security groups or groups associated with a space they can see)*, Space Manager *(can see globally–enabled security groups or groups associated with a space they can see)*, Space Supporter *(can see globally–enabled security groups or groups associated with a space they can see)*
     operationId: listSecurityGroups
     tags:
       - Security Groups
     parameters:
       - $ref: ../components/parameters/Page.yaml
       - $ref: ../components/parameters/PerPage.yaml
-      - $ref: ../components/parameters/OrderBy.yaml
+      - name: order_by
+        in: query
+        required: false
+        schema:
+          type: string
+          enum:
+            - created_at
+            - -created_at
+            - updated_at
+            - -updated_at
+        description: Value to sort by. Defaults to ascending; prepend with `-` to sort descending. Valid values are `created_at`, `updated_at`
       - $ref: ../components/parameters/CreatedAts.yaml
       - $ref: ../components/parameters/UpdatedAts.yaml
       - name: guids
         in: query
+        required: false
         schema:
           type: array
           items:
             type: string
-        description: Comma-separated list of resource GUIDs to filter by
+        description: Comma-delimited list of security group guids to filter by
       - name: names
         in: query
+        required: false
         schema:
           type: array
           items:
             type: string
-        description: Comma-separated list of names to filter by (case insensitive)
+        description: Comma-delimited list of security group names to filter by (case-sensitive)
       - name: globally_enabled_running
         in: query
+        required: false
         schema:
           type: boolean
         description: If true, only include the security groups that are enabled for running
       - name: globally_enabled_staging
         in: query
+        required: false
         schema:
           type: boolean
         description: If true, only include the security groups that are enabled for staging
       - name: running_space_guids
         in: query
+        required: false
         schema:
           type: array
           items:
@@ -44,6 +62,7 @@
         description: Comma-delimited list of space guids to filter by
       - name: staging_space_guids
         in: query
+        required: false
         schema:
           type: array
           items:
@@ -56,6 +75,62 @@
           application/json:
             schema:
               $ref: ../components/schemas/SecurityGroupList.yaml
+            examples:
+              default:
+                summary: default
+                value:
+                  pagination:
+                    total_results: 1
+                    total_pages: 1
+                    first:
+                      href: https://api.example.org/v3/security_groups?page=1&per_page=50
+                    last:
+                      href: https://api.example.org/v3/security_groups?page=1&per_page=50
+                    next: null
+                    previous: null
+                  resources:
+                    - guid: b85a788e-671f-4549-814d-e34cdb2f539a
+                      created_at: '2020-02-20T17:42:08Z'
+                      updated_at: '2020-02-20T17:42:08Z'
+                      name: my-group0
+                      globally_enabled:
+                        running: true
+                        staging: false
+                      rules:
+                        - protocol: tcp
+                          destination: 10.10.10.0/24
+                          ports: 443,80,8080
+                        - protocol: icmp
+                          destination: 10.10.10.0/24
+                          type: 8
+                          code: 0
+                          description: Allow ping requests to private services
+                      relationships:
+                        staging_spaces:
+                          data:
+                            - guid: 885735b5-aea4-4cf5-8e44-961af0e41920
+                            - guid: 2f35885d-0c9d-4423-83ad-fd05066f8576
+                        running_spaces:
+                          data: []
+                      links:
+                        self:
+                          href: https://api.example.org/v3/security_groups/b85a788e-671f-4549-814d-e34cdb2f539a
+                    - guid: a89a788e-671f-4549-814d-e34c1b2f533a
+                      created_at: '2020-02-20T17:42:08Z'
+                      updated_at: '2020-02-20T17:42:08Z'
+                      name: my-group1
+                      globally_enabled:
+                        running: true
+                        staging: true
+                      rules: []
+                      relationships:
+                        staging_spaces:
+                          data: []
+                        running_spaces:
+                          data: []
+                      links:
+                        self:
+                          href: https://api.example.org/v3/security_groups/a89a788e-671f-4549-814d-e34c1b2f533a
       '400':
         $ref: ../components/responses/BadRequest.yaml
       '401':
@@ -74,11 +149,15 @@
         $ref: ../components/responses/ServiceUnavailable.yaml
   post:
     summary: Create a security group
-    description: Create a security group.
+    description: |-
+      Create a security group.
+
+      **Permitted roles:** Admin
     operationId: createSecurityGroup
     tags:
       - Security Groups
     requestBody:
+      required: true
       content:
         application/json:
           schema:
@@ -108,7 +187,7 @@
               default:
                 summary: default
                 value:
-                  guid: 123e4567-e89b-12d3-a456-426614174000
+                  guid: b85a788e-671f-4549-814d-e34cdb2f539a
                   created_at: '2020-02-20T17:42:08Z'
                   updated_at: '2020-02-20T17:42:08Z'
                   name: my-group0
@@ -136,8 +215,8 @@
                   relationships:
                     staging_spaces:
                       data:
-                        - guid: 123e4567-e89b-12d3-a456-426614174000
-                        - guid: 123e4567-e89b-12d3-a456-426614174000
+                        - guid: 885735b5-aea4-4cf5-8e44-961af0e41920
+                        - guid: 2f35885d-0c9d-4423-83ad-fd05066f8576
                     running_spaces:
                       data: []
                   links:
@@ -160,7 +239,10 @@
 /v3/security_groups/{guid}:
   get:
     summary: Get a security group
-    description: Get a security group.
+    description: |-
+      Retrieve a security group.
+
+      **Permitted roles:** Admin *(can see all security groups)*, Admin Read-Only *(can see all security groups)*, Global Auditor *(can see all security groups)*, Org Auditor *(can see globally enabled security groups)*, Org Billing Manager *(can see globally enabled security groups)*, Org Manager *(can see globally enabled security groups or groups associated with a space they can see)*, Space Auditor *(can see globally enabled security groups or groups associated with a space they can see)*, Space Developer *(can see globally enabled security groups or groups associated with a space they can see)*, Space Manager *(can see globally enabled security groups or groups associated with a space they can see)*, Space Supporter *(can see globally enabled security groups or groups associated with a space they can see)*
     operationId: getSecurityGroup
     tags:
       - Security Groups
@@ -177,7 +259,7 @@
               default:
                 summary: default
                 value:
-                  guid: 123e4567-e89b-12d3-a456-426614174000
+                  guid: b85a788e-671f-4549-814d-e34cdb2f539a
                   created_at: '2020-02-20T17:42:08Z'
                   updated_at: '2020-02-20T17:42:08Z'
                   name: my-group0
@@ -205,8 +287,8 @@
                   relationships:
                     staging_spaces:
                       data:
-                        - guid: 123e4567-e89b-12d3-a456-426614174000
-                        - guid: 123e4567-e89b-12d3-a456-426614174000
+                        - guid: 885735b5-aea4-4cf5-8e44-961af0e41920
+                        - guid: 2f35885d-0c9d-4423-83ad-fd05066f8576
                     running_spaces:
                       data: []
                   links:
@@ -220,17 +302,41 @@
         $ref: ../components/responses/NotFound.yaml
   patch:
     summary: Update a security group
-    description: Update a security group.
+    description: |-
+      This endpoint will only update the parameters specified in the request body. Any unspecified parameters will retain their existing values.
+
+      Updates to the `rules` parameter will fully replace the current set of `rules` for the security group.
+
+      Updates to the `globally_enabled` parameter will be merged with the existing configuration. For example, an update to the `globally_enabled.running` parameter will not affect the `globally_enabled.staging` configuration.
+
+      **Permitted roles:** Admin
     operationId: updateSecurityGroup
     tags:
       - Security Groups
     parameters:
       - $ref: ../components/parameters/Guid.yaml
     requestBody:
+      required: true
       content:
         application/json:
           schema:
             $ref: ../components/schemas/SecurityGroupUpdate.yaml
+          examples:
+            default:
+              summary: default
+              value:
+                name: my-group0
+                globally_enabled:
+                  running: true
+                rules:
+                  - protocol: tcp
+                    destination: 10.10.10.0/24
+                    ports: 443,80,8080
+                  - protocol: icmp
+                    destination: 10.10.10.0/24
+                    type: 8
+                    code: 0
+                    description: Allow ping requests to private services
     responses:
       '200':
         description: OK
@@ -242,7 +348,7 @@
               default:
                 summary: default
                 value:
-                  guid: 123e4567-e89b-12d3-a456-426614174000
+                  guid: b85a788e-671f-4549-814d-e34cdb2f539a
                   created_at: '2020-02-20T17:42:08Z'
                   updated_at: '2020-02-20T17:42:08Z'
                   name: my-group0
@@ -270,8 +376,8 @@
                   relationships:
                     staging_spaces:
                       data:
-                        - guid: 123e4567-e89b-12d3-a456-426614174000
-                        - guid: 123e4567-e89b-12d3-a456-426614174000
+                        - guid: 885735b5-aea4-4cf5-8e44-961af0e41920
+                        - guid: 2f35885d-0c9d-4423-83ad-fd05066f8576
                     running_spaces:
                       data: []
                   links:
@@ -295,7 +401,10 @@
         $ref: ../components/responses/ServiceUnavailable.yaml
   delete:
     summary: Delete a security group
-    description: Delete a security group.
+    description: |-
+      Delete a security group.
+
+      **Permitted roles:** Admin
     operationId: deleteSecurityGroup
     tags:
       - Security Groups
@@ -318,124 +427,45 @@
         $ref: ../components/responses/NotFound.yaml
       '500':
         $ref: ../components/responses/500.yaml
-/v3/spaces/{guid}/running_security_groups:
-  get:
-    summary: List running security groups for a space
-    description: This endpoint returns security groups that are enabled for running globally or at the space level for the given space.
-    operationId: listRunningSecurityGroupsForSpaceBySpaceGuid
-    tags:
-      - Security Groups
-    parameters:
-      - $ref: ../components/parameters/Guid.yaml
-    responses:
-      '200':
-        description: OK
-        content:
-          application/json:
-            schema:
-              $ref: ../components/schemas/SecurityGroupList.yaml
-      '401':
-        $ref: ../components/responses/Unauthorized.yaml
-      '403':
-        $ref: ../components/responses/Forbidden.yaml
-      '404':
-        $ref: ../components/responses/NotFound.yaml
-/v3/spaces/{guid}/staging_security_groups:
-  get:
-    summary: List staging security groups for a space
-    description: This endpoint returns security groups that are enabled for staging globally or at the space level for the given space.
-    operationId: listStagingSecurityGroupsForSpaceBySpaceGuid
-    tags:
-      - Security Groups
-    parameters:
-      - $ref: ../components/parameters/Guid.yaml
-    responses:
-      '200':
-        description: OK
-        content:
-          application/json:
-            schema:
-              $ref: ../components/schemas/SecurityGroupList.yaml
-      '401':
-        $ref: ../components/responses/Unauthorized.yaml
-      '403':
-        $ref: ../components/responses/Forbidden.yaml
-      '404':
-        $ref: ../components/responses/NotFound.yaml
-  patch:
-    summary: Update a security group
-    description: This endpoint will only update the parameters specified in the request body. Any unspecified parameters will retain their existing values. Updates to the `rules` parameter will fully replace the current set of `rules` for the security group. Updates to the `globally_enabled` parameter will be merged with the existing configuration. For example, an update to the `globally_enabled.running` parameter will not affect the `globally_enabled.staging` configuration.
-    operationId: updateSecurityGroup
-    tags:
-      - Security Groups
-    parameters:
-      - $ref: ../components/parameters/Guid.yaml
-    requestBody:
-      content:
-        application/json:
-          schema:
-            $ref: ../components/schemas/SecurityGroup.yaml
-    responses:
-      '200':
-        description: OK
-        content:
-          application/json:
-            schema:
-              $ref: ../components/schemas/SecurityGroup.yaml
-      '401':
-        $ref: ../components/responses/Unauthorized.yaml
-      '403':
-        $ref: ../components/responses/Forbidden.yaml
-      '404':
-        $ref: ../components/responses/NotFound.yaml
-      '422':
-        $ref: ../components/responses/UnprocessableEntity.yaml
-  delete:
-    summary: Delete a security group
-    description: Delete a security group.
-    operationId: deleteSecurityGroup
-    tags:
-      - Security Groups
-    parameters:
-      - $ref: ../components/parameters/Guid.yaml
-    responses:
-      '202':
-        description: Accepted
-        headers:
-          Location:
-            description: URL of the job that is deleting the security group
-            schema:
-              type: string
-              format: uri
-      '401':
-        $ref: ../components/responses/Unauthorized.yaml
-      '403':
-        $ref: ../components/responses/Forbidden.yaml
-      '404':
-        $ref: ../components/responses/NotFound.yaml
-      '422':
-        $ref: ../components/responses/UnprocessableEntity.yaml
 /v3/security_groups/{guid}/relationships/running_spaces:
   post:
     summary: Bind a running security group to spaces
-    description: This endpoint binds one or more spaces to a security group with the running lifecycle. Running app containers within these spaces will inherit the rules specified by this security group. Apps within these spaces must be restarted for these changes to take effect. Unless a security group is globally-enabled, an admin must add it to a space for it to be visible for the org and space managers. Once it's visible, org and space managers can add it to additional spaces.
+    description: |-
+      This endpoint binds one or more spaces to a security group with the running lifecycle.
+
+      Running app containers within these spaces will inherit the rules specified by this security group.
+
+      Apps within these spaces must be restarted for these changes to take effect.
+
+      Unless a security group is globally-enabled, an admin must add it to a space for it to be visible for the org and space managers. Once it's visible, org and space managers can add it to additional spaces.
+
+      **Permitted roles:** Admin, Space Manager *(can bind visible security groups to their spaces; visible groups are globally–enabled security groups or groups associated with a space they can see)*, Org Manager *(can bind visible security groups to their organizations' spaces; visible groups are globally–enabled security groups or groups associated with a space they can see)*
     operationId: bindRunningSecurityGroup
     tags:
       - Security Groups
     parameters:
       - $ref: ../components/parameters/Guid.yaml
     requestBody:
+      required: true
       content:
         application/json:
           schema:
-            $ref: ../components/schemas/RelationshipToMany.yaml
+            type: object
+            properties:
+              data:
+                type: array
+                items:
+                  $ref: ../components/schemas/Relationship.yaml
+                description: Space guids that will be bound to the security group
+            required:
+              - data
           examples:
             default:
               summary: default
               value:
                 data:
-                  - guid: 123e4567-e89b-12d3-a456-426614174000
-                  - guid: 123e4567-e89b-12d3-a456-426614174000
+                  - guid: 885735b5-aea4-4cf5-8e44-961af0e41920
+                  - guid: 2f35885d-0c9d-4423-83ad-fd05066f8576
     responses:
       '200':
         description: OK
@@ -443,6 +473,17 @@
           application/json:
             schema:
               $ref: ../components/schemas/RelationshipToMany.yaml
+            examples:
+              default:
+                summary: default
+                value:
+                  data:
+                    - guid: 885735b5-aea4-4cf5-8e44-961af0e41920
+                    - guid: 2f35885d-0c9d-4423-83ad-fd05066f8576
+                    - guid: 5a84d315-9513-4d74-95e5-f6a5501eeef7
+                  links:
+                    self:
+                      href: https://api.example.org/v3/security_groups/b85a788e-671f-4549-814d-e34cdb2f539a/relationships/running_spaces
       '401':
         $ref: ../components/responses/Unauthorized.yaml
       '403':
@@ -454,7 +495,12 @@
 /v3/security_groups/{guid}/relationships/running_spaces/{space_guid}:
   delete:
     summary: Unbind a running security group from a space
-    description: This endpoint removes a space from a security group with the running lifecycle. Apps within this space must be restarted for these changes to take effect.
+    description: |-
+      This endpoint removes a space from a security group with the running lifecycle.
+
+      Apps within this space must be restarted for these changes to take effect.
+
+      **Permitted roles:** Admin, Space Manager *(can unbind visible security groups from their spaces; visible groups are globally–enabled security groups or groups associated with a space they can see)*, Org Manager *(can unbind visible security groups from their organizations' spaces; visible groups are globally–enabled security groups or groups associated with a space they can see)*
     operationId: unbindRunningSecurityGroup
     tags:
       - Security Groups
@@ -475,24 +521,42 @@
 /v3/security_groups/{guid}/relationships/staging_spaces:
   post:
     summary: Bind a staging security group to spaces
-    description: This endpoint binds one or more spaces to a security group with the staging lifecycle. Staging app containers within these spaces will inherit the rules specified by this security group. Apps within these spaces must be restaged for these changes to take effect. Unless a security group is globally-enabled, an admin must add it to a space for it to be visible for the org and space managers. Once it's visible, org and space managers can add it to additional spaces.
+    description: |-
+      This endpoint binds one or more spaces to a security group with the staging lifecycle.
+
+      Staging app containers within these spaces will inherit the rules specified by this security group.
+
+      Apps within these spaces must be restaged for these changes to take effect.
+
+      Unless a security group is globally-enabled, an admin must add it to a space for it to be visible for the org and space managers. Once it's visible, org and space managers can add it to additional spaces.
+
+      **Permitted roles:** Admin, Space Manager *(can bind visible security groups to their spaces; visible groups are globally–enabled security groups or groups associated with a space they can see)*, Org Manager *(can bind visible security groups to their organizations' spaces; visible groups are globally–enabled security groups or groups associated with a space they can see)*
     operationId: bindStagingSecurityGroup
     tags:
       - Security Groups
     parameters:
       - $ref: ../components/parameters/Guid.yaml
     requestBody:
+      required: true
       content:
         application/json:
           schema:
-            $ref: ../components/schemas/RelationshipToMany.yaml
+            type: object
+            properties:
+              data:
+                type: array
+                items:
+                  $ref: ../components/schemas/Relationship.yaml
+                description: Space guids that will be bound to the security group
+            required:
+              - data
           examples:
             default:
               summary: default
               value:
                 data:
-                  - guid: 123e4567-e89b-12d3-a456-426614174000
-                  - guid: 123e4567-e89b-12d3-a456-426614174000
+                  - guid: 885735b5-aea4-4cf5-8e44-961af0e41920
+                  - guid: 2f35885d-0c9d-4423-83ad-fd05066f8576
     responses:
       '200':
         description: OK
@@ -500,6 +564,17 @@
           application/json:
             schema:
               $ref: ../components/schemas/RelationshipToMany.yaml
+            examples:
+              default:
+                summary: default
+                value:
+                  data:
+                    - guid: 885735b5-aea4-4cf5-8e44-961af0e41920
+                    - guid: 2f35885d-0c9d-4423-83ad-fd05066f8576
+                    - guid: 5a84d315-9513-4d74-95e5-f6a5501eeef7
+                  links:
+                    self:
+                      href: https://api.example.org/v3/security_groups/b85a788e-671f-4549-814d-e34cdb2f539a/relationships/staging_spaces
       '401':
         $ref: ../components/responses/Unauthorized.yaml
       '403':
@@ -511,7 +586,12 @@
 /v3/security_groups/{guid}/relationships/staging_spaces/{space_guid}:
   delete:
     summary: Unbind a staging security group from a space
-    description: This endpoint removes a space from a security group with the staging lifecycle. Apps within this space must be restaged for these changes to take effect.
+    description: |-
+      This endpoint removes a space from a security group with the staging lifecycle.
+
+      Apps within this space must be restaged for these changes to take effect.
+
+      **Permitted roles:** Admin, Space Manager *(can unbind visible security groups from their spaces; visible groups are globally–enabled security groups or groups associated with a space they can see)*, Org Manager *(can unbind visible security groups from their organizations' spaces; visible groups are globally–enabled security groups or groups associated with a space they can see)*
     operationId: unbindStagingSecurityGroup
     tags:
       - Security Groups

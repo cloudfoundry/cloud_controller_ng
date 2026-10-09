@@ -11,32 +11,18 @@
       Cloud Foundry operators may set minimum/maximum file sizes to match against. If the file size provided is outside this range, it will not be matched against.
 
       If the `resource_matching` [feature flag](#the-feature-flag-object) is disabled, resource matching will always return an empty array.
+
+      **Permitted roles:** All Roles
     operationId: postResourceMatches
     tags:
       - Resource Matches
     requestBody:
+      description: List of resources to check for in the resource cache
+      required: true
       content:
         application/json:
           schema:
-            type: object
-            properties:
-              resources:
-                type: array
-                items:
-                  type: object
-                  properties:
-                    checksum:
-                      type: object
-                      properties:
-                        value:
-                          type: string
-                    size_in_bytes:
-                      type: integer
-                    path:
-                      type: string
-                description: List of resources to check for in the resource cache
-            required:
-              - resources
+            $ref: ../components/schemas/ResourceMatch.yaml
           examples:
             default:
               summary: default

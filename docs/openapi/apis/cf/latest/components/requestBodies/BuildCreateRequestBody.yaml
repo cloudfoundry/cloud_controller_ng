@@ -11,14 +11,31 @@ content:
             guid:
               type: string
               format: uuid
+              description: The guid of the app package to stage
           required:
             - guid
           description: App package to stage
         lifecycle:
           $ref: '../schemas/Lifecycle.yaml'
-          description: Lifecycle information for a build
+          description: Lifecycle information for a build; defaults to the lifecycle on the app
+        staging_memory_in_mb:
+          type: integer
+          description: Memory in MB allocated for staging of the build
+        staging_disk_in_mb:
+          type: integer
+          description: Disk space in MB allocated for staging of the build
+        staging_log_rate_limit_bytes_per_second:
+          type: integer
+          description: Log rate limit in bytes per second allocated for staging of the build
         metadata:
           $ref: '../schemas/Metadata.yaml'
+          description: Labels and annotations applied to the build
       required:
         - package
       description: Request schema for creating a build
+    examples:
+      default:
+        summary: default
+        value:
+          package:
+            guid: 8e4da443-f255-499c-8b47-b3729b5b7432

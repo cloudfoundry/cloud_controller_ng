@@ -1,27 +1,41 @@
 /v3/droplets:
   get:
     summary: List droplets
-    description: Retrieve all droplets.
+    description: |-
+      Retrieve all droplets the user has access to.
+
+      **Permitted roles:** All Roles
     operationId: listDroplets
     tags:
       - Droplets
     parameters:
       - $ref: ../components/parameters/Page.yaml
       - $ref: ../components/parameters/PerPage.yaml
-      - $ref: ../components/parameters/OrderBy.yaml
+      - name: order_by
+        in: query
+        required: false
+        schema:
+          type: string
+          enum:
+            - created_at
+            - -created_at
+            - updated_at
+            - -updated_at
+        description: Value to sort by. Defaults to ascending; prepend with `-` to sort descending. Valid values are `created_at` and `updated_at`
       - $ref: ../components/parameters/CreatedAts.yaml
       - $ref: ../components/parameters/UpdatedAts.yaml
       - $ref: ../components/parameters/LabelSelector.yaml
       - name: guids
         in: query
+        required: false
         schema:
           type: array
           items:
             type: string
-        description: |
-          Comma-delimited list of droplet GUIDs to filter by
+        description: Comma-delimited list of droplet guids to filter by
       - name: states
         in: query
+        required: false
         schema:
           type: array
           items:
@@ -33,38 +47,37 @@
               - COPYING
               - FAILED
               - EXPIRED
-        description: |
-          Comma-delimited list of droplet states to filter by
+        description: Comma-delimited list of droplet states to filter by
       - name: app_guids
         in: query
+        required: false
         schema:
           type: array
           items:
             type: string
-        description: |
-          Comma-delimited list of app GUIDs to filter by
+        description: Comma-delimited list of app guids to filter by
       - name: current
         in: query
+        required: false
         schema:
           type: boolean
-        description: |
-          If true, only include the current droplet for each app
+        description: If true, only include the current droplet for each app
       - name: space_guids
         in: query
+        required: false
         schema:
           type: array
           items:
             type: string
-        description: |
-          Comma-delimited list of space GUIDs to filter by
+        description: Comma-delimited list of space guids to filter by
       - name: organization_guids
         in: query
+        required: false
         schema:
           type: array
           items:
             type: string
-        description: |
-          Comma-delimited list of organization GUIDs to filter by
+        description: Comma-delimited list of organization guids to filter by
     responses:
       '200':
         description: OK
@@ -80,13 +93,13 @@
                     total_results: 2
                     total_pages: 1
                     first:
-                      href: https://api.example.org?page=1&per_page=50
+                      href: https://api.example.org/v3/droplets?page=1&per_page=50
                     last:
-                      href: https://api.example.org?page=1&per_page=50
+                      href: https://api.example.org/v3/droplets?page=1&per_page=50
                     next: null
                     previous: null
                   resources:
-                    - guid: 123e4567-e89b-12d3-a456-426614174000
+                    - guid: 585bc3c1-3743-497d-88b0-403ad6b56d16
                       state: STAGED
                       error: null
                       lifecycle:
@@ -95,7 +108,7 @@
                       image: null
                       execution_metadata: PRIVATE DATA HIDDEN
                       process_types:
-                        redacted_message: 123e4567-e89b-12d3-a456-426614174000
+                        redacted_message: '[PRIVATE DATA HIDDEN IN LISTS]'
                       checksum:
                         type: sha256
                         value: e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855
@@ -110,7 +123,7 @@
                       relationships:
                         app:
                           data:
-                            guid: 123e4567-e89b-12d3-a456-426614174000
+                            guid: 7b34f1cf-7e73-428a-bb5a-8a17a8058396
                       links:
                         self:
                           href: https://api.example.org/v3/droplets/585bc3c1-3743-497d-88b0-403ad6b56d16
@@ -126,15 +139,15 @@
                       metadata:
                         labels: {}
                         annotations: {}
-                    - guid: 123e4567-e89b-12d3-a456-426614174000
+                    - guid: fdf3851c-def8-4de1-87f1-6d4543189e22
                       state: STAGED
                       error: null
                       lifecycle:
                         type: docker
                         data: {}
-                      execution_metadata: 123e4567-e89b-12d3-a456-426614174000
+                      execution_metadata: '[PRIVATE DATA HIDDEN IN LISTS]'
                       process_types:
-                        redacted_message: 123e4567-e89b-12d3-a456-426614174000
+                        redacted_message: '[PRIVATE DATA HIDDEN IN LISTS]'
                       image: cloudfoundry/diego-docker-app-custom:latest
                       checksum: null
                       buildpacks: null
@@ -144,7 +157,7 @@
                       relationships:
                         app:
                           data:
-                            guid: 123e4567-e89b-12d3-a456-426614174000
+                            guid: 7b34f1cf-7e73-428a-bb5a-8a17a8058396
                       links:
                         self:
                           href: https://api.example.org/v3/droplets/fdf3851c-def8-4de1-87f1-6d4543189e22
@@ -175,70 +188,29 @@
       '503':
         $ref: ../components/responses/ServiceUnavailable.yaml
   post:
-    summary: Create a droplet
-    description: This endpoint is only for creating a droplet without a package. To create a droplet based on a package, see [Create a build](#create-a-build).
+    summary: Create or copy a droplet
+    description: |-
+      This endpoint is only for creating a droplet without a package. To create a droplet based on a package, see [Create a build](#create-a-build).
+
+      **Copy a droplet:** supplying the optional `source_guid` query parameter copies the droplet identified by `source_guid` to a different app instead of creating a new droplet. The copied droplet excludes the environment variables listed on the source droplet. In copy mode the only accepted body parameter is `relationships.app`, a relationship to the destination app; `process_types` is not accepted.
+
+      **Permitted roles:** Admin, Space Developer
     operationId: createDroplet
     tags:
       - Droplets
+    parameters:
+      - name: source_guid
+        in: query
+        required: false
+        schema:
+          type: string
+          format: uuid
+        description: Source guid of the droplet to be copied. When supplied, the droplet is copied to the app given in `relationships.app` rather than created from scratch
     requestBody:
       $ref: ../components/requestBodies/DropletCreateRequestBody.yaml
     responses:
       '201':
-        description: Droplet created
-        content:
-          application/json:
-            schema:
-              $ref: ../components/schemas/Droplet.yaml
-            examples:
-              default:
-                summary: default
-                value:
-                  guid: 123e4567-e89b-12d3-a456-426614174000
-                  state: AWAITING_UPLOAD
-                  error: null
-                  lifecycle:
-                    type: buildpack
-                    data: {}
-                  execution_metadata: ''
-                  process_types:
-                    rake: bundle exec rake
-                    web: bundle exec rackup config.ru -p $PORT
-                  checksum:
-                    type: sha256
-                    value: e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855
-                  buildpacks:
-                    - name: ruby_buildpack
-                      detect_output: ruby 1.6.14
-                      version: 1.1.1.
-                      buildpack_name: ruby
-                  stack: cflinuxfs4
-                  image: null
-                  created_at: '2016-03-28T23:39:34Z'
-                  updated_at: '2016-03-28T23:39:47Z'
-                  relationships:
-                    app:
-                      data:
-                        guid: 123e4567-e89b-12d3-a456-426614174000
-                  links:
-                    self:
-                      href: https://api.example.org/v3/droplets/585bc3c1-3743-497d-88b0-403ad6b56d16
-                    app:
-                      href: https://api.example.org/v3/apps/7b34f1cf-7e73-428a-bb5a-8a17a8058396
-                    assign_current_droplet:
-                      href: https://api.example.org/v3/apps/7b34f1cf-7e73-428a-bb5a-8a17a8058396/relationships/current_droplet
-                      method: PATCH
-                    upload:
-                      href: https://api.example.org/v3/droplets/585bc3c1-3743-497d-88b0-403ad6b56d16/upload
-                      method: POST
-                  metadata:
-                    labels: {}
-                    annotations: {}
-        links:
-          app:
-            operationId: getApp
-            parameters:
-              guid: $response.body#/relationships/app/data/guid
-            description: Retrieve the app for this droplet
+        $ref: ../components/responses/DropletCreateResponse.yaml
       '400':
         $ref: ../components/responses/BadRequest.yaml
       '401':
@@ -258,7 +230,10 @@
 /v3/droplets/{guid}:
   get:
     summary: Get a droplet
-    description: Retrieve a droplet.
+    description: |-
+      Retrieve a droplet.
+
+      **Permitted roles:** Admin, Admin Read-Only, Global Auditor *(some fields are redacted)*, Org Manager *(some fields are redacted)*, Space Auditor *(some fields are redacted)*, Space Developer, Space Manager *(some fields are redacted)*, Space Supporter *(some fields are redacted)*
     operationId: getDroplet
     tags:
       - Droplets
@@ -266,7 +241,31 @@
       - $ref: ../components/parameters/Guid.yaml
     responses:
       '200':
-        description: Droplet retrieved
+        $ref: ../components/responses/DropletGetResponse.yaml
+      '400':
+        $ref: ../components/responses/BadRequest.yaml
+      '401':
+        $ref: ../components/responses/Unauthorized.yaml
+      '403':
+        $ref: ../components/responses/Forbidden.yaml
+      '404':
+        $ref: ../components/responses/NotFound.yaml
+  patch:
+    summary: Update a droplet
+    description: |-
+      Update a droplet.
+
+      **Permitted roles:** Admin, Space Developer, Build State Updater *(this is a special component role; [read more about component roles](#component-roles))*
+    operationId: updateDroplet
+    tags:
+      - Droplets
+    parameters:
+      - $ref: ../components/parameters/Guid.yaml
+    requestBody:
+      $ref: ../components/requestBodies/DropletUpdateRequestBody.yaml
+    responses:
+      '200':
+        description: Successfully updated droplet
         content:
           application/json:
             schema:
@@ -275,7 +274,7 @@
               default:
                 summary: default
                 value:
-                  guid: 123e4567-e89b-12d3-a456-426614174000
+                  guid: 585bc3c1-3743-497d-88b0-403ad6b56d16
                   state: STAGED
                   error: null
                   lifecycle:
@@ -300,7 +299,7 @@
                   relationships:
                     app:
                       data:
-                        guid: 123e4567-e89b-12d3-a456-426614174000
+                        guid: 7b34f1cf-7e73-428a-bb5a-8a17a8058396
                   links:
                     self:
                       href: https://api.example.org/v3/droplets/585bc3c1-3743-497d-88b0-403ad6b56d16
@@ -314,55 +313,10 @@
                     download:
                       href: https://api.example.org/v3/droplets/585bc3c1-3743-497d-88b0-403ad6b56d16/download
                   metadata:
-                    labels: {}
-                    annotations: {}
-        links:
-          app:
-            operationId: getApp
-            parameters:
-              guid: $response.body#/relationships/app/data/guid
-            description: Retrieve the app for this droplet
-      '400':
-        $ref: ../components/responses/BadRequest.yaml
-      '403':
-        $ref: ../components/responses/Forbidden.yaml
-      '404':
-        $ref: ../components/responses/NotFound.yaml
-  patch:
-    summary: Update a droplet
-    description: Update a droplet.
-    operationId: updateDroplet
-    tags:
-      - Droplets
-    parameters:
-      - $ref: ../components/parameters/Guid.yaml
-    requestBody:
-      description: Droplet object that needs to be updated
-      required: true
-      content:
-        application/json:
-          schema:
-            type: object
-            properties:
-              metadata:
-                $ref: ../components/schemas/Metadata.yaml
-              image:
-                type: string
-                description: Image reference where the built complete image was stored
-            required: []
-            description: Request schema for updating a droplet
-          examples:
-            default:
-              summary: default
-              value:
-                metadata:
-                  labels:
-                    key: value
-                  annotations:
-                    note: detailed information
-    responses:
-      '200':
-        $ref: ../components/responses/DropletGetResponse.yaml
+                    labels:
+                      release: stable
+                    annotations:
+                      note: detailed information
       '400':
         $ref: ../components/responses/BadRequest.yaml
       '401':
@@ -374,18 +328,17 @@
       '409':
         $ref: ../components/responses/Conflict.yaml
       '422':
-        description: Unprocessable Entity
-        content:
-          application/json:
-            schema:
-              $ref: ../components/schemas/Error.yaml
+        $ref: ../components/responses/UnprocessableEntity.yaml
       '500':
         $ref: ../components/responses/500.yaml
       '503':
         $ref: ../components/responses/ServiceUnavailable.yaml
   delete:
     summary: Delete a droplet
-    description: Delete a droplet.
+    description: |-
+      Delete a droplet.
+
+      **Permitted roles:** Admin, Space Developer
     operationId: deleteDroplet
     tags:
       - Droplets
@@ -400,10 +353,6 @@
             schema:
               type: string
               format: uri
-        content:
-          application/json:
-            schema:
-              $ref: ../components/schemas/Job.yaml
       '401':
         $ref: ../components/responses/Unauthorized.yaml
       '403':
@@ -418,9 +367,11 @@
   get:
     summary: Download droplet bits
     description: |-
-      Download a gzip compressed tarball file containing a Cloud Foundry compatible droplet.
-      When using a remote blobstore, such as AWS, the response is a redirect to the actual location of the bits. If the client is automatically following redirects, then the OAuth token that was used to communicate with Cloud Controller will be relayed on the new redirect request. Some blobstores may reject the request in that case. Clients may need to follow the redirect without including the OAuth token.
+      Download a gzip compressed tarball file containing a Cloud Foundry compatible droplet. When using a remote blobstore, such as AWS, the response is a redirect to the actual location of the bits. If the client is automatically following redirects, then the OAuth token that was used to communicate with Cloud Controller will be relayed on the new redirect request. Some blobstores may reject the request in that case. Clients may need to follow the redirect without including the OAuth token.
+
       Only droplets that are in the `STAGED` state and have lifecycle type `buildpack` can be downloaded.
+
+      **Permitted roles:** Admin, Admin Read-Only, Global Auditor, Org Manager, Space Auditor, Space Developer, Space Manager
     operationId: downloadDroplet
     tags:
       - Droplets
@@ -428,17 +379,21 @@
       - $ref: ../components/parameters/Guid.yaml
     responses:
       '200':
-        description: OK
+        description: The droplet bits; returned directly when the blobstore is local to the Cloud Controller
         content:
           application/octet-stream:
             schema:
               type: string
               format: binary
-          text/html:
+              description: A gzip compressed tarball containing the droplet
+      '302':
+        description: Redirect to the actual location of the bits in the remote blobstore
+        headers:
+          Location:
+            description: URL of the droplet bits in the blobstore
             schema:
               type: string
-      '302':
-        description: Redirect to download location
+              format: uri
       '401':
         $ref: ../components/responses/Unauthorized.yaml
       '403':
@@ -452,69 +407,65 @@
 /v3/droplets/{guid}/upload:
   post:
     summary: Upload droplet bits
-    description: Upload a gzip compressed tarball file containing a Cloud Foundry compatible droplet. The file must be sent as part of a multi-part form.
+    description: |-
+      Upload a gzip compressed tarball file containing a Cloud Foundry compatible droplet. The file must be sent as part of a multi-part form.
+
+      **Permitted roles:** Admin, Space Developer
     operationId: uploadDroplet
     tags:
       - Droplets
     parameters:
       - $ref: ../components/parameters/Guid.yaml
     requestBody:
-      description: The droplet file to be uploaded
-      required: true
-      content:
-        multipart/form-data:
-          schema:
-            type: object
-            properties:
-              bits:
-                type: string
-                format: binary
-              resources:
-                type: array
-                items:
-                  type: object
-                  properties:
-                    path:
-                      type: string
-                    size_in_bytes:
-                      type: integer
-                    checksum:
-                      type: object
-                      properties:
-                        value:
-                          type: string
-        application/json:
-          schema:
-            type: object
-            properties:
-              resources:
-                type: array
-                items:
-                  type: object
-                  properties:
-                    path:
-                      type: string
-                    size_in_bytes:
-                      type: integer
-                    checksum:
-                      type: object
-                      properties:
-                        value:
-                          type: string
+      $ref: ../components/requestBodies/DropletUploadRequestBody.yaml
     responses:
-      '200':
-        $ref: ../components/responses/DropletGetResponse.yaml
       '202':
-        description: Upload initiated
+        description: Upload accepted; the droplet bits are processed asynchronously
         headers:
           Location:
+            description: URL of the job that is processing the droplet upload
             schema:
               type: string
-            description: URL of the job tracking the upload
+              format: uri
         content:
           application/json:
             schema:
               $ref: ../components/schemas/Droplet.yaml
+            examples:
+              default:
+                summary: default
+                value:
+                  guid: 3c64aba2-2d9e-4eea-9e07-6fec1636315e
+                  state: PROCESSING_UPLOAD
+                  error: null
+                  lifecycle:
+                    type: buildpack
+                    data: {}
+                  checksum: null
+                  buildpacks: []
+                  stack: null
+                  image: null
+                  execution_metadata: ''
+                  process_types:
+                    rake: bundle exec rake
+                    web: bundle exec rackup config.ru -p $PORT
+                  created_at: '2019-05-15T22:43:54Z'
+                  updated_at: '2019-05-15T22:53:02Z'
+                  relationships:
+                    app:
+                      data:
+                        guid: a7c7b09d-350d-4816-bf0b-18612fb2eab4
+                  links:
+                    self:
+                      href: https://api.example.org/v3/droplets/3c64aba2-2d9e-4eea-9e07-6fec1636315e
+                    app:
+                      href: https://api.example.org/v3/apps/a7c7b09d-350d-4816-bf0b-18612fb2eab4
+                    assign_current_droplet:
+                      href: https://api.example.org/v3/apps/a7c7b09d-350d-4816-bf0b-18612fb2eab4/relationships/current_droplet
+                      method: PATCH
+                  metadata:
+                    labels: {}
+                    annotations: {}
       '401':
         $ref: ../components/responses/Unauthorized.yaml
       '403':
