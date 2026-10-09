@@ -1,0 +1,90 @@
+---
+openapi: 3.0.3
+info:
+  title: Cloud Controller V3 API
+  version: v3
+  description: ''
+servers: []
+paths:
+  "/v3/apps/{guid}/manifest":
+    get:
+      summary: Generate a manifest for an app
+      tags:
+      - AppManifest
+      parameters:
+      - name: guid
+        in: path
+        required: true
+        schema:
+          type: string
+        example: edc4fd24-919d-40ca-86bb-451a864b98d6
+      responses:
+        '200':
+          description: retrieves an app manifest for the app
+          content:
+            application/x-yaml:
+              schema:
+                type: string
+              example: |
+                ---
+                applications:
+                - name: name-15875
+                  env:
+                    one: tomato
+                    two: potato
+                  lifecycle: docker
+                  docker:
+                    image: org/image-6444006f-97b1-4309-9d1a-8c74b30473fc:latest
+                    username: xXxMyL1ttlePwnyxXx
+                  features:
+                    ssh: true
+                    revisions: true
+                    service-binding-k8s: false
+                    file-based-vcap-services: false
+                  services:
+                  - si-1
+                  - si-2
+                  routes:
+                  - route: a_host.domain-864.example.com
+                    protocol: http1
+                    options: {}
+                  - route: b_host.domain-864.example.com/path
+                    protocol: http1
+                    options: {}
+                  metadata:
+                    labels:
+                      potato: idaho
+                    annotations:
+                      style: mashed
+                  processes:
+                  - type: web
+                    instances: 1
+                    memory: 1024M
+                    disk_quota: 1024M
+                    log-rate-limit-per-second: -1
+                    health-check-type: port
+                    readiness-health-check-type: process
+                  - type: worker
+                    instances: 1
+                    memory: 1024M
+                    disk_quota: 1024M
+                    log-rate-limit-per-second: 1M
+                    command: Do a thing
+                    health-check-type: http
+                    health-check-http-endpoint: "/foobar"
+                    readiness-health-check-type: http
+                    readiness-health-check-http-endpoint: "/foobaz"
+                    timeout: 5
+                  sidecars:
+                  - name: authenticator
+                    process_types:
+                    - web
+                    - worker
+                    command: "./authenticator"
+                  - name: my_sidecar
+                    process_types:
+                    - other_worker
+                    command: rackup
+tags:
+- name: AppManifest
+  description: ''
