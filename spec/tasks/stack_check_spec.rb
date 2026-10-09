@@ -21,13 +21,17 @@ RSpec.describe 'stack_check' do
     dbl
   end
 
+  # Memoized so the Tempfile stays referenced and is not GC-unlinked mid-example.
+  let(:stacks_file) { Tempfile.new }
+
   before do
-    file = Tempfile.new
-    file.write(stack_file_contents.to_yaml)
-    file.close
-    TestConfig.override(stacks_file: file.path)
+    stacks_file.write(stack_file_contents.to_yaml)
+    stacks_file.close
+    TestConfig.override(stacks_file: stacks_file.path)
     allow(RakeConfig).to receive(:config).and_return(TestConfig.config_instance)
   end
+
+  after { stacks_file.unlink }
 
   it 'does not load all models' do
     expect(VCAP::CloudController::DB).not_to receive(:load_models_without_migrations_check)
