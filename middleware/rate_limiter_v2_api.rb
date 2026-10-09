@@ -36,9 +36,8 @@ module CloudFoundry
         VCAP::CloudController::SecurityContext.v2_rate_limit_exempted?
       end
 
-      def rate_limit_error(_env)
-        api_error = CloudController::Errors::ApiError.new_from_details('RateLimitV2APIExceeded')
-        ErrorPresenter.new(api_error, Rails.env.test?, V2ErrorHasher.new(api_error)).to_hash
+      def rate_limit_error_name(_env)
+        'RateLimitV2APIExceeded'
       end
     end
   end

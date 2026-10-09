@@ -103,6 +103,54 @@ module VCAP::CloudController
           expect(config_hash[:local_route]).to eq('127.0.0.1')
         end
       end
+
+      describe 'redis counter defaults' do
+        let(:base_hash) { YAMLConfig.safe_load_file('config/cloud_controller.yml') }
+
+        context 'when concurrency_rate_limiter is enabled' do
+          let(:config_hash) do
+            base_hash['concurrency_rate_limiter'] = { 'enabled' => true, 'blocking_limit' => 10 }
+            base_hash['puma'] = { 'automatic_worker_count' => false, 'workers' => 2, 'max_threads' => 5 }
+            Config.load_from_hash(base_hash, context: :api).config_hash
+          end
+
+          it 'derives redis_connection_pool_size from puma max_threads' do
+            expect(config_hash[:redis_connection_pool_size]).to eq(5)
+          end
+
+          it 'derives redis_counter_ttl_seconds from request_timeout_in_seconds + 1' do
+            expect(config_hash[:redis_counter_ttl_seconds]).to eq(config_hash[:request_timeout_in_seconds] + 1)
+          end
+        end
+
+        context 'when max_concurrent_service_broker_requests is set' do
+          let(:config_hash) do
+            base_hash['max_concurrent_service_broker_requests'] = 3
+            base_hash['puma'] = { 'automatic_worker_count' => false, 'workers' => 2, 'max_threads' => 4 }
+            Config.load_from_hash(base_hash, context: :api).config_hash
+          end
+
+          it 'derives redis_connection_pool_size from puma max_threads' do
+            expect(config_hash[:redis_connection_pool_size]).to eq(4)
+          end
+        end
+
+        context 'when neither rate limiter is active' do
+          let(:config_hash) do
+            base_hash['concurrency_rate_limiter'] = { 'enabled' => false }
+            base_hash['max_concurrent_service_broker_requests'] = 0
+            Config.load_from_hash(base_hash, context: :api).config_hash
+          end
+
+          it 'does not set redis_connection_pool_size' do
+            expect(config_hash[:redis_connection_pool_size]).to be_nil
+          end
+
+          it 'does not set redis_counter_ttl_seconds' do
+            expect(config_hash[:redis_counter_ttl_seconds]).to be_nil
+          end
+        end
+      end
     end
 
     describe '.load_from_file' do

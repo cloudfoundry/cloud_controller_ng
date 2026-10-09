@@ -110,7 +110,9 @@ module VCAP::CloudController
               anything,
               logger: instance_of(Steno::Logger),
               max_concurrent_requests: TestConfig.config_instance.get(:max_concurrent_service_broker_requests),
-              broker_timeout_seconds: TestConfig.config_instance.get(:broker_client_timeout_seconds)
+              broker_timeout_seconds: TestConfig.config_instance.get(:broker_client_timeout_seconds),
+              redis_connection_pool_size: TestConfig.config_instance.get(:redis_connection_pool_size),
+              redis_counter_ttl_seconds: TestConfig.config_instance.get(:redis_counter_ttl_seconds)
             )
           end
         end
@@ -218,6 +220,57 @@ module VCAP::CloudController
           builder.build(TestConfig.override(security_event_logging: enabled_config), request_metrics, request_logs).to_app
 
           expect(CloudFoundry::Middleware::CefLogs).to have_received(:new).with(anything, fake_logger, TestConfig.config_instance.get(:local_route))
+        end
+      end
+
+      describe 'ConcurrencyRateLimiter' do
+        before do
+          allow(CloudFoundry::Middleware::ConcurrencyRateLimiter).to receive(:new)
+        end
+
+        context 'when enabled' do
+          before do
+            builder.build(TestConfig.override(concurrency_rate_limiter: {
+                                                enabled: true,
+                                                blocking_limit: 10,
+                                                logging_limit: 5
+                                              }), request_metrics, request_logs).to_app
+          end
+
+          it 'enables the ConcurrencyRateLimiter middleware' do
+            expect(CloudFoundry::Middleware::ConcurrencyRateLimiter).to have_received(:new).with(
+              anything,
+              logger: instance_of(Steno::Logger),
+              blocking_limit: 10,
+              logging_limit: 5,
+              redis_connection_pool_size: TestConfig.config_instance.get(:redis_connection_pool_size),
+              redis_counter_ttl_seconds: TestConfig.config_instance.get(:redis_counter_ttl_seconds)
+            )
+          end
+        end
+
+        context 'when disabled' do
+          before do
+            builder.build(TestConfig.override(concurrency_rate_limiter: { enabled: false }), request_metrics, request_logs).to_app
+          end
+
+          it 'does not enable the ConcurrencyRateLimiter middleware' do
+            expect(CloudFoundry::Middleware::ConcurrencyRateLimiter).not_to have_received(:new)
+          end
+        end
+      end
+
+      describe 'UserContextSetter' do
+        before do
+          allow(CloudFoundry::Middleware::UserContextSetter).to receive(:new)
+        end
+
+        it 'wires UserContextSetter with the security context configurer' do
+          builder.build(TestConfig.config_instance, request_metrics, request_logs).to_app
+          expect(CloudFoundry::Middleware::UserContextSetter).to have_received(:new).with(
+            anything,
+            instance_of(VCAP::CloudController::Security::SecurityContextConfigurer)
+          )
         end
       end
 
