@@ -679,7 +679,7 @@ RSpec.describe 'Processes' do
     end
 
     let(:instances_reporters) { double(:instances_reporters) }
-    let(:usage_time) { Time.now.utc.to_s }
+    let(:usage_time) { Time.now.utc.to_datetime.rfc3339 }
 
     let(:expected_response) do
       {

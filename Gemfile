@@ -51,6 +51,7 @@ end
 group :test do
   gem 'factory_bot', '~> 6.5'
   gem 'mock_redis'
+  gem 'openapi_first'
   gem 'parallel_tests'
   gem 'rack-test'
   gem 'rspec', '~> 3.13.2'

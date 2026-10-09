@@ -1,0 +1,102 @@
+# Check the traffic our request specs already generate against the OpenAPI
+# description in docs/openapi, and report what it finds.
+#
+# Informational: the description already disagrees with the API in a handful
+# of places, so the run publishes a digest rather than failing. Dispatch it
+# with `strict` to see what gating would do.
+name: OpenAPI Conformance
+
+concurrency:
+  group: '${{ github.workflow }}-${{ github.head_ref || github.run_id }}'
+  cancel-in-progress: true
+
+on:
+  workflow_dispatch:
+    inputs:
+      strict:
+        description: 'Fail the job on a non-conforming response'
+        type: boolean
+        default: false
+  pull_request:
+    branches: [ main ]
+    paths:
+      - 'app/**'
+      - 'lib/**'
+      - 'docs/openapi/**'
+      - 'spec/request/**'
+      - 'spec/support/openapi_conformance.rb'
+      - 'spec/support/request_spec_helper.rb'
+      - '.github/workflows/openapi_conformance.yml'
+
+permissions:
+  contents: read
+
+jobs:
+  Conformance:
+    name: Request specs vs. OpenAPI description
+    runs-on: ubuntu-latest
+    timeout-minutes: 45
+    services:
+      postgres:
+        image: postgres:17
+        env:
+          POSTGRES_PASSWORD: rootpassword
+        # Test-only durability tuning: skip the work that backs durability.
+        command: >-
+          postgres
+          -c fsync=off
+          -c synchronous_commit=off
+          -c full_page_writes=off
+        options: >-
+          --tmpfs /var/lib/postgresql/data:rw,size=2g
+          --health-cmd pg_isready
+          --health-interval 10s
+          --health-timeout 5s
+          --health-retries 5
+        ports:
+          - 5432:5432
+    env:
+      DB: postgres
+      POSTGRES_CONNECTION_PREFIX: postgres://postgres:rootpassword@localhost:5432
+      OPENAPI_CONFORMANCE: ${{ (github.event_name == 'workflow_dispatch' && inputs.strict) && 'strict' || '1' }}
+    steps:
+      - uses: actions/checkout@v7
+      - uses: ./.github/workflows/composite/setup
+      - uses: actions/setup-node@v7
+        with:
+          node-version: 24
+
+      # openapi_first takes a single file, so the multi-file redocly source
+      # has to be bundled before the specs can read it.
+      - name: Build the API description
+        working-directory: docs/openapi
+        run: |
+          yarn install --frozen-lockfile
+          yarn build
+
+      - name: Prepare the database
+        run: bundle exec rake db:recreate
+
+      - name: Run request specs against the description
+        run: bundle exec rspec spec/request --format progress
+
+      - name: Publish the report
+        if: always()
+        run: |
+          if [ -f out/openapi_conformance.md ]; then
+            cat out/openapi_conformance.md >> "$GITHUB_STEP_SUMMARY"
+          else
+            echo '## OpenAPI conformance' >> "$GITHUB_STEP_SUMMARY"
+            echo 'No report produced -- the run failed before the specs finished.' >> "$GITHUB_STEP_SUMMARY"
+          fi
+
+      - name: Upload the report
+        if: always()
+        uses: actions/upload-artifact@v7
+        with:
+          name: openapi-conformance
+          path: |
+            out/openapi_conformance.md
+            out/openapi_coverage.html
+          if-no-files-found: warn
+          retention-days: 7
