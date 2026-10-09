@@ -7,7 +7,12 @@ module VCAP::CloudController
 
     let(:config_hash) { { url: 'http://uaa-url' } }
     let(:uaa_info) { double(CF::UAA::Info) }
-    let(:rsa_key) { OpenSSL::PKey::RSA.new(2048) }
+
+    # Generated once at load time to avoid per-example RSA key generation overhead
+    rsa_key_const  = OpenSSL::PKey::RSA.new(2048)
+    rsa_key2_const = OpenSSL::PKey::RSA.new(2048)
+
+    let(:rsa_key) { rsa_key_const }
     let(:rsa_pem) { rsa_key.public_key.to_pem }
     let(:key_hash) { { 'key-name' => { 'value' => rsa_pem } } }
     let(:my_logger) { double(Steno::Logger) }
@@ -52,7 +57,7 @@ module VCAP::CloudController
       end
 
       context 'when key was fetched more than 30 seconds ago' do
-        let(:rsa_key2) { OpenSSL::PKey::RSA.new(2048) }
+        let(:rsa_key2) { rsa_key2_const }
         let(:key_hash2) { { 'key-name' => { 'value' => rsa_key2.public_key.to_pem } } }
 
         before { allow(uaa_info).to receive(:validation_keys_hash).and_return(key_hash, key_hash2) }
@@ -72,7 +77,7 @@ module VCAP::CloudController
       end
 
       context 'when key was fetched less than 30 seconds ago' do
-        let(:rsa_key2) { OpenSSL::PKey::RSA.new(2048) }
+        let(:rsa_key2) { rsa_key2_const }
         let(:key_hash2) { { 'key-name' => { 'value' => rsa_key2.public_key.to_pem } } }
 
         before { allow(uaa_info).to receive(:validation_keys_hash).and_return(key_hash, key_hash2) }

@@ -3,20 +3,19 @@ require 'messages/validators/label_selector_requirement_validator'
 
 module VCAP::CloudController::Validators
   RSpec.describe 'LabelSelectorRequirementValidator' do
-    let(:label_selector_class) do
-      Class.new do
-        include ActiveModel::Model
-        include VCAP::CloudController::Validators
+    label_selector_class = Class.new do
+      include ActiveModel::Model
+      include VCAP::CloudController::Validators
 
-        attr_accessor :requirements
+      attr_accessor :requirements
 
-        validates_with LabelSelectorRequirementValidator
+      validates_with LabelSelectorRequirementValidator
 
-        def self.model_name
-          ActiveModel::Name.new(self, nil, 'label selector class')
-        end
+      def self.model_name
+        ActiveModel::Name.new(self, nil, 'label selector class')
       end
     end
+
     let(:message) { label_selector_class.new({ requirements: }) }
 
     context 'when requirements are empty' do
