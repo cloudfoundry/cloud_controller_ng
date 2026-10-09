@@ -262,7 +262,25 @@ module VCAP::CloudController
     describe 'GET /staging/packages/:guid' do
       let(:package) { create(:package_model) }
 
-      before { authorize(staging_user, staging_password) }
+      # FLAKE_DEBUG: temporary instrumentation for the intermittent 404 on this
+      # endpoint. Force the lazy `package` INSERT here and log the db/connection/
+      # thread identity of the INSERTING side, so the controller-side FLAKE_DEBUG
+      # line (app/controllers/runtime/stagings_controller.rb) has a baseline to
+      # compare against -- a connection or thread swap between insert and read is
+      # only conclusive with both sides logged. Revert together with the
+      # controller-side probe once CI has captured one occurrence.
+      before do
+        authorize(staging_user, staging_password)
+
+        db = VCAP::CloudController::PackageModel.db
+        guid = package.guid
+        conn_id = db.synchronize(&:object_id)
+        warn(
+          "FLAKE_DEBUG stagings-404-insert guid=#{guid} " \
+          "in_txn=#{db.in_transaction?} db_id=#{db.object_id} " \
+          "conn_id=#{conn_id} thread_id=#{Thread.current.object_id}"
+        )
+      end
 
       def create_test_blob
         tmpfile = Tempfile.new('staging-test-blob')
