@@ -194,17 +194,19 @@ module VCAP::CloudController
             changes[censored] = Presenters::Censorship::PRIVATE_DATA_HIDDEN if changes.key?(censored)
           end
 
-          v2_buildpack = changes.key?('buildpack')
-          v3_buildpack = changes.key?('lifecycle') && changes['lifecycle'].key?('data') && changes['lifecycle']['data'].key?('buildpack')
-
-          if v2_buildpack
-            buildpack_attr = changes['buildpack']
-            changes['buildpack'] = CloudController::UrlSecretObfuscator.obfuscate(buildpack_attr) if buildpack_attr
-          elsif v3_buildpack
-            buildpack_attr = changes['lifecycle']['data']['buildpack']
-            changes['lifecycle']['data']['buildpack'] = CloudController::UrlSecretObfuscator.obfuscate(buildpack_attr) if buildpack_attr
-          end
+          obfuscate_buildpack_urls(changes)
         end
+      end
+
+      def obfuscate_buildpack_urls(changes)
+        # Top-level 'buildpack' is v2-only; remove with the v2 API.
+        changes['buildpack'] = CloudController::UrlSecretObfuscator.obfuscate(changes['buildpack']) if changes['buildpack']
+
+        lifecycle_data = changes['lifecycle']['data'] if changes.key?('lifecycle') && changes['lifecycle'].key?('data')
+        return unless lifecycle_data
+
+        lifecycle_data['buildpack'] = CloudController::UrlSecretObfuscator.obfuscate(lifecycle_data['buildpack']) if lifecycle_data['buildpack']
+        lifecycle_data['buildpacks'] = lifecycle_data['buildpacks'].map { |b| CloudController::UrlSecretObfuscator.obfuscate(b) } if lifecycle_data['buildpacks']
       end
     end
   end
