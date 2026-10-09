@@ -24,7 +24,7 @@ RSpec.describe 'migration to add delete cascade to foreign keys', isolation: :tr
       db[:buildpack_lifecycle_data].insert(guid: 'another_bld_guid', build_guid: 'not_exists')
       db[:buildpack_lifecycle_buildpacks].insert(guid: 'another_blb_guid', buildpack_lifecycle_data_guid: 'another_bld_guid')
 
-      Sequel::Migrator.run(db, migrations_path, target: current_migration_index, allow_missing_migration_files: true)
+      run_migration
 
       # After migration: prevents inserts with non-existent build_guid
       expect { db[:buildpack_lifecycle_data].insert(guid: 'bld_guid_new', build_guid: 'not_exists') }.to raise_error(Sequel::ForeignKeyConstraintViolation)
