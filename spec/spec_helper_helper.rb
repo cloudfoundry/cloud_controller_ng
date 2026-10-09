@@ -169,6 +169,25 @@ module SpecHelperHelper
         TmpdirCleaner.clean
       end
 
+      # Guard against a leaked Timecop clock. A spec that freezes or travels
+      # time without returning it corrupts every following example that derives
+      # a value from Time.now (e.g. `created_at: Time.now.utc - 1.second`),
+      # producing order-dependent flakes far from the real culprit. The global
+      # `after { Timecop.return }` below would silently absorb such a leak, so
+      # detect it at example entry and fail loudly, naming the example that
+      # inherited the leaked clock -- its predecessor is the one to fix.
+      rspec_config.prepend_before do
+        if Timecop.top_stack_item
+          leaked = Timecop.top_stack_item
+          Timecop.return
+          raise 'Timecop clock leaked into this example from a predecessor ' \
+                "(mock type=#{leaked.mock_type}, mocked now=#{Time.now.utc.iso8601}). " \
+                'A prior spec froze or travelled time without returning it. Find the ' \
+                'predecessor (run with the same --seed and bisect) and pair its ' \
+                'Timecop.freeze/travel with Timecop.return (or use the block form).'
+        end
+      end
+
       rspec_config.after do
         Timecop.return
       end
