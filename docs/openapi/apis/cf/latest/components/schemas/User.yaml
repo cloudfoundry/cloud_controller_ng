@@ -6,25 +6,30 @@ properties:
   created_at:
     type: string
     format: date-time
-    description: The ISO8601 compatible date and time when resource was created
+    description: The time with zone when the object was created
   updated_at:
     type: string
     format: date-time
-    description: The ISO8601 compatible date and time when resource was last updated
+    description: The time with zone when the object was last updated
   username:
     type: [string, "null"]
-    description: The username of the user
+    description: The name registered in UAA; will be `null` for UAA clients and non-UAA users
   presentation_name:
     type: string
-    description: The presentation name of the user
+    description: The name displayed for the user; for UAA users, this is the same as the username. For UAA clients, this is the UAA client ID
   origin:
     type: [string, "null"]
-    description: The origin of the user
+    description: The identity provider for the UAA user; will be `null` for UAA clients
   metadata:
     $ref: './Metadata.yaml'
+    description: Labels applied to and annotations added to the user
   links:
     type: object
+    description: Links to related resources
     properties:
       self:
         $ref: './Link.yaml'
         description: The URL to get this user
+description: |
+  The user resource is used to manage access to organizations, spaces, and other resources within Cloud Foundry.
+  Cloud Controller users "shadow" a corresponding user or client in UAA; the user's guid should match either a UAA user id or a UAA client id.

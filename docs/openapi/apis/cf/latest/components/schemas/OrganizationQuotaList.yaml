@@ -1,9 +1,15 @@
 type: object
 allOf:
-  - $ref: './Pagination.yaml'
-  - properties:
+  - type: object
+    properties:
+      pagination:
+        $ref: './Pagination.yaml'
+        description: Pagination information for the list of organization quotas
+  - type: object
+    properties:
       resources:
         type: array
         items:
           $ref: './OrganizationQuota.yaml'
+        description: List of organization quotas
 description: A paginated list of organization quotas

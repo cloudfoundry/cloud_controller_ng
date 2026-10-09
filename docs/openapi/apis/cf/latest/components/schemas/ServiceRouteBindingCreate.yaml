@@ -15,8 +15,11 @@ properties:
     description: Relationships for the service route binding
   parameters:
     type: object
-    description: A JSON object that is passed to the service broker
+    additionalProperties: true
+    description: A JSON object that is passed to the service broker; only valid for managed service instances
   metadata:
     $ref: './Metadata.yaml'
+    description: Labels and annotations applied to the service route binding; only valid for managed service instances
 required:
   - relationships
+description: A request to create a service route binding
