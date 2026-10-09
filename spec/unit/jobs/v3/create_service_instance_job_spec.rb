@@ -39,6 +39,32 @@ module VCAP::CloudController
 
       it { expect(described_class).to be < VCAP::CloudController::Jobs::ReoccurringJob }
 
+      describe '#hash_for_logs' do
+        let(:params) { { edition: 'cloud', systempassword: 's3cr3t-value' } }
+        let(:audit_hash) { { name: 'my-si', parameters: { systempassword: 's3cr3t-value' }, type: 'managed' } }
+
+        it 'includes non-sensitive identifying fields' do
+          h = job.hash_for_logs
+          expect(h).to include(
+            operation: 'provision',
+            operation_type: 'create',
+            resource_type: 'service_instances',
+            resource_guid: service_instance.guid,
+            retry_number: 0,
+            first_time: true
+          )
+          expect(h).to have_key(:start_time)
+          expect(h).to have_key(:maximum_duration_seconds)
+        end
+
+        it 'never includes the arbitrary_parameters or audit_hash payload' do
+          expect(job.hash_for_logs.to_s).not_to include('s3cr3t-value')
+          expect(job.hash_for_logs).not_to have_key(:arbitrary_parameters)
+          expect(job.hash_for_logs).not_to have_key(:audit_hash)
+          expect(job.hash_for_logs).not_to have_key(:parameters)
+        end
+      end
+
       describe '#perform' do
         let(:provision_response) {}
         let(:poll_response) { { finished: false } }

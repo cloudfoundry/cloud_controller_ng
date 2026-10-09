@@ -6,6 +6,7 @@ require 'cloud_controller/execution_context'
 require 'sequel/extensions/query_length_logging'
 require 'sequel/extensions/request_query_metrics'
 require 'sequel/extensions/default_order_by_id'
+require 'sequel/extensions/delayed_jobs_log_redaction'
 
 module VCAP::CloudController
   class DB
@@ -32,6 +33,7 @@ module VCAP::CloudController
       if opts[:log_db_queries]
         db.logger = logger
         db.sql_log_level = opts[:log_level]
+        db.extension(:delayed_jobs_log_redaction)
         db.extension :caller_logging
         db.caller_logging_ignore = /sequel_paginator|query_length_logging|sequel_pg|paginated_collection_renderer|request_query_metrics|default_order_by_id/
         db.caller_logging_formatter = lambda do |caller|
