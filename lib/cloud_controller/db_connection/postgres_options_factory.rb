@@ -25,6 +25,10 @@ module VCAP::CloudController
 
         options
       end
+
+      def self.reset_env(_); end
+
+      def self.set_env(_, _); end
     end
   end
 end
