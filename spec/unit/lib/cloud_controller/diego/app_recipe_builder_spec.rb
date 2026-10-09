@@ -356,6 +356,20 @@ module VCAP::CloudController
 
           it_behaves_like 'creating a desired lrp'
 
+          context 'with a launched service account' do
+            let(:config) do
+              Config.new({ service_account_runtime_enabled: true,
+                           diego: { use_privileged_containers_for_running: false, lifecycle_bundles: { 'potato-stack' => 'some-uri' }, pid_limit: 100 } })
+            end
+
+            it 'keeps the launch identity in rebuilt LRPs after desired unbind' do
+              account = ServiceAccountModel.create(name: 'payments-worker', space: space, status: 'ready')
+              process.update(service_account_guid: account.guid, service_account_snapshot: true)
+              app_model.update(service_account: nil)
+              expect(builder.build_app_lrp.certificate_properties.service_account.name).to eq(account.name)
+            end
+          end
+
           it 'creates a desired lrp with buildpack specific properties' do
             lrp = builder.build_app_lrp
             expect(lrp.environment_variables).to contain_exactly(::Diego::Bbs::Models::EnvironmentVariable.new(name: 'foo', value: 'bar'))

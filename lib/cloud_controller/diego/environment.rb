@@ -1,6 +1,7 @@
 require 'presenters/system_environment/system_env_presenter'
 require 'cloud_controller/diego/normal_env_hash_to_diego_env_array_philosopher'
 require_relative '../../vcap/vars_builder'
+require 'cloud_controller/diego/service_account_identity'
 
 module VCAP::CloudController
   module Diego
@@ -42,6 +43,9 @@ module VCAP::CloudController
           merge(process.environment_json || {}).
           merge(blk.call).
           merge(SystemEnvPresenter.new(process).system_env)
+
+        diego_env = diego_env.except('VCAP_SERVICE_ACCOUNT', :VCAP_SERVICE_ACCOUNT).
+                    merge(ServiceAccountIdentity.new(process.app, Config.config, account_guid: process.runtime_service_account_guid).environment)
 
         diego_env = diego_env.merge(DATABASE_URL: process.database_uri) if process.database_uri
 
