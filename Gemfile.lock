@@ -124,7 +124,7 @@ GEM
     jaro_winkler (1.7.0)
     json (3.0.2)
     json-diff (0.4.1)
-    json-schema (6.2.0)
+    json-schema (6.2.1)
       addressable (~> 2.8)
       bigdecimal (>= 3.1, < 5)
     kramdown (2.5.2)
