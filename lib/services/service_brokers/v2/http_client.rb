@@ -73,7 +73,7 @@ module VCAP::Services
         headers = client.default_header.merge(opts[:header])
 
         logger.info 'request', method: method, url: uri.to_s
-        logger.debug "Sending #{method} to #{uri}, BODY: #{body.inspect}, HEADERS: #{headers}"
+        logger.debug "Sending #{method} to #{uri}, BODY: #{redact_request_body(body)}, HEADERS: #{headers}"
 
         response = client.request(method, uri, opts)
         logger.info 'response', status: response.code
@@ -86,6 +86,18 @@ module VCAP::Services
         raise Errors::HttpClientTimeout.new(uri.to_s, method, e)
       rescue StandardError => e
         raise HttpRequestError.new(e.message, uri.to_s, method, e)
+      end
+
+      def redact_request_body(body)
+        return body.inspect if body.nil?
+
+        parsed = Oj.load(body)
+        return body.inspect unless parsed.is_a?(Hash)
+
+        parsed['parameters'] = VCAP::CloudController::Presenters::Censorship::PRIVATE_DATA_HIDDEN if parsed.key?('parameters')
+        parsed.inspect
+      rescue StandardError
+        'Error parsing body'
       end
 
       def redact_credentials(response)
