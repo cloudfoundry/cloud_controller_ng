@@ -29,14 +29,9 @@ module Sequel::DelayedJobsLogRedaction
   end
 
   def redact_args(args)
-    case args
-    when Array
-      args.map { |a| sensitive_arg?(a) ? '[REDACTED]' : a }
-    when Hash
-      args.transform_values { |v| sensitive_arg?(v) ? '[REDACTED]' : v }
-    else
-      sensitive_arg?(args) ? '[REDACTED]' : args
-    end
+    return args unless args.is_a?(Array)
+
+    args.map { |a| sensitive_arg?(a) ? '[REDACTED]' : a }
   end
 
   def sensitive_arg?(value)
