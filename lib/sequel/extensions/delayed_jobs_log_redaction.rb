@@ -8,11 +8,11 @@ module Sequel::DelayedJobsLogRedaction
   HANDLER_COLUMN = /[`"]?handler[`"]?/i
 
   def log_connection_yield(sql, conn, args=nil)
-    if @loggers.any? && sql.downcase.include?('delayed_jobs')
+    if @loggers.any? && sql.include?('delayed_jobs')
       sql = redact_delayed_jobs(sql)
       # Sequel's base logger appends "; #{args.inspect}" to the logged line. If bound args
       # carry the serialized handler, redact there too.
-      args = redact_args(args) if args && args.inspect.include?('!ruby')
+      args = redact_args(args) if args.is_a?(Array) && args.any? { |a| sensitive_arg?(a) }
     end
     super
   end
