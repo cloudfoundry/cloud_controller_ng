@@ -1,4 +1,3 @@
-require 'spec_helper'
 require 'rubocop'
 require 'rubocop/rspec/cop_helper'
 require 'rubocop/config'
@@ -67,6 +66,33 @@ RSpec.describe RuboCop::Cop::Migration::NoModelInSpecs do
   it 'does not register an offense for non-Model constants' do
     result = inspect_source(<<~RUBY)
       SecureRandom.uuid
+    RUBY
+
+    expect(result.size).to eq(0)
+  end
+
+  it 'registers an offense for model usage via let variable' do
+    result = inspect_source(<<~RUBY)
+      let(:annotation) { VCAP::CloudController::IsolationSegmentAnnotationModel }
+      annotation.create(resource_guid: 'x', key_name: 'k', value: 'v')
+    RUBY
+
+    expect(result.size).to eq(1)
+  end
+
+  it 'registers an offense for model usage via let! variable' do
+    result = inspect_source(<<~RUBY)
+      let!(:label) { VCAP::CloudController::IsolationSegmentLabelModel }
+      label.where(resource_guid: 'x').count
+    RUBY
+
+    expect(result.size).to eq(1)
+  end
+
+  it 'does not register an offense for let variable not holding a model' do
+    result = inspect_source(<<~RUBY)
+      let(:guid) { SecureRandom.uuid }
+      guid.upcase
     RUBY
 
     expect(result.size).to eq(0)
