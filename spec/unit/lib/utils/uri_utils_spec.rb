@@ -174,4 +174,46 @@ RSpec.describe UriUtils do
       expect { UriUtils.parse_docker_uri('publish/buildpack@sha256:e118d0') }.to raise_error(UriUtils::InvalidDockerURI)
     end
   end
+
+  describe '.url_has_userinfo?' do
+    it 'returns true for an https URL with user:pass@' do
+      expect(UriUtils.url_has_userinfo?('https://user:pass@git.example.com/acme/buildpack.git')).to be true
+    end
+
+    it 'returns true for an http URL with user only' do
+      expect(UriUtils.url_has_userinfo?('http://user@example.com/buildpack.git')).to be true
+    end
+
+    it 'returns false for a clean https URL' do
+      expect(UriUtils.url_has_userinfo?('https://git.example.com/acme/buildpack.git')).to be false
+    end
+
+    it 'returns false for an admin buildpack name' do
+      expect(UriUtils.url_has_userinfo?('ruby_buildpack')).to be false
+    end
+
+    it 'returns false for nil' do
+      expect(UriUtils.url_has_userinfo?(nil)).to be false
+    end
+
+    it 'returns false for a git+ssh URL (no userinfo field)' do
+      expect(UriUtils.url_has_userinfo?('git@git.example.com:acme/buildpack.git')).to be false
+    end
+
+    it 'returns true for an https URL with an empty username but a password (token-style auth)' do
+      expect(UriUtils.url_has_userinfo?('https://:token@registry.example.com/buildpack')).to be true
+    end
+
+    it 'returns true for an https URL with an IPv6 host and credentials' do
+      expect(UriUtils.url_has_userinfo?('https://user:pass@[::1]:8080/buildpack')).to be true
+    end
+
+    it 'returns false for an https URL with an IPv6 host and no credentials' do
+      expect(UriUtils.url_has_userinfo?('https://[::1]:8080/buildpack')).to be false
+    end
+
+    it 'returns false for a malformed URL that cannot be parsed' do
+      expect(UriUtils.url_has_userinfo?('https://exa mple.com/buildpack')).to be false
+    end
+  end
 end

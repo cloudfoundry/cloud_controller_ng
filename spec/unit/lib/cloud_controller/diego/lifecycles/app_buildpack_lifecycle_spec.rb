@@ -102,7 +102,7 @@ module VCAP::CloudController
 
     describe 'validation' do
       let(:validator) { instance_double(BuildpackLifecycleDataValidator) }
-      let(:stubbed_fetcher_data) { { stack: 'foo', buildpack_infos: 'bar' } }
+      let(:stubbed_fetcher_data) { { stack: 'foo', buildpack_infos: [] } }
 
       before do
         allow(validator).to receive(:valid?)
@@ -115,7 +115,12 @@ module VCAP::CloudController
       it 'constructs the validator correctly' do
         lifecycle.valid?
 
-        expect(BuildpackLifecycleDataValidator).to have_received(:new).with(buildpack_infos: 'bar', stack: 'foo')
+        expect(BuildpackLifecycleDataValidator).to have_received(:new).with(
+          buildpack_infos: [],
+          stack: 'foo',
+          credentials: nil,
+          credentials_from_message: false
+        )
       end
 
       it 'delegates #valid? to a BuildpackLifecycleDataValidator' do
@@ -126,6 +131,102 @@ module VCAP::CloudController
       it 'delegates #errors to a BuildpackLifecycleDataValidator' do
         lifecycle.errors
         expect(validator).to have_received(:errors)
+      end
+    end
+
+    describe '#create_lifecycle_data_model with credentials' do
+      context 'when credentials are provided' do
+        let(:creds) { { 'git.example.com' => { 'username' => 'u', 'password' => 'p' } } }
+        let(:lifecycle_request_data) { { buildpacks: ['http://git.example.com/acme/bp.git'], credentials: creds } }
+        let!(:app) { create(:app_model) }
+
+        it 'stores credentials on the lifecycle data model' do
+          lifecycle.create_lifecycle_data_model(app)
+          expect(app.buildpack_lifecycle_data.reload.credentials).to eq(creds)
+        end
+      end
+    end
+
+    describe '#update_lifecycle_data_model credentials handling' do
+      let(:app) { create(:app_model, :buildpack) }
+
+      context 'when credentials are requested' do
+        let(:creds) { { 'git.example.com' => { 'username' => 'u', 'password' => 'p' } } }
+        let(:message) { AppUpdateMessage.new({ lifecycle: { type: 'buildpack', data: { credentials: creds } } }) }
+
+        it 'updates the credentials on the lifecycle data' do
+          lifecycle.update_lifecycle_data_model(app)
+          expect(app.buildpack_lifecycle_data.reload.credentials).to eq(creds)
+        end
+      end
+
+      context 'when credentials are set to null (clear)' do
+        let(:message) { AppUpdateMessage.new({ lifecycle: { type: 'buildpack', data: { credentials: nil } } }) }
+
+        before do
+          app.buildpack_lifecycle_data.update(credentials_json: Oj.dump({ 'git.example.com' => { 'username' => 'u' } }))
+        end
+
+        it 'clears the credentials' do
+          lifecycle.update_lifecycle_data_model(app)
+          expect(app.buildpack_lifecycle_data.reload.credentials).to be_nil
+        end
+      end
+
+      context 'when credentials are absent from the request (not requested)' do
+        let(:message) { AppUpdateMessage.new({ lifecycle: { type: 'buildpack', data: { stack: app.buildpack_lifecycle_data.stack } } }) }
+
+        before do
+          stored_creds = { 'git.example.com' => { 'username' => 'stored' } }
+          app.buildpack_lifecycle_data.update(credentials_json: Oj.dump(stored_creds))
+        end
+
+        it 'leaves stored credentials untouched' do
+          lifecycle.update_lifecycle_data_model(app)
+          expect(app.buildpack_lifecycle_data.reload.credentials).to eq({ 'git.example.com' => { 'username' => 'stored' } })
+        end
+      end
+
+      context 'when PATCH sends only credentials and stored buildpack URL has userinfo' do
+        let(:app) { create(:app_model, :buildpack) }
+        let(:creds) { { 'git.example.com' => { 'username' => 'u', 'password' => 'p' } } }
+        let(:message) { AppUpdateMessage.new({ lifecycle: { type: 'buildpack', data: { credentials: creds } } }) }
+
+        before do
+          app.buildpack_lifecycle_data.update(buildpacks: ['https://user:pass@git.example.com/bp.git'])
+        end
+
+        it 'is invalid because stored buildpack URL already has userinfo' do
+          lc = AppBuildpackLifecycle.new(message, app)
+          expect(lc.valid?).to be false
+          expect(lc.errors.full_messages.join).to match(/credentials/)
+        end
+      end
+
+      context 'when the request submits a buildpack URL with userinfo and the app has stored credentials' do
+        let(:app) { create(:app_model, :buildpack) }
+        let(:message) { AppUpdateMessage.new({ lifecycle: { type: 'buildpack', data: { buildpacks: ['https://user:pass@git.example.com/bp.git'] } } }) }
+
+        before do
+          app.buildpack_lifecycle_data.credentials = { 'git.example.com' => { 'username' => 'stored', 'password' => 'stored' } }
+          app.buildpack_lifecycle_data.save
+        end
+
+        it 'is invalid and explains how to clear the stored credentials' do
+          lc = AppBuildpackLifecycle.new(message, app)
+          expect(lc.valid?).to be false
+          expect(lc.errors.full_messages.join).to include('already has stored buildpack credentials')
+          expect(lc.errors.full_messages.join).to include('credentials: null')
+        end
+      end
+
+      context 'when the app is currently a docker app' do
+        let(:app) { create(:app_model, :docker) }
+        let(:message) { AppUpdateMessage.new({ lifecycle: { type: 'buildpack', data: {} } }) }
+
+        it 'does not raise when resolving credentials from docker lifecycle data' do
+          expect { AppBuildpackLifecycle.new(message, app) }.not_to raise_error
+        end
       end
     end
   end
