@@ -317,6 +317,12 @@ class VCAP::CloudController::Permissions
     membership.authorized_space_guids_subquery(ROLES_FOR_ROUTE_READING)
   end
 
+  def space_ids_with_readable_routes_query
+    raise 'must not be called for users that can read globally' if can_read_globally?
+
+    membership.authorized_space_ids_subquery(ROLES_FOR_ROUTE_READING)
+  end
+
   def can_read_app_environment_variables?(space_id, org_id)
     can_read_secrets_globally? ||
       membership.role_applies?(ROLES_FOR_APP_ENVIRONMENT_VARIABLES_READING, space_id, org_id)

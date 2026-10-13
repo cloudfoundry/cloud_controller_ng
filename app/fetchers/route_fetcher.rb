@@ -3,22 +3,56 @@ require 'fetchers/base_list_fetcher'
 module VCAP::CloudController
   class RouteFetcher < BaseListFetcher
     class << self
-      def fetch(message, readable_space_guids_dataset: nil, eager_loaded_associations: [], omniscient: false)
+      def fetch(message, readable_space_guids_dataset: nil, readable_space_ids_dataset: nil, eager_loaded_associations: [], omniscient: false)
         dataset = Route.dataset.eager(eager_loaded_associations).
-                  join(:spaces, id: Sequel[:routes][:space_id]).
-                  left_join(:route_shares, route_guid: Sequel[:routes][:guid]).qualify
+                  join(:spaces, id: Sequel[:routes][:space_id]).qualify
 
         unless omniscient
-          dataset = dataset.where do
-            (Sequel[:spaces][:guid] =~ readable_space_guids_dataset) |
-              (Sequel[:route_shares][:target_space_guid] =~ readable_space_guids_dataset)
-          end
+          dataset = dataset.where(Sequel[:routes][:guid] => accessible_route_guids_dataset(
+            readable_space_ids_dataset: readable_space_ids_dataset,
+            readable_space_guids_dataset: readable_space_guids_dataset
+          ))
         end
-        dataset = dataset.distinct(Sequel[:routes][:guid])
         filter(message, dataset)
       end
 
       private
+
+      def accessible_route_guids_dataset(readable_space_ids_dataset:, readable_space_guids_dataset:)
+        raise ArgumentError.new('readable space ids or guids dataset required') unless readable_space_ids_dataset || readable_space_guids_dataset
+
+        owned_space_column = readable_space_ids_dataset ? :id : :guid
+        owned_space_values = readable_space_ids_dataset || readable_space_guids_dataset
+        shared_space_guids = readable_space_guids_dataset || Space.where(id: readable_space_ids_dataset).select(:guid)
+
+        route_guids_dataset(
+          owned_space_column: owned_space_column,
+          owned_space_values: owned_space_values,
+          shared_space_guids: shared_space_guids
+        )
+      end
+
+      def route_guids_for_space_guids_dataset(space_guids)
+        route_guids_dataset(
+          owned_space_column: :guid,
+          owned_space_values: space_guids,
+          shared_space_guids: space_guids
+        )
+      end
+
+      def route_guids_dataset(owned_space_column:, owned_space_values:, shared_space_guids:)
+        owned_route_guids = Route.dataset.
+                            join(:spaces, id: Sequel[:routes][:space_id]).
+                            where(Sequel[:spaces][owned_space_column] =~ owned_space_values).
+                            select(Sequel[:routes][:guid])
+
+        shared_route_guids = Route.dataset.
+                             join(:route_shares, route_guid: Sequel[:routes][:guid]).
+                             where(Sequel[:route_shares][:target_space_guid] =~ shared_space_guids).
+                             select(Sequel[:routes][:guid])
+
+        owned_route_guids.union(shared_route_guids, all: true, from_self: false)
+      end
 
       def filter(message, dataset)
         dataset = dataset.where(host: message.hosts) if message.requested?(:hosts)
@@ -59,12 +93,7 @@ module VCAP::CloudController
           )
         end
 
-        if message.requested?(:space_guids)
-          dataset = dataset.where do
-            (Sequel[:spaces][:guid] =~ message.space_guids) |
-              (Sequel[:route_shares][:target_space_guid] =~ message.space_guids)
-          end
-        end
+        dataset = dataset.where(Sequel[:routes][:guid] => route_guids_for_space_guids_dataset(message.space_guids)) if message.requested?(:space_guids)
 
         super(message, dataset, Route)
       end
