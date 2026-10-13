@@ -528,6 +528,60 @@ module VCAP::CloudController
             end
           end
         end
+
+        context 'v3 with a buildpacks array' do
+          let(:app) { create(:app_model) }
+          let(:attrs) do
+            {
+              'lifecycle' => {
+                'type' => 'buildpack',
+                'data' => { 'buildpacks' => buildpacks }
+              }
+            }
+          end
+
+          context 'when the buildpacks are not nil' do
+            let(:buildpacks) do
+              [
+                'https://user:password@example.com/first.git',
+                'https://user:password@example.com/second.git'
+              ]
+            end
+
+            it 'obfuscates each buildpack url' do
+              event = app_event_repository.record_app_update(app, space, user_audit_info, attrs).reload
+
+              expect(event.metadata.dig('request', 'lifecycle', 'data', 'buildpacks')).to eq(
+                [
+                  'https://***:***@example.com/first.git',
+                  'https://***:***@example.com/second.git'
+                ]
+              )
+            end
+
+            it 'calls out to UrlSecretObfuscator once per buildpack' do
+              allow(CloudController::UrlSecretObfuscator).to receive(:obfuscate)
+              app_event_repository.record_app_update(app, space, user_audit_info, attrs)
+              expect(CloudController::UrlSecretObfuscator).to have_received(:obfuscate).exactly :twice
+            end
+          end
+
+          context 'when the buildpacks are nil' do
+            let(:buildpacks) { nil }
+
+            it 'does nothing' do
+              event = app_event_repository.record_app_update(app, space, user_audit_info, attrs).reload
+
+              expected_request = {
+                'lifecycle' => {
+                  'type' => 'buildpack',
+                  'data' => { 'buildpacks' => nil }
+                }
+              }
+              expect(event.metadata.fetch('request')).to eq expected_request
+            end
+          end
+        end
       end
 
       context 'with a v3 app' do

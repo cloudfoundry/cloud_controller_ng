@@ -133,7 +133,7 @@ module VCAP::CloudController
         end
 
         def record_user_provided_service_instance_event(event, service_instance, params=nil)
-          metadata = { request: with_credentials_redacted(params) }
+          metadata = { request: with_url_credentials_obfuscated(with_credentials_redacted(params)) }
 
           create_service_instance_event(
             'user_provided_service_instance',
@@ -216,6 +216,16 @@ module VCAP::CloudController
 
         def with_credentials_redacted(request_data)
           redact(request_data, for_key: 'credentials', with: Presenters::Censorship::REDACTED)
+        end
+
+        def with_url_credentials_obfuscated(request_data)
+          return request_data unless request_data.respond_to?(:[]=)
+
+          request_data.dup.tap do |data|
+            %w[syslog_drain_url route_service_url].each do |url_key|
+              data[url_key] = CloudController::UrlSecretObfuscator.obfuscate(data[url_key]) if data[url_key]
+            end
+          end
         end
 
         def redact(
