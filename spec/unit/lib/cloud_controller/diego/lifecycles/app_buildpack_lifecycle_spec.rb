@@ -115,7 +115,7 @@ module VCAP::CloudController
       it 'constructs the validator correctly' do
         lifecycle.valid?
 
-        expect(BuildpackLifecycleDataValidator).to have_received(:new).with(buildpack_infos: 'bar', stack: 'foo')
+        expect(BuildpackLifecycleDataValidator).to have_received(:new).with(buildpack_infos: 'bar', stack: 'foo', stack_name: anything)
       end
 
       it 'delegates #valid? to a BuildpackLifecycleDataValidator' do

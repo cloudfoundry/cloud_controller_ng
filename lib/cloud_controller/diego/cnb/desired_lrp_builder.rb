@@ -1,8 +1,13 @@
+require 'cloud_controller/diego/custom_stack_uri_converter'
+require 'cloud_controller/diego/custom_stack_fallback'
+require 'utils/uri_utils'
+
 module VCAP::CloudController
   module Diego
     module CNB
       class DesiredLrpBuilder
         include ::Diego::ActionBuilder
+        include CustomStackFallback
 
         class InvalidStack < StandardError; end
 
@@ -25,7 +30,7 @@ module VCAP::CloudController
         def cached_dependencies
           return nil if @config.get(:diego, :enable_declarative_asset_downloads)
 
-          lifecycle_bundle_key = :"cnb/#{@stack}"
+          lifecycle_bundle_key = :"cnb/#{resolved_stack_name}"
           lifecycle_bundle = @config.get(:diego, :lifecycle_bundles)[lifecycle_bundle_key]
           raise InvalidStack.new("no compiler defined for requested stack '#{@stack}'") unless lifecycle_bundle
 
@@ -33,12 +38,14 @@ module VCAP::CloudController
             ::Diego::Bbs::Models::CachedDependency.new(
               from: LifecycleBundleUriGenerator.uri(lifecycle_bundle),
               to: '/tmp/lifecycle',
-              cache_key: "cnb-#{@stack}-lifecycle"
+              cache_key: "cnb-#{resolved_stack_name}-lifecycle"
             )
           ]
         end
 
         def root_fs
+          return CustomStackUriConverter.convert(@stack) if UriUtils.is_custom_stack_uri?(@stack)
+
           @stack_obj ||= Stack.find(name: @stack)
           raise CloudController::Errors::ApiError.new_from_details('StackNotFound', @stack) unless @stack_obj
 
@@ -64,16 +71,16 @@ module VCAP::CloudController
         def image_layers
           return [] unless @config.get(:diego, :enable_declarative_asset_downloads)
 
-          lifecycle_bundle_key = :"cnb/#{@stack}"
+          lifecycle_bundle_key = :"cnb/#{resolved_stack_name}"
           lifecycle_bundle = @config.get(:diego, :lifecycle_bundles)[lifecycle_bundle_key]
           raise InvalidStack.new("no compiler defined for requested stack '#{@stack}'") unless lifecycle_bundle
 
-          destination = @config.get(:diego, :droplet_destinations)[@stack.to_sym]
+          destination = @config.get(:diego, :droplet_destinations)[resolved_stack_name.to_sym]
           raise InvalidStack.new("no droplet destination defined for requested stack '#{@stack}'") unless destination
 
           layers = [
             ::Diego::Bbs::Models::ImageLayer.new(
-              name: "cnb-#{@stack}-lifecycle",
+              name: "cnb-#{resolved_stack_name}-lifecycle",
               url: LifecycleBundleUriGenerator.uri(lifecycle_bundle),
               destination_path: '/tmp/lifecycle',
               layer_type: ::Diego::Bbs::Models::ImageLayer::Type::SHARED,

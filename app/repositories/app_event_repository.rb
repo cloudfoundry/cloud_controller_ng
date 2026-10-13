@@ -204,6 +204,11 @@ module VCAP::CloudController
             buildpack_attr = changes['lifecycle']['data']['buildpack']
             changes['lifecycle']['data']['buildpack'] = CloudController::UrlSecretObfuscator.obfuscate(buildpack_attr) if buildpack_attr
           end
+
+          if changes.key?('lifecycle') && changes['lifecycle'].is_a?(Hash) &&
+             changes['lifecycle']['data'].is_a?(Hash) && changes['lifecycle']['data'].key?('credentials')
+            changes['lifecycle']['data']['credentials'] = Presenters::Censorship::PRIVATE_DATA_HIDDEN if changes['lifecycle']['data']['credentials']
+          end
         end
       end
     end

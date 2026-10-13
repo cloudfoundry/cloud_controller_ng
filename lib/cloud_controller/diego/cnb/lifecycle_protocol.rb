@@ -27,6 +27,9 @@ module VCAP
             lifecycle_data.credentials = staging_details.lifecycle.credentials
             lifecycle_data.auto_detect = staging_details.lifecycle.buildpack_infos.empty?
 
+            bp_data = staging_details.lifecycle.staging_message.buildpack_data
+            lifecycle_data.stack_id = bp_data.stack_id if bp_data.requested?(:stack_id)
+
             lifecycle_data
           end
 

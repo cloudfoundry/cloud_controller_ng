@@ -9,18 +9,36 @@ module VCAP::CloudController
       @staging_message = staging_message
       @package = package
 
+      assert_custom_stacks_enabled!
+
       db_result = BuildpackLifecycleFetcher.fetch(buildpacks_to_use, staging_stack, type)
       @buildpack_infos = db_result[:buildpack_infos]
-      @validator = BuildpackLifecycleDataValidator.new({ buildpack_infos: buildpack_infos, stack: db_result[:stack] })
+      @validator = BuildpackLifecycleDataValidator.new({
+                                                         buildpack_infos: buildpack_infos,
+                                                         stack: db_result[:stack],
+                                                         stack_name: staging_stack
+                                                       })
     end
 
     delegate :valid?, :errors, to: :validator
 
     def staging_stack
-      requested_stack || app_stack || VCAP::CloudController::Stack.default.name
+      @staging_stack ||= requested_stack || app_stack || VCAP::CloudController::Stack.default.name
+    end
+
+    def custom_stack?
+      UriUtils.is_custom_stack_uri?(staging_stack)
+    end
+
+    def credentials
+      staging_message.buildpack_data.credentials
     end
 
     private
+
+    def assert_custom_stacks_enabled!
+      FeatureFlag.raise_unless_enabled!(:diego_custom_stacks) if UriUtils.is_custom_stack_uri?(staging_stack)
+    end
 
     def buildpacks_to_use
       staging_message.buildpack_data.buildpacks || @package.app.lifecycle_data.buildpacks
