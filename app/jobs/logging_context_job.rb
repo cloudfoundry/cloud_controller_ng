@@ -11,6 +11,10 @@ module VCAP::CloudController
         @request_id = request_id
       end
 
+      def hash_for_logs
+        super.merge(request_id: request_id).compact
+      end
+
       def before(job)
         # Get guid via root job mixin (as root job) or via `root_job_guid` column (sub-job)
         @root_job_guid = wrapped_handler.try(:root_job_guid) ||

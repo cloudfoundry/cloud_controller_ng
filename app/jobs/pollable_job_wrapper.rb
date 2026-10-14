@@ -43,6 +43,10 @@ module VCAP::CloudController
         end
       end
 
+      def hash_for_logs
+        super.merge(existing_guid: existing_guid, root_job_guid: @root_job_guid).compact
+      end
+
       def success(job)
         if @handler.respond_to?(:success)
           persist_warnings(job)
