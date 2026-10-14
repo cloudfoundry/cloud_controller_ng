@@ -154,6 +154,35 @@ RSpec.describe Sequel::ConnectionMetrics do
         expect(prometheus_updater).to receive(:update_gauge_metric).with(:cc_open_db_connections_total, an_instance_of(Integer), labels: { process_type: 'puma_worker' })
         db.pool.send(:disconnect_connection, conn)
       end
+
+      context 'when the connection is currently allocated to the calling thread (disconnect error path)' do
+        # Simulates the Sequel hold() disconnect path: conn is allocated to the current thread
+        # and disconnect_connection is called before @allocated is cleaned up, bypassing release.
+        it 'decrements the acquired DB connections metric to compensate for the skipped release' do
+          real_thread = Thread.current
+          real_conn = db.pool.send(:acquire, real_thread)
+
+          expect(prometheus_updater).to receive(:decrement_gauge_metric).with(:cc_acquired_db_connections_total, labels: { process_type: 'puma_worker' })
+          db.pool.send(:disconnect_connection, real_conn)
+        end
+
+        it 'cleans up connection_info for the current thread' do
+          real_thread = Thread.current
+          real_conn = db.pool.send(:acquire, real_thread)
+
+          db.pool.send(:disconnect_connection, real_conn)
+          expect(db.pool.instance_variable_get(:@connection_info)[real_thread]).to be_nil
+        end
+      end
+
+      context 'when the connection is NOT allocated to the calling thread (normal disconnect path)' do
+        it 'does not decrement the acquired DB connections metric' do
+          # conn was acquired by `thread` (a double), not the current real thread,
+          # so the guard should not fire.
+          expect(prometheus_updater).not_to receive(:decrement_gauge_metric).with(:cc_acquired_db_connections_total, anything)
+          db.pool.send(:disconnect_connection, conn)
+        end
+      end
     end
 
     describe 'release' do

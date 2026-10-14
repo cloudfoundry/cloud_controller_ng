@@ -70,8 +70,17 @@ module Sequel
     end
 
     def disconnect_connection(conn)
+      # Sequel's disconnect error path skips release; compensate the acquired gauge if this thread owns conn.
+      acquired_by_current_thread = sync { @allocated[Sequel.current] == conn }
+
       super
+
       @prometheus_updater.update_gauge_metric(:cc_open_db_connections_total, size, labels: { process_type: })
+
+      return unless acquired_by_current_thread
+
+      @prometheus_updater.decrement_gauge_metric(:cc_acquired_db_connections_total, labels: { process_type: })
+      @connection_info.delete(Sequel.current)
     end
 
     def release(thread)
