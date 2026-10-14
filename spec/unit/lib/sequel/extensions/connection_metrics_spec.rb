@@ -173,6 +173,20 @@ RSpec.describe Sequel::ConnectionMetrics do
           db.pool.send(:disconnect_connection, real_conn)
           expect(db.pool.instance_variable_get(:@connection_info)[real_thread]).to be_nil
         end
+
+        context 'and the driver raises while closing the broken connection (e.g. mysql2)' do
+          # mysql2 does not rescue in disconnect_connection, so closing an already-broken
+          # socket raises. The compensation must still run so the gauge does not drift.
+          it 'still decrements the acquired DB connections metric and cleans up connection_info' do
+            real_thread = Thread.current
+            real_conn = db.pool.send(:acquire, real_thread)
+            allow(db).to receive(:disconnect_connection).and_raise(Sequel::DatabaseDisconnectError)
+
+            expect(prometheus_updater).to receive(:decrement_gauge_metric).with(:cc_acquired_db_connections_total, labels: { process_type: 'puma_worker' })
+            expect { db.pool.send(:disconnect_connection, real_conn) }.to raise_error(Sequel::DatabaseDisconnectError)
+            expect(db.pool.instance_variable_get(:@connection_info)[real_thread]).to be_nil
+          end
+        end
       end
 
       context 'when the connection is NOT allocated to the calling thread (normal disconnect path)' do

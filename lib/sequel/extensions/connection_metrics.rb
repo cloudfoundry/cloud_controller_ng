@@ -71,16 +71,21 @@ module Sequel
 
     def disconnect_connection(conn)
       # Sequel's disconnect error path skips release; compensate the acquired gauge if this thread owns conn.
-      acquired_by_current_thread = sync { @allocated[Sequel.current] == conn }
+      thread = Sequel.current
+      acquired_by_current_thread = sync { @allocated[thread] == conn }
 
-      super
+      begin
+        super
+      ensure
+        # Run the compensation in ensure: some adapters (e.g. mysql2) let the driver's close raise on an
+        # already-broken socket, and the acquired gauge must still be corrected on that disconnect-error path.
+        @prometheus_updater.update_gauge_metric(:cc_open_db_connections_total, size, labels: { process_type: })
 
-      @prometheus_updater.update_gauge_metric(:cc_open_db_connections_total, size, labels: { process_type: })
-
-      return unless acquired_by_current_thread
-
-      @prometheus_updater.decrement_gauge_metric(:cc_acquired_db_connections_total, labels: { process_type: })
-      @connection_info.delete(Sequel.current)
+        if acquired_by_current_thread
+          @prometheus_updater.decrement_gauge_metric(:cc_acquired_db_connections_total, labels: { process_type: })
+          @connection_info.delete(thread)
+        end
+      end
     end
 
     def release(thread)
