@@ -19,11 +19,6 @@ module CloudFoundry
         !basic_auth?(env) && v2_api?(env) && !v2_rate_limit_exempted?
       end
 
-      def v2_api?(env)
-        request = ActionDispatch::Request.new(env)
-        request.fullpath.match(%r{\A/v2/(?!(info)).+})
-      end
-
       def global_request_limit(_env)
         admin? ? @global_admin_limit : @global_general_limit
       end
@@ -32,12 +27,17 @@ module CloudFoundry
         admin? ? @per_process_admin_limit : @per_process_general_limit
       end
 
-      def v2_rate_limit_exempted?
-        VCAP::CloudController::SecurityContext.v2_rate_limit_exempted?
-      end
-
       def rate_limit_error_name(_env)
         'RateLimitV2APIExceeded'
+      end
+
+      def v2_api?(env)
+        request = ActionDispatch::Request.new(env)
+        request.fullpath.match(%r{\A/v2/(?!(info)).+})
+      end
+
+      def v2_rate_limit_exempted?
+        VCAP::CloudController::SecurityContext.v2_rate_limit_exempted?
       end
     end
   end

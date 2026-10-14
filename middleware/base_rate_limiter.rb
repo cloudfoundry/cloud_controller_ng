@@ -1,7 +1,8 @@
+require 'mixins/user_reset_interval'
 require 'mixins/user_id'
 require 'mixins/too_many_requests'
 require 'mixins/basic_auth'
-require 'mixins/user_reset_interval'
+require 'mixins/admin'
 require 'redis'
 
 module CloudFoundry
@@ -9,9 +10,8 @@ module CloudFoundry
     class ExpiringRequestCounter
       include CloudFoundry::Middleware::UserResetInterval
 
-      def initialize(key_prefix, redis_connection_pool_size: nil)
+      def initialize(key_prefix)
         @key_prefix = key_prefix
-        @redis_connection_pool_size = redis_connection_pool_size
       end
 
       def increment(user_guid, reset_interval_in_minutes, logger)
@@ -26,7 +26,7 @@ module CloudFoundry
         return @store if defined?(@store)
 
         redis_socket = VCAP::CloudController::Config.config.get(:redis, :socket)
-        @store = redis_socket.nil? ? InMemoryStore.new : RedisStore.new(redis_socket, @redis_connection_pool_size)
+        @store = redis_socket.nil? ? InMemoryStore.new : RedisStore.new(redis_socket)
       end
 
       class InMemoryStore
@@ -50,8 +50,8 @@ module CloudFoundry
       end
 
       class RedisStore
-        def initialize(socket, connection_pool_size)
-          connection_pool_size ||= VCAP::CloudController::Config.config.get(:puma, :max_threads) || 1
+        def initialize(socket)
+          connection_pool_size = VCAP::CloudController::Config.config.get(:puma, :max_threads) || 1
           @redis = ConnectionPool::Wrapper.new(size: connection_pool_size) do
             Redis.new(timeout: 1, path: socket)
           end
@@ -94,6 +94,7 @@ module CloudFoundry
       include CloudFoundry::Middleware::UserId
       include CloudFoundry::Middleware::TooManyRequests
       include CloudFoundry::Middleware::BasicAuth
+      include CloudFoundry::Middleware::Admin
 
       def initialize(app, logger, expiring_request_counter, reset_interval, header_suffix=nil)
         @app = app
@@ -132,16 +133,12 @@ module CloudFoundry
         raise 'method should be implemented in concrete class'
       end
 
-      def rate_limit_error_name(_env)
-        raise 'method should be implemented in concrete class'
-      end
-
       def per_process_request_limit(_env)
         raise 'method should be implemented in concrete class'
       end
 
-      def exceeded_rate_limit(count, env)
-        count > per_process_request_limit(env)
+      def rate_limit_error_name(_env)
+        raise 'method should be implemented in concrete class'
       end
 
       def estimate_remaining(env, new_count)
@@ -153,8 +150,8 @@ module CloudFoundry
         [0, estimate].max.to_i.to_s
       end
 
-      def admin?
-        VCAP::CloudController::SecurityContext.admin? || VCAP::CloudController::SecurityContext.admin_read_only?
+      def exceeded_rate_limit(count, env)
+        count > per_process_request_limit(env)
       end
     end
   end

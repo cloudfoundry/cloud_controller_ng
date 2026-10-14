@@ -18,7 +18,7 @@ module CloudFoundry
           }
         )
       end
-      let(:expiring_request_counter) { double }
+      let(:expiring_request_counter) { instance_double(ExpiringRequestCounter) }
 
       let(:app) { double(:app, call: [200, {}, 'a body']) }
       let(:per_process_general_limit) { 100 }
@@ -28,7 +28,7 @@ module CloudFoundry
       let(:per_process_admin_limit) { -1 }
       let(:global_admin_limit) { -1 }
       let(:interval) { 60 }
-      let(:logger) { double('logger', info: nil) }
+      let(:logger) { double('logger') }
       let(:expires_in) { 10.minutes.to_i }
 
       let(:unauthenticated_env) { { some: 'env' } }
@@ -389,14 +389,12 @@ module CloudFoundry
               expect(ConnectionPool::Wrapper).to have_received(:new).with(size: 123)
             end
 
-            context 'with custom connection pool size' do
-              let(:expiring_request_counter) { ExpiringRequestCounter.new('test', redis_connection_pool_size: 456) }
+            it 'uses a default connection pool size of 1 when puma max threads is not set' do
+              skip('Not relevant for InMemoryStore') if store_implementation == :in_memory
 
-              it 'uses the provided connection pool size' do
-                skip('Not relevant for InMemoryStore') if store_implementation == :in_memory
-
-                expect(ConnectionPool::Wrapper).to have_received(:new).with(size: 456)
-              end
+              TestConfig.override(redis: { socket: 'foo' }, puma: { max_threads: nil })
+              expect(ConnectionPool::Wrapper).to receive(:new).with(size: 1).and_call_original
+              ExpiringRequestCounter.new('test').send(:store)
             end
           end
 

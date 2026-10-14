@@ -1,4 +1,5 @@
-require 'mixins/too_many_requests'
+require 'base_concurrency_rate_limiter'
+require 'mixins/admin'
 require 'concurrent_request_counter'
 
 module CloudFoundry
@@ -10,36 +11,16 @@ module CloudFoundry
       RateLimitEndpoint.new(%r{\A/v3/(service_instances|service_credential_bindings|service_route_bindings)/.+/parameters\z}, %w[GET])
     ].freeze
 
-    class ServiceBrokerRateLimiter
-      include CloudFoundry::Middleware::TooManyRequests
+    class ServiceBrokerRateLimiter < BaseConcurrencyRateLimiter
+      include CloudFoundry::Middleware::Admin
 
       def initialize(app, opts)
-        @app = app
-        @logger = opts[:logger]
         @broker_timeout_seconds = opts[:broker_timeout_seconds]
-        @counter = ConcurrentRequestCounter.instance(
+        counter = ConcurrentRequestCounter.instance(
           'service-broker-rate-limit',
-          blocking_limit: opts[:max_concurrent_requests],
-          redis_connection_pool_size: opts[:redis_connection_pool_size],
-          redis_counter_ttl_seconds: opts[:redis_counter_ttl_seconds]
+          blocking_limit: opts[:max_concurrent_requests]
         )
-      end
-
-      def call(env)
-        decrement_after_call = false
-        user_guid = env['cf.user_guid']
-
-        if apply_rate_limiting?(env)
-          decrement_after_call = @counter.try_increment?(user_guid, @logger)
-          unless decrement_after_call
-            @logger.info("Service broker concurrent rate limit exceeded for user '#{user_guid}'")
-            return too_many_requests!(env, 'ServiceBrokerRateLimitExceeded', retry_after: suggested_retry_after)
-          end
-        end
-
-        @app.call(env)
-      ensure
-        @counter.decrement(user_guid, @logger) if decrement_after_call
+        super(app, opts[:logger], counter)
       end
 
       private
@@ -49,19 +30,19 @@ module CloudFoundry
         !admin? && is_rate_limited_service_request?(request)
       end
 
-      def admin?
-        VCAP::CloudController::SecurityContext.admin? || VCAP::CloudController::SecurityContext.admin_read_only?
+      def rate_limit_error_name(_env)
+        'ServiceBrokerRateLimitExceeded'
+      end
+
+      def suggested_retry_after
+        delay_range = (@broker_timeout_seconds * 0.5).floor..(@broker_timeout_seconds * 1.5).ceil
+        rand(delay_range).to_i
       end
 
       def is_rate_limited_service_request?(request)
         RATE_LIMITED_ENDPOINTS.any? do |endpoint|
           endpoint.endpoint_pattern.match?(request.fullpath) && endpoint.request_methods.include?(request.method)
         end
-      end
-
-      def suggested_retry_after
-        delay_range = (@broker_timeout_seconds * 0.5).floor..(@broker_timeout_seconds * 1.5).ceil
-        rand(delay_range).to_i
       end
     end
   end

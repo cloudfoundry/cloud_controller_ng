@@ -9,8 +9,6 @@ module CloudFoundry
         user_token?(env) ? env['cf.user_guid'] : client_ip(ActionDispatch::Request.new(env))
       end
 
-      private
-
       def user_token?(env)
         !!env['cf.user_guid']
       end

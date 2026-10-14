@@ -3,18 +3,18 @@ require 'spec_helper'
 module CloudFoundry
   module Middleware
     RSpec.describe ConcurrencyRateLimiter do
+      let(:middleware) do
+        ConcurrencyRateLimiter.new(app, logger:, blocking_limit:, logging_limit:)
+      end
+
       let(:app) { double(:app, call: [200, {}, 'a body']) }
-      let(:logger) { double('logger', info: nil, error: nil) }
+      let(:logger) { double('logger') }
       let(:user_guid) { 'user-id-1' }
       let(:user_env) { { 'cf.user_guid' => user_guid, 'PATH_INFO' => '/v3/apps' } }
       let(:blocking_limit) { 2 }
       let(:logging_limit) { nil }
       let(:counter) do
         instance_double(ConcurrentRequestCounter, try_increment?: true, decrement: nil)
-      end
-
-      let(:middleware) do
-        ConcurrencyRateLimiter.new(app, logger: logger, blocking_limit: blocking_limit, logging_limit: logging_limit)
       end
 
       before do
@@ -59,7 +59,7 @@ module CloudFoundry
             expect(response_headers['Retry-After'].to_i).to be > 0
           end
 
-          context 'when the path is /v3' do
+          context 'when the path is /v3/*' do
             it 'formats the error in v3 format' do
               _, _, body = middleware.call(user_env)
               json_body = Oj.load(body.first)
@@ -70,7 +70,7 @@ module CloudFoundry
             end
           end
 
-          context 'when the path is /v2' do
+          context 'when the path is /v2/*' do
             let(:user_env) { { 'cf.user_guid' => user_guid, 'PATH_INFO' => '/v2/apps' } }
 
             it 'formats the error in v2 format' do

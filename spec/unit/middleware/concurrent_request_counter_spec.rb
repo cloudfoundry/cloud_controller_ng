@@ -210,7 +210,7 @@ module CloudFoundry
       let(:key) { 'test-key' }
       let(:redis) { MockRedis.new }
       let(:store) do
-        s = ConcurrentRequestCounter::RedisStore.new('/tmp/test.sock', 1, nil)
+        s = ConcurrentRequestCounter::RedisStore.new('/tmp/test.sock')
         s.instance_variable_set(:@redis, redis)
         s
       end
@@ -238,6 +238,20 @@ module CloudFoundry
         end
       end
 
+      describe '#initialize' do
+        it 'sizes the connection pool to the puma max threads' do
+          TestConfig.override(puma: { max_threads: 123 })
+          expect(ConnectionPool::Wrapper).to receive(:new).with(size: 123).and_call_original
+          ConcurrentRequestCounter::RedisStore.new('/tmp/test.sock')
+        end
+
+        it 'uses a default connection pool size of 1 when puma max threads is not set' do
+          TestConfig.override(puma: { max_threads: nil })
+          expect(ConnectionPool::Wrapper).to receive(:new).with(size: 1).and_call_original
+          ConcurrentRequestCounter::RedisStore.new('/tmp/test.sock')
+        end
+      end
+
       describe '#try_increment' do
         it 'returns 1 for a new key' do
           expect(store.try_increment(key, 10, logger)).to eq(1)
@@ -255,10 +269,8 @@ module CloudFoundry
         end
 
         context 'with TTL configured' do
-          let(:store) do
-            s = ConcurrentRequestCounter::RedisStore.new('/tmp/test.sock', 1, 60)
-            s.instance_variable_set(:@redis, redis)
-            s
+          before do
+            TestConfig.override(request_timeout_in_seconds: 59)
           end
 
           it 'sets TTL only on the first increment' do

@@ -16,7 +16,7 @@ module CloudFoundry
           }
         )
       end
-      let(:expiring_request_counter) { double }
+      let(:expiring_request_counter) { instance_double(ExpiringRequestCounter) }
 
       let(:app) { double(:app, call: [200, {}, 'a body']) }
       let(:per_process_general_limit) { 20 }
@@ -24,7 +24,7 @@ module CloudFoundry
       let(:per_process_admin_limit) { 100 }
       let(:global_admin_limit) { 1000 }
       let(:interval) { 60 }
-      let(:logger) { double('logger', info: nil) }
+      let(:logger) { double('logger') }
       let(:expires_in) { 10.minutes.to_i }
 
       let(:path_info) { '/v2/service_instances' }
@@ -313,7 +313,7 @@ module CloudFoundry
 
         context 'when the user is admin' do
           before do
-            allow(VCAP::CloudController::SecurityContext).to receive(:admin_read_only?).and_return(true)
+            allow(VCAP::CloudController::SecurityContext).to receive(:admin?).and_return(true)
           end
 
           it 'contains the correct headers' do

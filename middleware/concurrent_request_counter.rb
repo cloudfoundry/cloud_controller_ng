@@ -17,12 +17,10 @@ module CloudFoundry
         @instances[key_prefix]
       end
 
-      def initialize(key_prefix, blocking_limit: nil, logging_limit: nil, redis_connection_pool_size: nil, redis_counter_ttl_seconds: nil)
+      def initialize(key_prefix, blocking_limit: nil, logging_limit: nil)
         @key_prefix = key_prefix
         @blocking_limit = blocking_limit
         @logging_limit = logging_limit
-        @redis_connection_pool_size = redis_connection_pool_size
-        @redis_counter_ttl_seconds = redis_counter_ttl_seconds
       end
 
       def try_increment?(user_guid, logger)
@@ -67,11 +65,7 @@ module CloudFoundry
         return @store if defined?(@store)
 
         redis_socket = VCAP::CloudController::Config.config.get(:redis, :socket)
-        @store = if redis_socket.nil?
-                   InMemoryStore.new
-                 else
-                   RedisStore.new(redis_socket, @redis_connection_pool_size, @redis_counter_ttl_seconds)
-                 end
+        @store = redis_socket.nil? ? InMemoryStore.new : RedisStore.new(redis_socket)
       end
 
       class RedisStore
@@ -107,7 +101,9 @@ module CloudFoundry
         LUA
         LOG_INCREMENT_SHA = Digest::SHA1.hexdigest(LOG_INCREMENT_SCRIPT).freeze
 
-        def initialize(socket, connection_pool_size, counter_ttl_seconds)
+        def initialize(socket)
+          connection_pool_size = VCAP::CloudController::Config.config.get(:puma, :max_threads) || 1
+          counter_ttl_seconds = VCAP::CloudController::Config.config.get(:request_timeout_in_seconds) + 1
           @redis = ConnectionPool::Wrapper.new(size: connection_pool_size) do
             Redis.new(timeout: 1, path: socket)
           end

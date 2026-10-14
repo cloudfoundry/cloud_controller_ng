@@ -3,8 +3,12 @@ require 'spec_helper'
 module CloudFoundry
   module Middleware
     RSpec.describe ServiceBrokerRateLimiter, isolation: :truncation do
+      let(:middleware) do
+        ServiceBrokerRateLimiter.new(app, logger:, max_concurrent_requests:, broker_timeout_seconds:)
+      end
+
       let(:app) { double(:app) }
-      let(:logger) { double('logger', info: nil) }
+      let(:logger) { double('logger') }
       let(:instance) { create(:service, instances_retrievable: true) }
       let(:path_info) { '/v2/service_instances' }
       let(:user_guid) { SecureRandom.uuid }
@@ -12,17 +16,12 @@ module CloudFoundry
       let(:env) { { 'cf.user_guid' => user_guid, 'PATH_INFO' => path, 'REQUEST_METHOD' => request_method } }
       let(:fake_request) { instance_double(ActionDispatch::Request, fullpath: '/v2/service_instances', method: 'POST') }
       let(:max_concurrent_requests) { 1 }
-      let(:broker_timeout) { 60 }
+      let(:broker_timeout_seconds) { 60 }
       let(:counter) { instance_double(ConcurrentRequestCounter, try_increment?: true, decrement: nil) }
-
-      let(:middleware) do
-        ServiceBrokerRateLimiter.new(app, logger: logger, max_concurrent_requests: max_concurrent_requests, broker_timeout_seconds: broker_timeout)
-      end
 
       before do
         allow(ConcurrentRequestCounter).to receive(:instance).and_return(counter)
         allow(ActionDispatch::Request).to receive(:new).and_return(fake_request)
-        allow(logger).to receive(:info)
         allow(app).to receive(:call).and_return([200, {}, 'a body'])
       end
 
@@ -106,7 +105,6 @@ module CloudFoundry
                   expect(statuses).to include(200)
                   expect(statuses).to include(429)
                   expect(app).to have_received(:call).once
-                  expect(logger).to have_received(:info).with("Service broker concurrent rate limit exceeded for user '#{user_guid}'")
                 end
               end
             end
@@ -137,7 +135,6 @@ module CloudFoundry
 
                   expect(statuses).to all(eq(200))
                   expect(app).to have_received(:call).twice
-                  expect(logger).not_to have_received(:info)
                 end
               end
             end
@@ -164,7 +161,7 @@ module CloudFoundry
                 'description' => 'Service broker concurrent request limit exceeded',
                 'error_code' => 'CF-ServiceBrokerRateLimitExceeded'
               )
-              expect(response_headers['Retry-After'].to_i).to be_between((broker_timeout * 0.5).floor, (broker_timeout * 1.5).ceil)
+              expect(response_headers['Retry-After'].to_i).to be_between((broker_timeout_seconds * 0.5).floor, (broker_timeout_seconds * 1.5).ceil)
             end
           end
         end
@@ -181,18 +178,18 @@ module CloudFoundry
                 'detail' => 'Service broker concurrent request limit exceeded',
                 'title' => 'CF-ServiceBrokerRateLimitExceeded'
               )
-              expect(response_headers['Retry-After'].to_i).to be_between((broker_timeout * 0.5).floor, (broker_timeout * 1.5).ceil)
+              expect(response_headers['Retry-After'].to_i).to be_between((broker_timeout_seconds * 0.5).floor, (broker_timeout_seconds * 1.5).ceil)
             end
           end
         end
 
         context 'when broker_client_timeout_seconds is reduced' do
-          let(:broker_timeout) { 3 }
+          let(:broker_timeout_seconds) { 3 }
 
           it 'reduces the suggested delay in the Retry-After header' do
             Timecop.freeze do
               _, response_headers, = middleware.call(user_env)
-              expect(response_headers['Retry-After'].to_i).to be_between((broker_timeout * 0.5).floor, (broker_timeout * 1.5).ceil)
+              expect(response_headers['Retry-After'].to_i).to be_between((broker_timeout_seconds * 0.5).floor, (broker_timeout_seconds * 1.5).ceil)
             end
           end
         end
@@ -222,7 +219,7 @@ module CloudFoundry
         end
 
         context 'endpoint does not use included method' do
-          let(:fake_request) { instance_double(ActionDispatch::Request, fullpath: '/v3/service_instances', method: 'GET') }
+          let(:fake_request) { instance_double(ActionDispatch::Request, fullpath: '/v3/service_instances/some-guid/parameters', method: 'POST') }
 
           it 'does not rate limit them' do
             middleware.call(user_env)

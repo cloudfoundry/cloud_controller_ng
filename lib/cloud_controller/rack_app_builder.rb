@@ -16,11 +16,14 @@ require 'user_context_setter'
 
 module VCAP::CloudController
   class RackAppBuilder
-    # rubocop:disable Metrics/MethodLength, Metrics/BlockLength
     def build(config, request_metrics, request_logs)
       token_decoder = VCAP::CloudController::UaaTokenDecoder.new(config.get(:uaa))
       configurer = VCAP::CloudController::Security::SecurityContextConfigurer.new(token_decoder)
 
+      concurrency_rate_limiter_config = concurrency_rate_limiter_config(config)
+      rate_limiter_config = rate_limiter_config(config)
+      service_broker_rate_limiter_config = service_broker_rate_limiter_config(config)
+      rate_limiter_v2_api_config = rate_limiter_v2_api_config(config)
       logger = access_log(config)
 
       Rack::Builder.new do
@@ -31,47 +34,10 @@ module VCAP::CloudController
         use CloudFoundry::Middleware::SecurityContextSetter, configurer
         use CloudFoundry::Middleware::Zipkin
 
-        if config.get(:concurrency_rate_limiter, :enabled)
-          use CloudFoundry::Middleware::ConcurrencyRateLimiter, {
-            logger: Steno.logger('cc.concurrency_rate_limiter'),
-            blocking_limit: config.get(:concurrency_rate_limiter, :blocking_limit),
-            logging_limit: config.get(:concurrency_rate_limiter, :logging_limit),
-            redis_connection_pool_size: config.get(:redis_connection_pool_size),
-            redis_counter_ttl_seconds: config.get(:redis_counter_ttl_seconds)
-          }
-        end
-
-        if config.get(:rate_limiter, :enabled)
-          use CloudFoundry::Middleware::RateLimiter, {
-            logger: Steno.logger('cc.rate_limiter'),
-            per_process_general_limit: config.get(:rate_limiter, :per_process_general_limit),
-            global_general_limit: config.get(:rate_limiter, :global_general_limit),
-            per_process_unauthenticated_limit: config.get(:rate_limiter, :per_process_unauthenticated_limit),
-            global_unauthenticated_limit: config.get(:rate_limiter, :global_unauthenticated_limit),
-            per_process_admin_limit: config.get(:rate_limiter, :per_process_admin_limit),
-            global_admin_limit: config.get(:rate_limiter, :global_admin_limit),
-            interval: config.get(:rate_limiter, :reset_interval_in_minutes)
-          }
-        end
-        if config.get(:max_concurrent_service_broker_requests) > 0
-          use CloudFoundry::Middleware::ServiceBrokerRateLimiter, {
-            logger: Steno.logger('cc.service_broker_rate_limiter'),
-            max_concurrent_requests: config.get(:max_concurrent_service_broker_requests),
-            broker_timeout_seconds: config.get(:broker_client_timeout_seconds),
-            redis_connection_pool_size: config.get(:redis_connection_pool_size),
-            redis_counter_ttl_seconds: config.get(:redis_counter_ttl_seconds)
-          }
-        end
-        if config.get(:rate_limiter_v2_api, :enabled)
-          use CloudFoundry::Middleware::RateLimiterV2API, {
-            logger: Steno.logger('cc.rate_limiter_v2_api'),
-            per_process_general_limit: config.get(:rate_limiter_v2_api, :per_process_general_limit),
-            global_general_limit: config.get(:rate_limiter_v2_api, :global_general_limit),
-            per_process_admin_limit: config.get(:rate_limiter_v2_api, :per_process_admin_limit),
-            global_admin_limit: config.get(:rate_limiter_v2_api, :global_admin_limit),
-            interval: config.get(:rate_limiter_v2_api, :reset_interval_in_minutes)
-          }
-        end
+        use CloudFoundry::Middleware::ConcurrencyRateLimiter, concurrency_rate_limiter_config if config.get(:concurrency_rate_limiter, :enabled)
+        use CloudFoundry::Middleware::RateLimiter, rate_limiter_config if config.get(:rate_limiter, :enabled)
+        use CloudFoundry::Middleware::ServiceBrokerRateLimiter, service_broker_rate_limiter_config if config.get(:max_concurrent_service_broker_requests) > 0
+        use CloudFoundry::Middleware::RateLimiterV2API, rate_limiter_v2_api_config if config.get(:rate_limiter_v2_api, :enabled)
 
         use CloudFoundry::Middleware::RequestMetrics, request_metrics
         use CloudFoundry::Middleware::UserContextSetter, configurer
@@ -94,7 +60,6 @@ module VCAP::CloudController
         end
       end
     end
-    # rubocop:enable Metrics/MethodLength, Metrics/BlockLength
 
     private
 
@@ -105,6 +70,46 @@ module VCAP::CloudController
       access_log ||= File.open(access_filename, 'a')
       access_log.sync = true
       access_log
+    end
+
+    def concurrency_rate_limiter_config(config)
+      {
+        logger: Steno.logger('cc.concurrency_rate_limiter'),
+        blocking_limit: config.get(:concurrency_rate_limiter, :blocking_limit),
+        logging_limit: config.get(:concurrency_rate_limiter, :logging_limit)
+      }
+    end
+
+    def rate_limiter_config(config)
+      {
+        logger: Steno.logger('cc.rate_limiter'),
+        per_process_general_limit: config.get(:rate_limiter, :per_process_general_limit),
+        global_general_limit: config.get(:rate_limiter, :global_general_limit),
+        per_process_unauthenticated_limit: config.get(:rate_limiter, :per_process_unauthenticated_limit),
+        global_unauthenticated_limit: config.get(:rate_limiter, :global_unauthenticated_limit),
+        per_process_admin_limit: config.get(:rate_limiter, :per_process_admin_limit),
+        global_admin_limit: config.get(:rate_limiter, :global_admin_limit),
+        interval: config.get(:rate_limiter, :reset_interval_in_minutes)
+      }
+    end
+
+    def service_broker_rate_limiter_config(config)
+      {
+        logger: Steno.logger('cc.service_broker_rate_limiter'),
+        max_concurrent_requests: config.get(:max_concurrent_service_broker_requests),
+        broker_timeout_seconds: config.get(:broker_client_timeout_seconds)
+      }
+    end
+
+    def rate_limiter_v2_api_config(config)
+      {
+        logger: Steno.logger('cc.rate_limiter_v2_api'),
+        per_process_general_limit: config.get(:rate_limiter_v2_api, :per_process_general_limit),
+        global_general_limit: config.get(:rate_limiter_v2_api, :global_general_limit),
+        per_process_admin_limit: config.get(:rate_limiter_v2_api, :per_process_admin_limit),
+        global_admin_limit: config.get(:rate_limiter_v2_api, :global_admin_limit),
+        interval: config.get(:rate_limiter_v2_api, :reset_interval_in_minutes)
+      }
     end
   end
 end

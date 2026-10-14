@@ -50,15 +50,15 @@ module CloudFoundry
       describe '#user_token?' do
         it 'returns true when cf.user_guid is set' do
           env = { 'cf.user_guid' => 'some-user-guid' }
-          expect(implementor.send(:user_token?, env)).to be true
+          expect(implementor).to be_user_token(env)
         end
 
         it 'returns false when cf.user_guid is absent' do
-          expect(implementor.send(:user_token?, {})).to be false
+          expect(implementor).not_to be_user_token({})
         end
 
         it 'returns false when cf.user_guid is nil' do
-          expect(implementor.send(:user_token?, { 'cf.user_guid' => nil })).to be false
+          expect(implementor).not_to be_user_token({ 'cf.user_guid' => nil })
         end
       end
     end
