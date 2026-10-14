@@ -81,10 +81,7 @@ module Sequel
         # already-broken socket, and the acquired gauge must still be corrected on that disconnect-error path.
         @prometheus_updater.update_gauge_metric(:cc_open_db_connections_total, size, labels: { process_type: })
 
-        if acquired_by_current_thread
-          @prometheus_updater.decrement_gauge_metric(:cc_acquired_db_connections_total, labels: { process_type: })
-          @connection_info.delete(thread)
-        end
+        decrement_acquired(thread) if acquired_by_current_thread
       end
     end
 
@@ -97,6 +94,12 @@ module Sequel
         @prometheus_updater.update_histogram_metric(:cc_db_connection_hold_duration_seconds, duration)
       end
 
+      decrement_acquired(thread)
+    end
+
+    # Decrement the acquired gauge and drop the thread's connection info. Shared by release
+    # and the disconnect-error compensation so the teardown stays in sync between the two.
+    def decrement_acquired(thread)
       @prometheus_updater.decrement_gauge_metric(:cc_acquired_db_connections_total, labels: { process_type: })
       @connection_info.delete(thread)
     end
