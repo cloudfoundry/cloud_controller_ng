@@ -87,6 +87,14 @@ module CloudFoundry
             expect(response_headers['X-RateLimit-Reset']).to eq((frozen_epoch + expires_in).to_s)
           end
         end
+
+        describe 'X-RateLimit-Reason' do
+          it 'contains the reason for rate limiting' do
+            allow(expiring_request_counter).to receive(:increment).and_return([per_process_general_limit + 1, expires_in])
+            _, response_headers, = middleware.call(user_1_env.merge('PATH_INFO' => '/v3/foo'))
+            expect(response_headers['X-RateLimit-Reason']).to eq('RateLimiter')
+          end
+        end
       end
 
       it 'increments the counter and allows the request to continue' do

@@ -7,6 +7,7 @@ module CloudFoundry
         headers['Content-Type'] = 'text/plain; charset=utf-8'
         message = rate_limit_error(env, error_name).to_json
         headers['Content-Length'] = message.bytesize.to_s
+        headers['X-RateLimit-Reason'] = self.class.name&.demodulize
         [429, extra_headers.to_hash.merge(headers), [message]]
       end
 

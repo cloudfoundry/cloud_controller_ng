@@ -193,6 +193,11 @@ module CloudFoundry
             end
           end
         end
+
+        it 'includes X-RateLimit-Reason header' do
+          _, response_headers, = middleware.call(user_env)
+          expect(response_headers['X-RateLimit-Reason']).to eq('ServiceBrokerRateLimiter')
+        end
       end
 
       describe 'skipped requests' do

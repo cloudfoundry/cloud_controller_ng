@@ -59,6 +59,11 @@ module CloudFoundry
             expect(response_headers['Retry-After'].to_i).to be > 0
           end
 
+          it 'includes X-RateLimit-Reason header' do
+            _, response_headers, = middleware.call(user_env)
+            expect(response_headers['X-RateLimit-Reason']).to eq('ConcurrencyRateLimiter')
+          end
+
           context 'when the path is /v3/*' do
             it 'formats the error in v3 format' do
               _, _, body = middleware.call(user_env)
