@@ -1,25 +1,157 @@
 type: object
+description: |-
+  Service plans represent the service plans offered by a service offering.
+  A service offering will have one or more service plans.
+  Service offerings and service plans are created and updated when a service broker is registered or updated.
 allOf:
   - $ref: './BaseSchema.yaml'
   - properties:
-      service_offering_guid:
+      name:
         type: string
-      service_offering_name:
+        description: Name of the service plan
+      visibility_type:
         type: string
+        enum:
+          - public
+          - admin
+          - organization
+          - space
+        description: Denotes the visibility of the plan; can be `public`, `admin`, `organization`, `space`, see [_list of visibility types_](#list-of-visibility-types)
+      available:
+        type: boolean
+        description: Whether or not the service plan is available
+      free:
+        type: boolean
+        description: Whether or not the service plan is free of charge
+      costs:
+        type: array
+        description: The cost of the service plan as obtained from the service broker catalog
+        items:
+          type: object
+          description: The service plan cost
+          properties:
+            amount:
+              type: number
+              format: float
+              description: Pricing amount
+            currency:
+              type: string
+              description: Currency code for the pricing amount, e.g. USD, GBP
+            unit:
+              type: string
+              description: Display name for type of cost, e.g. Monthly, Hourly, Request, GB
+      description:
+        type: string
+        description: Description of the service plan
+      maintenance_info:
+        type: object
+        description: Information about the version of this service plan
+        properties:
+          version:
+            type: string
+            description: The current semantic version of the service plan; comparing this version with that of a service instance can be used to determine whether or not the service instance is up to date with this service plan
+          description:
+            type: string
+            description: A textual explanation associated with this version
+      broker_catalog:
+        type: object
+        description: This object contains information obtained from the service broker catalog
+        properties:
+          id:
+            type: string
+            description: The identifier that the service broker provided for this service plan
+          metadata:
+            type: object
+            additionalProperties: true
+            description: Additional information provided by the service broker as specified by [OSBAPI](https://github.com/openservicebrokerapi/servicebroker/blob/master/profile.md#plan-metadata-fields)
+          maximum_polling_duration:
+            type: [integer, "null"]
+            description: The maximum number of seconds that Cloud Foundry will wait for an asynchronous service broker operation
+          features:
+            type: object
+            description: Features supported by this service plan
+            properties:
+              plan_updateable:
+                type: boolean
+                description: Whether the service plan supports upgrade/downgrade for service plans; when the catalog does not specify a value, it is inherited from the service offering
+              bindable:
+                type: boolean
+                description: Specifies whether service instances of the service can be bound to applications
+      schemas:
+        type: object
+        description: Schema definitions for service instances and service bindings for the service plan
+        properties:
+          service_instance:
+            type: object
+            description: Schema definitions for service instances of this service plan
+            properties:
+              create:
+                type: object
+                description: Schema definition for service instance creation
+                properties:
+                  parameters:
+                    type: object
+                    additionalProperties: true
+                    description: The schema definition for the input parameters; each input parameter is expressed as a property within a JSON object
+              update:
+                type: object
+                description: Schema definition for service instance update
+                properties:
+                  parameters:
+                    type: object
+                    additionalProperties: true
+                    description: The schema definition for the input parameters; each input parameter is expressed as a property within a JSON object
+          service_binding:
+            type: object
+            description: Schema definitions for service bindings of this service plan
+            properties:
+              create:
+                type: object
+                description: Schema definition for service Binding creation
+                properties:
+                  parameters:
+                    type: object
+                    additionalProperties: true
+                    description: The schema definition for the input parameters; each input parameter is expressed as a property within a JSON object
+      relationships:
+        type: object
+        description: Relationships for the service plan
+        properties:
+          service_offering:
+            $ref: './RelationshipToOne.yaml'
+            description: The service offering that this service plan relates to
+          space:
+            $ref: './RelationshipToOne.yaml'
+            description: The space of the service broker, if this service plan is from a space-scoped service broker
       metadata:
         $ref: './Metadata.yaml'
+        description: Labels and annotations applied to the service plan
       links:
         type: object
+        description: Links to related resources
         properties:
           self:
             $ref: './Link.yaml'
-            description: The URL to get this service plan
+            description: The URL of this service plan
           service_offering:
             $ref: './Link.yaml'
-            description: The URL to get the service offering for this plan
+            description: The URL of the service offering that this service plan relates to
           visibility:
             $ref: './Link.yaml'
-            description: The URL to get the visibility for this plan
+            description: The URL of the visibility of this service plan
+          space:
+            $ref: './Link.yaml'
+            description: The URL of the space of the service broker; only present for service plans from space-scoped service brokers
       included:
         $ref: './IncludedResources.yaml'
         description: Additional related resources included in the response when using the include parameter
+    required:
+    - name
+    - visibility_type
+    - available
+    - free
+    - description
+    - broker_catalog
+    - schemas
+    - relationships
+    - links

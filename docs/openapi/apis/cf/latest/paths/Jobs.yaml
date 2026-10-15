@@ -1,7 +1,10 @@
 /v3/jobs/{guid}:
   get:
     summary: Get a job
-    description: Retrieve a specific job.
+    description: |-
+      Retrieve a specific job.
+
+      **Permitted roles:** All Roles
     operationId: getJob
     tags:
       - Jobs
@@ -16,9 +19,22 @@
               $ref: ../components/schemas/Job.yaml
             examples:
               default:
-                summary: default
+                summary: Completed job
                 value:
-                  guid: 123e4567-e89b-12d3-a456-426614174000
+                  guid: b19ae525-cbd3-4155-b156-dc0c2a431b4c
+                  created_at: '2016-10-19T20:25:04Z'
+                  updated_at: '2016-11-08T16:41:26Z'
+                  operation: app.delete
+                  state: COMPLETE
+                  links:
+                    self:
+                      href: https://api.example.org/v3/jobs/b19ae525-cbd3-4155-b156-dc0c2a431b4c
+                  errors: []
+                  warnings: []
+              failed:
+                summary: Failed job
+                value:
+                  guid: b19ae525-cbd3-4155-b156-dc0c2a431b4c
                   created_at: '2016-10-19T20:25:04Z'
                   updated_at: '2016-11-08T16:41:26Z'
                   operation: app.delete
