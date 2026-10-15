@@ -2,11 +2,11 @@ type: object
 properties:
   read_basic_data:
     type: boolean
-    description: Whether the user can read basic app data
+    description: Whether the current user can read the app's basic data; true if the user can see the app
   read_sensitive_data:
     type: boolean
-    description: Whether the user can read sensitive app data
+    description: Whether the current user can read the app's sensitive data; only admin, read-only admins, and space developers can read sensitive data
 required:
   - read_basic_data
   - read_sensitive_data
-description: 'User permissions for an app'
+description: The current user's permissions for the given app

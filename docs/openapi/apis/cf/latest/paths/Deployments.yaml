@@ -1,26 +1,41 @@
 /v3/deployments:
   get:
     summary: List deployments
-    description: Retrieve all deployments.
+    description: |-
+      Retrieve all deployments the user has access to.
+
+      **Permitted roles:** All Roles
     operationId: listDeployments
     tags:
       - Deployments
     parameters:
       - $ref: ../components/parameters/Page.yaml
       - $ref: ../components/parameters/PerPage.yaml
-      - $ref: ../components/parameters/OrderBy.yaml
+      - name: order_by
+        in: query
+        required: false
+        schema:
+          type: string
+          enum:
+            - created_at
+            - -created_at
+            - updated_at
+            - -updated_at
+        description: Value to sort by. Defaults to ascending; prepend with `-` to sort descending. Valid values are `created_at`, `updated_at`
       - $ref: ../components/parameters/CreatedAts.yaml
       - $ref: ../components/parameters/UpdatedAts.yaml
       - $ref: ../components/parameters/LabelSelector.yaml
       - name: app_guids
         in: query
+        required: false
         schema:
           type: array
           items:
             type: string
-        description: Comma-delimited list of app GUIDs to filter by
+        description: Comma-delimited list of app guids to filter by
       - name: states
         in: query
+        required: false
         schema:
           type: array
           items:
@@ -28,6 +43,7 @@
         description: Comma-delimited list of states to filter by
       - name: status_reasons
         in: query
+        required: false
         schema:
           type: array
           items:
@@ -39,9 +55,10 @@
               - DEPLOYED
               - CANCELED
               - SUPERSEDED
-        description: Comma-delimited list of status reasons to filter by
+        description: Comma-delimited list of status reasons to filter by; valid values include `DEPLOYING`, `PAUSED`, `CANCELING`, `DEPLOYED`, `CANCELED`, `SUPERSEDED`
       - name: status_values
         in: query
+        required: false
         schema:
           type: array
           items:
@@ -49,7 +66,7 @@
             enum:
               - ACTIVE
               - FINALIZED
-        description: Comma-delimited list of status values to filter by
+        description: Comma-delimited list of status values to filter by; valid values include `ACTIVE` and `FINALIZED`
     responses:
       '200':
         description: OK
@@ -123,7 +140,10 @@
         $ref: ../components/responses/ServiceUnavailable.yaml
   post:
     summary: Create a deployment
-    description: When you create a new deployment you can either provide a specific droplet or revision to deploy. If no revision or droplet is provided, the droplet associated with the app is deployed.
+    description: |-
+      When you create a new deployment you can either provide a specific droplet or revision to deploy. If no revision or droplet is provided, the droplet associated with the [app](#apps) is deployed.
+
+      **Permitted roles:** Admin, Space Developer, Space Supporter
     operationId: createDeployment
     tags:
       - Deployments
@@ -134,54 +154,89 @@
         application/json:
           schema:
             type: object
+            required:
+              - relationships
             properties:
               relationships:
-                $ref: ../components/schemas/Relationships.yaml
+                type: object
+                description: Relationships to other resources
+                required:
+                  - app
+                properties:
+                  app:
+                    $ref: ../components/schemas/RelationshipToOne.yaml
+                    description: The app to deploy a droplet for
+              droplet:
+                $ref: ../components/schemas/Relationship.yaml
+                description: The droplet to deploy for the app; this will update the app's [current droplet](#get-current-droplet-association-for-an-app) to this droplet. Defaults to the app's [current droplet](#get-current-droplet-association-for-an-app). Only a droplet *or* a revision may be provided, not both.
+              revision:
+                $ref: ../components/schemas/Relationship.yaml
+                description: The [revision](#revisions) whose droplet to deploy for the app; this will update the app's [current droplet](#get-current-droplet-association-for-an-app) to this droplet. Only a droplet *or* a revision may be provided, not both.
               strategy:
                 type: string
+                description: The strategy to use for the deployment; supported strategies are `rolling` and `canary` (experimental)
+                default: rolling
                 enum:
                   - rolling
                   - canary
               options:
                 type: object
+                description: Options to use for the deployment
                 properties:
                   max_in_flight:
                     type: integer
-                    description: The maximum number of instances that will be deployed simultaneously
+                    description: The maximum number of new instances to deploy simultaneously
                     default: 1
                     minimum: 1
                   web_instances:
                     type: integer
-                    description: The number of instances for the web process of the new droplet
+                    description: The number of web instances the deployment will scale to. Defaults to the current web process's instance count
                   memory_in_mb:
-                    type: integer
-                    description: The amount of memory in megabytes to allocate for the web process
+                    type: [integer, "null"]
+                    description: The amount of memory in megabytes to allocate per web process instance. If `null`, the amount allocated will be taken from the previous web process.
+                    default: null
                   disk_in_mb:
-                    type: integer
-                    description: The amount of disk space in megabytes to allocate for the web process
+                    type: [integer, "null"]
+                    description: The amount of disk in megabytes to allocate per web process instance. If `null`, the amount allocated will be taken from the previous web process.
+                    default: null
                   log_rate_limit_in_bytes_per_second:
-                    type: integer
-                    description: The log rate limit in bytes per second for the web process. A value of -1 indicates unlimited, 0 prevents any logs from being emitted.
+                    type: [integer, "null"]
+                    description: Log rate limit in bytes per second to allocate per web process instance. If `null`, the amount allocated will be taken from the previous web process.
+                    default: null
                   canary:
                     type: object
-                    description: Canary steps to use for the deployment. Only available for deployments with strategy ‘canary’.
+                    description: Canary options to use for the deployment. Only valid for deployments with strategy `canary`. (experimental)
                     properties:
                       steps:
                         type: array
-                        description: Array of steps defining the canary deployment progression
+                        description: An array of canary steps to use for the deployment. (experimental)
                         items:
                           type: object
+                          description: A canary step object
                           properties:
                             instance_weight:
                               type: integer
-                              description: The percentage of instances to be deployed as part of the canary process in this step
-              droplet:
-                $ref: ../components/schemas/Relationship.yaml
-              revision:
-                $ref: ../components/schemas/Relationship.yaml
+                              description: The percentage of instances to be deployed as part of the canary process in this step (experimental)
+                              minimum: 1
+                              maximum: 100
               metadata:
                 $ref: ../components/schemas/Metadata.yaml
+                description: |-
+                  `labels`: Labels applied to the deployment
+
+                  `annotations`: Annotations applied to the deployment
+            description: Request schema for creating a deployment
           examples:
+            droplet:
+              summary: Create a deployment with a droplet
+              value:
+                droplet:
+                  guid: 123e4567-e89b-12d3-a456-426614174000
+                strategy: rolling
+                relationships:
+                  app:
+                    data:
+                      guid: 123e4567-e89b-12d3-a456-426614174000
             default:
               summary: default
               value:
@@ -199,6 +254,62 @@
           application/json:
             schema:
               $ref: ../components/schemas/Deployment.yaml
+            examples:
+              default:
+                summary: default
+                value:
+                  guid: 123e4567-e89b-12d3-a456-426614174000
+                  status:
+                    value: ACTIVE
+                    reason: DEPLOYING
+                    details:
+                      last_successful_healthcheck: '2018-04-25T22:42:10Z'
+                      last_status_change: '2018-04-25T22:42:10Z'
+                    canary:
+                      steps:
+                        current: 1
+                        total: 2
+                  strategy: canary
+                  options:
+                    max_in_flight: 3
+                    web_instances: 5
+                    memory_in_mb: 1024
+                    disk_in_mb: 1024
+                    log_rate_limit_in_bytes_per_second: -1
+                    canary:
+                      steps:
+                        - instance_weight: 10
+                        - instance_weight: 20
+                  droplet:
+                    guid: 123e4567-e89b-12d3-a456-426614174000
+                  previous_droplet:
+                    guid: 123e4567-e89b-12d3-a456-426614174000
+                  new_processes:
+                    - guid: 123e4567-e89b-12d3-a456-426614174000
+                      type: web
+                  revision:
+                    guid: 123e4567-e89b-12d3-a456-426614174000
+                    version: 1
+                  created_at: '2018-04-25T22:42:10Z'
+                  updated_at: '2018-04-25T22:42:10Z'
+                  metadata:
+                    labels: {}
+                    annotations: {}
+                  relationships:
+                    app:
+                      data:
+                        guid: 123e4567-e89b-12d3-a456-426614174000
+                  links:
+                    self:
+                      href: https://api.example.org/v3/deployments/59c3d133-2b83-46f3-960e-7765a129aea4
+                    app:
+                      href: https://api.example.org/v3/apps/305cea31-5a44-45ca-b51b-e89c7a8ef8b2
+                    cancel:
+                      href: https://api.example.org/v3/deployments/59c3d133-2b83-46f3-960e-7765a129aea4/actions/cancel
+                      method: POST
+                    continue:
+                      href: https://api.example.org/v3/deployments/59c3d133-2b83-46f3-960e-7765a129aea4/actions/continue
+                      method: POST
         links:
           app:
             operationId: getApp
@@ -232,12 +343,16 @@
 /v3/deployments/{guid}:
   get:
     summary: Get a deployment
-    description: Retrieve a deployment.
+    description: |-
+      Retrieve a deployment.
+
+      **Permitted roles:** Admin, Admin Read-Only, Global Auditor, Org Manager, Space Auditor, Space Developer, Space Manager, Space Supporter
     operationId: getDeployment
     tags:
       - Deployments
     parameters:
       - $ref: ../components/parameters/Guid.yaml
+        description: The GUID of the deployment
     responses:
       '200':
         description: Successfully retrieved deployment
@@ -245,6 +360,62 @@
           application/json:
             schema:
               $ref: ../components/schemas/Deployment.yaml
+            examples:
+              default:
+                summary: default
+                value:
+                  guid: 123e4567-e89b-12d3-a456-426614174000
+                  status:
+                    value: ACTIVE
+                    reason: DEPLOYING
+                    details:
+                      last_successful_healthcheck: '2018-04-25T22:42:10Z'
+                      last_status_change: '2018-04-25T22:42:10Z'
+                    canary:
+                      steps:
+                        current: 1
+                        total: 2
+                  strategy: canary
+                  options:
+                    max_in_flight: 3
+                    web_instances: 5
+                    memory_in_mb: 1024
+                    disk_in_mb: 1024
+                    log_rate_limit_in_bytes_per_second: -1
+                    canary:
+                      steps:
+                        - instance_weight: 10
+                        - instance_weight: 20
+                  droplet:
+                    guid: 123e4567-e89b-12d3-a456-426614174000
+                  previous_droplet:
+                    guid: 123e4567-e89b-12d3-a456-426614174000
+                  new_processes:
+                    - guid: 123e4567-e89b-12d3-a456-426614174000
+                      type: web
+                  revision:
+                    guid: 123e4567-e89b-12d3-a456-426614174000
+                    version: 1
+                  created_at: '2018-04-25T22:42:10Z'
+                  updated_at: '2018-04-25T22:42:10Z'
+                  metadata:
+                    labels: {}
+                    annotations: {}
+                  relationships:
+                    app:
+                      data:
+                        guid: 123e4567-e89b-12d3-a456-426614174000
+                  links:
+                    self:
+                      href: https://api.example.org/v3/deployments/59c3d133-2b83-46f3-960e-7765a129aea4
+                    app:
+                      href: https://api.example.org/v3/apps/305cea31-5a44-45ca-b51b-e89c7a8ef8b2
+                    cancel:
+                      href: https://api.example.org/v3/deployments/59c3d133-2b83-46f3-960e-7765a129aea4/actions/cancel
+                      method: POST
+                    continue:
+                      href: https://api.example.org/v3/deployments/59c3d133-2b83-46f3-960e-7765a129aea4/actions/continue
+                      method: POST
         links:
           app:
             operationId: getApp
@@ -269,12 +440,16 @@
         $ref: ../components/responses/NotFound.yaml
   patch:
     summary: Update a deployment
-    description: Update a deployment.
+    description: |-
+      Update a deployment.
+
+      **Permitted roles:** Admin, Space Developer
     operationId: updateDeployment
     tags:
       - Deployments
     parameters:
       - $ref: ../components/parameters/Guid.yaml
+        description: The GUID of the deployment
     requestBody:
       description: Deployment object that needs to be updated
       required: true
@@ -285,6 +460,10 @@
             properties:
               metadata:
                 $ref: ../components/schemas/Metadata.yaml
+                description: |-
+                  `labels`: Labels applied to the deployment
+
+                  `annotations`: Annotations applied to the deployment
             description: Request schema for updating a deployment
           examples:
             default:
@@ -302,6 +481,64 @@
           application/json:
             schema:
               $ref: ../components/schemas/Deployment.yaml
+            examples:
+              default:
+                summary: default
+                value:
+                  guid: 123e4567-e89b-12d3-a456-426614174000
+                  status:
+                    value: ACTIVE
+                    reason: DEPLOYING
+                    details:
+                      last_successful_healthcheck: '2018-04-25T22:42:10Z'
+                      last_status_change: '2018-04-25T22:42:10Z'
+                    canary:
+                      steps:
+                        current: 1
+                        total: 2
+                  strategy: canary
+                  options:
+                    max_in_flight: 3
+                    web_instances: 5
+                    memory_in_mb: 1024
+                    disk_in_mb: 1024
+                    log_rate_limit_in_bytes_per_second: -1
+                    canary:
+                      steps:
+                        - instance_weight: 10
+                        - instance_weight: 20
+                  droplet:
+                    guid: 123e4567-e89b-12d3-a456-426614174000
+                  previous_droplet:
+                    guid: 123e4567-e89b-12d3-a456-426614174000
+                  new_processes:
+                    - guid: 123e4567-e89b-12d3-a456-426614174000
+                      type: web
+                  revision:
+                    guid: 123e4567-e89b-12d3-a456-426614174000
+                    version: 1
+                  created_at: '2018-04-25T22:42:10Z'
+                  updated_at: '2018-04-25T22:42:10Z'
+                  metadata:
+                    labels:
+                      key: value
+                    annotations:
+                      note: detailed information
+                  relationships:
+                    app:
+                      data:
+                        guid: 123e4567-e89b-12d3-a456-426614174000
+                  links:
+                    self:
+                      href: https://api.example.org/v3/deployments/59c3d133-2b83-46f3-960e-7765a129aea4
+                    app:
+                      href: https://api.example.org/v3/apps/305cea31-5a44-45ca-b51b-e89c7a8ef8b2
+                    cancel:
+                      href: https://api.example.org/v3/deployments/59c3d133-2b83-46f3-960e-7765a129aea4/actions/cancel
+                      method: POST
+                    continue:
+                      href: https://api.example.org/v3/deployments/59c3d133-2b83-46f3-960e-7765a129aea4/actions/continue
+                      method: POST
       '400':
         $ref: ../components/responses/BadRequest.yaml
       '401':
@@ -321,19 +558,25 @@
 /v3/deployments/{guid}/actions/cancel:
   post:
     summary: Cancel a deployment
-    description: Cancel a deployment.
+    description: |-
+      Cancel a deployment.
+
+      Canceling reverts the application to the state it was in before the deployment started. This involves scaling up the original web process, removing any deployment artifacts, and resetting the current droplet on the application.
+
+      Only a deployment whose **status.value** is `ACTIVE` can be canceled; canceling any other deployment is rejected with a `422 Unprocessable Entity`.
+
+      > **Warning:** There is no guarantee about zero-downtime during a cancel. The goal is to revert to the original state as quickly as possible.
+
+      **Permitted roles:** Admin, Space Developer, Space Supporter
     operationId: cancelDeployment
     tags:
       - Deployments
     parameters:
       - $ref: ../components/parameters/Guid.yaml
+        description: The GUID of the deployment
     responses:
       '200':
-        description: Successfully canceled deployment
-        content:
-          application/json:
-            schema:
-              $ref: ../components/schemas/Deployment.yaml
+        description: Successfully canceled deployment; the response has an empty body
       '401':
         $ref: ../components/responses/Unauthorized.yaml
       '403':
@@ -345,19 +588,23 @@
 /v3/deployments/{guid}/actions/continue:
   post:
     summary: Continue a deployment
-    description: Continue a deployment.
+    description: |-
+      Continue a deployment.
+
+      [Canary deployments](https://docs.cloudfoundry.org/devguide/deploy-apps/rolling-deploy.html#canary-deployment-process) deploy a single instance and pause for user evaluation. If the canary instance is deemed successful, the deployment can be resumed via this action. The deployment then continues like a rolling deployment. This feature is experimental and is subject to change.
+
+      Only a paused deployment (**status.value** `ACTIVE` and **status.reason** `PAUSED`) can be continued; continuing any other deployment is rejected with a `422 Unprocessable Entity`.
+
+      **Permitted roles:** Admin, Space Developer, Space Supporter
     operationId: continueDeployment
     tags:
       - Deployments
     parameters:
       - $ref: ../components/parameters/Guid.yaml
+        description: The GUID of the deployment
     responses:
       '200':
-        description: Successfully continued deployment
-        content:
-          application/json:
-            schema:
-              $ref: ../components/schemas/Deployment.yaml
+        description: Successfully continued deployment; the response has an empty body
       '401':
         $ref: ../components/responses/Unauthorized.yaml
       '403':

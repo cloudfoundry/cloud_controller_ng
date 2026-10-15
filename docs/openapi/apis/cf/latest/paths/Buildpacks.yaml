@@ -1,33 +1,59 @@
 /v3/buildpacks:
   get:
     summary: List buildpacks
-    description: Retrieve all buildpacks.
+    description: |-
+      Retrieve all buildpacks the user has access to.
+
+      **Permitted roles:** All Roles
     operationId: listBuildpacks
     tags:
       - Buildpacks
     parameters:
       - $ref: ../components/parameters/Page.yaml
       - $ref: ../components/parameters/PerPage.yaml
-      - $ref: ../components/parameters/OrderBy.yaml
-      - $ref: ../components/parameters/CreatedAts.yaml
-      - $ref: ../components/parameters/UpdatedAts.yaml
-      - $ref: ../components/parameters/LabelSelector.yaml
       - name: names
         in: query
+        required: false
         schema:
           type: array
           items:
             type: string
-        description: |
-          Comma-delimited list of buildpack names to filter by
+        description: Comma-delimited list of buildpack names to filter by (case-sensitive)
       - name: stacks
         in: query
+        required: false
         schema:
           type: array
           items:
             type: string
-        description: |
-          Comma-delimited list of stacks to filter by
+        description: Comma-delimited list of stack names to filter by (case-sensitive)
+      - name: lifecycle
+        in: query
+        required: false
+        schema:
+          type: string
+          enum:
+            - buildpack
+            - cnb
+        description: Type of buildpack. Valid values are `buildpack` and `cnb`
+      - name: order_by
+        in: query
+        required: false
+        schema:
+          type: string
+          enum:
+            - created_at
+            - -created_at
+            - updated_at
+            - -updated_at
+            - lifecycle
+            - -lifecycle
+            - position
+            - -position
+        description: Value to sort by; defaults to ascending. Prepend with `-` to sort descending. Valid values are `created_at`, `updated_at`, `lifecycle`, and `position`
+      - $ref: ../components/parameters/LabelSelector.yaml
+      - $ref: ../components/parameters/CreatedAts.yaml
+      - $ref: ../components/parameters/UpdatedAts.yaml
     responses:
       '200':
         description: OK
@@ -50,7 +76,7 @@
                       href: https://api.example.org/v3/buildpacks?page=2&per_page=2
                     previous: null
                   resources:
-                    - guid: 123e4567-e89b-12d3-a456-426614174000
+                    - guid: fd35633f-5c5c-4e4e-a5a9-0722c970a9d2
                       created_at: '2016-03-18T23:26:46Z'
                       updated_at: '2016-10-17T20:00:42Z'
                       name: my-buildpack
@@ -88,7 +114,7 @@
         $ref: ../components/responses/ServiceUnavailable.yaml
   post:
     summary: Create a buildpack
-    description: Create a buildpack.
+    description: '**Permitted roles:** Admin'
     operationId: createBuildpack
     tags:
       - Buildpacks
@@ -114,7 +140,7 @@
 /v3/buildpacks/{guid}:
   get:
     summary: Get a buildpack
-    description: Retrieve a buildpack.
+    description: '**Permitted roles:** All Roles'
     operationId: getBuildpack
     tags:
       - Buildpacks
@@ -133,7 +159,7 @@
         $ref: ../components/responses/NotFound.yaml
   patch:
     summary: Update a buildpack
-    description: Update a buildpack.
+    description: '**Permitted roles:** Admin'
     operationId: updateBuildpack
     tags:
       - Buildpacks
@@ -148,6 +174,30 @@
           application/json:
             schema:
               $ref: ../components/schemas/Buildpack.yaml
+            examples:
+              default:
+                summary: default
+                value:
+                  guid: fd35633f-5c5c-4e4e-a5a9-0722c970a9d2
+                  created_at: '2016-03-18T23:26:46Z'
+                  updated_at: '2016-10-17T20:00:42Z'
+                  name: ruby_buildpack
+                  state: AWAITING_UPLOAD
+                  filename: null
+                  stack: windows64
+                  position: 42
+                  lifecycle: buildpack
+                  enabled: true
+                  locked: false
+                  metadata:
+                    labels: {}
+                    annotations: {}
+                  links:
+                    self:
+                      href: https://api.example.org/v3/buildpacks/fd35633f-5c5c-4e4e-a5a9-0722c970a9d2
+                    upload:
+                      href: https://api.example.org/v3/buildpacks/fd35633f-5c5c-4e4e-a5a9-0722c970a9d2/upload
+                      method: POST
       '400':
         $ref: ../components/responses/BadRequest.yaml
       '401':
@@ -166,7 +216,7 @@
         $ref: ../components/responses/ServiceUnavailable.yaml
   delete:
     summary: Delete a buildpack
-    description: Delete a buildpack.
+    description: '**Permitted roles:** Admin'
     operationId: deleteBuildpack
     tags:
       - Buildpacks
@@ -177,10 +227,12 @@
         description: Accepted
         headers:
           Location:
-            description: URL of the job that is deleting the buildpack
+            description: URL of the [job](#jobs) that is deleting the buildpack
             schema:
               type: string
               format: uri
+              examples:
+                - https://api.example.org/v3/jobs/af5c57f6-8769-41fa-a499-2c84ed896788
       '401':
         $ref: ../components/responses/Unauthorized.yaml
       '403':
@@ -194,14 +246,17 @@
 /v3/buildpacks/{guid}/upload:
   post:
     summary: Upload buildpack bits
-    description: Upload a zip file containing a Cloud Foundry compatible buildpack. The file must be sent as part of a multi-part form.
+    description: |-
+      Upload a zip file containing a Cloud Foundry compatible buildpack. The file must be sent as part of a multi-part form.
+
+      **Permitted roles:** Admin
     operationId: uploadBuildpack
     tags:
       - Buildpacks
     parameters:
       - $ref: ../components/parameters/Guid.yaml
     requestBody:
-      description: The buildpack file to be uploaded
+      description: The buildpack file to be uploaded, sent as part of a multi-part form
       required: true
       content:
         multipart/form-data:
@@ -211,38 +266,49 @@
               bits:
                 type: string
                 format: binary
-              resources:
-                type: array
-                items:
-                  type: object
-                  properties:
-                    path:
-                      type: string
-                    size_in_bytes:
-                      type: integer
-                    checksum:
-                      type: object
-                      properties:
-                        value:
-                          type: string
+                description: A binary zip file containing the buildpack bits
+            required:
+              - bits
+            description: Request schema for uploading buildpack bits
     responses:
-      '200':
-        description: Successfully uploaded buildpack
-        content:
-          application/json:
-            schema:
-              $ref: ../components/schemas/Buildpack.yaml
       '202':
-        description: Upload initiated
+        description: Accepted
         headers:
           Location:
+            description: URL of the [job](#jobs) that is processing the buildpack bits
             schema:
               type: string
-            description: URL of the job tracking the upload
+              format: uri
+              examples:
+                - https://api.example.org/v3/jobs/af5c57f6-8769-41fa-a499-2c84ed896788
         content:
           application/json:
             schema:
               $ref: ../components/schemas/Buildpack.yaml
+            examples:
+              default:
+                summary: default
+                value:
+                  guid: fd35633f-5c5c-4e4e-a5a9-0722c970a9d2
+                  created_at: '2016-03-18T23:26:46Z'
+                  updated_at: '2016-10-17T20:00:42Z'
+                  name: ruby_buildpack
+                  state: AWAITING_UPLOAD
+                  filename: null
+                  stack: windows64
+                  position: 42
+                  lifecycle: buildpack
+                  enabled: true
+                  locked: false
+                  metadata:
+                    labels: {}
+                    annotations: {}
+                  links:
+                    self:
+                      href: https://api.example.org/v3/buildpacks/fd35633f-5c5c-4e4e-a5a9-0722c970a9d2
+                    upload:
+                      href: https://api.example.org/v3/buildpacks/fd35633f-5c5c-4e4e-a5a9-0722c970a9d2/upload
+                      method: POST
       '401':
         $ref: ../components/responses/Unauthorized.yaml
       '403':

@@ -1,0 +1,17 @@
+description: A gzip compressed tarball file containing a Cloud Foundry compatible droplet, sent as part of a multi-part form
+required: true
+content:
+  multipart/form-data:
+    schema:
+      type: object
+      properties:
+        bits:
+          type: string
+          format: binary
+          description: A gzip compressed tarball file with `.tgz` extension containing the droplet bits
+      required:
+        - bits
+      description: Request schema for uploading droplet bits
+    encoding:
+      bits:
+        contentType: application/gzip

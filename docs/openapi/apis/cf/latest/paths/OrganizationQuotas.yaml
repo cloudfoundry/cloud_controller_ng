@@ -1,16 +1,30 @@
 /v3/organization_quotas:
   get:
     summary: List organization quotas
-    description: This endpoint lists all organization quota resources.
+    description: |-
+      This endpoint lists all organization quota resources.
+
+      **Permitted roles:** Admin, Admin Read-Only, Global Auditor, Org Manager *(response will only include guids of managed organizations)*, Org Auditor *(response will only include guids of audited organizations)*, Org Billing Manager *(response will only include guids of billing-managed organizations)*, Space Auditor *(response will only include guids of parent organizations)*, Space Developer *(response will only include guids of parent organizations)*, Space Manager *(response will only include guids of parent organizations)*, Space Supporter *(response will only include guids of parent organizations)*
     operationId: listOrganizationQuotas
     tags:
       - Organization Quotas
     parameters:
       - $ref: ../components/parameters/Page.yaml
       - $ref: ../components/parameters/PerPage.yaml
-      - $ref: ../components/parameters/OrderBy.yaml
+      - name: order_by
+        in: query
+        required: false
+        schema:
+          type: string
+          enum:
+            - created_at
+            - -created_at
+            - updated_at
+            - -updated_at
+        description: Value to sort by; defaults to ascending. Prepend with `-` to sort descending. Valid values are `created_at`, `updated_at`
       - name: guids
         in: query
+        required: false
         schema:
           type: array
           items:
@@ -18,13 +32,15 @@
         description: Comma-delimited list of organization quota guids to filter by
       - name: names
         in: query
+        required: false
         schema:
           type: array
           items:
             type: string
-        description: Comma-delimited list of organization quota names to filter by
+        description: Comma-delimited list of organization quota names to filter by (case-insensitive)
       - name: organization_guids
         in: query
+        required: false
         schema:
           type: array
           items:
@@ -53,7 +69,7 @@
                     next: null
                     previous: null
                   resources:
-                    - guid: 123e4567-e89b-12d3-a456-426614174000
+                    - guid: b7887f5c-34bb-40c5-9778-577572e4fb2d
                       created_at: '2016-05-04T17:00:41Z'
                       updated_at: '2016-05-04T17:00:41Z'
                       name: don-quixote
@@ -75,11 +91,11 @@
                       relationships:
                         organizations:
                           data:
-                            - guid: 123e4567-e89b-12d3-a456-426614174000
+                            - guid: 9b370018-c38e-44c9-86d6-155c76801104
                       links:
                         self:
-                          href: https://api.example.org/v3/organization_quotas/quota-1-guid
-                    - guid: 123e4567-e89b-12d3-a456-426614174000
+                          href: https://api.example.org/v3/organization_quotas/b7887f5c-34bb-40c5-9778-577572e4fb2d
+                    - guid: 1cfb4b53-71f2-4a6c-9c1c-53a6b0a1e2d4
                       created_at: '2017-05-04T17:00:41Z'
                       updated_at: '2017-05-04T17:00:41Z'
                       name: sancho-panza
@@ -103,7 +119,7 @@
                           data: []
                       links:
                         self:
-                          href: https://api.example.org/v3/organization_quotas/quota-2-guid
+                          href: https://api.example.org/v3/organization_quotas/1cfb4b53-71f2-4a6c-9c1c-53a6b0a1e2d4
       '400':
         $ref: ../components/responses/BadRequest.yaml
       '401':
@@ -126,6 +142,8 @@
       This endpoint creates a new organization quota, but does not assign it to a specific organization unless an organization GUID is provided in the `relationships.organizations` parameter.
 
       To create an organization quota you must be an admin.
+
+      **Permitted roles:** Admin
     operationId: createOrganizationQuota
     tags:
       - Organization Quotas
@@ -142,7 +160,7 @@
               default:
                 summary: default
                 value:
-                  guid: 123e4567-e89b-12d3-a456-426614174000
+                  guid: b7887f5c-34bb-40c5-9778-577572e4fb2d
                   created_at: '2016-05-04T17:00:41Z'
                   updated_at: '2016-05-04T17:00:41Z'
                   name: don-quixote
@@ -164,10 +182,10 @@
                   relationships:
                     organizations:
                       data:
-                        - guid: 123e4567-e89b-12d3-a456-426614174000
+                        - guid: 9b370018-c38e-44c9-86d6-155c76801104
                   links:
                     self:
-                      href: https://api.example.org/v3/organization_quotas/quota-guid
+                      href: https://api.example.org/v3/organization_quotas/b7887f5c-34bb-40c5-9778-577572e4fb2d
       '400':
         $ref: ../components/responses/BadRequest.yaml
       '401':
@@ -185,12 +203,21 @@
 /v3/organization_quotas/{guid}:
   get:
     summary: Get an organization quota
-    description: This endpoint gets an individual organization quota resource.
+    description: |-
+      This endpoint gets an individual organization quota resource.
+
+      **Permitted roles:** Admin, Admin Read-Only, Global Auditor, Org Manager *(response will only include guids of managed organizations)*, Org Auditor *(response will only include guids of audited organizations)*, Org Billing Manager *(response will only include guids of billing-managed organizations)*, Space Auditor *(response will only include guids of parent organizations)*, Space Developer *(response will only include guids of parent organizations)*, Space Manager *(response will only include guids of parent organizations)*, Space Supporter *(response will only include guids of parent organizations)*
     operationId: getOrganizationQuota
     tags:
       - Organization Quotas
     parameters:
-      - $ref: ../components/parameters/Guid.yaml
+      - name: guid
+        in: path
+        required: true
+        schema:
+          type: string
+          format: uuid
+        description: The unique identifier for the organization quota
     responses:
       '200':
         description: OK
@@ -202,7 +229,7 @@
               default:
                 summary: default
                 value:
-                  guid: 123e4567-e89b-12d3-a456-426614174000
+                  guid: b7887f5c-34bb-40c5-9778-577572e4fb2d
                   created_at: '2016-05-04T17:00:41Z'
                   updated_at: '2016-05-04T17:00:41Z'
                   name: don-quixote
@@ -224,10 +251,10 @@
                   relationships:
                     organizations:
                       data:
-                        - guid: 123e4567-e89b-12d3-a456-426614174000
+                        - guid: 9b370018-c38e-44c9-86d6-155c76801104
                   links:
                     self:
-                      href: https://api.example.org/v3/organization_quotas/quota-guid
+                      href: https://api.example.org/v3/organization_quotas/b7887f5c-34bb-40c5-9778-577572e4fb2d
       '401':
         $ref: ../components/responses/Unauthorized.yaml
       '403':
@@ -236,12 +263,21 @@
         $ref: ../components/responses/NotFound.yaml
   patch:
     summary: Update an organization quota
-    description: This endpoint will only update the parameters specified in the request body. Any unspecified parameters will retain their existing values.
+    description: |-
+      This endpoint will only update the parameters specified in the request body. Any unspecified parameters will retain their existing values.
+
+      **Permitted roles:** Admin
     operationId: updateOrganizationQuota
     tags:
       - Organization Quotas
     parameters:
-      - $ref: ../components/parameters/Guid.yaml
+      - name: guid
+        in: path
+        required: true
+        schema:
+          type: string
+          format: uuid
+        description: The unique identifier for the organization quota
     requestBody:
       $ref: ../components/requestBodies/OrganizationQuotaUpdateRequestBody.yaml
     responses:
@@ -255,7 +291,7 @@
               default:
                 summary: default
                 value:
-                  guid: 123e4567-e89b-12d3-a456-426614174000
+                  guid: b7887f5c-34bb-40c5-9778-577572e4fb2d
                   created_at: '2016-05-04T17:00:41Z'
                   updated_at: '2016-05-04T17:00:41Z'
                   name: don-quixote
@@ -277,10 +313,10 @@
                   relationships:
                     organizations:
                       data:
-                        - guid: 123e4567-e89b-12d3-a456-426614174000
+                        - guid: 9b370018-c38e-44c9-86d6-155c76801104
                   links:
                     self:
-                      href: https://api.example.org/v3/organization_quotas/quota-guid
+                      href: https://api.example.org/v3/organization_quotas/b7887f5c-34bb-40c5-9778-577572e4fb2d
       '400':
         $ref: ../components/responses/BadRequest.yaml
       '401':
@@ -299,12 +335,21 @@
         $ref: ../components/responses/ServiceUnavailable.yaml
   delete:
     summary: Delete an organization quota
-    description: Organization quotas cannot be deleted when applied to any organizations.
+    description: |-
+      Organization quotas cannot be deleted when applied to any organizations.
+
+      **Permitted roles:** Admin
     operationId: deleteOrganizationQuota
     tags:
       - Organization Quotas
     parameters:
-      - $ref: ../components/parameters/Guid.yaml
+      - name: guid
+        in: path
+        required: true
+        schema:
+          type: string
+          format: uuid
+        description: The unique identifier for the organization quota
     responses:
       '202':
         description: Accepted
@@ -314,6 +359,7 @@
             schema:
               type: string
               format: uri
+            example: https://api.example.org/v3/jobs/af5c1a1f-0aeb-4d3a-a1f5-6e0d0a20e1b0
       '401':
         $ref: ../components/responses/Unauthorized.yaml
       '403':
@@ -331,6 +377,8 @@
       This endpoint applies an organization quota to one or more organizations.
 
       Only admin users can apply an organization quota to an organization.
+
+      **Permitted roles:** Admin
     operationId: applyOrganizationQuota
     tags:
       - Organization Quotas
@@ -341,36 +389,62 @@
         schema:
           type: string
           format: uuid
+        description: The unique identifier for the organization quota
     requestBody:
+      description: The organizations that the organization quota will be applied to
+      required: true
       content:
         application/json:
           schema:
-            $ref: ../components/schemas/RelationshipToMany.yaml
+            type: object
+            description: Request schema for applying an organization quota to organizations
+            properties:
+              data:
+                type: array
+                items:
+                  $ref: ../components/schemas/Relationship.yaml
+                description: Organization guids that the quota will apply to
+            required:
+              - data
           examples:
             default:
               summary: default
               value:
                 data:
-                  - guid: 123e4567-e89b-12d3-a456-426614174000
-                  - guid: 123e4567-e89b-12d3-a456-426614174000
+                  - guid: d4c91047-7b29-4fda-b7f9-04033e5c9c9f
+                  - guid: 24637893-3b77-489d-bb79-8466f0d88b52
     responses:
       '200':
         description: OK
         content:
           application/json:
             schema:
-              $ref: ../components/schemas/RelationshipToMany.yaml
+              type: object
+              description: The organizations the organization quota is applied to
+              properties:
+                data:
+                  type: array
+                  items:
+                    $ref: ../components/schemas/Relationship.yaml
+                  description: Organization guids that the quota applies to
+                links:
+                  type: object
+                  description: Links to related resources
+                  properties:
+                    self:
+                      $ref: ../components/schemas/Link.yaml
+                      description: The URL of this organization quota to organizations relationship
             examples:
               default:
                 summary: default
                 value:
                   data:
-                    - guid: 123e4567-e89b-12d3-a456-426614174000
-                    - guid: 123e4567-e89b-12d3-a456-426614174000
-                    - guid: 123e4567-e89b-12d3-a456-426614174000
+                    - guid: d4c91047-7b29-4fda-b7f9-04033e5c9c9f
+                    - guid: 24637893-3b77-489d-bb79-8466f0d88b52
+                    - guid: 9b370018-c38e-44c9-86d6-155c76801104
                   links:
                     self:
-                      href: https://api.example.org/v3/organization_quotas/quota-guid/relationships/organizations
+                      href: https://api.example.org/v3/organization_quotas/b7887f5c-34bb-40c5-9778-577572e4fb2d/relationships/organizations
       '401':
         $ref: ../components/responses/Unauthorized.yaml
       '403':

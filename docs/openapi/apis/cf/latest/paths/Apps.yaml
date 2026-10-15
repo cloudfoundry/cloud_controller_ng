@@ -1,63 +1,87 @@
 /v3/apps:
   get:
     summary: List apps
-    description: Retrieve all apps the user has access to.
+    description: |-
+      Retrieve all apps the user has access to.
+
+      **Permitted roles:** All Roles
     operationId: listApps
     tags:
       - Apps
     parameters:
       - $ref: ../components/parameters/Page.yaml
       - $ref: ../components/parameters/PerPage.yaml
-      - $ref: ../components/parameters/OrderBy.yaml
+      - name: order_by
+        in: query
+        required: false
+        schema:
+          type: string
+          enum:
+            - created_at
+            - -created_at
+            - updated_at
+            - -updated_at
+            - name
+            - -name
+            - state
+            - -state
+        description: Value to sort by. Defaults to ascending; prepend with `-` to sort descending. Valid values are `created_at`, `updated_at`, `name`, `state`
       - $ref: ../components/parameters/CreatedAts.yaml
       - $ref: ../components/parameters/UpdatedAts.yaml
       - $ref: ../components/parameters/LabelSelector.yaml
       - name: guids
         in: query
+        required: false
         schema:
           type: array
           items:
             type: string
-        description: Comma-delimited list of app GUIDs to filter by
+        description: Comma-delimited list of app guids to filter by
       - name: names
         in: query
+        required: false
         schema:
           type: array
           items:
             type: string
-        description: Comma-delimited list of app names to filter by
+        description: Comma-delimited list of app names to filter by (case-insensitive)
       - name: space_guids
         in: query
+        required: false
         schema:
           type: array
           items:
             type: string
-        description: Comma-delimited list of space GUIDs to filter by
+        description: Comma-delimited list of space guids to filter by
       - name: organization_guids
         in: query
+        required: false
         schema:
           type: array
           items:
             type: string
-        description: Comma-delimited list of organization GUIDs to filter by
+        description: Comma-delimited list of organization guids to filter by
       - name: stacks
         in: query
+        required: false
         schema:
           type: array
           items:
             type: string
-        description: Comma-delimited list of stack names to filter by
+        description: Comma-delimited list of stack names to filter by (case-sensitive)
       - name: lifecycle_type
         in: query
+        required: false
         schema:
           type: string
           enum:
             - buildpack
             - cnb
             - docker
-        description: Lifecycle type to filter by
+        description: '[Lifecycle](#lifecycles) type to filter by; valid values are `buildpack`, `cnb`, `docker`'
       - name: include
         in: query
+        required: false
         schema:
           type: array
           items:
@@ -65,7 +89,7 @@
             enum:
               - space
               - space.organization
-        description: Optionally include a list of unique related resources in the response
+        description: Optionally include a list of unique related resources in the response; valid values are `space` and `space.organization`
     responses:
       '200':
         description: OK
@@ -81,14 +105,14 @@
                     total_results: 3
                     total_pages: 2
                     first:
-                      href: https://api.example.org?page=1&per_page=2
+                      href: https://api.example.org/v3/apps?page=1&per_page=2
                     last:
-                      href: https://api.example.org?page=2&per_page=2
+                      href: https://api.example.org/v3/apps?page=2&per_page=2
                     next:
-                      href: https://api.example.org?page=2&per_page=2
+                      href: https://api.example.org/v3/apps?page=2&per_page=2
                     previous: null
                   resources:
-                    - guid: 123e4567-e89b-12d3-a456-426614174000
+                    - guid: 1cb006ee-fb05-47e1-b541-c34179ddc446
                       name: my_app
                       state: STARTED
                       created_at: '2016-03-17T21:41:30Z'
@@ -102,10 +126,10 @@
                       relationships:
                         space:
                           data:
-                            guid: 123e4567-e89b-12d3-a456-426614174000
+                            guid: 2f35885d-0c9d-4423-83ad-fd05066f8576
                         current_droplet:
                           data:
-                            guid: 123e4567-e89b-12d3-a456-426614174000
+                            guid: 585bc3c1-3743-497d-88b0-403ad6b56d16
                       links:
                         self:
                           href: https://api.example.org/v3/apps/1cb006ee-fb05-47e1-b541-c34179ddc446
@@ -138,7 +162,7 @@
                       metadata:
                         labels: {}
                         annotations: {}
-                    - guid: 123e4567-e89b-12d3-a456-426614174000
+                    - guid: 02b4ec9b-94c7-4468-9c23-4e906191a0f8
                       name: my_app2
                       state: STOPPED
                       created_at: '1970-01-01T00:00:02Z'
@@ -152,39 +176,39 @@
                       relationships:
                         space:
                           data:
-                            guid: 123e4567-e89b-12d3-a456-426614174000
-                        droplet:
+                            guid: 2f35885d-0c9d-4423-83ad-fd05066f8576
+                        current_droplet:
                           data:
-                            guid: 123e4567-e89b-12d3-a456-426614174000
+                            guid: 585bc3c1-3743-497d-88b0-403ad6b56d16
                       links:
                         self:
-                          href: https://api.example.org/02b4ec9b-94c7-4468-9c23-4e906191a0f8
+                          href: https://api.example.org/v3/apps/02b4ec9b-94c7-4468-9c23-4e906191a0f8
                         space:
                           href: https://api.example.org/v3/spaces/2f35885d-0c9d-4423-83ad-fd05066f8576
                         processes:
-                          href: https://api.example.org/02b4ec9b-94c7-4468-9c23-4e906191a0f8/processes
+                          href: https://api.example.org/v3/apps/02b4ec9b-94c7-4468-9c23-4e906191a0f8/processes
                         packages:
-                          href: https://api.example.org/02b4ec9b-94c7-4468-9c23-4e906191a0f8/packages
+                          href: https://api.example.org/v3/apps/02b4ec9b-94c7-4468-9c23-4e906191a0f8/packages
                         environment_variables:
-                          href: https://api.example.org/02b4ec9b-94c7-4468-9c23-4e906191a0f8/environment_variables
+                          href: https://api.example.org/v3/apps/02b4ec9b-94c7-4468-9c23-4e906191a0f8/environment_variables
                         current_droplet:
-                          href: https://api.example.org/02b4ec9b-94c7-4468-9c23-4e906191a0f8/droplets/current
+                          href: https://api.example.org/v3/apps/02b4ec9b-94c7-4468-9c23-4e906191a0f8/droplets/current
                         droplets:
-                          href: https://api.example.org/02b4ec9b-94c7-4468-9c23-4e906191a0f8/droplets
+                          href: https://api.example.org/v3/apps/02b4ec9b-94c7-4468-9c23-4e906191a0f8/droplets
                         tasks:
-                          href: https://api.example.org/02b4ec9b-94c7-4468-9c23-4e906191a0f8/tasks
+                          href: https://api.example.org/v3/apps/02b4ec9b-94c7-4468-9c23-4e906191a0f8/tasks
                         start:
-                          href: https://api.example.org/02b4ec9b-94c7-4468-9c23-4e906191a0f8/actions/start
+                          href: https://api.example.org/v3/apps/02b4ec9b-94c7-4468-9c23-4e906191a0f8/actions/start
                           method: POST
                         stop:
-                          href: https://api.example.org/02b4ec9b-94c7-4468-9c23-4e906191a0f8/actions/stop
+                          href: https://api.example.org/v3/apps/02b4ec9b-94c7-4468-9c23-4e906191a0f8/actions/stop
                           method: POST
                         revisions:
-                          href: https://api.example.org//02b4ec9b-94c7-4468-9c23-4e906191a0f8/revisions
+                          href: https://api.example.org/v3/apps/02b4ec9b-94c7-4468-9c23-4e906191a0f8/revisions
                         deployed_revisions:
-                          href: https://api.example.org//02b4ec9b-94c7-4468-9c23-4e906191a0f8/revisions/deployed
+                          href: https://api.example.org/v3/apps/02b4ec9b-94c7-4468-9c23-4e906191a0f8/revisions/deployed
                         features:
-                          href: https://api.example.org//02b4ec9b-94c7-4468-9c23-4e906191a0f8/features
+                          href: https://api.example.org/v3/apps/02b4ec9b-94c7-4468-9c23-4e906191a0f8/features
                       metadata:
                         labels: {}
                         annotations: {}
@@ -206,7 +230,10 @@
         $ref: ../components/responses/ServiceUnavailable.yaml
   post:
     summary: Create an app
-    description: Creates a new app.
+    description: |-
+      Creates a new app.
+
+      **Permitted roles:** Admin, Space Developer
     operationId: createApp
     tags:
       - Apps
@@ -223,7 +250,7 @@
               default:
                 summary: default
                 value:
-                  guid: 123e4567-e89b-12d3-a456-426614174000
+                  guid: 1cb006ee-fb05-47e1-b541-c34179ddc446
                   name: my_app
                   state: STOPPED
                   created_at: '2016-03-17T21:41:30Z'
@@ -237,10 +264,10 @@
                   relationships:
                     space:
                       data:
-                        guid: 123e4567-e89b-12d3-a456-426614174000
+                        guid: 2f35885d-0c9d-4423-83ad-fd05066f8576
                     current_droplet:
                       data:
-                        guid: 123e4567-e89b-12d3-a456-426614174000
+                        guid: 585bc3c1-3743-497d-88b0-403ad6b56d16
                   links:
                     self:
                       href: https://api.example.org/v3/apps/1cb006ee-fb05-47e1-b541-c34179ddc446
@@ -289,7 +316,20 @@
       '401':
         $ref: ../components/responses/Unauthorized.yaml
       '403':
-        $ref: ../components/responses/Forbidden.yaml
+        description: Forbidden
+        content:
+          application/json:
+            schema:
+              $ref: ../components/schemas/Errors.yaml
+            examples:
+              feature_disabled:
+                summary: CF-FeatureDisabled
+                description: Some [feature flag](#list-of-feature-flags) must be enabled by the Cloud Foundry admin in order to push the app as is. The `detail` message should contain information on which feature is disabled.
+                value:
+                  errors:
+                    - code: 330002
+                      title: CF-FeatureDisabled
+                      detail: 'Feature Disabled: diego_docker'
       '409':
         $ref: ../components/responses/Conflict.yaml
       '422':
@@ -300,17 +340,13 @@
               $ref: ../components/schemas/Errors.yaml
             examples:
               uniqueness_error:
+                summary: CF-UniquenessError
+                description: The given app name is already taken in the targeted space
                 value:
                   errors:
                     - code: 10016
                       title: CF-UniquenessError
                       detail: The given app name is already taken in the targeted space
-              feature_disabled:
-                value:
-                  errors:
-                    - code: 330002
-                      title: CF-FeatureDisabled
-                      detail: Some feature flag must be enabled by the Cloud Foundry admin in order to push the app as is.
       '500':
         $ref: ../components/responses/500.yaml
       '503':
@@ -318,7 +354,10 @@
 /v3/apps/{guid}:
   get:
     summary: Get an app
-    description: Retrieve a specific app.
+    description: |-
+      Retrieve a specific app.
+
+      **Permitted roles:** Admin, Admin Read-Only, Global Auditor, Org Manager, Space Auditor, Space Developer, Space Manager, Space Supporter
     operationId: getApp
     tags:
       - Apps
@@ -326,6 +365,7 @@
       - $ref: ../components/parameters/Guid.yaml
       - name: include
         in: query
+        required: false
         schema:
           type: array
           items:
@@ -333,7 +373,7 @@
             enum:
               - space
               - space.organization
-        description: Optionally include a list of unique related resources in the response
+        description: Optionally include additional related resources in the response; valid values are `space` and `space.organization`
     responses:
       '200':
         description: Successfully retrieved app
@@ -345,7 +385,7 @@
               default:
                 summary: default
                 value:
-                  guid: 123e4567-e89b-12d3-a456-426614174000
+                  guid: 1cb006ee-fb05-47e1-b541-c34179ddc446
                   name: my_app
                   state: STOPPED
                   created_at: '2016-03-17T21:41:30Z'
@@ -359,10 +399,10 @@
                   relationships:
                     space:
                       data:
-                        guid: 123e4567-e89b-12d3-a456-426614174000
+                        guid: 2f35885d-0c9d-4423-83ad-fd05066f8576
                     current_droplet:
                       data:
-                        guid: 123e4567-e89b-12d3-a456-426614174000
+                        guid: 585bc3c1-3743-497d-88b0-403ad6b56d16
                   links:
                     self:
                       href: https://api.example.org/v3/apps/1cb006ee-fb05-47e1-b541-c34179ddc446
@@ -414,7 +454,10 @@
         $ref: ../components/responses/NotFound.yaml
   patch:
     summary: Update an app
-    description: Update an app.
+    description: |-
+      Update an app.
+
+      **Permitted roles:** Admin, Space Developer
     operationId: updateApp
     tags:
       - Apps
@@ -433,7 +476,7 @@
               default:
                 summary: default
                 value:
-                  guid: 123e4567-e89b-12d3-a456-426614174000
+                  guid: 1cb006ee-fb05-47e1-b541-c34179ddc446
                   name: my_app
                   state: STARTED
                   created_at: '2016-03-17T21:41:30Z'
@@ -447,10 +490,10 @@
                   relationships:
                     space:
                       data:
-                        guid: 123e4567-e89b-12d3-a456-426614174000
+                        guid: 2f35885d-0c9d-4423-83ad-fd05066f8576
                     current_droplet:
                       data:
-                        guid: 123e4567-e89b-12d3-a456-426614174000
+                        guid: 585bc3c1-3743-497d-88b0-403ad6b56d16
                   links:
                     self:
                       href: https://api.example.org/v3/apps/1cb006ee-fb05-47e1-b541-c34179ddc446
@@ -512,7 +555,10 @@
         $ref: ../components/responses/ServiceUnavailable.yaml
   delete:
     summary: Delete an app
-    description: Delete an app.
+    description: |-
+      Delete an app.
+
+      **Permitted roles:** Admin, Space Developer
     operationId: deleteApp
     tags:
       - Apps
@@ -520,13 +566,15 @@
       - $ref: ../components/parameters/Guid.yaml
     responses:
       '202':
-        description: Successfully deleted app
+        description: Accepted
         headers:
           Location:
-            description: URL of the job that is deleting the app
+            description: URL of the [job](#jobs) that is deleting the app
             schema:
               type: string
               format: uri
+              examples:
+                - https://api.example.org/v3/jobs/af5c57f6-8769-41fa-a499-2c84ed896788
       '401':
         $ref: ../components/responses/Unauthorized.yaml
       '403':
@@ -540,7 +588,10 @@
 /v3/apps/{guid}/actions/start:
   post:
     summary: Start an app
-    description: Start an app.
+    description: |-
+      Start an app.
+
+      **Permitted roles:** Admin, Space Developer, Space Supporter
     operationId: startApp
     tags:
       - Apps
@@ -557,7 +608,7 @@
               default:
                 summary: default
                 value:
-                  guid: 123e4567-e89b-12d3-a456-426614174000
+                  guid: 1cb006ee-fb05-47e1-b541-c34179ddc446
                   name: my_app
                   state: STARTED
                   created_at: '2016-03-17T21:41:30Z'
@@ -571,10 +622,10 @@
                   relationships:
                     space:
                       data:
-                        guid: 123e4567-e89b-12d3-a456-426614174000
+                        guid: 2f35885d-0c9d-4423-83ad-fd05066f8576
                     current_droplet:
                       data:
-                        guid: 123e4567-e89b-12d3-a456-426614174000
+                        guid: 585bc3c1-3743-497d-88b0-403ad6b56d16
                   links:
                     self:
                       href: https://api.example.org/v3/apps/1cb006ee-fb05-47e1-b541-c34179ddc446
@@ -618,7 +669,10 @@
 /v3/apps/{guid}/actions/stop:
   post:
     summary: Stop an app
-    description: Stop an app.
+    description: |-
+      Stop an app.
+
+      **Permitted roles:** Admin, Space Developer, Space Supporter
     operationId: stopApp
     tags:
       - Apps
@@ -635,9 +689,9 @@
               default:
                 summary: default
                 value:
-                  guid: 123e4567-e89b-12d3-a456-426614174000
+                  guid: 1cb006ee-fb05-47e1-b541-c34179ddc446
                   name: my_app
-                  state: STARTED
+                  state: STOPPED
                   created_at: '2016-03-17T21:41:30Z'
                   updated_at: '2016-03-18T11:32:30Z'
                   lifecycle:
@@ -649,10 +703,10 @@
                   relationships:
                     space:
                       data:
-                        guid: 123e4567-e89b-12d3-a456-426614174000
+                        guid: 2f35885d-0c9d-4423-83ad-fd05066f8576
                     current_droplet:
                       data:
-                        guid: 123e4567-e89b-12d3-a456-426614174000
+                        guid: 585bc3c1-3743-497d-88b0-403ad6b56d16
                   links:
                     self:
                       href: https://api.example.org/v3/apps/1cb006ee-fb05-47e1-b541-c34179ddc446
@@ -696,7 +750,15 @@
 /v3/apps/{guid}/actions/restart:
   post:
     summary: Restart an app
-    description: This endpoint will synchronously stop and start an application. Unlike the start and stop actions, this endpoint will error if the app is not successfully stopped in the runtime. For restarting applications without downtime, see the deployments resource.
+    description: |-
+      This endpoint will synchronously stop and start an application.
+      Unlike the [start](#start-an-app) and [stop](#stop-an-app) actions,
+      this endpoint will error if the app is not successfully stopped
+      in the runtime.
+
+      For restarting applications without downtime, see the [deployments](#deployments) resource.
+
+      **Permitted roles:** Admin, Space Developer, Space Supporter
     operationId: restartApp
     tags:
       - Apps
@@ -713,7 +775,7 @@
               default:
                 summary: default
                 value:
-                  guid: 123e4567-e89b-12d3-a456-426614174000
+                  guid: 1cb006ee-fb05-47e1-b541-c34179ddc446
                   name: my_app
                   state: STARTED
                   created_at: '2016-03-17T21:41:30Z'
@@ -727,10 +789,10 @@
                   relationships:
                     space:
                       data:
-                        guid: 123e4567-e89b-12d3-a456-426614174000
+                        guid: 2f35885d-0c9d-4423-83ad-fd05066f8576
                     current_droplet:
                       data:
-                        guid: 123e4567-e89b-12d3-a456-426614174000
+                        guid: 585bc3c1-3743-497d-88b0-403ad6b56d16
                   links:
                     self:
                       href: https://api.example.org/v3/apps/1cb006ee-fb05-47e1-b541-c34179ddc446
@@ -774,7 +836,10 @@
 /v3/apps/{guid}/droplets:
   get:
     summary: List droplets for an app
-    description: Retrieve all droplets belonging to an app.
+    description: |-
+      Retrieve a list of droplets belonging to an app.
+
+      **Permitted roles:** Admin, Admin Read-Only, Global Auditor, Org Manager, Space Auditor, Space Developer, Space Manager, Space Supporter
     operationId: listAppDroplets
     tags:
       - Apps
@@ -783,10 +848,21 @@
       - $ref: ../components/parameters/Guid.yaml
       - $ref: ../components/parameters/Page.yaml
       - $ref: ../components/parameters/PerPage.yaml
-      - $ref: ../components/parameters/OrderBy.yaml
+      - name: order_by
+        in: query
+        required: false
+        schema:
+          type: string
+          enum:
+            - created_at
+            - -created_at
+            - updated_at
+            - -updated_at
+        description: Value to sort by. Defaults to ascending; prepend with `-` to sort descending. Valid values are `created_at` and `updated_at`
       - $ref: ../components/parameters/LabelSelector.yaml
       - name: guids
         in: query
+        required: false
         schema:
           type: array
           items:
@@ -794,6 +870,7 @@
         description: Comma-delimited list of droplet guids to filter by
       - name: states
         in: query
+        required: false
         schema:
           type: array
           items:
@@ -806,6 +883,12 @@
               - FAILED
               - EXPIRED
         description: Comma-delimited list of droplet states to filter by
+      - name: current
+        in: query
+        required: false
+        schema:
+          type: boolean
+        description: If true, only include the droplet currently assigned to the app
     responses:
       '200':
         description: List of droplets for the app
@@ -821,13 +904,13 @@
                     total_results: 2
                     total_pages: 1
                     first:
-                      href: https://api.example.org?page=1&per_page=50
+                      href: https://api.example.org/v3/apps/7b34f1cf-7e73-428a-bb5a-8a17a8058396/droplets?page=1&per_page=50
                     last:
-                      href: https://api.example.org?page=1&per_page=50
+                      href: https://api.example.org/v3/apps/7b34f1cf-7e73-428a-bb5a-8a17a8058396/droplets?page=1&per_page=50
                     next: null
                     previous: null
                   resources:
-                    - guid: 123e4567-e89b-12d3-a456-426614174000
+                    - guid: 585bc3c1-3743-497d-88b0-403ad6b56d16
                       state: STAGED
                       error: null
                       lifecycle:
@@ -851,7 +934,7 @@
                       relationships:
                         app:
                           data:
-                            guid: 123e4567-e89b-12d3-a456-426614174000
+                            guid: 7b34f1cf-7e73-428a-bb5a-8a17a8058396
                       links:
                         self:
                           href: https://api.example.org/v3/droplets/585bc3c1-3743-497d-88b0-403ad6b56d16
@@ -867,7 +950,7 @@
                       metadata:
                         labels: {}
                         annotations: {}
-                    - guid: 123e4567-e89b-12d3-a456-426614174000
+                    - guid: fdf3851c-def8-4de1-87f1-6d4543189e22
                       state: STAGED
                       error: null
                       lifecycle:
@@ -885,7 +968,7 @@
                       relationships:
                         app:
                           data:
-                            guid: 123e4567-e89b-12d3-a456-426614174000
+                            guid: 7b34f1cf-7e73-428a-bb5a-8a17a8058396
                       links:
                         self:
                           href: https://api.example.org/v3/droplets/fdf3851c-def8-4de1-87f1-6d4543189e22
@@ -908,7 +991,10 @@
 /v3/apps/{guid}/droplets/current:
   get:
     summary: Get current droplet
-    description: Get the current droplet for an app.
+    description: |-
+      Get the current droplet for an app.
+
+      **Permitted roles:** Admin, Admin Read-Only, Global Auditor, Org Manager, Space Auditor, Space Developer, Space Manager, Space Supporter
     operationId: getCurrentDropletForApp
     tags:
       - Apps
@@ -925,7 +1011,7 @@
               default:
                 summary: default
                 value:
-                  guid: 123e4567-e89b-12d3-a456-426614174000
+                  guid: 585bc3c1-3743-497d-88b0-403ad6b56d16
                   state: STAGED
                   error: null
                   lifecycle:
@@ -950,7 +1036,7 @@
                   relationships:
                     app:
                       data:
-                        guid: 123e4567-e89b-12d3-a456-426614174000
+                        guid: 7b34f1cf-7e73-428a-bb5a-8a17a8058396
                   links:
                     self:
                       href: https://api.example.org/v3/droplets/585bc3c1-3743-497d-88b0-403ad6b56d16
@@ -975,7 +1061,10 @@
 /v3/apps/{guid}/relationships/current_droplet:
   get:
     summary: Get current droplet association for an app
-    description: This endpoint retrieves the current droplet relationship for an app.
+    description: |-
+      This endpoint retrieves the current droplet relationship for an app.
+
+      **Permitted roles:** Admin, Admin Read-Only, Global Auditor, Org Manager, Space Auditor, Space Developer, Space Manager, Space Supporter
     operationId: getCurrentDropletAssociationForApp
     tags:
       - Apps
@@ -993,7 +1082,7 @@
                 summary: default
                 value:
                   data:
-                    guid: 123e4567-e89b-12d3-a456-426614174000
+                    guid: 9d8e007c-ce52-4ea7-8a57-f2825d2c6b39
                   links:
                     self:
                       href: https://api.example.org/v3/apps/d4c91047-7b29-4fda-b7f9-04033e5c9c9f/relationships/current_droplet
@@ -1007,7 +1096,10 @@
         $ref: ../components/responses/NotFound.yaml
   patch:
     summary: Set current droplet
-    description: Set the current droplet for an app. The current droplet is the droplet that the app will use when running.
+    description: |-
+      Set the current droplet for an app. The current droplet is the droplet that the app will use when running.
+
+      **Permitted roles:** Admin, Space Developer, Space Supporter
     operationId: setCurrentDropletForApp
     tags:
       - Apps
@@ -1023,6 +1115,7 @@
             properties:
               data:
                 $ref: ../components/schemas/Relationship.yaml
+                description: The guid of the droplet to set as the app's current droplet
             required:
               - data
             description: Request schema for setting the current droplet
@@ -1031,7 +1124,7 @@
               summary: default
               value:
                 data:
-                  guid: 123e4567-e89b-12d3-a456-426614174000
+                  guid: 9d8e007c-ce52-4ea7-8a57-f2825d2c6b39
     responses:
       '200':
         description: Successfully set current droplet
@@ -1044,7 +1137,7 @@
                 summary: default
                 value:
                   data:
-                    guid: 123e4567-e89b-12d3-a456-426614174000
+                    guid: 9d8e007c-ce52-4ea7-8a57-f2825d2c6b39
                   links:
                     self:
                       href: https://api.example.org/v3/apps/d4c91047-7b29-4fda-b7f9-04033e5c9c9f/relationships/current_droplet
@@ -1061,7 +1154,11 @@
 /v3/apps/{guid}/env:
   get:
     summary: Get environment for an app
-    description: Retrieve the environment variables that will be provided to an app at runtime. It will include environment variables for Environment Variable Groups and Service Bindings.
+    description: |-
+      Retrieve the environment variables that will be provided to an app at runtime.
+      It will include environment variables for Environment Variable Groups and Service Bindings.
+
+      **Permitted roles:** Admin, Admin Read-Only, Space Developer, Space Supporter *(`system_env_json` redacted)*
     operationId: getEnvForApp
     tags:
       - Apps
@@ -1125,7 +1222,11 @@
 /v3/apps/{guid}/environment_variables:
   get:
     summary: Get environment variables for an app
-    description: Retrieve the environment variables that are associated with the given app. For the entire list of environment variables that will be available to the app at runtime, see the env endpoint.
+    description: |-
+      Retrieve the environment variables that are associated with the given app.
+      For the entire list of environment variables that will be available to the app at runtime, see the [env endpoint](#get-environment-for-an-app).
+
+      **Permitted roles:** Admin, Admin Read-Only, Space Developer, Space Supporter
     operationId: getEnvironmentVariablesForApp
     tags:
       - Apps
@@ -1146,9 +1247,9 @@
                     RAILS_ENV: production
                   links:
                     self:
-                      href: https://api.example.org/v3/apps/[guid]/environment_variables
+                      href: https://api.example.org/v3/apps/1cb006ee-fb05-47e1-b541-c34179ddc446/environment_variables
                     app:
-                      href: https://api.example.org/v3/apps/[guid]
+                      href: https://api.example.org/v3/apps/1cb006ee-fb05-47e1-b541-c34179ddc446
       '401':
         $ref: ../components/responses/Unauthorized.yaml
       '403':
@@ -1157,13 +1258,23 @@
         $ref: ../components/responses/NotFound.yaml
   patch:
     summary: Update environment variables for an app
-    description: Update the environment variables associated with the given app. The variables given in the request will be merged with the existing app environment variables. Any requested variables with a value of `null` will be removed from the app. Environment variable names may not start with VCAP_. PORT is not a valid environment variable. The updated environment variables will not take effect until the app is restarted.
+    description: |-
+      Update the environment variables associated with the given app.
+      The variables given in the request will be merged with the existing app environment variables.
+      Any requested variables with a value of `null` will be removed from the app.
+      Environment variable names may not start with VCAP_. PORT is not a valid environment variable.
+
+      > **Note:** The updated environment variables will not take effect until the app is restarted.
+
+      **Permitted roles:** Admin, Space Developer, Space Supporter
     operationId: updateEnvironmentVariablesForApp
     tags:
       - Apps
     parameters:
       - $ref: ../components/parameters/Guid.yaml
     requestBody:
+      description: The environment variables to merge into the app's existing environment variables
+      required: true
       content:
         application/json:
           schema:
@@ -1173,7 +1284,8 @@
                 type: object
                 additionalProperties:
                   type: [string, "null"]
-                description: Environment variables to inject; keys and values must be strings
+                description: Environment variables to be used for the app when running; a value of `null` removes the variable from the app
+            description: Request schema for updating an app's environment variables
           examples:
             default:
               summary: default
@@ -1197,9 +1309,9 @@
                     DEBUG: 'false'
                   links:
                     self:
-                      href: https://api.example.org/v3/apps/[guid]/environment_variables
+                      href: https://api.example.org/v3/apps/1cb006ee-fb05-47e1-b541-c34179ddc446/environment_variables
                     app:
-                      href: https://api.example.org/v3/apps/[guid]
+                      href: https://api.example.org/v3/apps/1cb006ee-fb05-47e1-b541-c34179ddc446
       '401':
         $ref: ../components/responses/Unauthorized.yaml
       '403':
@@ -1211,7 +1323,12 @@
 /v3/apps/{guid}/permissions:
   get:
     summary: Get permissions for an app
-    description: Get the current user’s permissions for the given app. If a user can see an app, then they can see its basic data. Only admin, read-only admins, and space developers can read sensitive data.
+    description: |-
+      Get the current user's permissions for the given app. If a user can see an app,
+      then they can see its basic data. Only admin, read-only admins, and space
+      developers can read sensitive data.
+
+      **Permitted roles:** Admin, Admin Read-Only, Global Auditor, Org Manager, Space Auditor, Space Developer, Space Manager, Space Supporter
     operationId: getPermissionsForApp
     tags:
       - Apps
@@ -1239,7 +1356,13 @@
 /v3/apps/{guid}/ssh_enabled:
   get:
     summary: Get SSH enabled for an app
-    description: Returns if an application’s runtime environment will accept ssh connections. If ssh is disabled, the `reason` field will describe whether it is disabled globally, at the space level, or at the app level.
+    description: |-
+      Returns if an application's runtime environment will accept ssh connections.
+      If ssh is disabled,
+      the `reason` field will describe
+      whether it is disabled globally, at the space level, or at the app level.
+
+      **Permitted roles:** Admin, Admin Read-Only, Global Auditor, Org Manager, Space Auditor, Space Developer, Space Manager, Space Supporter
     operationId: getSshEnabledForApp
     tags:
       - Apps
@@ -1267,7 +1390,14 @@
 /v3/apps/{guid}/actions/clear_buildpack_cache:
   post:
     summary: Clear buildpack cache for application
-    description: This endpoint will delete the buildpack cache for a specified app. The buildpack cache is used during staging by buildpacks as a way to cache certain resources, e.g. downloaded Ruby gems. A user may want to use this endpoint when an app doesn’t stage anymore due to out-of-disk caused by a large buildpack cache content.
+    description: |-
+      This endpoint will delete the buildpack cache for a specified app.
+      The buildpack cache is used during staging by buildpacks as a way to
+      cache certain resources, e.g. downloaded Ruby gems. A user may want to use this
+      endpoint when an app doesn't stage anymore due to out-of-disk caused
+      by a large buildpack cache content.
+
+      **Permitted roles:** Admin, Space Developer, Space Supporter
     operationId: clearBuildpackCacheForApplication
     tags:
       - Apps
@@ -1276,6 +1406,14 @@
     responses:
       '202':
         description: Accepted
+        headers:
+          Location:
+            description: URL of the [job](#jobs) that is clearing the buildpack cache
+            schema:
+              type: string
+              format: uri
+              examples:
+                - https://api.example.org/v3/jobs/af5c57f6-8769-41fa-a499-2c84ed896788
       '401':
         $ref: ../components/responses/Unauthorized.yaml
       '403':
@@ -1287,15 +1425,48 @@
 /v3/apps/{guid}/features:
   get:
     summary: List app features
-    description: This endpoint retrieves the list of features for the specified app.
+    description: |-
+      This endpoint retrieves the list of features for the specified app.
+
+      **Permitted roles:** Admin, Admin Read-Only, Global Auditor, Org Manager, Space Auditor, Space Developer, Space Manager, Space Supporter
     operationId: listAppFeatures
     tags:
-      - Apps
+      - App Features
     parameters:
       - $ref: ../components/parameters/Guid.yaml
     responses:
       '200':
         description: OK
+        content:
+          application/json:
+            schema:
+              $ref: ../components/schemas/AppFeatureList.yaml
+            examples:
+              default:
+                summary: default
+                value:
+                  resources:
+                    - name: ssh
+                      description: Enable SSHing into the app.
+                      enabled: true
+                    - name: revisions
+                      description: Enable versioning of an application
+                      enabled: false
+                    - name: service-binding-k8s
+                      description: Enable k8s service bindings for the app
+                      enabled: false
+                    - name: file-based-vcap-services
+                      description: Enable file-based VCAP service bindings for the app
+                      enabled: false
+                  pagination:
+                    total_results: 4
+                    total_pages: 1
+                    first:
+                      href: /v3/apps/05d39de4-2c9e-4c76-8fd6-10417da07e42/features
+                    last:
+                      href: /v3/apps/05d39de4-2c9e-4c76-8fd6-10417da07e42/features
+                    next: null
+                    previous: null
       '401':
         $ref: ../components/responses/Unauthorized.yaml
       '403':
@@ -1305,10 +1476,13 @@
 /v3/apps/{guid}/features/{name}:
   get:
     summary: Get an app feature
-    description: Get an app feature.
+    description: |-
+      Retrieve a single feature for the specified app.
+
+      **Permitted roles:** Admin, Admin Read-Only, Global Auditor, Org Manager, Space Auditor, Space Developer, Space Manager, Space Supporter
     operationId: getAppFeature
     tags:
-      - Apps
+      - App Features
     parameters:
       - $ref: ../components/parameters/Guid.yaml
       - name: name
@@ -1321,9 +1495,21 @@
             - revisions
             - service-binding-k8s
             - file-based-vcap-services
+        description: Name of the app feature; valid values are `ssh`, `revisions`, `service-binding-k8s`, `file-based-vcap-services`
     responses:
       '200':
         description: OK
+        content:
+          application/json:
+            schema:
+              $ref: ../components/schemas/AppFeature.yaml
+            examples:
+              default:
+                summary: default
+                value:
+                  name: ssh
+                  description: Enable SSHing into the app.
+                  enabled: true
       '401':
         $ref: ../components/responses/Unauthorized.yaml
       '403':
@@ -1332,10 +1518,15 @@
         $ref: ../components/responses/NotFound.yaml
   patch:
     summary: Update an app feature
-    description: Update an app feature.
+    description: |-
+      Enable or disable a feature for the specified app.
+
+      Only one of `file-based-vcap-services` and `service-binding-k8s` may be enabled for an app at a time.
+
+      **Permitted roles:** Admin, Space Developer, Space Supporter *(can only update **revisions** feature)*
     operationId: updateAppFeature
     tags:
-      - Apps
+      - App Features
     parameters:
       - $ref: ../components/parameters/Guid.yaml
       - name: name
@@ -1348,13 +1539,21 @@
             - revisions
             - service-binding-k8s
             - file-based-vcap-services
+        description: Name of the app feature; valid values are `ssh`, `revisions`, `service-binding-k8s`, `file-based-vcap-services`
     requestBody:
+      description: The app feature state that needs to be set
+      required: true
       content:
         application/json:
           schema:
+            type: object
             properties:
               enabled:
                 type: boolean
+                description: Denotes whether or not the app feature should be enabled
+            required:
+              - enabled
+            description: Request schema for updating an app feature
           examples:
             default:
               summary: default
@@ -1363,6 +1562,17 @@
     responses:
       '200':
         description: OK
+        content:
+          application/json:
+            schema:
+              $ref: ../components/schemas/AppFeature.yaml
+            examples:
+              default:
+                summary: default
+                value:
+                  name: ssh
+                  description: Enable SSHing into the app.
+                  enabled: true
       '400':
         $ref: ../components/responses/BadRequest.yaml
       '401':

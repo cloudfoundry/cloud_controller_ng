@@ -1,4 +1,5 @@
 description: Service broker to create
+required: true
 content:
   application/json:
     schema:
@@ -6,44 +7,28 @@ content:
       properties:
         name:
           type: string
-          description: Name of the service broker
+          description: Name of the service broker; must be unique (case-sensitive)
         url:
           type: string
           format: uri
           description: URL of the service broker
         authentication:
-          type: object
-          properties:
-            type:
-              type: string
-              enum:
-                - basic
-              description: Type of authentication
-            credentials:
-              type: object
-              properties:
-                username:
-                  type: string
-                password:
-                  type: string
-              required:
-                - username
-                - password
-          required:
-            - type
-            - credentials
-          description: Authentication details for the service broker
+          $ref: ../schemas/ServiceBrokerAuthentication.yaml
+          description: Credentials used to authenticate against the service broker
         relationships:
           type: object
+          description: Relationships for the service broker
           properties:
             space:
               $ref: ../schemas/RelationshipToOne.yaml
-          description: Relationships for the service broker
+              description: If set, restricts the service broker to the specified space
         metadata:
           $ref: ../schemas/Metadata.yaml
+          description: Labels and annotations applied to the service broker
       required:
         - name
         - url
+        - authentication
     examples:
       default:
         summary: default
@@ -58,4 +43,4 @@ content:
           relationships:
             space:
               data:
-                guid: 123e4567-e89b-12d3-a456-426614174000
+                guid: 2f35885d-0c9d-4423-83ad-fd05066f8576

@@ -2,11 +2,12 @@ type: object
 properties:
   var:
     type: object
-    description: Environment variables
+    description: Environment variables that are associated with the given app; keys and values are strings
     additionalProperties:
       type: [string, "null"]
   links:
     type: object
+    description: Links to related resources
     properties:
       self:
         $ref: './Link.yaml'
@@ -14,4 +15,4 @@ properties:
       app:
         $ref: './Link.yaml'
         description: The URL to get the app for these environment variables
-description: 'App environment variables with links'
+description: The environment variables that are associated with the given app

@@ -1,19 +1,33 @@
 /v3/packages:
   get:
     summary: List packages
-    description: Retrieve all packages.
+    description: |-
+      Retrieve all packages the user has access to.
+
+      **Permitted roles:** All Roles
     operationId: listPackages
     tags:
       - Packages
     parameters:
       - $ref: ../components/parameters/Page.yaml
       - $ref: ../components/parameters/PerPage.yaml
-      - $ref: ../components/parameters/OrderBy.yaml
+      - name: order_by
+        in: query
+        required: false
+        schema:
+          type: string
+          enum:
+            - created_at
+            - -created_at
+            - updated_at
+            - -updated_at
+        description: Value to sort by; defaults to ascending. Prepend with `-` to sort descending. Valid values are `created_at`, `updated_at`
       - $ref: ../components/parameters/CreatedAts.yaml
       - $ref: ../components/parameters/UpdatedAts.yaml
       - $ref: ../components/parameters/LabelSelector.yaml
       - name: guids
         in: query
+        required: false
         schema:
           type: array
           items:
@@ -21,6 +35,7 @@
         description: Comma-delimited list of package guids to filter by
       - name: states
         in: query
+        required: false
         schema:
           type: array
           items:
@@ -35,6 +50,7 @@
         description: Comma-delimited list of package states to filter by
       - name: types
         in: query
+        required: false
         schema:
           type: array
           items:
@@ -45,6 +61,7 @@
         description: Comma-delimited list of package types to filter by
       - name: app_guids
         in: query
+        required: false
         schema:
           type: array
           items:
@@ -52,6 +69,7 @@
         description: Comma-delimited list of app guids to filter by
       - name: space_guids
         in: query
+        required: false
         schema:
           type: array
           items:
@@ -59,6 +77,7 @@
         description: Comma-delimited list of space guids to filter by
       - name: organization_guids
         in: query
+        required: false
         schema:
           type: array
           items:
@@ -79,13 +98,13 @@
                     total_results: 2
                     total_pages: 1
                     first:
-                      href: https://api.example.org?types=bits%2Cdocker&page=1&per_page=2
+                      href: https://api.example.org/v3/packages?types=bits%2Cdocker&page=1&per_page=2
                     last:
-                      href: https://api.example.org?types=bits%2Cdocker&page=1&per_page=2
+                      href: https://api.example.org/v3/packages?types=bits%2Cdocker&page=1&per_page=2
                     next: null
                     previous: null
                   resources:
-                    - guid: 123e4567-e89b-12d3-a456-426614174000
+                    - guid: a57fd932-85db-483a-a27e-b00efbb3b0a4
                       type: bits
                       data:
                         checksum:
@@ -98,7 +117,7 @@
                       relationships:
                         app:
                           data:
-                            guid: 123e4567-e89b-12d3-a456-426614174000
+                            guid: fa3558ce-1c4d-46fc-9776-54b9c8021745
                       links:
                         self:
                           href: https://api.example.org/v3/packages/a57fd932-85db-483a-a27e-b00efbb3b0a4
@@ -113,7 +132,7 @@
                       metadata:
                         labels: {}
                         annotations: {}
-                    - guid: 123e4567-e89b-12d3-a456-426614174000
+                    - guid: 8f1f294d-cef8-4c11-9f0b-3bcdc0bd2691
                       type: docker
                       data:
                         image: registry/image:latest
@@ -125,7 +144,7 @@
                       relationships:
                         app:
                           data:
-                            guid: 123e4567-e89b-12d3-a456-426614174000
+                            guid: fa3558ce-1c4d-46fc-9776-54b9c8021745
                       links:
                         self:
                           href: https://api.example.org/v3/packages/8f1f294d-cef8-4c11-9f0b-3bcdc0bd2691
@@ -151,25 +170,69 @@
       '503':
         $ref: ../components/responses/ServiceUnavailable.yaml
   post:
-    summary: Create a package
-    description: Create a package.
+    summary: Create or copy a package
+    description: |-
+      Create a package.
+
+      **Copy a package:** supplying the optional `source_guid` query parameter copies the bits of the source package identified by `source_guid` to a target package instead of creating a new package. In copy mode `type` and `data` are not accepted; `relationships.app`, a relationship to the destination app, is the only accepted body parameter.
+
+      **Permitted roles:** Admin, Space Developer
     operationId: createPackage
     tags:
       - Packages
+    parameters:
+      - name: source_guid
+        in: query
+        required: false
+        schema:
+          type: string
+          format: uuid
+        description: GUID of the source package to copy from. When supplied, the bits of that package are copied to a new package for the app given in `relationships.app`
     requestBody:
       $ref: ../components/requestBodies/PackageCreateRequestBody.yaml
     responses:
       '201':
-        description: Successfully created package
+        description: Successfully created (or copied) package
         content:
           application/json:
             schema:
               $ref: ../components/schemas/Package.yaml
             examples:
+              buildpack_app:
+                summary: buildpack app
+                value:
+                  guid: 44f7c078-0934-470f-9883-4fcddc5b8f13
+                  type: bits
+                  data:
+                    checksum:
+                      type: sha256
+                      value: null
+                    error: null
+                  state: AWAITING_UPLOAD
+                  created_at: '2015-11-13T17:02:56Z'
+                  updated_at: '2016-06-08T16:41:26Z'
+                  relationships:
+                    app:
+                      data:
+                        guid: 1d3bf0ec-5806-43c4-b64e-8364dba1086a
+                  links:
+                    self:
+                      href: https://api.example.org/v3/packages/44f7c078-0934-470f-9883-4fcddc5b8f13
+                    upload:
+                      href: https://api.example.org/v3/packages/44f7c078-0934-470f-9883-4fcddc5b8f13/upload
+                      method: POST
+                    download:
+                      href: https://api.example.org/v3/packages/44f7c078-0934-470f-9883-4fcddc5b8f13/download
+                      method: GET
+                    app:
+                      href: https://api.example.org/v3/apps/1d3bf0ec-5806-43c4-b64e-8364dba1086a
+                  metadata:
+                    labels: {}
+                    annotations: {}
               docker_app:
                 summary: Docker app
                 value:
-                  guid: 123e4567-e89b-12d3-a456-426614174000
+                  guid: 4cb65058-f04f-458f-aca1-5f4e43de6407
                   type: docker
                   data:
                     image: registry/image:latest
@@ -181,12 +244,34 @@
                   relationships:
                     app:
                       data:
-                        guid: 123e4567-e89b-12d3-a456-426614174000
+                        guid: d8b8148d-5798-44de-821a-64b85b15e968
                   links:
                     self:
                       href: https://api.example.org/v3/packages/4cb65058-f04f-458f-aca1-5f4e43de6407
                     app:
                       href: https://api.example.org/v3/apps/d8b8148d-5798-44de-821a-64b85b15e968
+                  metadata:
+                    labels: {}
+                    annotations: {}
+              copy:
+                summary: copy (with the source_guid query parameter)
+                value:
+                  guid: fec72fc1-e453-4463-a86d-5df426f337a3
+                  type: docker
+                  data:
+                    image: http://awesome-sauce.example.org
+                  state: COPYING
+                  created_at: '2016-03-17T21:41:09Z'
+                  updated_at: '2016-06-08T16:41:26Z'
+                  relationships:
+                    app:
+                      data:
+                        guid: 36208a68-562d-4f51-94ea-28bd8553a271
+                  links:
+                    self:
+                      href: https://api.example.org/v3/packages/fec72fc1-e453-4463-a86d-5df426f337a3
+                    app:
+                      href: https://api.example.org/v3/apps/36208a68-562d-4f51-94ea-28bd8553a271
                   metadata:
                     labels: {}
                     annotations: {}
@@ -213,7 +298,10 @@
 /v3/packages/{guid}:
   get:
     summary: Get a package
-    description: Retrieve a package.
+    description: |-
+      Retrieve a package.
+
+      **Permitted roles:** Admin, Admin Read-Only, Global Auditor, Org Manager, Space Auditor, Space Developer, Space Manager, Space Supporter
     operationId: getPackage
     tags:
       - Packages
@@ -226,6 +314,38 @@
           application/json:
             schema:
               $ref: ../components/schemas/Package.yaml
+            examples:
+              default:
+                summary: default
+                value:
+                  guid: 44f7c078-0934-470f-9883-4fcddc5b8f13
+                  type: bits
+                  data:
+                    checksum:
+                      type: sha256
+                      value: null
+                    error: null
+                  state: PROCESSING_UPLOAD
+                  created_at: '2015-11-13T17:02:56Z'
+                  updated_at: '2016-06-08T16:41:26Z'
+                  relationships:
+                    app:
+                      data:
+                        guid: 1d3bf0ec-5806-43c4-b64e-8364dba1086a
+                  links:
+                    self:
+                      href: https://api.example.org/v3/packages/44f7c078-0934-470f-9883-4fcddc5b8f13
+                    upload:
+                      href: https://api.example.org/v3/packages/44f7c078-0934-470f-9883-4fcddc5b8f13/upload
+                      method: POST
+                    download:
+                      href: https://api.example.org/v3/packages/44f7c078-0934-470f-9883-4fcddc5b8f13/download
+                      method: GET
+                    app:
+                      href: https://api.example.org/v3/apps/1d3bf0ec-5806-43c4-b64e-8364dba1086a
+                  metadata:
+                    labels: {}
+                    annotations: {}
         links:
           app:
             operationId: getApp
@@ -242,37 +362,17 @@
         $ref: ../components/responses/UnprocessableEntity.yaml
   patch:
     summary: Update a package
-    description: Update a package.
+    description: |-
+      Update a package.
+
+      **Permitted roles:** Admin, Space Developer
     operationId: updatePackage
     tags:
       - Packages
     parameters:
       - $ref: ../components/parameters/Guid.yaml
     requestBody:
-      description: Package object that needs to be updated
-      required: true
-      content:
-        application/json:
-          schema:
-            type: object
-            properties:
-              metadata:
-                $ref: ../components/schemas/Metadata.yaml
-              username:
-                type: string
-                description: The username for the image’s registry. Only possible for Docker package.
-              password:
-                type: string
-                description: The password for the image’s registry. Only possible for Docker package.
-          examples:
-            default:
-              summary: default
-              value:
-                metadata:
-                  labels:
-                    key: value
-                  annotations:
-                    note: detailed information
+      $ref: ../components/requestBodies/PackageUpdateRequestBody.yaml
     responses:
       '200':
         description: Successfully updated package
@@ -280,6 +380,40 @@
           application/json:
             schema:
               $ref: ../components/schemas/Package.yaml
+            examples:
+              default:
+                summary: default
+                value:
+                  guid: 44f7c078-0934-470f-9883-4fcddc5b8f13
+                  type: bits
+                  data:
+                    checksum:
+                      type: sha256
+                      value: null
+                    error: null
+                  state: PROCESSING_UPLOAD
+                  created_at: '2015-11-13T17:02:56Z'
+                  updated_at: '2016-06-08T16:41:26Z'
+                  relationships:
+                    app:
+                      data:
+                        guid: 1d3bf0ec-5806-43c4-b64e-8364dba1086a
+                  links:
+                    self:
+                      href: https://api.example.org/v3/packages/44f7c078-0934-470f-9883-4fcddc5b8f13
+                    upload:
+                      href: https://api.example.org/v3/packages/44f7c078-0934-470f-9883-4fcddc5b8f13/upload
+                      method: POST
+                    download:
+                      href: https://api.example.org/v3/packages/44f7c078-0934-470f-9883-4fcddc5b8f13/download
+                      method: GET
+                    app:
+                      href: https://api.example.org/v3/apps/1d3bf0ec-5806-43c4-b64e-8364dba1086a
+                  metadata:
+                    labels:
+                      key: value
+                    annotations:
+                      note: detailed information
       '400':
         $ref: ../components/responses/BadRequest.yaml
       '401':
@@ -298,7 +432,10 @@
         $ref: ../components/responses/ServiceUnavailable.yaml
   delete:
     summary: Delete a package
-    description: Delete a package.
+    description: |-
+      Delete a package.
+
+      **Permitted roles:** Admin, Space Developer
     operationId: deletePackage
     tags:
       - Packages
@@ -326,7 +463,10 @@
 /v3/packages/{guid}/droplets:
   get:
     summary: List droplets for a package
-    description: Retrieve a list of droplets belonging to a package.
+    description: |-
+      Retrieve a list of droplets belonging to a package.
+
+      **Permitted roles:** Admin, Admin Read-Only, Global Auditor, Org Manager, Space Auditor, Space Developer, Space Manager, Space Supporter
     operationId: listPackageDroplets
     tags:
       - Packages
@@ -335,10 +475,21 @@
       - $ref: ../components/parameters/Guid.yaml
       - $ref: ../components/parameters/Page.yaml
       - $ref: ../components/parameters/PerPage.yaml
-      - $ref: ../components/parameters/OrderBy.yaml
+      - name: order_by
+        in: query
+        required: false
+        schema:
+          type: string
+          enum:
+            - created_at
+            - -created_at
+            - updated_at
+            - -updated_at
+        description: Value to sort by. Defaults to ascending; prepend with `-` to sort descending. Valid values are `created_at` and `updated_at`
       - $ref: ../components/parameters/LabelSelector.yaml
       - name: guids
         in: query
+        required: false
         schema:
           type: array
           items:
@@ -346,10 +497,18 @@
         description: Comma-delimited list of droplet guids to filter by
       - name: states
         in: query
+        required: false
         schema:
           type: array
           items:
             type: string
+            enum:
+              - AWAITING_UPLOAD
+              - PROCESSING_UPLOAD
+              - STAGED
+              - COPYING
+              - FAILED
+              - EXPIRED
         description: Comma-delimited list of droplet states to filter by
     responses:
       '200':
@@ -366,13 +525,13 @@
                     total_results: 2
                     total_pages: 1
                     first:
-                      href: https://api.example.org?page=1&per_page=50
+                      href: https://api.example.org/v3/packages/7b34f1cf-7e73-428a-bb5a-8a17a8058396/droplets?page=1&per_page=50
                     last:
-                      href: https://api.example.org?page=1&per_page=50
+                      href: https://api.example.org/v3/packages/7b34f1cf-7e73-428a-bb5a-8a17a8058396/droplets?page=1&per_page=50
                     next: null
                     previous: null
                   resources:
-                    - guid: 123e4567-e89b-12d3-a456-426614174000
+                    - guid: 585bc3c1-3743-497d-88b0-403ad6b56d16
                       state: STAGED
                       error: null
                       lifecycle:
@@ -381,7 +540,7 @@
                       image: null
                       execution_metadata: PRIVATE DATA HIDDEN
                       process_types:
-                        redacted_message: 123e4567-e89b-12d3-a456-426614174000
+                        redacted_message: '[PRIVATE DATA HIDDEN IN LISTS]'
                       checksum:
                         type: sha256
                         value: e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855
@@ -396,7 +555,7 @@
                       relationships:
                         app:
                           data:
-                            guid: 123e4567-e89b-12d3-a456-426614174000
+                            guid: 7b34f1cf-7e73-428a-bb5a-8a17a8058396
                       links:
                         self:
                           href: https://api.example.org/v3/droplets/585bc3c1-3743-497d-88b0-403ad6b56d16
@@ -412,15 +571,15 @@
                       metadata:
                         labels: {}
                         annotations: {}
-                    - guid: 123e4567-e89b-12d3-a456-426614174000
+                    - guid: fdf3851c-def8-4de1-87f1-6d4543189e22
                       state: STAGED
                       error: null
                       lifecycle:
                         type: docker
                         data: {}
-                      execution_metadata: 123e4567-e89b-12d3-a456-426614174000
+                      execution_metadata: '[PRIVATE DATA HIDDEN IN LISTS]'
                       process_types:
-                        redacted_message: 123e4567-e89b-12d3-a456-426614174000
+                        redacted_message: '[PRIVATE DATA HIDDEN IN LISTS]'
                       image: cloudfoundry/diego-docker-app-custom:latest
                       checksum: null
                       buildpacks: null
@@ -430,7 +589,7 @@
                       relationships:
                         app:
                           data:
-                            guid: 123e4567-e89b-12d3-a456-426614174000
+                            guid: 7b34f1cf-7e73-428a-bb5a-8a17a8058396
                       links:
                         self:
                           href: https://api.example.org/v3/droplets/fdf3851c-def8-4de1-87f1-6d4543189e22
@@ -453,53 +612,19 @@
 /v3/packages/{guid}/upload:
   post:
     summary: Upload package bits
-    description: This upload endpoint takes a multi-part form requests for packages of type `bits`. The request requires either a [.zip file](https://en.wikipedia.org/wiki/Zip_(file_format)) uploaded under the `bits` field or a list of [resource match objects](#the-resource-match-object) under the `resources` field. These field may be used together.
+    description: |-
+      This upload endpoint takes a multi-part form requests for packages of type `bits`. The request requires either a [.zip file](https://en.wikipedia.org/wiki/Zip_(file_format)) uploaded under the `bits` field or a list of [resource match objects](#the-resource-match-object) under the `resources` field. These field may be used together.
+
+      The `resources` field in the request accepts the v2 resources object format.
+
+      **Permitted roles:** Admin, Space Developer
     operationId: uploadPackageBits
     tags:
       - Packages
     parameters:
       - $ref: ../components/parameters/Guid.yaml
     requestBody:
-      content:
-        multipart/form-data:
-          schema:
-            type: object
-            properties:
-              bits:
-                type: string
-                format: binary
-              resources:
-                type: array
-                items:
-                  type: object
-                  properties:
-                    path:
-                      type: string
-                    size_in_bytes:
-                      type: integer
-                    checksum:
-                      type: object
-                      properties:
-                        value:
-                          type: string
-        application/json:
-          schema:
-            type: object
-            properties:
-              resources:
-                type: array
-                items:
-                  type: object
-                  properties:
-                    path:
-                      type: string
-                    size_in_bytes:
-                      type: integer
-                    checksum:
-                      type: object
-                      properties:
-                        value:
-                          type: string
+      $ref: ../components/requestBodies/PackageUploadRequestBody.yaml
     responses:
       '200':
         description: Successfully uploaded package bits
@@ -507,17 +632,38 @@
           application/json:
             schema:
               $ref: ../components/schemas/Package.yaml
-      '202':
-        description: Upload initiated
-        headers:
-          Location:
-            schema:
-              type: string
-            description: URL of the job tracking the upload
-        content:
-          application/json:
-            schema:
-              $ref: ../components/schemas/Package.yaml
+            examples:
+              default:
+                summary: default
+                value:
+                  guid: 44f7c078-0934-470f-9883-4fcddc5b8f13
+                  type: bits
+                  data:
+                    checksum:
+                      type: sha256
+                      value: null
+                    error: null
+                  state: PROCESSING_UPLOAD
+                  created_at: '2015-11-13T17:02:56Z'
+                  updated_at: '2016-06-08T16:41:26Z'
+                  relationships:
+                    app:
+                      data:
+                        guid: 1d3bf0ec-5806-43c4-b64e-8364dba1086a
+                  links:
+                    self:
+                      href: https://api.example.org/v3/packages/44f7c078-0934-470f-9883-4fcddc5b8f13
+                    upload:
+                      href: https://api.example.org/v3/packages/44f7c078-0934-470f-9883-4fcddc5b8f13/upload
+                      method: POST
+                    download:
+                      href: https://api.example.org/v3/packages/44f7c078-0934-470f-9883-4fcddc5b8f13/download
+                      method: GET
+                    app:
+                      href: https://api.example.org/v3/apps/1d3bf0ec-5806-43c4-b64e-8364dba1086a
+                  metadata:
+                    labels: {}
+                    annotations: {}
       '401':
         $ref: ../components/responses/Unauthorized.yaml
       '403':
@@ -533,53 +679,30 @@
       This endpoint downloads the bits of an existing package.
 
       When using a remote blobstore, such as AWS, the response is a redirect to the actual location of the bits. If the client is automatically following redirects, then the OAuth token that was used to communicate with Cloud Controller will be replayed on the new redirect request. Some blobstores may reject the request in that case. Clients may need to follow the redirect without including the OAuth token.
+
+      **Permitted roles:** Admin, Space Developer
     operationId: downloadPackageBits
     tags:
       - Packages
     parameters:
       - $ref: ../components/parameters/Guid.yaml
     responses:
-      '302':
-        description: Redirect to download location
-      '403':
-        $ref: ../components/responses/Forbidden.yaml
-      '404':
-        $ref: ../components/responses/NotFound.yaml
-/v3/packages?source_guid={source_guid}:
-  post:
-    summary: Copy a package
-    description: This endpoint copies the bits of a source package to a target package.
-    operationId: copyPackage
-    tags:
-      - Packages
-    parameters:
-      - name: source_guid
-        in: query
-        required: true
-        schema:
-          type: string
-          format: uuid
-        description: The GUID of the package to copy from
-    requestBody:
-      description: Destination app for the copied package
-      required: true
-      content:
-        application/json:
-          schema:
-            type: object
-            properties:
-              relationships:
-                $ref: ../components/schemas/Relationships.yaml
-            required:
-              - relationships
-            description: Request schema for copying a package
-    responses:
-      '201':
-        description: Successfully copied package
+      '200':
+        description: The package bits; returned directly when the blobstore is local to the Cloud Controller
         content:
-          application/json:
+          application/octet-stream:
             schema:
-              $ref: ../components/schemas/Package.yaml
+              type: string
+              format: binary
+              description: A zip file containing the package bits
+      '302':
+        description: Redirect to the actual location of the bits in the remote blobstore
+        headers:
+          Location:
+            description: URL of the package bits in the blobstore
+            schema:
+              type: string
+              format: uri
       '401':
         $ref: ../components/responses/Unauthorized.yaml
       '403':
@@ -588,27 +711,46 @@
         $ref: ../components/responses/NotFound.yaml
       '422':
         $ref: ../components/responses/UnprocessableEntity.yaml
+      '502':
+        $ref: ../components/responses/BadGateway.yaml
 /v3/apps/{guid}/packages:
   get:
     summary: List packages for an app
-    description: Retrieve packages for an app that the user has access to.
+    description: |-
+      Retrieve packages for an app that the user has access to.
+
+      **Permitted roles:** Admin, Admin Read-Only, Global Auditor, Org Manager, Space Auditor, Space Developer, Space Manager, Space Supporter
     operationId: listAppPackages
     tags:
       - Packages
     parameters:
       - $ref: ../components/parameters/Guid.yaml
+      - $ref: ../components/parameters/Page.yaml
+      - $ref: ../components/parameters/PerPage.yaml
+      - name: order_by
+        in: query
+        required: false
+        schema:
+          type: string
+          enum:
+            - created_at
+            - -created_at
+            - updated_at
+            - -updated_at
+        description: Value to sort by; defaults to ascending. Prepend with `-` to sort descending. Valid values are `created_at`, `updated_at`
+      - $ref: ../components/parameters/CreatedAts.yaml
+      - $ref: ../components/parameters/UpdatedAts.yaml
       - name: guids
         in: query
+        required: false
         schema:
           type: array
           items:
             type: string
-        description: Comma-delimited list of app GUIDs to filter by
-      - $ref: ../components/parameters/Page.yaml
-      - $ref: ../components/parameters/PerPage.yaml
-      - $ref: ../components/parameters/OrderBy.yaml
+        description: Comma-delimited list of package guids to filter by
       - name: states
         in: query
+        required: false
         schema:
           type: array
           items:
@@ -623,6 +765,7 @@
         description: Comma-delimited list of package states to filter by
       - name: types
         in: query
+        required: false
         schema:
           type: array
           items:
@@ -652,7 +795,7 @@
                     next: null
                     previous: null
                   resources:
-                    - guid: 123e4567-e89b-12d3-a456-426614174000
+                    - guid: 752edab0-2147-4f58-9c25-cd72ad8c3561
                       type: bits
                       data:
                         error: null
@@ -665,7 +808,7 @@
                       relationships:
                         app:
                           data:
-                            guid: 123e4567-e89b-12d3-a456-426614174000
+                            guid: f2efe391-2b5b-4836-8518-ad93fa9ebf69
                       links:
                         self:
                           href: https://api.example.org/v3/packages/752edab0-2147-4f58-9c25-cd72ad8c3561

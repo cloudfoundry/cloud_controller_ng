@@ -14,10 +14,11 @@ content:
           $ref: ../schemas/HealthCheck.yaml
           description: The health check to perform on the process
         readiness_health_check:
-          $ref: ../schemas/HealthCheck.yaml
+          $ref: ../schemas/ReadinessHealthCheck.yaml
           description: The readiness health check to perform on the process
         metadata:
           $ref: ../schemas/Metadata.yaml
+          description: Labels and annotations applied to the process
       description: Request schema for updating a process
     examples:
       default:

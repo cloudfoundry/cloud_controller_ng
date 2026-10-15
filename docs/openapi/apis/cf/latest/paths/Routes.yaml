@@ -1,83 +1,86 @@
 /v3/routes:
   get:
     summary: List routes
-    description: Retrieve all routes the user has access to.
+    description: |-
+      Retrieve all routes the user has access to.
+
+      **Permitted roles:** All Roles
     operationId: listRoutes
     tags:
       - Routes
     parameters:
       - $ref: ../components/parameters/Page.yaml
       - $ref: ../components/parameters/PerPage.yaml
-      - $ref: ../components/parameters/OrderBy.yaml
+      - name: order_by
+        in: query
+        required: false
+        schema:
+          type: string
+          enum:
+            - created_at
+            - -created_at
+            - updated_at
+            - -updated_at
+        description: Value to sort by. Defaults to ascending; prepend with `-` to sort descending. Valid values are `created_at`, `updated_at`
       - $ref: ../components/parameters/CreatedAts.yaml
       - $ref: ../components/parameters/UpdatedAts.yaml
       - $ref: ../components/parameters/LabelSelector.yaml
-      - name: protocols
-        in: query
-        schema:
-          type: array
-          items:
-            type: string
-            enum:
-              - http
-              - tcp
-        description: Comma-delimited list of protocols to filter by
       - name: hosts
         in: query
         schema:
           type: array
           items:
             type: string
-        description: Comma-delimited list of hosts to filter by
+        description: Comma-delimited list of hostnames to filter by
       - name: paths
         in: query
         schema:
           type: array
           items:
             type: string
-        description: Comma-delimited list of paths to filter by
+        description: Comma-delimited list of paths to filter by (e.g. `/path1,/path2`)
       - name: ports
         in: query
         schema:
           type: array
           items:
             type: integer
-        description: Comma-delimited list of ports to filter by
+        description: Comma-delimited list of ports to filter by (e.g. `3306,5432`)
       - name: domain_guids
         in: query
         schema:
           type: array
           items:
             type: string
-        description: Comma-delimited list of domain GUIDs to filter by
+        description: Comma-delimited list of domain guids to filter by
       - name: space_guids
         in: query
         schema:
           type: array
           items:
             type: string
-        description: Comma-delimited list of space GUIDs to filter by
+        description: Comma-delimited list of space guids to filter by
       - name: app_guids
         in: query
         schema:
           type: array
           items:
             type: string
-        description: Comma-delimited list of app GUIDs to filter by
+        description: Comma-delimited list of app guids to filter by
       - name: organization_guids
         in: query
         schema:
           type: array
           items:
             type: string
-        description: Comma-delimited list of organization GUIDs to filter by
+        description: Comma-delimited list of organization guids to filter by
       - name: service_instance_guids
         in: query
         schema:
           type: array
           items:
             type: string
-        description: Comma-delimited list of service instance GUIDs to filter by
+        description: Comma-delimited list of service instance guids to filter by
       - name: include
         in: query
         schema:
@@ -88,7 +91,8 @@
               - domain
               - space.organization
               - space
-        description: Optionally include a list of unique related resources in the response
+              - route_policies
+        description: Optionally include a list of unique related resources in the response. Valid values are `domain`, `space.organization`, `space`, `route_policies`
     responses:
       '200':
         $ref: ../components/responses/RouteListResponse.yaml
@@ -110,7 +114,10 @@
         $ref: ../components/responses/ServiceUnavailable.yaml
   post:
     summary: Create a route
-    description: Create a route.
+    description: |-
+      Create a route.
+
+      **Permitted roles:** Admin, Space Developer, Space Supporter
     operationId: createRoute
     tags:
       - Routes
@@ -118,22 +125,7 @@
       $ref: ../components/requestBodies/RouteCreateRequestBody.yaml
     responses:
       '201':
-        description: Route created
-        content:
-          application/json:
-            schema:
-              $ref: ../components/schemas/Route.yaml
-        links:
-          space:
-            operationId: getSpace
-            parameters:
-              guid: $response.body#/relationships/space/data/guid
-            description: Retrieve the space for this route
-          domain:
-            operationId: getDomain
-            parameters:
-              guid: $response.body#/relationships/domain/data/guid
-            description: Retrieve the domain for this route
+        $ref: ../components/responses/RouteCreateResponse.yaml
       '400':
         $ref: ../components/responses/BadRequest.yaml
       '401':
@@ -151,7 +143,10 @@
 /v3/routes/{guid}:
   get:
     summary: Get a route
-    description: Retrieve a route.
+    description: |-
+      Retrieve a route.
+
+      **Permitted roles:** Admin, Admin Read-Only, Global Auditor, Org Auditor, Org Manager, Space Auditor, Space Developer, Space Manager, Space Supporter
     operationId: getRoute
     tags:
       - Routes
@@ -165,9 +160,10 @@
             type: string
             enum:
               - domain
-              - space
               - space.organization
-        description: Optionally include a list of unique related resources in the response
+              - space
+              - route_policies
+        description: Optionally include additional related resources in the response. Valid values are `domain`, `space.organization`, `space`, `route_policies`
     responses:
       '200':
         description: Successfully retrieved route
@@ -175,6 +171,60 @@
           application/json:
             schema:
               $ref: ../components/schemas/Route.yaml
+            examples:
+              default:
+                summary: default
+                value:
+                  guid: cbad697f-cac1-48f4-9017-ac08f39dfb31
+                  protocol: tcp
+                  port: 6666
+                  created_at: '2019-05-10T17:17:48Z'
+                  updated_at: '2019-05-10T17:17:48Z'
+                  host: a-hostname
+                  path: /some_path
+                  url: a-hostname.a-domain.com/some_path
+                  destinations:
+                    - guid: 385bf117-17f5-4689-8c5c-08c6cc821fed
+                      app:
+                        guid: 0a6636b5-7fc4-44d8-8752-0db3e40b35a5
+                        process:
+                          type: web
+                      weight: null
+                      port: 8080
+                      protocol: tcp
+                      created_at: '2019-05-10T17:17:48Z'
+                      updated_at: '2019-05-10T17:17:48Z'
+                    - guid: 27e96a3b-5bcf-49ed-8048-351e0be23e6f
+                      app:
+                        guid: f61e59fa-2121-4217-8c7b-15bfd75baf25
+                        process:
+                          type: web
+                      weight: null
+                      port: 8080
+                      protocol: tcp
+                      created_at: '2019-05-10T17:17:48Z'
+                      updated_at: '2019-05-10T17:17:48Z'
+                  options:
+                    loadbalancing: round-robin
+                  metadata:
+                    labels: {}
+                    annotations: {}
+                  relationships:
+                    space:
+                      data:
+                        guid: 885a8cb3-c07b-4856-b448-eeb10bf36236
+                    domain:
+                      data:
+                        guid: 0b5f3633-194c-42d2-9408-972366617e0e
+                  links:
+                    self:
+                      href: https://api.example.org/v3/routes/cbad697f-cac1-48f4-9017-ac08f39dfb31
+                    space:
+                      href: https://api.example.org/v3/spaces/885a8cb3-c07b-4856-b448-eeb10bf36236
+                    domain:
+                      href: https://api.example.org/v3/domains/0b5f3633-194c-42d2-9408-972366617e0e
+                    destinations:
+                      href: https://api.example.org/v3/routes/cbad697f-cac1-48f4-9017-ac08f39dfb31/destinations
         links:
           space:
             operationId: getSpace
@@ -194,7 +244,10 @@
         $ref: ../components/responses/NotFound.yaml
   patch:
     summary: Update a route
-    description: Update a route.
+    description: |-
+      Update a route.
+
+      **Permitted roles:** Admin, Space Developer, Space Supporter
     operationId: updateRoute
     tags:
       - Routes
@@ -208,9 +261,24 @@
           schema:
             type: object
             properties:
+              options:
+                $ref: ../components/schemas/RouteOptions.yaml
+                description: Options applied to the route
               metadata:
                 $ref: ../components/schemas/Metadata.yaml
+                description: Labels and annotations applied to the route
             description: Request schema for updating a route
+          examples:
+            default:
+              summary: default
+              value:
+                options:
+                  loadbalancing: round-robin
+                metadata:
+                  labels:
+                    key: value
+                  annotations:
+                    note: detailed information
     responses:
       '200':
         description: Successfully updated route
@@ -218,6 +286,60 @@
           application/json:
             schema:
               $ref: ../components/schemas/Route.yaml
+            examples:
+              default:
+                summary: default
+                value:
+                  guid: cbad697f-cac1-48f4-9017-ac08f39dfb31
+                  protocol: tcp
+                  port: 6666
+                  created_at: '2019-05-10T17:17:48Z'
+                  updated_at: '2019-05-10T17:17:48Z'
+                  host: a-hostname
+                  path: "/some_path"
+                  url: a-hostname.a-domain.com/some_path
+                  destinations:
+                  - guid: 385bf117-17f5-4689-8c5c-08c6cc821fed
+                    app:
+                      guid: 0a6636b5-7fc4-44d8-8752-0db3e40b35a5
+                      process:
+                        type: web
+                    weight: 
+                    port: 8080
+                    protocol: tcp
+                    created_at: '2019-05-10T17:17:48Z'
+                    updated_at: '2019-05-10T17:17:48Z'
+                  - guid: 27e96a3b-5bcf-49ed-8048-351e0be23e6f
+                    app:
+                      guid: f61e59fa-2121-4217-8c7b-15bfd75baf25
+                      process:
+                        type: web
+                    weight: 
+                    port: 8080
+                    protocol: tcp
+                    created_at: '2019-05-10T17:17:48Z'
+                    updated_at: '2019-05-10T17:17:48Z'
+                  options:
+                    loadbalancing: round-robin
+                  metadata:
+                    labels: {}
+                    annotations: {}
+                  relationships:
+                    space:
+                      data:
+                        guid: 885a8cb3-c07b-4856-b448-eeb10bf36236
+                    domain:
+                      data:
+                        guid: 0b5f3633-194c-42d2-9408-972366617e0e
+                  links:
+                    self:
+                      href: https://api.example.org/v3/routes/cbad697f-cac1-48f4-9017-ac08f39dfb31
+                    space:
+                      href: https://api.example.org/v3/spaces/885a8cb3-c07b-4856-b448-eeb10bf36236
+                    domain:
+                      href: https://api.example.org/v3/domains/0b5f3633-194c-42d2-9408-972366617e0e
+                    destinations:
+                      href: https://api.example.org/v3/routes/cbad697f-cac1-48f4-9017-ac08f39dfb31/destinations
         links:
           space:
             operationId: getSpace
@@ -247,7 +369,10 @@
         $ref: ../components/responses/ServiceUnavailable.yaml
   delete:
     summary: Delete a route
-    description: Delete a route.
+    description: |-
+      Delete a route.
+
+      **Permitted roles:** Admin, Space Developer, Space Supporter
     operationId: deleteRoute
     tags:
       - Routes
@@ -275,15 +400,35 @@
 /v3/apps/{guid}/routes:
   get:
     summary: List routes for an app
-    description: Retrieve all routes that have destinations that point to the given app.
+    description: |-
+      Retrieve all routes that have [destinations](#the-destination-object) that point to the given app.
+
+      **Permitted roles:** Admin, Admin Read-Only, Global Auditor, Org Manager, Space Auditor, Space Developer, Space Manager, Space Supporter
     operationId: listAppRoutes
     tags:
       - Routes
     parameters:
-      - $ref: ../components/parameters/Guid.yaml
+      - name: guid
+        in: path
+        required: true
+        schema:
+          type: string
+          format: uuid
+        description: The unique identifier for the app
       - $ref: ../components/parameters/Page.yaml
       - $ref: ../components/parameters/PerPage.yaml
-      - $ref: ../components/parameters/OrderBy.yaml
+      - name: order_by
+        in: query
+        required: false
+        schema:
+          type: string
+          enum:
+            - created_at
+            - -created_at
+            - updated_at
+            - -updated_at
+        description: Value to sort by. Defaults to ascending; prepend with `-` to sort descending. Valid values are `created_at`, `updated_at`
+      - $ref: ../components/parameters/LabelSelector.yaml
       - name: domain_guids
         in: query
         schema:
@@ -298,20 +443,34 @@
           items:
             type: string
         description: Comma-delimited list of hostnames to filter by
+      - name: organization_guids
+        in: query
+        schema:
+          type: array
+          items:
+            type: string
+        description: Comma-delimited list of organization guids to filter by
       - name: paths
         in: query
         schema:
           type: array
           items:
             type: string
-        description: Comma-delimited list of paths to filter by
+        description: Comma-delimited list of paths to filter by (e.g. `/path1,/path2`)
       - name: ports
         in: query
         schema:
           type: array
           items:
             type: integer
-        description: Comma-delimited list of ports to filter by
+        description: Comma-delimited list of ports to filter by (e.g. `3306,5432`)
+      - name: space_guids
+        in: query
+        schema:
+          type: array
+          items:
+            type: string
+        description: Comma-delimited list of space guids to filter by
     responses:
       '200':
         description: OK
@@ -327,14 +486,14 @@
                     total_results: 3
                     total_pages: 2
                     first:
-                      href: https://api.example.org<%= path %>?page=1&per_page=2
+                      href: https://api.example.org/v3/apps/1cb006ee-fb05-47e1-b541-c34179ddc446/routes?page=1&per_page=2
                     last:
-                      href: https://api.example.org<%= path %>?page=2&per_page=2
+                      href: https://api.example.org/v3/apps/1cb006ee-fb05-47e1-b541-c34179ddc446/routes?page=2&per_page=2
                     next:
-                      href: https://api.example.org<%= path %>?page=2&per_page=2
+                      href: https://api.example.org/v3/apps/1cb006ee-fb05-47e1-b541-c34179ddc446/routes?page=2&per_page=2
                     previous: null
                   resources:
-                    - guid: 123e4567-e89b-12d3-a456-426614174000
+                    - guid: cbad697f-cac1-48f4-9017-ac08f39dfb31
                       protocol: http
                       created_at: '2019-05-10T17:17:48Z'
                       updated_at: '2019-05-10T17:17:48Z'
@@ -342,9 +501,9 @@
                       path: /some_path
                       url: a-hostname.a-domain.com/some_path
                       destinations:
-                        - guid: 123e4567-e89b-12d3-a456-426614174000
+                        - guid: 385bf117-17f5-4689-8c5c-08c6cc821fed
                           app:
-                            guid: 123e4567-e89b-12d3-a456-426614174000
+                            guid: 0a6636b5-7fc4-44d8-8752-0db3e40b35a5
                             process:
                               type: web
                           weight: null
@@ -352,9 +511,9 @@
                           protocol: http1
                           created_at: '2019-05-10T17:17:48Z'
                           updated_at: '2019-05-10T17:17:48Z'
-                        - guid: 123e4567-e89b-12d3-a456-426614174000
+                        - guid: 27e96a3b-5bcf-49ed-8048-351e0be23e6f
                           app:
-                            guid: 123e4567-e89b-12d3-a456-426614174000
+                            guid: f61e59fa-2121-4217-8c7b-15bfd75baf25
                             process:
                               type: web
                           weight: null
@@ -370,10 +529,10 @@
                       relationships:
                         space:
                           data:
-                            guid: 123e4567-e89b-12d3-a456-426614174000
+                            guid: 885a8cb3-c07b-4856-b448-eeb10bf36236
                         domain:
                           data:
-                            guid: 123e4567-e89b-12d3-a456-426614174000
+                            guid: 0b5f3633-194c-42d2-9408-972366617e0e
                       links:
                         self:
                           href: https://api.example.org/v3/routes/cbad697f-cac1-48f4-9017-ac08f39dfb31
@@ -391,8 +550,11 @@
         $ref: ../components/responses/NotFound.yaml
 /v3/routes/{guid}/relationships/shared_spaces:
   get:
-    summary: List shared spaces relationship
-    description: Lists the spaces that the route has been shared to.
+    summary: Lists shared spaces relationship (experimental)
+    description: |-
+      Lists the spaces that the route has been shared to.
+
+      **Permitted roles:** Admin, Admin Read-Only, Global Auditor, Org Auditor, Org Manager, Space Auditor, Space Developer, Space Manager, Space Supporter
     operationId: listSharedSpacesRelationship
     tags:
       - Routes
@@ -405,6 +567,16 @@
           application/json:
             schema:
               $ref: ../components/schemas/RelationshipToMany.yaml
+            examples:
+              default:
+                summary: default
+                value:
+                  data:
+                    - guid: 885735b5-aea4-4cf5-8e44-961af0e41920
+                    - guid: d4c91047-7b29-4fda-b7f9-04033e5c9c9f
+                  links:
+                    self:
+                      href: https://api.example.org/v3/routes/cbad697f-cac1-48f4-9017-ac08f39dfb31/relationships/shared_spaces
       '401':
         $ref: ../components/responses/Unauthorized.yaml
       '403':
@@ -413,14 +585,17 @@
         $ref: ../components/responses/NotFound.yaml
   post:
     summary: Share a route with other spaces (experimental)
-    description: This endpoint shares the route with the specified spaces. This allows users with read and write access in both the route’s space and a shared space to bind a route to an app in the shared space. In order to share into a space the requesting user must have write permission in the target space.
+    description: |-
+      This endpoint shares the route with the specified spaces. This allows users with read and write access in both the route's space and a shared space to bind a route to an app in the shared space. In order to share into a space the requesting user must have write permission in the target space.
+
+      **Permitted roles:** Admin, Space Developer, Space Supporter
     operationId: shareRoute
     tags:
       - Routes
     parameters:
       - $ref: ../components/parameters/Guid.yaml
     requestBody:
-      description: List of spaces to share the route with
+      description: Shared space relationships; each space will have this route shared to it
       required: true
       content:
         application/json:
@@ -431,8 +606,8 @@
               summary: default
               value:
                 data:
-                  - guid: 123e4567-e89b-12d3-a456-426614174000
-                  - guid: 123e4567-e89b-12d3-a456-426614174000
+                  - guid: 885735b5-aea4-4cf5-8e44-961af0e41920
+                  - guid: d4c91047-7b29-4fda-b7f9-04033e5c9c9f
     responses:
       '200':
         description: OK
@@ -440,6 +615,16 @@
           application/json:
             schema:
               $ref: ../components/schemas/RelationshipToMany.yaml
+            examples:
+              default:
+                summary: default
+                value:
+                  data:
+                    - guid: 885735b5-aea4-4cf5-8e44-961af0e41920
+                    - guid: d4c91047-7b29-4fda-b7f9-04033e5c9c9f
+                  links:
+                    self:
+                      href: https://api.example.org/v3/routes/cbad697f-cac1-48f4-9017-ac08f39dfb31/relationships/shared_spaces
       '401':
         $ref: ../components/responses/Unauthorized.yaml
       '403':
@@ -451,7 +636,10 @@
 /v3/routes/{guid}/relationships/shared_spaces/{space_guid}:
   delete:
     summary: Unshare a route that was shared with another space (experimental)
-    description: Unshares a route that was shared with another space.
+    description: |-
+      Unshares a route that was shared with another space.
+
+      **Permitted roles:** Admin, Space Developer, Space Supporter
     operationId: unshareRoute
     tags:
       - Routes
@@ -478,22 +666,59 @@
 /v3/routes/{guid}/relationships/space:
   patch:
     summary: Transfer ownership (experimental)
-    description: Transfers a the ownership of a route to a another space. Users must have write access for both spaces to perform this action. The original owning space will still retain access to the route as a [shared space](#share-a-route-with-other-spaces-experimental). To completely remove a space from a route, users will have to use [unshare route](#unshare-a-route-that-was-shared-with-another-space-experimental).
+    description: |-
+      Transfers a the ownership of a route to a another space. Users must have write access for both spaces to perform this action.
+      The original owning space will still retain access to the route as a [shared space](#share-a-route-with-other-spaces-experimental).
+      To completely remove a space from a route, users will have to use [unshare route](#unshare-a-route-that-was-shared-with-another-space-experimental).
+
+      **Permitted roles:** Admin, Space Developer
     operationId: transferRouteOwnership
     tags:
       - Routes
     parameters:
       - $ref: ../components/parameters/Guid.yaml
     requestBody:
-      description: The space to transfer ownership to
+      description: The space to transfer ownership of the route to
       required: true
       content:
         application/json:
           schema:
-            $ref: ../components/schemas/RelationshipToOne.yaml
+            type: object
+            properties:
+              data:
+                type: object
+                properties:
+                  guid:
+                    type: string
+                    format: uuid
+                    description: The GUID of the space to transfer ownership of the route to
+                required:
+                  - guid
+                description: A relationship to the space that will own the route
+            required:
+              - data
+          examples:
+            default:
+              summary: default
+              value:
+                data:
+                  guid: 885a8cb3-c07b-4856-b448-eeb10bf36236
     responses:
-      '204':
-        description: No Content
+      '200':
+        description: OK
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                status:
+                  type: string
+                  description: Status of the ownership transfer
+            examples:
+              default:
+                summary: default
+                value:
+                  status: ok
       '401':
         $ref: ../components/responses/Unauthorized.yaml
       '403':
@@ -505,14 +730,29 @@
 /v3/routes/{guid}/destinations:
   get:
     summary: List destinations for a route
-    description: Retrieve all destinations associated with a route.
+    description: |-
+      Retrieve all destinations associated with a route.
+
+      **Permitted roles:** Admin, Admin Read-Only, Global Auditor, Org Auditor, Org Manager, Space Auditor, Space Developer, Space Manager, Space Supporter
     operationId: listDestinationsForRoute
     tags:
       - Routes
     parameters:
       - $ref: ../components/parameters/Guid.yaml
-      - $ref: ../components/parameters/Page.yaml
-      - $ref: ../components/parameters/PerPage.yaml
+      - name: guids
+        in: query
+        schema:
+          type: array
+          items:
+            type: string
+        description: Comma-delimited list of destination guids to filter by
+      - name: app_guids
+        in: query
+        schema:
+          type: array
+          items:
+            type: string
+        description: Comma-delimited list of app guids to filter by
     responses:
       '200':
         description: List of destinations for the route
@@ -525,9 +765,9 @@
                 summary: default
                 value:
                   destinations:
-                    - guid: 123e4567-e89b-12d3-a456-426614174000
+                    - guid: 89323d4e-2e84-43e7-83e9-adbf50a20c0e
                       app:
-                        guid: 123e4567-e89b-12d3-a456-426614174000
+                        guid: 1cb006ee-fb05-47e1-b541-c34179ddc446
                         process:
                           type: web
                       weight: null
@@ -535,9 +775,9 @@
                       protocol: http2
                       created_at: '2019-05-10T17:17:48Z'
                       updated_at: '2019-05-10T17:17:48Z'
-                    - guid: 123e4567-e89b-12d3-a456-426614174000
+                    - guid: fbef10a2-8ee7-11e9-aa2d-abeeaf7b83c5
                       app:
-                        guid: 123e4567-e89b-12d3-a456-426614174000
+                        guid: 01856e12-8ee8-11e9-98a5-bb397dbc818f
                         process:
                           type: api
                       weight: null
@@ -564,6 +804,8 @@
       Add one or more destinations to a route, preserving any existing destinations.
 
       Weighted destinations (deprecated) cannot be added with this endpoint.
+
+      **Permitted roles:** Admin, Space Developer, Space Supporter
     operationId: insertDestinationsForRoute
     tags:
       - Routes
@@ -583,9 +825,9 @@
                 summary: default
                 value:
                   destinations:
-                    - guid: 123e4567-e89b-12d3-a456-426614174000
+                    - guid: 89323d4e-2e84-43e7-83e9-adbf50a20c0e
                       app:
-                        guid: 123e4567-e89b-12d3-a456-426614174000
+                        guid: 1cb006ee-fb05-47e1-b541-c34179ddc446
                         process:
                           type: web
                       weight: null
@@ -593,9 +835,9 @@
                       protocol: http2
                       created_at: '2019-05-10T17:17:48Z'
                       updated_at: '2019-05-10T17:17:48Z'
-                    - guid: 123e4567-e89b-12d3-a456-426614174000
+                    - guid: fbef10a2-8ee7-11e9-aa2d-abeeaf7b83c5
                       app:
-                        guid: 123e4567-e89b-12d3-a456-426614174000
+                        guid: 01856e12-8ee8-11e9-98a5-bb397dbc818f
                         process:
                           type: api
                       weight: null
@@ -626,6 +868,8 @@
       Weighted destinations are **deprecated**. Development of the experimental Istio Service Mesh routing layer was discontinued in 2020 and is no longer supported by the platform. Specifying a `weight` for a destination will take no effect.
 
       If weighted destinations are provided, however, all destinations provided here must have a `weight` specified, and all weights for this route must sum to 100. If not, all provided destinations must not have a `weight`. Mixing weighted and unweighted destinations for a route is not allowed.
+
+      **Permitted roles:** Admin, Space Developer, Space Supporter
     operationId: replaceDestinationsForRouteWithPatch
     tags:
       - Routes
@@ -645,17 +889,17 @@
                 summary: default
                 value:
                   destinations:
-                    - guid: 123e4567-e89b-12d3-a456-426614174000
+                    - guid: 89323d4e-2e84-43e7-83e9-adbf50a20c0e
                       app:
-                        guid: 123e4567-e89b-12d3-a456-426614174000
+                        guid: 1cb006ee-fb05-47e1-b541-c34179ddc446
                         process:
                           type: web
                       weight: 61
                       port: 8080
                       protocol: http2
-                    - guid: 123e4567-e89b-12d3-a456-426614174000
+                    - guid: fbef10a2-8ee7-11e9-aa2d-abeeaf7b83c5
                       app:
-                        guid: 123e4567-e89b-12d3-a456-426614174000
+                        guid: 01856e12-8ee8-11e9-98a5-bb397dbc818f
                         process:
                           type: api
                       weight: 39
@@ -679,7 +923,10 @@
 /v3/routes/{guid}/destinations/{destination_guid}:
   patch:
     summary: Update a destination protocol for a route
-    description: This endpoint updates the protocol of a route destination (app, port and weight cannot be updated)
+    description: |-
+      This endpoint updates the protocol of a route destination (app, port and weight cannot be updated)
+
+      **Permitted roles:** Admin, Space Developer, Space Supporter
     operationId: updateDestinationProtocolForRoute
     tags:
       - Routes
@@ -701,13 +948,15 @@
             type: object
             properties:
               protocol:
-                type: string
-                description: Protocol of the destination
+                type:
+                  - string
+                  - 'null'
                 enum:
                   - http1
                   - http2
-            required:
-              - protocol
+                  - tcp
+                  - null
+                description: Protocol the destination will use. Valid protocols are `http1` or `http2` if route protocol is `http`, `tcp` if route protocol is `tcp`. A `null` value will set it to either `http1` or `tcp` based on the route protocol
           examples:
             default:
               summary: default
@@ -724,9 +973,9 @@
               default:
                 summary: default
                 value:
-                  guid: 123e4567-e89b-12d3-a456-426614174000
+                  guid: 89323d4e-2e84-43e7-83e9-adbf50a20c0e
                   app:
-                    guid: 123e4567-e89b-12d3-a456-426614174000
+                    guid: 1cb006ee-fb05-47e1-b541-c34179ddc446
                     process:
                       type: web
                   weight: 61
@@ -747,7 +996,10 @@
         $ref: ../components/responses/UnprocessableEntity.yaml
   delete:
     summary: Remove destination for a route
-    description: Remove a destination from a route.
+    description: |-
+      Remove a destination from a route.
+
+      **Permitted roles:** Admin, Space Developer, Space Supporter
     operationId: removeDestinationForRoute
     tags:
       - Routes
@@ -763,26 +1015,6 @@
     responses:
       '204':
         description: Successfully removed destination from the route
-      '401':
-        $ref: ../components/responses/Unauthorized.yaml
-      '403':
-        $ref: ../components/responses/Forbidden.yaml
-      '404':
-        $ref: ../components/responses/NotFound.yaml
-      '422':
-        $ref: ../components/responses/UnprocessableEntity.yaml
-/v3/spaces/{guid}/routes:
-  delete:
-    summary: Delete unmapped routes for a space
-    description: Deletes all routes in a space that are not mapped to any applications and not bound to any service instances.
-    operationId: deleteUnmappedRoutesForSpace
-    tags:
-      - Routes
-    parameters:
-      - $ref: ../components/parameters/Guid.yaml
-    responses:
-      '204':
-        description: Successfully deleted unmapped routes from the space
       '401':
         $ref: ../components/responses/Unauthorized.yaml
       '403':

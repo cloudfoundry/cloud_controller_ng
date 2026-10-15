@@ -1,18 +1,17 @@
 /v3/audit_events:
   get:
     summary: List audit events
-    description: Retrieve all audit events the user has access to.
+    description: |-
+      Retrieve all audit events the user has access to.
+
+      **Permitted roles:** Admin, Admin Read-Only, Global Auditor, Org Auditor, Org Manager, Space Auditor, Space Developer, Space Manager, Space Supporter
     operationId: listAuditEvents
     tags:
       - Audit Events
     parameters:
-      - $ref: ../components/parameters/Page.yaml
-      - $ref: ../components/parameters/PerPage.yaml
-      - $ref: ../components/parameters/OrderBy.yaml
-      - $ref: ../components/parameters/CreatedAts.yaml
-      - $ref: ../components/parameters/UpdatedAts.yaml
       - name: types
         in: query
+        required: false
         schema:
           type: array
           items:
@@ -20,6 +19,8 @@
             enum:
               - audit.app.apply_manifest
               - audit.app.build.create
+              - audit.app.build.failed
+              - audit.app.build.staged
               - audit.app.copy-bits
               - audit.app.create
               - audit.app.delete-request
@@ -60,15 +61,26 @@
               - audit.app.unmap-route
               - audit.app.update
               - audit.app.upload-bits
+              - audit.buildpack.create
+              - audit.buildpack.delete
+              - audit.buildpack.update
+              - audit.buildpack.upload
               - audit.organization.create
               - audit.organization.delete-request
               - audit.organization.update
+              - audit.organization_quota.apply
+              - audit.organization_quota.create
+              - audit.organization_quota.delete
+              - audit.organization_quota.update
               - audit.route.create
               - audit.route.delete-request
               - audit.route.share
               - audit.route.transfer-owner
               - audit.route.unshare
               - audit.route.update
+              - audit.route_policy.create
+              - audit.route_policy.delete
+              - audit.route_policy.update
               - audit.service.create
               - audit.service.delete
               - audit.service.update
@@ -115,6 +127,14 @@
               - audit.space.create
               - audit.space.delete-request
               - audit.space.update
+              - audit.space_quota.apply
+              - audit.space_quota.create
+              - audit.space_quota.delete
+              - audit.space_quota.remove
+              - audit.space_quota.update
+              - audit.stack.create
+              - audit.stack.delete
+              - audit.stack.update
               - audit.user.organization_auditor_add
               - audit.user.organization_auditor_remove
               - audit.user.organization_billing_manager_add
@@ -140,13 +160,15 @@
         description: Comma-delimited list of event types to filter by
       - name: target_guids
         in: query
+        required: false
         schema:
           type: array
           items:
             type: string
-        description: Comma-delimited list of target guids to filter by. Also supports filtering by exclusion.
+        description: Comma-delimited list of target guids to filter by. Also supports [filtering by exclusion](#exclusion-operator), for example `target_guids[not]=guid-1,guid-2`
       - name: space_guids
         in: query
+        required: false
         schema:
           type: array
           items:
@@ -154,11 +176,39 @@
         description: Comma-delimited list of space guids to filter by
       - name: organization_guids
         in: query
+        required: false
         schema:
           type: array
           items:
             type: string
         description: Comma-delimited list of organization guids to filter by
+      - $ref: ../components/parameters/Page.yaml
+      - $ref: ../components/parameters/PerPage.yaml
+      - name: order_by
+        in: query
+        required: false
+        schema:
+          type: string
+          enum:
+            - created_at
+            - -created_at
+            - updated_at
+            - -updated_at
+        description: Value to sort by. Defaults to ascending; prepend with `-` to sort descending. Valid values are `created_at`, `updated_at`
+      - name: created_ats
+        in: query
+        required: false
+        schema:
+          type: string
+        description: Timestamp to filter by. When filtering on equality, several comma-delimited timestamps may be passed. Also supports filtering with [relational operators](#relational-operators), for example `created_ats[gt]`, `created_ats[gte]`, `created_ats[lt]` and `created_ats[lte]`
+        example: '2021-01-01T00:00:00Z'
+      - name: updated_ats
+        in: query
+        required: false
+        schema:
+          type: string
+        description: Timestamp to filter by. When filtering on equality, several comma-delimited timestamps may be passed. Also supports filtering with [relational operators](#relational-operators), for example `updated_ats[gt]`, `updated_ats[gte]`, `updated_ats[lt]` and `updated_ats[lte]`
+        example: '2021-01-01T00:00:00Z'
     responses:
       '200':
         description: OK
@@ -174,9 +224,9 @@
                     total_results: 1
                     total_pages: 1
                     first:
-                      href: https://api.example.org?page=1&per_page=2
+                      href: https://api.example.org/v3/audit_events?page=1&per_page=2
                     last:
-                      href: https://api.example.org?page=1&per_page=2
+                      href: https://api.example.org/v3/audit_events?page=1&per_page=2
                     next: null
                     previous: null
                   resources:
@@ -201,7 +251,7 @@
                         guid: 123e4567-e89b-12d3-a456-426614174000
                       links:
                         self:
-                          href: https://api.example.org//a595fe2f-01ff-4965-a50c-290258ab8582
+                          href: https://api.example.org/v3/audit_events/a595fe2f-01ff-4965-a50c-290258ab8582
       '400':
         $ref: ../components/responses/BadRequest.yaml
       '401':
@@ -221,12 +271,21 @@
 /v3/audit_events/{guid}:
   get:
     summary: Get an audit event
-    description: Retrieve a specific audit event.
+    description: |-
+      Retrieve a specific audit event.
+
+      **Permitted roles:** Admin, Admin Read-Only, Global Auditor, Org Auditor *(cannot see events which occurred in orgs that the user does not belong to)*, Space Auditor *(cannot see events which occurred in spaces that the user does not belong to)*, Space Developer *(cannot see events which occurred in spaces that the user does not belong to)*, Space Supporter *(cannot see events which occurred in spaces that the user does not belong to)*
     operationId: getAuditEvent
     tags:
       - Audit Events
     parameters:
-      - $ref: ../components/parameters/Guid.yaml
+      - name: guid
+        in: path
+        required: true
+        schema:
+          type: string
+          format: uuid
+        description: The unique identifier for the audit event
     responses:
       '200':
         description: OK
