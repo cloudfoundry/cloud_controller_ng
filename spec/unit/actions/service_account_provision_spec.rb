@@ -103,6 +103,49 @@ module VCAP::CloudController
         action.provision(account)
         expect(account.reload.status).to eq('ready')
       end
+
+      it 'migrates its own inline-CA registration to the reference, clearing the inline CA' do
+        allow(clients).to receive(:get).and_return(registration)
+        expect(clients).not_to receive(:add)
+        expect(clients).to receive(:put).with(:client, referenced.merge('tls-client-auth-ca' => nil))
+        action.provision(account)
+        expect(account.reload.status).to eq('ready')
+      end
+
+      it 'deletes its own registration with a drifted trust anchor when disabling' do
+        account.update(enabled: false)
+        allow(clients).to receive(:get).and_return(registration)
+        expect(clients).to receive(:delete).with(:client, account.client_id)
+        action.deprovision(account)
+        expect(account.reload.status).to eq('disabled')
+      end
+
+      it 'does not adopt an unmarked client that differs only in trust anchor' do
+        allow(clients).to receive(:get).and_return(registration.except('cf_service_account_guid'))
+        expect(clients).not_to receive(:put)
+        expect { action.provision(account) }.to raise_error(/client identity collision/)
+        expect(account.reload.status).to eq('failed')
+      end
+
+      it 'does not adopt a marked client that also differs in other policy' do
+        allow(clients).to receive(:get).and_return(registration.merge('authorities' => %w[cloud_controller.admin]))
+        expect(clients).not_to receive(:put)
+        expect { action.provision(account) }.to raise_error(/client identity collision/)
+      end
+    end
+
+    it 'updates its own registration when the configured inline CA bundle changes' do
+      allow(clients).to receive(:get).and_return(registration.merge('tls-client-auth-ca' => 'previous-ca'))
+      expect(clients).to receive(:put).with(:client, registration.merge('tls-client-auth-ca-ref' => nil))
+      action.provision(account)
+      expect(account.reload.status).to eq('ready')
+    end
+
+    it 'migrates its own referenced registration back to inline CA certificates' do
+      allow(clients).to receive(:get).and_return(registration.except('tls-client-auth-ca').merge('tls-client-auth-ca-ref' => 'diego-instance-identity'))
+      expect(clients).to receive(:put).with(:client, registration.merge('tls-client-auth-ca-ref' => nil))
+      action.provision(account)
+      expect(account.reload.status).to eq('ready')
     end
 
     [{}, { identity_ca: 'trusted-ca', identity_ca_ref: 'diego-instance-identity' }, { identity_ca: ' ' }, { identity_ca_ref: '' }].each do |trust|
@@ -127,6 +170,20 @@ module VCAP::CloudController
         action.provision(account)
 
         expect(creation).to have_been_requested.once
+        expect(account.reload.status).to eq('ready')
+      end
+
+      it 'sends an explicit null to clear the replaced trust anchor in UAA' do
+        WebMock::API.stub_request(:get, client_url).
+          to_return(headers: response_headers, body: registration.merge('tls-client-auth-ca' => 'previous-ca').to_json)
+        update = WebMock::API.stub_request(:put, client_url).with do |request|
+          payload = Oj.load(request.body)
+          payload['tls-client-auth-ca'] == 'trusted-ca' && payload.key?('tls-client-auth-ca-ref') && payload['tls-client-auth-ca-ref'].nil?
+        end.to_return(headers: response_headers, body: registration.to_json)
+
+        action.provision(account)
+
+        expect(update).to have_been_requested.once
         expect(account.reload.status).to eq('ready')
       end
 
