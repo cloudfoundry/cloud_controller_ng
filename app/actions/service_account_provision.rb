@@ -2,15 +2,13 @@ module VCAP::CloudController
   class ServiceAccountProvision
     class Conflict < StandardError; end
 
-    TRUST_KEYS = %w[tls-client-auth-ca tls-client-auth-ca-ref].freeze
-
-    def initialize(clients, identity_ca: nil, identity_ca_ref: nil)
-      trust = { 'tls-client-auth-ca' => identity_ca, 'tls-client-auth-ca-ref' => identity_ca_ref }.compact_blank
-      raise ArgumentError.new('exactly one of identity_ca or identity_ca_ref must be configured') unless trust.size == 1
+    # identity_ca_ref names an operator-defined UAA trust bundle containing the instance identity CA.
+    # CA rotation changes the bundle's contents in UAA; registered clients never change.
+    def initialize(clients, identity_ca_ref:)
+      raise ArgumentError.new('identity_ca_ref must name a UAA trust bundle') if identity_ca_ref.blank?
 
       @clients = clients
-      # Inline PEM, or the name of an operator-defined UAA trust bundle (rotated in UAA without client updates).
-      @trust = trust
+      @identity_ca_ref = identity_ca_ref
     end
 
     def provision(account)
@@ -26,13 +24,10 @@ module VCAP::CloudController
 
             desired = registration(account)
             existing = existing_client(account.client_id)
-            if existing.nil?
+            if existing
+              raise Conflict.new('client identity collision') unless matching_registration?(existing, desired)
+            else
               @clients.add(:client, desired)
-            elsif !matching_registration?(existing, desired)
-              raise Conflict.new('client identity collision') unless trust_anchor_drift_only?(existing, desired)
-
-              # UAA merges client updates: clear the replaced trust setting explicitly.
-              @clients.put(:client, desired.merge((TRUST_KEYS - desired.keys).index_with(nil)))
             end
 
             User.create(guid: account.client_id, is_oauth_client: true, active: true) unless principal
@@ -62,7 +57,7 @@ module VCAP::CloudController
 
             existing = existing_client(account.client_id)
             if existing
-              raise Conflict.new('client identity collision') unless owned_client?(existing, registration(account))
+              raise Conflict.new('client identity collision') unless matching_registration?(existing, registration(account))
 
               @clients.delete(:client, account.client_id)
             end
@@ -82,17 +77,6 @@ module VCAP::CloudController
     end
 
     private
-
-    # A client carrying this account's marker whose only difference is its trust anchor (inline CA
-    # bundle changed, or switched between inline CA and a UAA trust bundle reference) is ours to update.
-    # Every other policy difference, or a missing marker, remains a collision.
-    def trust_anchor_drift_only?(existing, desired)
-      matching_registration?(existing.except(*TRUST_KEYS), desired.except(*TRUST_KEYS))
-    end
-
-    def owned_client?(existing, desired)
-      matching_registration?(existing, desired) || trust_anchor_drift_only?(existing, desired)
-    end
 
     def matching_registration?(existing, desired)
       tls_keys = existing.keys.select { |key| key.start_with?('tls-client-auth-', 'tls_client_auth_') }
@@ -122,11 +106,11 @@ module VCAP::CloudController
         'authorized_grant_types' => ['client_credentials'],
         'authorities' => %w[cloud_controller.read cloud_controller.write],
         'scope' => [],
-        'access_token_validity' => 300
-      }.merge(@trust).merge(
+        'access_token_validity' => 300,
+        'tls-client-auth-ca-ref' => @identity_ca_ref,
         'tls_client_auth_san_dns' => account.certificate_dns_san,
         'cf_service_account_guid' => account.guid
-      )
+      }
     end
   end
 end
