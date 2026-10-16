@@ -311,7 +311,9 @@ module CloudController
       return @dependencies[:service_account_provisioner] if @dependencies[:service_account_provisioner]
 
       settings = config.get(:service_account_provisioning)
-      unless settings.is_a?(Hash) && %i[client_id client_secret identity_ca].all? { |key| settings[key].is_a?(String) && settings[key].present? }
+      configured = ->(key) { settings[key].is_a?(String) && settings[key].present? }
+      unless settings.is_a?(Hash) && %i[client_id client_secret].all?(&configured) &&
+             %i[identity_ca identity_ca_ref].one?(&configured) && %i[identity_ca identity_ca_ref].none? { |key| settings.key?(key) && !configured.call(key) }
         raise 'service account provisioning is not configured'
       end
 
@@ -321,7 +323,8 @@ module CloudController
         secret: settings[:client_secret],
         ca_file: config.get(:uaa, :ca_file)
       )
-      register(:service_account_provisioner, ServiceAccountProvision.new(clients, identity_ca: settings[:identity_ca]))
+      register(:service_account_provisioner,
+               ServiceAccountProvision.new(clients, identity_ca: settings[:identity_ca], identity_ca_ref: settings[:identity_ca_ref]))
     end
 
     def uaa_shadow_user_creation_client

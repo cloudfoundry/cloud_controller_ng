@@ -2,9 +2,13 @@ module VCAP::CloudController
   class ServiceAccountProvision
     class Conflict < StandardError; end
 
-    def initialize(clients, identity_ca:)
+    def initialize(clients, identity_ca: nil, identity_ca_ref: nil)
+      trust = { 'tls-client-auth-ca' => identity_ca, 'tls-client-auth-ca-ref' => identity_ca_ref }.compact_blank
+      raise ArgumentError.new('exactly one of identity_ca or identity_ca_ref must be configured') unless trust.size == 1
+
       @clients = clients
-      @identity_ca = identity_ca
+      # Inline PEM, or the name of an operator-defined UAA trust bundle (rotated in UAA without client updates).
+      @trust = trust
     end
 
     def provision(account)
@@ -102,11 +106,11 @@ module VCAP::CloudController
         'authorized_grant_types' => ['client_credentials'],
         'authorities' => %w[cloud_controller.read cloud_controller.write],
         'scope' => [],
-        'access_token_validity' => 300,
-        'tls-client-auth-ca' => @identity_ca,
+        'access_token_validity' => 300
+      }.merge(@trust).merge(
         'tls_client_auth_san_dns' => account.certificate_dns_san,
         'cf_service_account_guid' => account.guid
-      }
+      )
     end
   end
 end
