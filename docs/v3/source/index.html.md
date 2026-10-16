@@ -29,6 +29,7 @@ includes:
   - api_resources/routes
   - api_resources/security_groups
   - api_resources/service_brokers
+  - api_resources/service_accounts
   - api_resources/service_offerings
   - api_resources/service_plans
   - api_resources/service_plan_visibility
