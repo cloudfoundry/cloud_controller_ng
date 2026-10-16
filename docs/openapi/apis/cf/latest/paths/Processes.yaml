@@ -236,8 +236,7 @@
                           - STARTING
                           - DOWN
                       since:
-                        type: number
-                        format: double
+                        type: integer
                 links:
                   type: object
                   properties:

@@ -15,7 +15,7 @@ properties:
     type: object
     properties:
       guid:
-        type: string
+        type: [string, "null"]
         description: Unique identifier of the app that this event pertains to, if applicable
       name:
         type: [string, "null"]
@@ -57,7 +57,7 @@ properties:
     type: object
     properties:
       guid:
-        type: string
+        type: [string, "null"]
         description: Unique identifier of the task that this event pertains to, if applicable
       name:
         type: [string, "null"]
