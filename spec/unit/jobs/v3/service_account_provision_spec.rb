@@ -6,7 +6,7 @@ module VCAP::CloudController
   RSpec.describe 'Service account provisioning job', job_context: :worker do
     let(:account) { ServiceAccountModel.create(name: 'payments-worker', space: create(:space)) }
     let(:clients) { instance_double(CF::UAA::Scim) }
-    let(:provisioner) { ServiceAccountProvision.new(clients, identity_ca: 'worker-only-ca') }
+    let(:provisioner) { ServiceAccountProvision.new(clients, identity_ca_ref: 'diego-instance-identity') }
     let(:locator) { CloudController::DependencyLocator.instance }
     let(:job) { Jobs::V3.const_get(:ServiceAccountProvision).new(account.guid) }
 

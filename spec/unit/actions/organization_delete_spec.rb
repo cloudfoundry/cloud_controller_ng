@@ -76,7 +76,7 @@ module VCAP::CloudController
         context 'service accounts' do
           let!(:account) { ServiceAccountModel.create(name: 'org-worker', space: space) }
           let(:clients) { instance_double(CF::UAA::Scim) }
-          let(:provisioner) { ServiceAccountProvision.new(clients, identity_ca: 'identity-ca') }
+          let(:provisioner) { ServiceAccountProvision.new(clients, identity_ca_ref: 'diego-instance-identity') }
 
           before do
             TestConfig.override(service_account_provisioning_enabled: true)
