@@ -60,6 +60,30 @@ module VCAP::CloudController
 
         expect(creation).to have_been_requested.once
       end
+
+      it 'updates an owned inline-CA client to the reference through the configured management client' do
+        WebMock::API.stub_request(:post, "#{uaa_url}/oauth/token").
+          to_return(headers: headers, body: { access_token: 'manager-token', token_type: 'bearer', expires_in: 300 }.to_json)
+        existing = {
+          client_id: account.client_id, authorized_grant_types: ['client_credentials'],
+          authorities: %w[cloud_controller.read cloud_controller.write], access_token_validity: 300,
+          'tls-client-auth-ca' => 'instance-identity-ca', tls_client_auth_san_dns: account.certificate_dns_san,
+          cf_service_account_guid: account.guid
+        }
+        WebMock::API.stub_request(:get, "#{uaa_url}/oauth/clients/#{account.client_id}").
+          to_return(headers: headers, body: existing.to_json)
+        update = WebMock::API.stub_request(:put, "#{uaa_url}/oauth/clients/#{account.client_id}").
+                 with(headers: { 'Authorization' => 'bearer manager-token' }) do |request|
+                   payload = Oj.load(request.body)
+                   payload['tls-client-auth-ca-ref'] == 'diego-instance-identity' &&
+                     payload.key?('tls-client-auth-ca') && payload['tls-client-auth-ca'].nil?
+                 end.to_return(headers: headers, body: existing.to_json)
+
+        locator.service_account_provisioner.provision(account)
+
+        expect(update).to have_been_requested.once
+        expect(account.reload.status).to eq('ready')
+      end
     end
 
     it 'fails closed when both inline CA certificates and a bundle reference are configured' do
