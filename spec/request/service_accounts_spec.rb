@@ -250,7 +250,7 @@ RSpec.describe 'Service accounts' do
   context 'account lifecycle' do
     let(:account) { VCAP::CloudController::ServiceAccountModel.create(name: 'payments-worker', space: space) }
     let(:clients) { instance_double(CF::UAA::Scim) }
-    let(:provisioner) { VCAP::CloudController::ServiceAccountProvision.new(clients, identity_ca: 'identity-ca') }
+    let(:provisioner) { VCAP::CloudController::ServiceAccountProvision.new(clients, identity_ca_ref: 'diego-instance-identity') }
     let(:account_path) { "/v3/service_accounts/#{account.guid}" }
 
     before do

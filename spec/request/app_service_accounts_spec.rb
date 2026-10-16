@@ -78,7 +78,7 @@ RSpec.describe 'App service account relationship' do
       TestConfig.override(service_account_provisioning_enabled: true)
       CloudController::DependencyLocator.instance.register(
         :service_account_provisioner,
-        VCAP::CloudController::ServiceAccountProvision.new(clients, identity_ca: 'identity-ca')
+        VCAP::CloudController::ServiceAccountProvision.new(clients, identity_ca_ref: 'diego-instance-identity')
       )
       account.update(status: 'reserved')
       allow(clients).to receive(:get).and_raise(CF::UAA::NotFound)

@@ -10,7 +10,7 @@ RSpec.describe 'Explicit service account resource roles' do
   before do
     allow(clients).to receive(:get).and_raise(CF::UAA::NotFound)
     allow(clients).to receive(:add)
-    VCAP::CloudController::ServiceAccountProvision.new(clients, identity_ca: 'identity-ca').provision(account)
+    VCAP::CloudController::ServiceAccountProvision.new(clients, identity_ca_ref: 'diego-instance-identity').provision(account)
     lookup = instance_double(VCAP::CloudController::UaaClient, usernames_for_ids: {})
     expect(lookup).not_to receive(:usernames_for_ids).with([principal.guid])
     allow(CloudController::DependencyLocator.instance).to receive(:uaa_username_lookup_client).and_return(lookup)

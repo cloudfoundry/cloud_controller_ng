@@ -5,7 +5,7 @@ module VCAP::CloudController
   RSpec.describe 'Service account provisioning' do
     let(:account) { ServiceAccountModel.create(name: 'payments-worker', space: create(:space)) }
     let(:clients) { instance_double(CF::UAA::Scim) }
-    let(:action) { VCAP::CloudController.const_get(:ServiceAccountProvision).new(clients, identity_ca: 'trusted-ca') }
+    let(:action) { VCAP::CloudController.const_get(:ServiceAccountProvision).new(clients, identity_ca_ref: 'diego-instance-identity') }
     let(:registration) do
       {
         'client_id' => account.client_id,
@@ -13,7 +13,7 @@ module VCAP::CloudController
         'authorities' => %w[cloud_controller.read cloud_controller.write],
         'scope' => [],
         'access_token_validity' => 300,
-        'tls-client-auth-ca' => 'trusted-ca',
+        'tls-client-auth-ca-ref' => 'diego-instance-identity',
         'tls_client_auth_san_dns' => account.certificate_dns_san,
         'cf_service_account_guid' => account.guid
       }
@@ -86,72 +86,35 @@ module VCAP::CloudController
       expect(account.reload.status).to eq('reserved')
     end
 
-    context 'when trust is configured as a UAA trust bundle reference' do
-      let(:action) { ServiceAccountProvision.new(clients, identity_ca_ref: 'diego-instance-identity') }
-      let(:referenced) { registration.except('tls-client-auth-ca').merge('tls-client-auth-ca-ref' => 'diego-instance-identity') }
-
-      it 'registers the bundle reference instead of inline CA certificates' do
-        allow(clients).to receive(:get).and_raise(CF::UAA::NotFound)
-        expect(clients).to receive(:add).with(:client, referenced)
-        action.provision(account)
-        expect(account.reload.status).to eq('ready')
+    it 'never registers inline CA certificates' do
+      allow(clients).to receive(:get).and_raise(CF::UAA::NotFound)
+      expect(clients).to receive(:add) do |_, payload|
+        expect(payload).not_to have_key('tls-client-auth-ca')
+        expect(payload['tls-client-auth-ca-ref']).to eq('diego-instance-identity')
       end
+      action.provision(account)
+    end
 
-      it 'reuses a matching referenced registration' do
-        allow(clients).to receive(:get).and_return(referenced)
+    [
+      { 'tls-client-auth-ca-ref' => 'previous-bundle' },
+      { 'tls-client-auth-ca-ref' => nil, 'tls-client-auth-ca' => 'inline-ca' }
+    ].each do |altered_trust|
+      it "refuses its own marked client with a different trust anchor (#{altered_trust.compact.keys.first})" do
+        allow(clients).to receive(:get).and_return(registration.merge(altered_trust).compact)
         expect(clients).not_to receive(:add)
-        action.provision(account)
-        expect(account.reload.status).to eq('ready')
-      end
-
-      it 'migrates its own inline-CA registration to the reference, clearing the inline CA' do
-        allow(clients).to receive(:get).and_return(registration)
-        expect(clients).not_to receive(:add)
-        expect(clients).to receive(:put).with(:client, referenced.merge('tls-client-auth-ca' => nil))
-        action.provision(account)
-        expect(account.reload.status).to eq('ready')
-      end
-
-      it 'deletes its own registration with a drifted trust anchor when disabling' do
-        account.update(enabled: false)
-        allow(clients).to receive(:get).and_return(registration)
-        expect(clients).to receive(:delete).with(:client, account.client_id)
-        action.deprovision(account)
-        expect(account.reload.status).to eq('disabled')
-      end
-
-      it 'does not adopt an unmarked client that differs only in trust anchor' do
-        allow(clients).to receive(:get).and_return(registration.except('cf_service_account_guid'))
-        expect(clients).not_to receive(:put)
         expect { action.provision(account) }.to raise_error(/client identity collision/)
         expect(account.reload.status).to eq('failed')
       end
-
-      it 'does not adopt a marked client that also differs in other policy' do
-        allow(clients).to receive(:get).and_return(registration.merge('authorities' => %w[cloud_controller.admin]))
-        expect(clients).not_to receive(:put)
-        expect { action.provision(account) }.to raise_error(/client identity collision/)
-      end
     end
 
-    it 'updates its own registration when the configured inline CA bundle changes' do
-      allow(clients).to receive(:get).and_return(registration.merge('tls-client-auth-ca' => 'previous-ca'))
-      expect(clients).to receive(:put).with(:client, registration.merge('tls-client-auth-ca-ref' => nil))
-      action.provision(account)
-      expect(account.reload.status).to eq('ready')
+    it 'only supports UAA trust bundle references' do
+      expect { ServiceAccountProvision.new(clients, identity_ca: 'inline-ca') }.to raise_error(ArgumentError)
     end
 
-    it 'migrates its own referenced registration back to inline CA certificates' do
-      allow(clients).to receive(:get).and_return(registration.except('tls-client-auth-ca').merge('tls-client-auth-ca-ref' => 'diego-instance-identity'))
-      expect(clients).to receive(:put).with(:client, registration.merge('tls-client-auth-ca-ref' => nil))
-      action.provision(account)
-      expect(account.reload.status).to eq('ready')
-    end
-
-    [{}, { identity_ca: 'trusted-ca', identity_ca_ref: 'diego-instance-identity' }, { identity_ca: ' ' }, { identity_ca_ref: '' }].each do |trust|
-      it "requires exactly one nonblank trust setting (#{trust.keys.join(', ').presence || 'none'})" do
-        expect { ServiceAccountProvision.new(clients, **trust) }.
-          to raise_error(ArgumentError, /exactly one of identity_ca or identity_ca_ref/)
+    [nil, '', ' '].each do |reference|
+      it "requires a nonblank trust bundle reference (#{reference.inspect})" do
+        expect { ServiceAccountProvision.new(clients, identity_ca_ref: reference) }.
+          to raise_error(ArgumentError, /identity_ca_ref must name a UAA trust bundle/)
       end
     end
 
@@ -170,20 +133,6 @@ module VCAP::CloudController
         action.provision(account)
 
         expect(creation).to have_been_requested.once
-        expect(account.reload.status).to eq('ready')
-      end
-
-      it 'sends an explicit null to clear the replaced trust anchor in UAA' do
-        WebMock::API.stub_request(:get, client_url).
-          to_return(headers: response_headers, body: registration.merge('tls-client-auth-ca' => 'previous-ca').to_json)
-        update = WebMock::API.stub_request(:put, client_url).with do |request|
-          payload = Oj.load(request.body)
-          payload['tls-client-auth-ca'] == 'trusted-ca' && payload.key?('tls-client-auth-ca-ref') && payload['tls-client-auth-ca-ref'].nil?
-        end.to_return(headers: response_headers, body: registration.to_json)
-
-        action.provision(account)
-
-        expect(update).to have_been_requested.once
         expect(account.reload.status).to eq('ready')
       end
 
