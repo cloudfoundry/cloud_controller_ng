@@ -1,4 +1,5 @@
 require 'presenters/v3/app_manifest_presenter'
+require 'presenters/helpers/censorship'
 require 'messages/app_manifest_message'
 require 'json-diff'
 
@@ -9,6 +10,8 @@ module VCAP::CloudController
       'routes' => 'route',
       'sidecars' => 'name'
     }.freeze
+
+    REDACTED_KEYS = %w[credentials cnb-credentials].freeze
 
     class << self
       # rubocop:todo Metrics/CyclomaticComplexity
@@ -56,6 +59,8 @@ module VCAP::CloudController
             # To preserve backwards compability, we've decided to skip diffs that satisfy this conditon
             next if !nested_attribute_exists && %w[disk_quota disk-quota memory].include?(key)
 
+            value = obfuscate_buildpack_urls(value) if %w[buildpack buildpacks].include?(key)
+
             key_diffs = JsonDiff.diff(
               existing_value,
               value,
@@ -68,6 +73,8 @@ module VCAP::CloudController
 
               diff['op'] = 'add' if diff['op'] == 'replace' && diff['was'].nil?
 
+              redact_credentials(diff) if REDACTED_KEYS.include?(key)
+
               json_diff << diff
             end
           end
@@ -78,6 +85,18 @@ module VCAP::CloudController
       end
 
       private
+
+      def redact_credentials(diff)
+        diff['value'] = Presenters::Censorship::PRIVATE_DATA_HIDDEN if diff.key?('value')
+        diff['was'] = Presenters::Censorship::PRIVATE_DATA_HIDDEN if diff.key?('was')
+      end
+
+      def obfuscate_buildpack_urls(buildpacks)
+        return CloudController::UrlSecretObfuscator.obfuscate(buildpacks) if buildpacks.is_a?(String)
+        return buildpacks unless buildpacks.is_a?(Array)
+
+        buildpacks.map { |bp| bp.is_a?(String) ? CloudController::UrlSecretObfuscator.obfuscate(bp) : bp }
+      end
 
       # rubocop:todo Metrics/CyclomaticComplexity
       def filter_manifest_app_hash(manifest_app_hash)

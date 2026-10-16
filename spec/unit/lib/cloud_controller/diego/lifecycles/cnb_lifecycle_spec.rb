@@ -103,6 +103,20 @@ module VCAP::CloudController
         end
       end
 
+      context 'when the user explicitly clears credentials with null' do
+        let(:app) { create(:app_model, :cnb, name: 'some-app', space: create(:space)) }
+        let(:request_data) { { credentials: nil } }
+
+        before do
+          app.lifecycle_data.update(credentials: '{"auth": {}}')
+        end
+
+        it 'does not fall back to the stored credentials' do
+          data_model = cnb_lifecycle.create_lifecycle_data_model(create(:build_model, :cnb))
+          expect(data_model.credentials).to be_nil
+        end
+      end
+
       context 'when the user specifies a stack' do
         let(:request_data) do
           { stack: 'cool-stack' }
@@ -168,7 +182,8 @@ module VCAP::CloudController
     end
 
     describe '#buildpack_infos' do
-      let(:stubbed_data) { { stack: app.lifecycle_data.stack, buildpack_infos: [instance_double(BuildpackInfo)] } }
+      let(:buildpack_info_double) { instance_double(BuildpackInfo, buildpack_url: nil) }
+      let(:stubbed_data) { { stack: app.lifecycle_data.stack, buildpack_infos: [buildpack_info_double] } }
       let(:request_data) do
         {
           buildpacks: %w[cool-buildpack docker://rad-buildpack]

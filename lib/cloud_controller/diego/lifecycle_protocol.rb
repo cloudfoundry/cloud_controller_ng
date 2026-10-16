@@ -34,8 +34,12 @@ module VCAP::CloudController
         lifecycle_data.build_artifacts_cache_download_uri = @blobstore_url_generator.buildpack_cache_download_url(staging_details.package.app_guid, stack)
         lifecycle_data.build_artifacts_cache_upload_uri   = @blobstore_url_generator.buildpack_cache_upload_url(staging_details.package.app_guid, stack)
         lifecycle_data.droplet_upload_uri                 = @blobstore_url_generator.droplet_upload_url(staging_details.staging_guid)
-        lifecycle_data.buildpacks                         = @buildpack_entry_generator.buildpack_entries(staging_details.lifecycle.buildpack_infos, stack)
-        lifecycle_data.stack                              = stack
+        lifecycle_data.buildpacks                         = @buildpack_entry_generator.buildpack_entries(
+          staging_details.lifecycle.buildpack_infos,
+          stack,
+          credentials: url_credentials_for_staging(staging_details)
+        )
+        lifecycle_data.stack = stack
 
         lifecycle_data.message
       rescue Membrane::SchemaValidationError => e
@@ -43,6 +47,11 @@ module VCAP::CloudController
 
         logger.error "app_bits_download_uri is nil for package #{staging_details.package.guid}"
         raise InvalidDownloadUri.new("Failed to get blobstore download url for package #{staging_details.package.guid}")
+      end
+
+      # Buildpack lifecycle injects these into custom buildpack URLs; CNB returns nil (uses CNB_REGISTRY_CREDS).
+      def url_credentials_for_staging(staging_details)
+        staging_details.lifecycle.credentials_for_staging
       end
 
       private

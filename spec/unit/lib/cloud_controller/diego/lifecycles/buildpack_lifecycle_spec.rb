@@ -156,8 +156,33 @@ module VCAP::CloudController
       end
     end
 
+    describe '#credentials_for_staging' do
+      let(:app) { AppModel.create(name: 'some-app', space: create(:space), lifecycle_type: 'buildpack') }
+      let!(:package) { create(:package_model, type: PackageModel::BITS_TYPE, app: app) }
+
+      context 'when the app has stored credentials and the staging message has none' do
+        let(:request_data) { {} }
+
+        before do
+          app.buildpack_lifecycle_data = BuildpackLifecycleDataModel.create(
+            app: app,
+            buildpacks: ['https://git.example.com/greendale/community-buildpack'],
+            stack: Stack.default.name,
+            credentials: { 'git.example.com' => { 'username' => 'user', 'password' => 'sekret' } }
+          )
+          app.save
+          app.reload
+        end
+
+        it 'reads the stored credentials from the app lifecycle data' do
+          expect(buildpack_lifecycle.credentials_for_staging).to eq({ 'git.example.com' => { 'username' => 'user', 'password' => 'sekret' } })
+        end
+      end
+    end
+
     describe '#buildpack_infos' do
-      let(:stubbed_data) { { stack: Stack.default.name, buildpack_infos: [instance_double(BuildpackInfo)] } }
+      let(:buildpack_info_double) { instance_double(BuildpackInfo, buildpack_url: nil) }
+      let(:stubbed_data) { { stack: Stack.default.name, buildpack_infos: [buildpack_info_double] } }
       let(:request_data) do
         {
           buildpacks: %w[cool-buildpack rad-buildpack]
@@ -177,7 +202,7 @@ module VCAP::CloudController
 
     describe 'validation' do
       let(:validator) { instance_double(BuildpackLifecycleDataValidator) }
-      let(:stubbed_fetcher_data) { { stack: 'foo', buildpack_infos: 'bar' } }
+      let(:stubbed_fetcher_data) { { stack: 'foo', buildpack_infos: [] } }
 
       before do
         allow(validator).to receive(:valid?)
@@ -190,7 +215,12 @@ module VCAP::CloudController
       it 'constructs the validator correctly' do
         buildpack_lifecycle.valid?
 
-        expect(BuildpackLifecycleDataValidator).to have_received(:new).with(buildpack_infos: 'bar', stack: 'foo')
+        expect(BuildpackLifecycleDataValidator).to have_received(:new).with(
+          buildpack_infos: [],
+          stack: 'foo',
+          credentials: nil,
+          credentials_from_message: false
+        )
       end
 
       it 'delegates #valid? to a BuildpackLifecycleDataValidator' do

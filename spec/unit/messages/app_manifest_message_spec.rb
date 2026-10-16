@@ -1395,6 +1395,20 @@ module VCAP::CloudController
         end
       end
 
+      context 'when "credentials" key is present' do
+        let(:parsed_yaml) do
+          {
+            'credentials' => { 'example.org' => { 'username' => 'foo', 'password' => 'bar' } }
+          }
+        end
+
+        it 'redacts the credentials' do
+          message = AppManifestMessage.create_from_yml(parsed_yaml)
+
+          expect(message.audit_hash).to eq('credentials' => '[PRIVATE DATA HIDDEN]')
+        end
+      end
+
       context 'when "buildpack" contains credentials in the URL' do
         let(:parsed_yaml) do
           {
@@ -2178,6 +2192,71 @@ module VCAP::CloudController
               expect(message.app_update_message.buildpack_data.stack).to eq(stack.name)
               expect(message.app_update_message.buildpack_data.credentials).to eq({ registry: { username: 'password' } })
             end
+          end
+
+          context 'when the generic credentials key is specified' do
+            let(:parsed_yaml) { { name: 'cnb', lifecycle: 'cnb', buildpacks: %w[nodejs java], stack: stack.name, credentials: { registry: { username: 'password' } } } }
+
+            it 'adds credentials to the lifecycle_data' do
+              message = AppManifestMessage.create_from_yml(parsed_yaml)
+
+              expect(message).to be_valid
+              expect(message.app_update_message.buildpack_data.credentials).to eq({ registry: { username: 'password' } })
+            end
+          end
+
+          context 'when the credentials key is explicitly null' do
+            let(:parsed_yaml) { { name: 'cnb', lifecycle: 'cnb', buildpacks: %w[nodejs java], stack: stack.name, credentials: nil } }
+
+            it 'requests credentials with a nil value so stored credentials are cleared' do
+              message = AppManifestMessage.create_from_yml(parsed_yaml)
+
+              expect(message).to be_valid
+              expect(message.app_update_message.buildpack_data.requested?(:credentials)).to be(true)
+              expect(message.app_update_message.buildpack_data.credentials).to be_nil
+            end
+          end
+
+          context 'when both credentials and cnb-credentials are specified' do
+            let(:parsed_yaml) do
+              { name: 'cnb', lifecycle: 'cnb', buildpacks: %w[nodejs java], stack: stack.name,
+                credentials: { registry: { username: 'a' } }, cnb_credentials: { registry: { username: 'b' } } }
+            end
+
+            it 'is invalid' do
+              message = AppManifestMessage.create_from_yml(parsed_yaml)
+
+              expect(message).not_to be_valid
+              expect(message.errors.full_messages).to include('Cannot specify both credentials and cnb-credentials keys')
+            end
+          end
+        end
+
+        context 'when buildpack lifecycle and credentials key is specified' do
+          let(:parsed_yaml) do
+            { name: 'app', lifecycle: 'buildpack', buildpacks: ['ruby_buildpack'], stack: stack.name,
+              credentials: { 'git.example.com' => { username: 'user', password: 'secret' } } }
+          end
+
+          it 'adds credentials to the lifecycle_data' do
+            message = AppManifestMessage.create_from_yml(parsed_yaml)
+
+            expect(message).to be_valid
+            expect(message.app_update_message.buildpack_data.credentials).to eq({ 'git.example.com': { username: 'user', password: 'secret' } })
+          end
+        end
+
+        context 'when buildpack lifecycle and credentials key is explicitly null' do
+          let(:parsed_yaml) do
+            { name: 'app', lifecycle: 'buildpack', buildpacks: ['ruby_buildpack'], stack: stack.name, credentials: nil }
+          end
+
+          it 'requests credentials with a nil value so stored credentials are cleared' do
+            message = AppManifestMessage.create_from_yml(parsed_yaml)
+
+            expect(message).to be_valid
+            expect(message.app_update_message.buildpack_data.requested?(:credentials)).to be(true)
+            expect(message.app_update_message.buildpack_data.credentials).to be_nil
           end
         end
 

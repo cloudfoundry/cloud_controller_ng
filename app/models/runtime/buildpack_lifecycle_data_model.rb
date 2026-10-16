@@ -9,6 +9,9 @@ module VCAP::CloudController
     LIFECYCLE_TYPE = Lifecycles::BUILDPACK
 
     set_field_as_encrypted :buildpack_url, salt: :encrypted_buildpack_url_salt, column: :encrypted_buildpack_url
+    set_field_as_encrypted :credentials_json,
+                           salt: :encrypted_credentials_json_salt,
+                           column: :encrypted_credentials_json
 
     many_to_one :droplet,
                 class: '::VCAP::CloudController::DropletModel',
@@ -85,11 +88,23 @@ module VCAP::CloudController
       buildpack_lifecycle_buildpacks.find(&:custom?)&.buildpack_url || legacy_buildpack_url
     end
 
+    def credentials
+      return unless credentials_json
+
+      Oj.load(credentials_json)
+    end
+
+    def credentials=(creds)
+      self.credentials_json = creds.nil? ? nil : Oj.dump(creds)
+    end
+
     def to_hash
-      {
+      hash = {
         buildpacks: obfuscated_buildpacks,
         stack: stack
       }
+      hash[:credentials] = Presenters::Censorship::REDACTED_CREDENTIAL unless credentials.nil?
+      hash
     end
 
     def validate

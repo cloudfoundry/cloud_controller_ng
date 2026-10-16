@@ -1,3 +1,5 @@
+require 'presenters/helpers/censorship'
+
 module VCAP::CloudController
   module Presenters
     module V3
@@ -7,8 +9,9 @@ module VCAP::CloudController
             return {} if app.docker?
 
             {
-              buildpacks: app.lifecycle_data.buildpacks.presence,
-              stack: app.lifecycle_data.stack
+              buildpacks: app.lifecycle_data.obfuscated_buildpacks.presence,
+              stack: app.lifecycle_data.stack,
+              credentials: app.lifecycle_data.credentials.nil? ? nil : Presenters::Censorship::REDACTED_CREDENTIAL
             }
           end
         end
