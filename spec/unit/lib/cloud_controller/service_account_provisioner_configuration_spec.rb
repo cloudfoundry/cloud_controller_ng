@@ -20,20 +20,56 @@ module VCAP::CloudController
     end
 
     it 'validates provisioning configuration for API-hosted local workers too' do
-      api_config = Config.read_file('config/cloud_controller.yml').merge(service_account_provisioning: settings.except(:identity_ca))
-      expect { ConfigSchemas::ApiSchema.validate(api_config) }.to raise_error(Membrane::SchemaValidationError, /identity_ca => Missing key/)
+      api_config = Config.read_file('config/cloud_controller.yml').merge(service_account_provisioning: settings.except(:client_id))
+      expect { ConfigSchemas::ApiSchema.validate(api_config) }.to raise_error(Membrane::SchemaValidationError, /client_id => Missing key/)
     end
 
-    %i[client_id client_secret identity_ca].each do |key|
+    %i[client_id client_secret].each do |key|
       it "rejects worker configuration missing #{key}" do
         worker_config[:service_account_provisioning] = settings.except(key)
         expect { ConfigSchemas::WorkerSchema.validate(worker_config) }.to raise_error(Membrane::SchemaValidationError, /#{key} => Missing key/)
       end
+    end
 
+    %i[client_id client_secret identity_ca].each do |key|
       it "fails closed before authentication with blank #{key}" do
         TestConfig.override(service_account_provisioning: settings.merge(key => ' '))
         expect { locator.service_account_provisioner }.to raise_error(/service account provisioning is not configured/)
       end
+    end
+
+    context 'with a UAA trust bundle reference instead of inline CA certificates' do
+      let(:settings) { { client_id: 'account-manager', client_secret: 'manager-secret', identity_ca_ref: 'diego-instance-identity' } }
+
+      it 'accepts the reference in worker and API configuration' do
+        expect { ConfigSchemas::WorkerSchema.validate(worker_config) }.not_to raise_error
+        api_config = Config.read_file('config/cloud_controller.yml').merge(service_account_provisioning: settings)
+        expect { ConfigSchemas::ApiSchema.validate(api_config) }.not_to raise_error
+      end
+
+      it 'registers account clients with the configured reference' do
+        WebMock::API.stub_request(:post, "#{uaa_url}/oauth/token").
+          to_return(headers: headers, body: { access_token: 'manager-token', token_type: 'bearer', expires_in: 300 }.to_json)
+        WebMock::API.stub_request(:get, "#{uaa_url}/oauth/clients/#{account.client_id}").to_return(status: 404)
+        creation = WebMock::API.stub_request(:post, "#{uaa_url}/oauth/clients").with do |request|
+          payload = Oj.load(request.body)
+          payload['tls-client-auth-ca-ref'] == 'diego-instance-identity' && !payload.key?('tls-client-auth-ca')
+        end.to_return(status: 201, headers: headers, body: { client_id: account.client_id }.to_json)
+
+        locator.service_account_provisioner.provision(account)
+
+        expect(creation).to have_been_requested.once
+      end
+    end
+
+    it 'fails closed when both inline CA certificates and a bundle reference are configured' do
+      TestConfig.override(service_account_provisioning: settings.merge(identity_ca_ref: 'diego-instance-identity'))
+      expect { locator.service_account_provisioner }.to raise_error(/service account provisioning is not configured/)
+    end
+
+    it 'fails closed when neither inline CA certificates nor a bundle reference are configured' do
+      TestConfig.override(service_account_provisioning: settings.except(:identity_ca))
+      expect { locator.service_account_provisioner }.to raise_error(/service account provisioning is not configured/)
     end
 
     it 'uses only the configured management credentials and instance identity CA' do

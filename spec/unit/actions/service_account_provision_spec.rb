@@ -86,6 +86,32 @@ module VCAP::CloudController
       expect(account.reload.status).to eq('reserved')
     end
 
+    context 'when trust is configured as a UAA trust bundle reference' do
+      let(:action) { ServiceAccountProvision.new(clients, identity_ca_ref: 'diego-instance-identity') }
+      let(:referenced) { registration.except('tls-client-auth-ca').merge('tls-client-auth-ca-ref' => 'diego-instance-identity') }
+
+      it 'registers the bundle reference instead of inline CA certificates' do
+        allow(clients).to receive(:get).and_raise(CF::UAA::NotFound)
+        expect(clients).to receive(:add).with(:client, referenced)
+        action.provision(account)
+        expect(account.reload.status).to eq('ready')
+      end
+
+      it 'reuses a matching referenced registration' do
+        allow(clients).to receive(:get).and_return(referenced)
+        expect(clients).not_to receive(:add)
+        action.provision(account)
+        expect(account.reload.status).to eq('ready')
+      end
+    end
+
+    [{}, { identity_ca: 'trusted-ca', identity_ca_ref: 'diego-instance-identity' }, { identity_ca: ' ' }, { identity_ca_ref: '' }].each do |trust|
+      it "requires exactly one nonblank trust setting (#{trust.keys.join(', ').presence || 'none'})" do
+        expect { ServiceAccountProvision.new(clients, **trust) }.
+          to raise_error(ArgumentError, /exactly one of identity_ca or identity_ca_ref/)
+      end
+    end
+
     context 'with the real UAA client library' do
       let(:uaa_url) { 'https://service-account-uaa.example.test' }
       let(:clients) { CF::UAA::Scim.new(uaa_url, 'bearer test-token') }
