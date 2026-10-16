@@ -32,7 +32,8 @@ module VCAP::CloudController
           optional(:service_account_provisioning) => {
             client_id: String,
             client_secret: String,
-            identity_ca: String
+            optional(:identity_ca) => String,
+            optional(:identity_ca_ref) => String
           },
           optional(:service_account_runtime_enabled) => bool,
           optional(:service_account_token_endpoint) => String,
