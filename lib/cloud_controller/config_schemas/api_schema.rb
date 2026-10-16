@@ -391,6 +391,12 @@ module VCAP::CloudController
             reset_interval_in_minutes: Integer
           },
 
+          optional(:concurrency_rate_limiter) => {
+            enabled: bool,
+            optional(:blocking_limit) => Integer,
+            optional(:logging_limit) => Integer
+          },
+
           optional(:temporary_enable_v2) => bool,
 
           optional(:temporary_enable_async_recursive_delete) => {

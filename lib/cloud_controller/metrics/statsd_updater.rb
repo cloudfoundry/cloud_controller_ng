@@ -2,9 +2,8 @@ require 'statsd/instrument'
 
 module VCAP::CloudController::Metrics
   class StatsdUpdater
-    def initialize(statsd=CloudController::DependencyLocator.instance.statsd_client, redis_connection_pool_size: nil)
+    def initialize(statsd=CloudController::DependencyLocator.instance.statsd_client)
       @statsd = statsd
-      @redis_connection_pool_size = redis_connection_pool_size
     end
 
     def update_deploying_count(deploying_count)
@@ -104,7 +103,7 @@ module VCAP::CloudController::Metrics
       return @store if defined?(@store)
 
       redis_socket = VCAP::CloudController::Config.config.get(:redis, :socket)
-      @store = redis_socket.nil? ? InMemoryStore.new : RedisStore.new(redis_socket, @redis_connection_pool_size)
+      @store = redis_socket.nil? ? InMemoryStore.new : RedisStore.new(redis_socket)
     end
 
     class InMemoryStore
@@ -127,8 +126,8 @@ module VCAP::CloudController::Metrics
     end
 
     class RedisStore
-      def initialize(socket, connection_pool_size)
-        connection_pool_size ||= VCAP::CloudController::Config.config.get(:puma, :max_threads) || 1
+      def initialize(socket)
+        connection_pool_size = VCAP::CloudController::Config.config.get(:puma, :max_threads) || 1
         @redis = ConnectionPool::Wrapper.new(size: connection_pool_size) do
           Redis.new(timeout: 1, path: socket)
         end
