@@ -7,6 +7,6 @@ RSpec.describe 'migration to change the delayed_jobs_reserve index', isolation: 
   end
 
   it 'succeeds' do
-    Sequel::Migrator.run(db, migrations_path, target: current_migration_index, allow_missing_migration_files: true)
+    run_migration
   end
 end

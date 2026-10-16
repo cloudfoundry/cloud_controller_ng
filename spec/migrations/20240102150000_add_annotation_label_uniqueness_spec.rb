@@ -66,7 +66,7 @@ RSpec.describe 'migration to add unique constraint to annotation and labels', is
       annotation.create(resource_guid: i5.guid, key_prefix: 'unique_prefix', key_name: key_f, value: 'v1')
 
       # Run migration once
-      expect { Sequel::Migrator.run(db, migrations_path, target: current_migration_index, allow_missing_migration_files: true) }.not_to raise_error
+      expect { run_migration }.not_to raise_error
 
       # Verify truncation behavior
       expect(trunc_a1.reload.key_name).to eq(truncated_key_name)
@@ -156,7 +156,7 @@ RSpec.describe 'migration to add unique constraint to annotation and labels', is
       label.create(resource_guid: i4.guid, key_prefix: 'unique_prefix', key_name: key_d, value: 'v1')
 
       # Run migration once
-      expect { Sequel::Migrator.run(db, migrations_path, target: current_migration_index, allow_missing_migration_files: true) }.not_to raise_error
+      expect { run_migration }.not_to raise_error
 
       # Verify duplicate removal (keeps smallest id)
       expect(label.where(resource_guid: i1.guid, key_name: key_a).count).to eq(2)
