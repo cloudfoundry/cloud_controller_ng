@@ -89,10 +89,8 @@ Bind/unbind return restart guidance and never restart the app automatically.
 
 Provisioning registers one canonical certificate-authenticated, secretless UAA
 client and creates a roleless OAuth principal with GUID equal to the client ID.
-Client collisions are rejected rather than overwritten/adopted. The one exception
-is a client carrying the account's GUID marker whose only difference is its trust
-anchor (changed inline CA bundle, or a switch between inline CA and a UAA trust
-bundle reference): it is updated in place, clearing the replaced setting. Transient worker
+Client collisions, including any registration difference, are rejected rather than
+overwritten/adopted. Transient worker
 failures expose `failed` state and retry up to three attempts. A later authorized
 bind can retry after the previous job has terminated. Unbind while provisioning
 does not cause the worker to restore an assignment.
@@ -141,11 +139,11 @@ BOSH properties under `cc.service_accounts`:
 - `token_endpoint`: HTTPS UAA mTLS endpoint without credentials/query/fragment.
 - Worker-only `management_client_id`, `management_client_secret`: dedicated UAA
   management credentials. Configure namespace protection independently in UAA.
-- Worker-only trust, exactly one of: `identity_ca_ref`, the name of an operator-defined
-  UAA trust bundle (`uaa.mtls.trust_bundles`) containing the instance identity CA,
-  preferred because CA rotation is then a UAA configuration change; or `identity_ca`,
-  the instance identity CA PEM copied into every registration. Existing clients are
-  updated when next provisioned (first bind or enable); there is no background sweep.
+- Worker-only `identity_ca_ref` (required): name of an operator-defined UAA trust
+  bundle (`uaa.mtls.trust_bundles`, UAA with named bundle support) containing the
+  instance identity CA. Clients reference the bundle; rotate the CA by changing the
+  bundle's contents in UAA (old+new, then new). Inline CA certificates are not
+  supported, and changing the configured bundle name makes existing clients collide.
 
 App-hosted local workers may receive equivalent `service_account_provisioning`
 configuration separately; the API BOSH template does not render management secrets.

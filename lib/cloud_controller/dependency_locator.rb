@@ -312,8 +312,8 @@ module CloudController
 
       settings = config.get(:service_account_provisioning)
       configured = ->(key) { settings[key].is_a?(String) && settings[key].present? }
-      unless settings.is_a?(Hash) && %i[client_id client_secret].all?(&configured) &&
-             %i[identity_ca identity_ca_ref].one?(&configured) && %i[identity_ca identity_ca_ref].none? { |key| settings.key?(key) && !configured.call(key) }
+      # Inline CA certificates are not supported: clients reference a UAA trust bundle.
+      unless settings.is_a?(Hash) && %i[client_id client_secret identity_ca_ref].all?(&configured) && !settings.key?(:identity_ca)
         raise 'service account provisioning is not configured'
       end
 
@@ -324,7 +324,7 @@ module CloudController
         ca_file: config.get(:uaa, :ca_file)
       )
       register(:service_account_provisioner,
-               ServiceAccountProvision.new(clients, identity_ca: settings[:identity_ca], identity_ca_ref: settings[:identity_ca_ref]))
+               ServiceAccountProvision.new(clients, identity_ca_ref: settings[:identity_ca_ref]))
     end
 
     def uaa_shadow_user_creation_client

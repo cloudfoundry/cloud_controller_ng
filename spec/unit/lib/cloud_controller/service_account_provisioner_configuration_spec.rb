@@ -29,9 +29,7 @@ module VCAP::CloudController
         worker_config[:service_account_provisioning] = settings.except(key)
         expect { ConfigSchemas::WorkerSchema.validate(worker_config) }.to raise_error(Membrane::SchemaValidationError, /#{key} => Missing key/)
       end
-    end
 
-    %i[client_id client_secret identity_ca_ref].each do |key|
       it "fails closed before authentication with blank #{key}" do
         TestConfig.override(service_account_provisioning: settings.merge(key => ' '))
         expect { locator.service_account_provisioner }.to raise_error(/service account provisioning is not configured/)
