@@ -41,6 +41,7 @@ Name | Type | Description
 **type** | _string_ | `buildpack`
 **data.buildpacks** | _list of strings_ | A list of the names of buildpacks, URLs from which they may be downloaded, or `null` to auto-detect a suitable buildpack during staging
 **data.stack** | _string_ | The root filesystem to use with the buildpack, for example `cflinuxfs4`
+**data.credentials** | _object_ | Credentials used to download custom buildpacks from private git repositories, keyed by host. Each entry is a username/password pair. If any buildpack URL embeds credentials, **data.credentials** must be empty; provide credentials in one place only.
 
 For records whose historical lifecycle data is no longer available,
 **data.buildpacks** may be an empty list and **data.stack** may be `null`.
@@ -83,7 +84,7 @@ Name | Type | Description
 ---- | ---- | -----------
 **type** | _string_ | `cnb`
 **data.buildpacks** | _list of strings_ | A list of URLs with either `docker://` or `http(s)://` scheme, pointing to the Cloud Native Buildpack OCI image. <br/>When the scheme is `http(s)://`, an OCI tarball is expected to be present at the specified location.
-**data.credentials** | _object_ | Credentials used to download the configured buildpacks. This can either contain username/password  or a token.
+**data.credentials** | _object_ | Credentials used to download the configured buildpacks, keyed by registry host. Each entry contains either a username/password pair or a token. CNB buildpack URLs must not embed credentials; use **data.credentials** instead.
 **data.stack** | _string_ | The root filesystem to use with the buildpack, for example `cflinuxfs4`
 
 For records whose historical lifecycle data is no longer available,

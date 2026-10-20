@@ -35,6 +35,15 @@ module UriUtils
       false
     end
 
+    def url_has_userinfo?(url)
+      return false unless url.is_a?(String)
+
+      uri = URI.parse(url)
+      uri.user.present? || uri.password.present?
+    rescue URI::InvalidURIError
+      false
+    end
+
     def is_uri_path?(candidate)
       !!(candidate.is_a?(String) && candidate =~ %r{^(?:/|/([^\s/]\S*)?)$})
     end

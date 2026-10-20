@@ -207,6 +207,7 @@ module VCAP::CloudController
 
         lifecycle_data['buildpack'] = CloudController::UrlSecretObfuscator.obfuscate(lifecycle_data['buildpack']) if lifecycle_data['buildpack']
         lifecycle_data['buildpacks'] = lifecycle_data['buildpacks'].map { |b| CloudController::UrlSecretObfuscator.obfuscate(b) } if lifecycle_data['buildpacks']
+        lifecycle_data['credentials'] = Presenters::Censorship::PRIVATE_DATA_HIDDEN if lifecycle_data.key?('credentials')
       end
     end
   end

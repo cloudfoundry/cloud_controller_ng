@@ -116,6 +116,77 @@ module VCAP::CloudController
             expect { buildpack_entry_generator.buildpack_entries(buildpack_infos, stack.name) }.to raise_error(/Unsupported buildpack type/)
           end
         end
+
+        context 'when credentials are provided and the custom buildpack host matches' do
+          let(:creds) { { 'git.example.com' => { 'username' => 'octocat', 'password' => 'hunter2' } } }
+          let(:custom_buildpack_info) { BuildpackInfo.new('https://git.example.com/acme/ruby-buildpack.git', nil) }
+          let(:buildpack_infos) { [custom_buildpack_info] }
+
+          it 'injects credentials into the custom buildpack URL as userinfo' do
+            result = buildpack_entry_generator.buildpack_entries(buildpack_infos, stack.name, credentials: creds)
+            expect(result.first[:url]).to eq('https://octocat:hunter2@git.example.com/acme/ruby-buildpack.git')
+            expect(result.first[:key]).to eq('https://octocat:hunter2@git.example.com/acme/ruby-buildpack.git')
+          end
+        end
+
+        context 'when the credentials come from a request message (symbol-keyed)' do
+          let(:message) do
+            BuildpackLifecycleDataMessage.new(credentials: { 'git.example.com' => { 'username' => 'octocat', 'password' => 'hunter2' } })
+          end
+          let(:custom_buildpack_info) { BuildpackInfo.new('https://git.example.com/acme/ruby-buildpack.git', nil) }
+          let(:buildpack_infos) { [custom_buildpack_info] }
+
+          it 'injects credentials despite the symbolized keys' do
+            result = buildpack_entry_generator.buildpack_entries(buildpack_infos, stack.name, credentials: message.credentials)
+            expect(result.first[:url]).to eq('https://octocat:hunter2@git.example.com/acme/ruby-buildpack.git')
+            expect(result.first[:key]).to eq('https://octocat:hunter2@git.example.com/acme/ruby-buildpack.git')
+          end
+        end
+
+        context 'when credentials are provided but no host matches' do
+          let(:creds) { { 'other.example.com' => { 'username' => 'u', 'password' => 'p' } } }
+          let(:custom_buildpack_info) { BuildpackInfo.new('https://git.example.com/acme/ruby-buildpack.git', nil) }
+          let(:buildpack_infos) { [custom_buildpack_info] }
+
+          it 'emits the URL without modification' do
+            result = buildpack_entry_generator.buildpack_entries(buildpack_infos, stack.name, credentials: creds)
+            expect(result.first[:url]).to eq('https://git.example.com/acme/ruby-buildpack.git')
+            expect(result.first[:key]).to eq('https://git.example.com/acme/ruby-buildpack.git')
+          end
+        end
+
+        context 'when a matching credential entry has no username' do
+          let(:creds) { { 'git.example.com' => { 'password' => 'p' } } }
+          let(:custom_buildpack_info) { BuildpackInfo.new('https://git.example.com/acme/ruby-buildpack.git', nil) }
+          let(:buildpack_infos) { [custom_buildpack_info] }
+
+          it 'emits the URL without modification' do
+            result = buildpack_entry_generator.buildpack_entries(buildpack_infos, stack.name, credentials: creds)
+            expect(result.first[:url]).to eq('https://git.example.com/acme/ruby-buildpack.git')
+            expect(result.first[:key]).to eq('https://git.example.com/acme/ruby-buildpack.git')
+          end
+        end
+
+        context 'when credentials are provided and buildpack is an admin buildpack' do
+          let(:creds) { { 'git.example.com' => { 'username' => 'u', 'password' => 'p' } } }
+          let(:buildpack_infos) { [BuildpackInfo.new('java', java_buildpack)] }
+
+          it 'does not inject credentials into admin buildpack entries' do
+            result = buildpack_entry_generator.buildpack_entries(buildpack_infos, stack.name, credentials: creds)
+            expect(result.first[:url]).to eq(admin_buildpack_download_url)
+            expect(result.first[:url]).not_to include('@')
+          end
+        end
+
+        context 'when credentials are nil' do
+          let(:custom_buildpack_info) { BuildpackInfo.new('https://git.example.com/acme/ruby-buildpack.git', nil) }
+          let(:buildpack_infos) { [custom_buildpack_info] }
+
+          it 'emits the URL without modification' do
+            result = buildpack_entry_generator.buildpack_entries(buildpack_infos, stack.name, credentials: nil)
+            expect(result.first[:url]).to eq('https://git.example.com/acme/ruby-buildpack.git')
+          end
+        end
       end
     end
   end
