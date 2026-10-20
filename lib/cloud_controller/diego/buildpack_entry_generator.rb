@@ -26,17 +26,17 @@ module VCAP::CloudController
       def inject_credentials(url, credentials)
         return url if credentials.blank?
 
-        host = URI.parse(url).host
-        cred = credentials[host]
+        credentials = credentials.deep_stringify_keys
+        uri = URI.parse(url)
+        cred = credentials[uri.host]
         return url if cred.blank?
 
         username = cred['username']
         password = cred['password']
         return url if username.blank?
 
-        uri = URI.parse(url)
-        uri.user = URI.encode_www_form_component(username)
-        uri.password = URI.encode_www_form_component(password) if password.present?
+        uri.user = CGI.escape(username)
+        uri.password = CGI.escape(password) if password.present?
         uri.to_s
       rescue URI::InvalidURIError
         url

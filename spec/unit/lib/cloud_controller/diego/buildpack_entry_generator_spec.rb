@@ -129,6 +129,20 @@ module VCAP::CloudController
           end
         end
 
+        context 'when the credentials come from a request message (symbol-keyed)' do
+          let(:message) do
+            BuildpackLifecycleDataMessage.new(credentials: { 'git.example.com' => { 'username' => 'octocat', 'password' => 'hunter2' } })
+          end
+          let(:custom_buildpack_info) { BuildpackInfo.new('https://git.example.com/acme/ruby-buildpack.git', nil) }
+          let(:buildpack_infos) { [custom_buildpack_info] }
+
+          it 'injects credentials despite the symbolized keys' do
+            result = buildpack_entry_generator.buildpack_entries(buildpack_infos, stack.name, credentials: message.credentials)
+            expect(result.first[:url]).to eq('https://octocat:hunter2@git.example.com/acme/ruby-buildpack.git')
+            expect(result.first[:key]).to eq('https://octocat:hunter2@git.example.com/acme/ruby-buildpack.git')
+          end
+        end
+
         context 'when credentials are provided but no host matches' do
           let(:creds) { { 'other.example.com' => { 'username' => 'u', 'password' => 'p' } } }
           let(:custom_buildpack_info) { BuildpackInfo.new('https://git.example.com/acme/ruby-buildpack.git', nil) }
