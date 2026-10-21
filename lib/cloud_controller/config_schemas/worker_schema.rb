@@ -71,7 +71,7 @@ module VCAP::CloudController
           },
 
           staging: {
-            auth: {
+            optional(:auth) => {
               user: String,
               password: String
             },
