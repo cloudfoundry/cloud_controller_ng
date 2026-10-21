@@ -572,6 +572,34 @@ RSpec.describe AppsV3Controller, type: :controller do
         end
       end
     end
+
+    context 'when requesting a custom stack and diego_custom_stacks is disabled' do
+      let(:request_body) do
+        {
+          name: 'some-name',
+          relationships: { space: { data: { guid: space.guid } } },
+          lifecycle: {
+            type: 'buildpack',
+            data: {
+              buildpacks: ['https://example.com/buildpack.git'],
+              stack: 'docker://registry.example.com/org/stack:tag'
+            }
+          }
+        }
+      end
+
+      before do
+        create(:feature_flag, name: 'diego_custom_stacks', enabled: false, error_message: nil)
+      end
+
+      it 'raises 403' do
+        post :create, params: request_body, as: :json
+
+        expect(response).to have_http_status(:forbidden)
+        expect(response.body).to include('FeatureDisabled')
+        expect(response.body).to include('diego_custom_stacks')
+      end
+    end
   end
 
   describe '#update' do
@@ -607,6 +635,32 @@ RSpec.describe AppsV3Controller, type: :controller do
           expect(response).to have_http_status :unprocessable_content
           expect(response.body).to include 'UnprocessableEntity'
         end
+      end
+    end
+
+    context 'when updating to a custom stack and diego_custom_stacks is disabled' do
+      let(:request_body) do
+        {
+          lifecycle: {
+            type: 'buildpack',
+            data: {
+              buildpacks: ['https://example.com/buildpack.git'],
+              stack: 'docker://registry.example.com/org/stack:tag'
+            }
+          }
+        }
+      end
+
+      before do
+        create(:feature_flag, name: 'diego_custom_stacks', enabled: false, error_message: nil)
+      end
+
+      it 'raises 403' do
+        patch :update, params: { guid: app_model.guid }.merge(request_body), as: :json
+
+        expect(response).to have_http_status(:forbidden)
+        expect(response.body).to include('FeatureDisabled')
+        expect(response.body).to include('diego_custom_stacks')
       end
     end
 
@@ -1265,6 +1319,21 @@ RSpec.describe AppsV3Controller, type: :controller do
         end
       end
     end
+
+    context 'when starting an app with a custom stack and diego_custom_stacks is disabled' do
+      before do
+        app_model.lifecycle_data.update(stack: 'docker://registry.example.com/org/stack:tag')
+        create(:feature_flag, name: 'diego_custom_stacks', enabled: false, error_message: nil)
+      end
+
+      it 'raises 403' do
+        put :start, params: { guid: app_model.guid }, as: :json
+
+        expect(response).to have_http_status(:forbidden)
+        expect(response.body).to include('FeatureDisabled')
+        expect(response.body).to include('diego_custom_stacks')
+      end
+    end
   end
 
   describe '#stop' do
@@ -1366,6 +1435,24 @@ RSpec.describe AppsV3Controller, type: :controller do
 
     before do
       create(:buildpack_lifecycle_data_model, app: app_model, buildpacks: nil, stack: VCAP::CloudController::Stack.default.name)
+    end
+
+    context 'when restarting an app with a custom stack and diego_custom_stacks is disabled' do
+      before do
+        set_current_user(user)
+        allow_user_read_access_for(user, spaces: [space])
+        allow_user_write_access(user, space:)
+        app_model.lifecycle_data.update(stack: 'docker://registry.example.com/org/stack:tag')
+        create(:feature_flag, name: 'diego_custom_stacks', enabled: false, error_message: nil)
+      end
+
+      it 'raises 403' do
+        post :restart, params: { guid: app_model.guid }, as: :json
+
+        expect(response).to have_http_status(:forbidden)
+        expect(response.body).to include('FeatureDisabled')
+        expect(response.body).to include('diego_custom_stacks')
+      end
     end
 
     context 'permissions' do

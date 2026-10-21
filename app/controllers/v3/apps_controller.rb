@@ -98,7 +98,7 @@ class AppsV3Controller < ApplicationController
     FeatureFlag.raise_unless_enabled!(:diego_docker) if message.lifecycle_type == VCAP::CloudController::PackageModel::DOCKER_TYPE
     lifecycle = AppLifecycleProvider.provide_for_create(message)
     FeatureFlag.raise_unless_enabled!(:diego_cnb) if lifecycle.type == VCAP::CloudController::Lifecycles::CNB
-    raise_unless_custom_stacks_enabled!(message)
+    raise_unless_custom_stack_enabled!(custom_stack_from_message(message))
     unprocessable!(lifecycle.errors.full_messages) unless lifecycle.valid?
 
     app_creator = AppCreate.new(user_audit_info)
@@ -129,6 +129,7 @@ class AppsV3Controller < ApplicationController
     require_writable_space!(space)
 
     lifecycle = AppLifecycleProvider.provide_for_update(message, app)
+    raise_unless_custom_stack_enabled!(custom_stack_from_message(message))
     unprocessable!(lifecycle.errors.full_messages) unless lifecycle.valid?
 
     app_updater = AppUpdate.new(user_audit_info)
@@ -189,7 +190,7 @@ class AppsV3Controller < ApplicationController
 
     FeatureFlag.raise_unless_enabled!(:diego_docker) if app.lifecycle_type == DockerLifecycleDataModel::LIFECYCLE_TYPE
     FeatureFlag.raise_unless_enabled!(:diego_cnb) if app.lifecycle_type == CNBLifecycleDataModel::LIFECYCLE_TYPE
-    raise_unless_custom_stacks_enabled!(app.lifecycle_data.stack) if app.lifecycle_data.respond_to?(:stack)
+    raise_unless_custom_stack_enabled!(app.lifecycle_data.stack) if app.lifecycle_data.respond_to?(:stack)
 
     AppStart.start(app:, user_audit_info:)
     TelemetryLogger.v3_emit(
@@ -233,7 +234,7 @@ class AppsV3Controller < ApplicationController
 
     FeatureFlag.raise_unless_enabled!(:diego_docker) if app.lifecycle_type == DockerLifecycleDataModel::LIFECYCLE_TYPE
     FeatureFlag.raise_unless_enabled!(:diego_cnb) if app.lifecycle_type == CNBLifecycleDataModel::LIFECYCLE_TYPE
-    raise_unless_custom_stacks_enabled!(app.lifecycle_data.stack) if app.lifecycle_data.respond_to?(:stack)
+    raise_unless_custom_stack_enabled!(app.lifecycle_data.stack) if app.lifecycle_data.respond_to?(:stack)
 
     AppRestart.restart(app: app, config: Config.config, user_audit_info: user_audit_info)
     TelemetryLogger.v3_emit(
@@ -400,16 +401,12 @@ class AppsV3Controller < ApplicationController
 
   private
 
-  def raise_unless_custom_stacks_enabled!(message_or_stack)
-    stack = case message_or_stack
-            when String
-              message_or_stack
-            when nil
-              nil
-            else
-              message_or_stack.lifecycle_data&.dig(:stack)
-            end
+  def raise_unless_custom_stack_enabled!(stack)
     FeatureFlag.raise_unless_enabled!(:diego_custom_stacks) if stack && UriUtils.is_custom_stack_uri?(stack)
+  end
+
+  def custom_stack_from_message(message)
+    message.lifecycle_data&.dig(:stack)
   end
 
   def async_recursive_delete_enabled?

@@ -364,6 +364,21 @@ module VCAP::CloudController
             expect(lrp.image_layers).to eq(expected_image_layers)
           end
 
+          context 'when the app uses a custom stack with registry credentials' do
+            before do
+              app_model.lifecycle_data.update(
+                stack: 'docker://registry.example.com/my-org/custom-stack:latest',
+                credentials: { 'registry.example.com' => { 'username' => 'stack-user', 'password' => 'stack-password' } }
+              )
+            end
+
+            it 'passes the credentials to Diego' do
+              lrp = builder.build_app_lrp
+              expect(lrp.image_username).to eq('stack-user')
+              expect(lrp.image_password).to eq('stack-password')
+            end
+          end
+
           context 'when the space is not entitled to any isolation segments' do
             before do
               allow(VCAP::CloudController::IsolationSegmentSelector).to receive(:for_space).and_return(nil)

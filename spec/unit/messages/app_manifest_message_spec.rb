@@ -2312,6 +2312,27 @@ module VCAP::CloudController
             expect(message.errors.full_messages).to include('Feature Disabled: I am a banana')
           end
         end
+
+        context 'when custom stacks are disabled' do
+          let(:parsed_yaml) do
+            {
+              name: 'custom-stack-app',
+              stack: 'docker://registry.example.com/org/stack:tag',
+              buildpacks: ['https://example.com/buildpack.git']
+            }
+          end
+
+          before do
+            create(:feature_flag, name: 'diego_custom_stacks', enabled: false, error_message: 'custom stacks are disabled')
+          end
+
+          it 'is not valid' do
+            message = AppManifestMessage.create_from_yml(parsed_yaml)
+
+            expect(message).not_to be_valid
+            expect(message.errors.full_messages).to include('Feature Disabled: custom stacks are disabled')
+          end
+        end
       end
     end
 

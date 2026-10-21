@@ -4,7 +4,7 @@ module VCAP::CloudController
       class LifecycleData
         attr_accessor :app_bits_download_uri, :build_artifacts_cache_download_uri, :build_artifacts_cache_upload_uri,
                       :buildpacks, :app_bits_checksum, :droplet_upload_uri, :stack, :buildpack_cache_checksum,
-                      :credentials, :auto_detect, :stack_id
+                      :credentials, :auto_detect
 
         def message
           message = {
@@ -19,7 +19,6 @@ module VCAP::CloudController
           message[:build_artifacts_cache_download_uri] = build_artifacts_cache_download_uri if build_artifacts_cache_download_uri
           message[:buildpack_cache_checksum] = buildpack_cache_checksum if buildpack_cache_checksum
           message[:credentials] = credentials if credentials
-          message[:stack_id] = stack_id if stack_id
 
           schema.validate(message)
           message
@@ -39,7 +38,6 @@ module VCAP::CloudController
               stack: String,
               app_bits_checksum: Hash,
               optional(:credentials) => String,
-              optional(:stack_id) => String,
               auto_detect: bool
             }
           end

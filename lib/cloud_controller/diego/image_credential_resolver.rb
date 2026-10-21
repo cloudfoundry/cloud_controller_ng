@@ -8,6 +8,7 @@ module VCAP::CloudController
       # Returns [username, password], falling back to custom stack registry credentials.
       def resolve(primary_username:, primary_password:, lifecycle_data:)
         return [primary_username, primary_password] if primary_username.present? && primary_password.present?
+        return [primary_username, primary_password] unless lifecycle_data.respond_to?(:stack) && custom_stack?(lifecycle_data.stack)
 
         resolve_from_custom_stack(lifecycle_data)
       end
@@ -16,6 +17,7 @@ module VCAP::CloudController
       def resolve_for_staging(primary_username:, primary_password:, lifecycle:)
         return [primary_username, primary_password] if primary_username.present? && primary_password.present?
         return [nil, nil] unless lifecycle.respond_to?(:credentials_for_staging) && lifecycle.respond_to?(:staging_stack)
+        return [primary_username, primary_password] unless custom_stack?(lifecycle.staging_stack)
 
         stack_host = UriUtils.custom_stack_registry_host(lifecycle.staging_stack)
         return [nil, nil] unless stack_host
@@ -33,13 +35,23 @@ module VCAP::CloudController
       end
       private_class_method :resolve_from_custom_stack
 
+      def custom_stack?(stack)
+        UriUtils.is_custom_stack_uri?(stack)
+      end
+      private_class_method :custom_stack?
+
       def extract_credentials(credentials, host)
         return [nil, nil] unless credentials.is_a?(Hash)
 
+        credentials = credentials.deep_stringify_keys
         creds = credentials[host]
         return [nil, nil] unless creds.is_a?(Hash)
 
-        [creds['username'], creds['password']]
+        username = creds['username']
+        password = creds['password']
+        return [nil, nil] unless username.present? && password.present?
+
+        [username, password]
       end
       private_class_method :extract_credentials
     end

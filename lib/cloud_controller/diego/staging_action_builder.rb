@@ -1,15 +1,14 @@
 require 'credhub/config_helpers'
 require 'diego/action_builder'
 require 'digest/xxhash'
-require 'cloud_controller/diego/custom_stack_uri_converter'
-require 'cloud_controller/diego/custom_stack_fallback'
+require 'cloud_controller/diego/docker/docker_uri_converter'
+require 'cloud_controller/diego/lifecycle_bundle_stack_resolver'
 
 module VCAP::CloudController
   module Diego
     class StagingActionBuilder
       include ::Credhub::ConfigHelpers
       include ::Diego::ActionBuilder
-      include CustomStackFallback
 
       attr_reader :config, :lifecycle_data, :staging_details
 
@@ -134,7 +133,7 @@ module VCAP::CloudController
 
       def stack
         @stack ||= if UriUtils.is_custom_stack_uri?(lifecycle_stack)
-                     CustomStackUriConverter.convert(lifecycle_stack)
+                     DockerURIConverter.new.convert(lifecycle_stack.delete_prefix('docker://'))
                    else
                      stack_obj = Stack.find(name: lifecycle_stack)
                      raise CloudController::Errors::ApiError.new_from_details('StackNotFound', lifecycle_stack) unless stack_obj
@@ -188,14 +187,12 @@ module VCAP::CloudController
           )
         ]
 
-        unless UriUtils.is_custom_stack_uri?(lifecycle_data[:stack])
-          actions << ::Diego::Bbs::Models::UploadAction.new(
-            user: 'vcap',
-            artifact: 'build artifacts cache',
-            from: @cache_source,
-            to: upload_buildpack_artifacts_cache_uri.to_s
-          )
-        end
+        actions << ::Diego::Bbs::Models::UploadAction.new(
+          user: 'vcap',
+          artifact: 'build artifacts cache',
+          from: @cache_source,
+          to: upload_buildpack_artifacts_cache_uri.to_s
+        )
 
         actions
       end
@@ -205,7 +202,7 @@ module VCAP::CloudController
       end
 
       def lifecycle_bundle_key
-        :"#{@prefix}/#{resolved_stack_name(lifecycle_data[:stack])}"
+        :"#{@prefix}/#{LifecycleBundleStackResolver.resolve(lifecycle_stack)}"
       end
 
       def upload_buildpack_artifacts_cache_uri

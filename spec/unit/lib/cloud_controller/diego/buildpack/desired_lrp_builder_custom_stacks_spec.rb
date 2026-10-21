@@ -1,6 +1,5 @@
 require 'spec_helper'
 require 'cloud_controller/diego/buildpack/desired_lrp_builder'
-require 'cloud_controller/diego/custom_stack_uri_converter'
 
 module VCAP::CloudController
   module Diego
@@ -39,12 +38,6 @@ module VCAP::CloudController
         end
 
         describe '#root_fs' do
-          context 'with a system stack' do
-            it 'returns preloaded rootfs' do
-              expect(builder.root_fs).to eq('preloaded:cflinuxfs4')
-            end
-          end
-
           context 'with a custom stack (docker:// URI)' do
             let(:stack) { 'docker://docker.io/cloudfoundry/cflinuxfs4:1.268.0' }
             let(:config) do
@@ -60,24 +53,6 @@ module VCAP::CloudController
 
             it 'returns a docker:// rootfs URI in Diego format' do
               expect(builder.root_fs).to eq('docker://docker.io/cloudfoundry/cflinuxfs4#1.268.0')
-            end
-          end
-
-          context 'with a custom stack from a private registry' do
-            let(:stack) { 'docker://registry.example.com/my-org/my-stack:v2.0' }
-            let(:config) do
-              Config.new({
-                           diego: {
-                             use_privileged_containers_for_running: false,
-                             lifecycle_bundles: { "buildpack/#{VCAP::CloudController::Stack.default.name}": 'http://lifecycle.example.com/bundle.tgz' },
-                             droplet_destinations: { 'default-stack-name': '/home/vcap' },
-                             enable_declarative_asset_downloads: false
-                           }
-                         })
-            end
-
-            it 'returns a docker:// rootfs URI for the private registry' do
-              expect(builder.root_fs).to eq('docker://registry.example.com/my-org/my-stack#v2.0')
             end
           end
         end

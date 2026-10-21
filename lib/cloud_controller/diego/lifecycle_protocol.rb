@@ -38,11 +38,10 @@ module VCAP::CloudController
         )
         lifecycle_data.stack = stack
 
-        unless UriUtils.is_custom_stack_uri?(stack)
-          lifecycle_data.buildpack_cache_checksum           = staging_details.package.app.buildpack_cache_sha256_checksum
-          lifecycle_data.build_artifacts_cache_download_uri = @blobstore_url_generator.buildpack_cache_download_url(staging_details.package.app_guid, stack)
-          lifecycle_data.build_artifacts_cache_upload_uri   = @blobstore_url_generator.buildpack_cache_upload_url(staging_details.package.app_guid, stack)
-        end
+        cache_key                                           = UriUtils.buildpack_cache_key(stack)
+        lifecycle_data.buildpack_cache_checksum             = staging_details.package.app.buildpack_cache_sha256_checksum
+        lifecycle_data.build_artifacts_cache_download_uri   = @blobstore_url_generator.buildpack_cache_download_url(staging_details.package.app_guid, cache_key)
+        lifecycle_data.build_artifacts_cache_upload_uri     = @blobstore_url_generator.buildpack_cache_upload_url(staging_details.package.app_guid, cache_key)
 
         lifecycle_data.message
       rescue Membrane::SchemaValidationError => e

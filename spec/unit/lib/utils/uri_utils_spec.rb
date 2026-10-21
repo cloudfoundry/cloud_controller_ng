@@ -104,6 +104,20 @@ RSpec.describe UriUtils do
     end
   end
 
+  describe '.is_custom_stack_uri?' do
+    it 'accepts valid Docker image references and identifies their registry' do
+      expect(UriUtils.is_custom_stack_uri?('docker://registry.example.com/my-org/my-stack:latest')).to be(true)
+      expect(UriUtils.is_custom_stack_uri?('docker://ubuntu:22.04')).to be(true)
+      expect(UriUtils.custom_stack_registry_host('docker://ubuntu:22.04')).to eq('docker.io')
+    end
+
+    it 'rejects non-Docker and invalid Docker references' do
+      expect(UriUtils.is_custom_stack_uri?('cflinuxfs4')).to be(false)
+      expect(UriUtils.is_custom_stack_uri?('https://example.com/stack')).to be(false)
+      expect(UriUtils.is_custom_stack_uri?('docker://')).to be(false)
+    end
+  end
+
   describe '.is_uri_path?' do
     it 'is false if the object is not a string' do
       expect(UriUtils.is_uri_path?(1)).to be false

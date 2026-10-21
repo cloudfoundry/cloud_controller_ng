@@ -7,13 +7,16 @@ module VCAP::CloudController
         subject(:builder) { TaskActionBuilder.new(config, task, lifecycle_data, 'vcap', ['app', task.command, ''], 'buildpack') }
 
         let(:enable_declarative_asset_downloads) { false }
+        let(:lifecycle_bundles) do
+          {
+            'buildpack/potato-stack': 'http://file-server.service.cf.internal:8080/v1/static/potato_lifecycle_bundle_url'
+          }
+        end
         let(:config) do
           Config.new({
                        diego: {
                          enable_declarative_asset_downloads: enable_declarative_asset_downloads,
-                         lifecycle_bundles: {
-                           'buildpack/potato-stack': 'http://file-server.service.cf.internal:8080/v1/static/potato_lifecycle_bundle_url'
-                         },
+                         lifecycle_bundles: lifecycle_bundles,
                          droplet_destinations: droplet_destinations
                        }
                      })
@@ -261,6 +264,14 @@ module VCAP::CloudController
               expect(builder.stack).to eq('preloaded:run-image')
             end
           end
+
+          context 'when the stack is a custom image' do
+            let(:stack) { 'docker://registry.example.com/my-org/custom-stack:latest' }
+
+            it 'returns a Docker rootfs URI' do
+              expect(builder.stack).to eq('docker://registry.example.com/my-org/custom-stack#latest')
+            end
+          end
         end
 
         describe '#cached_dependencies' do
@@ -289,6 +300,17 @@ module VCAP::CloudController
               expect do
                 builder.cached_dependencies
               end.to raise_error VCAP::CloudController::Diego::LifecycleBundleUriGenerator::InvalidStack
+            end
+          end
+
+          context 'when the stack is a custom image' do
+            let(:stack) { 'docker://registry.example.com/my-org/custom-stack:latest' }
+            let(:lifecycle_bundles) do
+              { "buildpack/#{Stack.default.name}": 'http://file-server.service.cf.internal:8080/v1/static/default_lifecycle_bundle_url' }
+            end
+
+            it 'uses the default stack lifecycle bundle' do
+              expect(builder.cached_dependencies.first.cache_key).to eq("buildpack-#{Stack.default.name}-lifecycle")
             end
           end
         end

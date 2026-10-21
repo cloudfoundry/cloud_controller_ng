@@ -17,21 +17,18 @@ module VCAP::CloudController
             ::Diego::Bbs::Models::EnvironmentVariable.new(name: 'CNB_GROUP_ID', value: '2000'),
             ::Diego::Bbs::Models::EnvironmentVariable.new(name: 'LANG', value: STAGING_DEFAULT_LANG)
           ]
-          cnb_stack_id = resolve_cnb_stack_id
+          # TODO: Verify this compatibility fallback end-to-end with archived stacks and
+          # buildpacks. Legacy CNB buildpacks require CNB_STACK_ID, while newer buildpacks
+          # use target metadata. For custom stacks, the full image URI is the only stable
+          # value currently persisted by Cloud Controller. Strict legacy buildpacks may
+          # require an explicit logical stack ID instead, which would need a different API.
+          cnb_stack_id = lifecycle_stack
           env.push(::Diego::Bbs::Models::EnvironmentVariable.new(name: 'CNB_STACK_ID', value: cnb_stack_id)) if cnb_stack_id
           env.push(::Diego::Bbs::Models::EnvironmentVariable.new(name: 'CNB_REGISTRY_CREDS', value: lifecycle_data[:credentials])) if lifecycle_data[:credentials]
           env
         end
 
         private
-
-        def resolve_cnb_stack_id
-          if UriUtils.is_custom_stack_uri?(lifecycle_stack)
-            lifecycle_data[:stack_id] # nil means auto-detect
-          else
-            lifecycle_stack
-          end
-        end
 
         def stage_action
           args = [

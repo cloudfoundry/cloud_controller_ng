@@ -1,4 +1,5 @@
 require 'uri'
+require 'digest'
 
 module UriUtils
   SSH_REGEX = %r{ \A (?:ssh://)? git@ .+? : .+? \.git \z }x
@@ -55,9 +56,15 @@ module UriUtils
       return nil if body.empty?
 
       host, = parse_docker_uri(body)
-      host.presence
-    rescue StandardError
+      host.presence || DOCKER_INDEX_SERVER
+    rescue InvalidDockerURI
       nil
+    end
+
+    def buildpack_cache_key(stack)
+      return stack unless is_custom_stack_uri?(stack)
+
+      Digest::SHA256.hexdigest(stack)
     end
 
     def is_uri_path?(candidate)
@@ -90,6 +97,8 @@ module UriUtils
         host = ''
         path = docker_uri
       end
+
+      raise InvalidDockerURI.new "Invalid image name [#{docker_uri}]" if path.blank?
 
       path = 'library/' + path if (official_docker_registry(name_parts[0]) || missing_registry(name_parts)) && path.exclude?('/')
       path, tag_digest = parse_docker_tag_digest_from_path(path)

@@ -21,6 +21,7 @@ module VCAP::CloudController
         buildpack_infos: @buildpack_infos,
         stack: db_result[:stack],
         stack_name: staging_stack,
+        lifecycle_type: type,
         credentials: @credentials_for_staging,
         credentials_from_message: staging_message.buildpack_data.requested?(:credentials)
       )

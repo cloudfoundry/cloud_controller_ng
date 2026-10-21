@@ -32,6 +32,21 @@ module VCAP::CloudController
           expect(username).to eq('my-user')
           expect(password).to eq('my-pass')
         end
+
+        it 'returns credentials from symbolized staging request data' do
+          allow(lifecycle).to receive(:credentials_for_staging).and_return(
+            {
+              'registry.example.com': {
+                username: 'my-user',
+                password: 'my-pass'
+              }
+            }
+          )
+
+          username, password = task_recipe_builder.send(:staging_image_credentials, staging_details)
+          expect(username).to eq('my-user')
+          expect(password).to eq('my-pass')
+        end
       end
 
       describe '#staging_image_credentials (docker package)' do
@@ -53,6 +68,20 @@ module VCAP::CloudController
           username, password = task_recipe_builder.send(:staging_image_credentials, staging_details)
           expect(username).to eq('docker-user')
           expect(password).to eq('docker-pass')
+        end
+      end
+
+      describe '#staging_image_credentials (incomplete custom stack credentials)' do
+        let(:lifecycle) do
+          instance_double(BuildpackLifecycle,
+                          staging_stack: 'docker://registry.example.com/my-org/my-stack:v1.0',
+                          credentials_for_staging: { 'registry.example.com' => { 'username' => 'stack-user' } })
+        end
+        let(:package) { instance_double(PackageModel, docker_username: nil, docker_password: nil) }
+        let(:staging_details) { instance_double(StagingDetails, package: package, lifecycle: lifecycle) }
+
+        it 'does not pass a partial credential pair to Diego' do
+          expect(task_recipe_builder.send(:staging_image_credentials, staging_details)).to eq([nil, nil])
         end
       end
 
@@ -80,6 +109,28 @@ module VCAP::CloudController
           username, password = task_recipe_builder.send(:staging_image_credentials, staging_details)
           expect(username).to eq('stack-user')
           expect(password).to eq('stack-pass')
+        end
+      end
+
+      describe '#staging_image_credentials (incomplete docker credentials)' do
+        let(:lifecycle) do
+          instance_double(
+            BuildpackLifecycle,
+            staging_stack: 'cflinuxfs4',
+            credentials_for_staging: nil
+          )
+        end
+        let(:package) do
+          instance_double(PackageModel, docker_username: 'only-user', docker_password: nil)
+        end
+        let(:staging_details) do
+          instance_double(StagingDetails, package: package, lifecycle: lifecycle)
+        end
+
+        it 'preserves docker package credentials for a system stack' do
+          username, password = task_recipe_builder.send(:staging_image_credentials, staging_details)
+          expect(username).to eq('only-user')
+          expect(password).to be_nil
         end
       end
 
