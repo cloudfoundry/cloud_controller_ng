@@ -48,7 +48,7 @@ jobs:
 
       - name: Run rubocop autocorrect
         if: steps.check.outputs.is_rubocop == 'true'
-        run: bundle exec rake rubocop || true
+        run: bundle exec rake rubocop_autocorrect || true
 
       - name: Commit and push fixes
         if: steps.check.outputs.is_rubocop == 'true'
