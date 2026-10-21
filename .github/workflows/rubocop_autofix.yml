@@ -54,8 +54,8 @@ jobs:
         if: steps.check.outputs.is_rubocop == 'true'
         run: |
           if ! git diff --quiet; then
-            git config user.name "github-actions[bot]"
-            git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+            git config user.name "ari-wg-gitbot"
+            git config user.email "app-runtime-interfaces@cloudfoundry.org"
             git add -u
             git commit -m "rubocop -a auto-fixes"
             git push
