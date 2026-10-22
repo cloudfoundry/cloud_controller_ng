@@ -1068,6 +1068,11 @@ specified, then the app will default to the operator-configured default stack.</
 <td><em>string</em></td>
 <td>The root filesystem to use with the buildpack, for example <code class="prettyprint">cflinuxfs4</code></td>
 </tr>
+<tr>
+<td><strong>data.credentials</strong></td>
+<td><em>object</em></td>
+<td>Credentials used to download custom buildpacks from private git repositories, keyed by host. Each entry is a username/password pair. If any buildpack URL embeds credentials, <strong>data.credentials</strong> must be empty; provide credentials in one place only.</td>
+</tr>
 </tbody></table>
 
 <p>For records whose historical lifecycle data is no longer available,
@@ -1121,7 +1126,7 @@ specified, then the app will default to the operator-configured default stack.</
 <tr>
 <td><strong>data.credentials</strong></td>
 <td><em>object</em></td>
-<td>Credentials used to download the configured buildpacks. This can either contain username/password  or a token.</td>
+<td>Credentials used to download the configured buildpacks, keyed by registry host. Each entry contains either a username/password pair or a token. CNB buildpack URLs must not embed credentials; use <strong>data.credentials</strong> instead.</td>
 </tr>
 <tr>
 <td><strong>data.stack</strong></td>
@@ -11500,6 +11505,16 @@ In the case where the specified isolation segment is the system-wide shared segm
 <td><strong>buildpacks</strong></td>
 <td><em>list of strings</em></td>
 <td>a) An empty array, which will automatically select the appropriate default buildpack according to the coding language (incompatible with <strong>lifecycle: cnb</strong>) <br>b) An array of one or more URLs pointing to buildpacks <br>c) An array of one or more installed buildpack names <br>Replaces the legacy <code class="prettyprint">buildpack</code> field</td>
+</tr>
+<tr>
+<td><strong>credentials</strong></td>
+<td><em>object</em></td>
+<td>Credentials used to download custom buildpacks (buildpack lifecycle) or buildpack OCI images (cnb lifecycle) from private git repositories or registries, keyed by host. For the buildpack lifecycle each entry is a username/password pair; for the cnb lifecycle each entry is a username/password pair or a token. Set to <code class="prettyprint">null</code> to clear previously stored credentials. If any buildpack URL embeds credentials, <strong>credentials</strong> must be empty; provide credentials in one place only.</td>
+</tr>
+<tr>
+<td><strong>cnb-credentials</strong></td>
+<td><em>object</em></td>
+<td>Backward-compatible alias for <strong>credentials</strong>. Specifying both <strong>credentials</strong> and <strong>cnb-credentials</strong> is an error.</td>
 </tr>
 <tr>
 <td><strong>docker</strong></td>
