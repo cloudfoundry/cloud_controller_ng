@@ -7,7 +7,8 @@ module VCAP::CloudController
     def initialize(message, app=nil)
       @message = message
 
-      db_result = BuildpackLifecycleFetcher.fetch(effective_buildpacks(app), stack, type)
+      validation_data = lifecycle_data_for_validation(app)
+      db_result = BuildpackLifecycleFetcher.fetch(validation_data[:buildpacks], validation_data[:stack], type)
 
       @validator = validator_class.new(
         buildpack_infos: db_result[:buildpack_infos],
@@ -37,8 +38,22 @@ module VCAP::CloudController
       BuildpackLifecycleDataValidator
     end
 
-    def effective_buildpacks(app)
-      message.buildpack_data.requested?(:buildpacks) ? buildpacks : (app&.lifecycle_data&.buildpacks || [])
+    def lifecycle_data_for_validation(app)
+      return { buildpacks:, stack: } unless app && validating_stored_buildpacks?
+
+      stored_data = app.lifecycle_data
+
+      {
+        buildpacks: stored_data.buildpacks || [],
+        stack: message.buildpack_data.requested?(:stack) ? stack : (stored_data.stack || stack)
+      }
+    end
+
+    def validating_stored_buildpacks?
+      # Stored URLs are needed to detect embedded userinfo when credentials are added separately.
+      message.buildpack_data.requested?(:credentials) &&
+        message.buildpack_data.credentials.present? &&
+        !message.buildpack_data.requested?(:buildpacks)
     end
 
     def effective_credentials(app)
