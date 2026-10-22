@@ -134,6 +134,57 @@ module VCAP::CloudController
       end
     end
 
+    describe 'validation of stored lifecycle data' do
+      let(:stored_stack) { create(:stack, name: 'some-stack') }
+      let(:app) { create(:app_model, :buildpack) }
+      let!(:stored_buildpack) { create(:buildpack, name: 'some-buildpack', stack: stored_stack.name) }
+
+      before do
+        app.lifecycle_data.update(buildpacks: ['some-buildpack'], stack: stored_stack.name)
+      end
+
+      context 'when the request does not include lifecycle data' do
+        let(:message) { AppUpdateMessage.new(lifecycle: { type: 'buildpack', data: {} }) }
+
+        it 'does not validate stored buildpacks' do
+          expect(BuildpackLifecycleFetcher).to receive(:fetch).with([], Stack.default.name, Lifecycles::BUILDPACK).and_call_original
+
+          lifecycle = AppBuildpackLifecycle.new(message, app)
+
+          expect(lifecycle).to be_valid
+        end
+      end
+
+      context 'when the request clears lifecycle credentials' do
+        let(:message) { AppUpdateMessage.new(lifecycle: { type: 'buildpack', data: { credentials: nil } }) }
+
+        it 'does not validate stored buildpacks' do
+          expect(BuildpackLifecycleFetcher).to receive(:fetch).with([], Stack.default.name, Lifecycles::BUILDPACK).and_call_original
+
+          lifecycle = AppBuildpackLifecycle.new(message, app)
+
+          expect(lifecycle).to be_valid
+        end
+      end
+
+      context 'when credentials are updated without buildpacks' do
+        let(:message) do
+          AppUpdateMessage.new(lifecycle: {
+                                 type: 'buildpack',
+                                 data: { credentials: { 'buildpacks.example.org' => { username: 'user', password: 'password' } } }
+                               })
+        end
+
+        it 'validates the stored buildpacks against the stored stack' do
+          expect(BuildpackLifecycleFetcher).to receive(:fetch).with(['some-buildpack'], stored_stack.name, Lifecycles::BUILDPACK).and_call_original
+
+          lifecycle = AppBuildpackLifecycle.new(message, app)
+
+          expect(lifecycle).to be_valid
+        end
+      end
+    end
+
     describe '#create_lifecycle_data_model with credentials' do
       context 'when credentials are provided' do
         let(:creds) { { 'git.example.com' => { 'username' => 'u', 'password' => 'p' } } }
