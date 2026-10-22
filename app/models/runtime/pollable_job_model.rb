@@ -5,6 +5,13 @@ module VCAP::CloudController
     FAILED_STATE = 'FAILED'.freeze
     POLLING_STATE = 'POLLING'.freeze
 
+    # Bits-upload operations run on the per-API-instance LOCAL worker queue
+    # (cc-<name>-<index>), which has a small, fixed number of workers. These are
+    # the only pollable jobs that compete for those local worker slots, so for
+    # fairness we count a user's active jobs among just these when deprioritizing.
+    UPLOAD_OPERATIONS = %w[package.upload droplet.upload buildpack.upload].freeze
+    ACTIVE_STATES = %w[PROCESSING POLLING].freeze
+
     one_to_many :warnings, class: 'VCAP::CloudController::JobWarningModel', key: :job_id
     one_to_many :sub_jobs, class: 'VCAP::CloudController::PollableJobModel', key: :root_job_guid, primary_key: :guid
 
@@ -53,7 +60,11 @@ module VCAP::CloudController
     end
 
     def self.number_of_active_jobs_by_user(user_guid)
-      PollableJobModel.where(state: %w[PROCESSING POLLING], user_guid: user_guid).count
+      PollableJobModel.where(state: ACTIVE_STATES, user_guid: user_guid).count
+    end
+
+    def self.number_of_active_upload_jobs_by_user(user_guid)
+      PollableJobModel.where(state: ACTIVE_STATES, user_guid: user_guid, operation: UPLOAD_OPERATIONS).count
     end
   end
 end

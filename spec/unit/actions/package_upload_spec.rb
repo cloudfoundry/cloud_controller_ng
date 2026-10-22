@@ -59,15 +59,48 @@ module VCAP::CloudController
           stub_const('VCAP::CloudController::SecurityContext', security_context)
         end
 
-        it 'deprioritizes the upload by the number of the user\'s active jobs' do
-          # Two existing active pollable jobs for the same user
+        it 'deprioritizes the upload by the number of the user\'s active upload jobs' do
+          # Two existing active upload jobs for the same user
           2.times do |i|
-            PollableJobModel.create(state: PollableJobModel::PROCESSING_STATE, user_guid: user_guid, delayed_job_guid: "existing-#{i}")
+            PollableJobModel.create(state: PollableJobModel::PROCESSING_STATE, user_guid: user_guid,
+                                    operation: 'package.upload', delayed_job_guid: "existing-#{i}")
           end
 
           package_upload.upload_async(message:, package:, config:, user_audit_info:)
 
           expect(Delayed::Job.last.priority).to eq(2)
+        end
+
+        it 'counts other upload operations (droplet/buildpack) that share the local queue' do
+          PollableJobModel.create(state: PollableJobModel::PROCESSING_STATE, user_guid: user_guid,
+                                  operation: 'droplet.upload', delayed_job_guid: 'd1')
+          PollableJobModel.create(state: PollableJobModel::PROCESSING_STATE, user_guid: user_guid,
+                                  operation: 'buildpack.upload', delayed_job_guid: 'b1')
+
+          package_upload.upload_async(message:, package:, config:, user_audit_info:)
+
+          expect(Delayed::Job.last.priority).to eq(2)
+        end
+
+        it 'does not count the user\'s non-upload (generic-queue) jobs' do
+          # Deletes/bindings run on the generic queue, different workers — must not deprioritize uploads
+          PollableJobModel.create(state: PollableJobModel::PROCESSING_STATE, user_guid: user_guid,
+                                  operation: 'app.delete', delayed_job_guid: 'g1')
+          PollableJobModel.create(state: PollableJobModel::POLLING_STATE, user_guid: user_guid,
+                                  operation: 'service_instance.create', delayed_job_guid: 'g2')
+
+          package_upload.upload_async(message:, package:, config:, user_audit_info:)
+
+          expect(Delayed::Job.last.priority).to eq(0)
+        end
+
+        it 'does not count another user\'s active upload jobs' do
+          PollableJobModel.create(state: PollableJobModel::PROCESSING_STATE, user_guid: 'other-user',
+                                  operation: 'package.upload', delayed_job_guid: 'o1')
+
+          package_upload.upload_async(message:, package:, config:, user_audit_info:)
+
+          expect(Delayed::Job.last.priority).to eq(0)
         end
 
         it 'does not deprioritize when the user has no active jobs' do
