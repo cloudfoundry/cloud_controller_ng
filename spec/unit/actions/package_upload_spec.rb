@@ -71,7 +71,7 @@ module VCAP::CloudController
           expect(Delayed::Job.last.priority).to eq(2)
         end
 
-        it 'counts other upload operations (droplet/buildpack) that share the local queue' do
+        it 'does not count other upload operations (droplet/buildpack)' do
           PollableJobModel.create(state: PollableJobModel::PROCESSING_STATE, user_guid: user_guid,
                                   operation: 'droplet.upload', delayed_job_guid: 'd1')
           PollableJobModel.create(state: PollableJobModel::PROCESSING_STATE, user_guid: user_guid,
@@ -79,7 +79,7 @@ module VCAP::CloudController
 
           package_upload.upload_async(message:, package:, config:, user_audit_info:)
 
-          expect(Delayed::Job.last.priority).to eq(2)
+          expect(Delayed::Job.last.priority).to eq(0)
         end
 
         it 'does not count the user\'s non-upload (generic-queue) jobs' do

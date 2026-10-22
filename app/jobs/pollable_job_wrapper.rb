@@ -27,9 +27,7 @@ module VCAP::CloudController
         else
           user_guid = VCAP::CloudController::UserAuditInfo.from_context(VCAP::CloudController::SecurityContext).user_guid
 
-          if VCAP::CloudController::Config.config.get(:jobs, :enable_dynamic_job_priorities) && user_guid
-            job.values[:priority] += active_jobs_count_for_priority(user_guid)
-          end
+          job.values[:priority] += active_jobs_count_for_priority(user_guid) if VCAP::CloudController::Config.config.get(:jobs, :enable_dynamic_job_priorities) && user_guid
 
           PollableJobModel.create(
             delayed_job_guid: job.guid,
@@ -87,13 +85,9 @@ module VCAP::CloudController
 
       private
 
-      # Bits uploads (package/droplet/buildpack) run on the per-instance LOCAL worker
-      # queue and only compete with each other for those slots, so they are throttled
-      # against the user's other active uploads. All other pollable jobs keep the
-      # original global count across the user's active jobs.
       def active_jobs_count_for_priority(user_guid)
-        if PollableJobModel::UPLOAD_OPERATIONS.include?(@handler.try(:display_name))
-          PollableJobModel.number_of_active_upload_jobs_by_user(user_guid)
+        if @handler.try(:display_name) == 'package.upload'
+          PollableJobModel.number_of_active_package_uploads_by_user(user_guid)
         else
           PollableJobModel.number_of_active_jobs_by_user(user_guid)
         end

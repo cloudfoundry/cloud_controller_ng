@@ -54,28 +54,23 @@ module VCAP::CloudController
       end
     end
 
-    describe('.number_of_active_upload_jobs_by_user') do
+    describe('.number_of_active_package_uploads_by_user') do
       let(:delayed_job) { Delayed::Backend::Sequel::Job.create }
 
       before do
-        # active upload jobs (local-queue) for the user
         PollableJobModel.create(state: 'PROCESSING', operation: 'package.upload', delayed_job_guid: delayed_job.guid, user_guid: 'some-user-guid')
-        PollableJobModel.create(state: 'POLLING', operation: 'droplet.upload', delayed_job_guid: delayed_job.guid, user_guid: 'some-user-guid')
-        PollableJobModel.create(state: 'PROCESSING', operation: 'buildpack.upload', delayed_job_guid: delayed_job.guid, user_guid: 'some-user-guid')
-        # non-upload (generic-queue) active job — must NOT be counted
+        PollableJobModel.create(state: 'POLLING', operation: 'package.upload', delayed_job_guid: delayed_job.guid, user_guid: 'some-user-guid')
         PollableJobModel.create(state: 'PROCESSING', operation: 'app.delete', delayed_job_guid: delayed_job.guid, user_guid: 'some-user-guid')
-        # finished upload job — must NOT be counted
         PollableJobModel.create(state: 'COMPLETE', operation: 'package.upload', delayed_job_guid: delayed_job.guid, user_guid: 'some-user-guid')
-        # another user's upload job — must NOT be counted
         PollableJobModel.create(state: 'PROCESSING', operation: 'package.upload', delayed_job_guid: delayed_job.guid, user_guid: 'other-user-guid')
       end
 
-      it 'counts only the user\'s active upload jobs' do
-        expect(PollableJobModel.number_of_active_upload_jobs_by_user('some-user-guid')).to eq(3)
+      it "counts only the user's active package upload jobs" do
+        expect(PollableJobModel.number_of_active_package_uploads_by_user('some-user-guid')).to eq(2)
       end
 
-      it 'returns 0 when the user has no active upload jobs' do
-        expect(PollableJobModel.number_of_active_upload_jobs_by_user('nobody')).to eq(0)
+      it 'returns 0 when the user has no active package upload jobs' do
+        expect(PollableJobModel.number_of_active_package_uploads_by_user('nobody')).to eq(0)
       end
     end
 
