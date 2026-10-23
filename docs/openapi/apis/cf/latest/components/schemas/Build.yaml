@@ -55,7 +55,7 @@ allOf:
         type: object
         properties:
           guid:
-            type: string
+            type: [string, "null"]
             description: The guid of the user that created the build
           name:
             type: [string, "null"]

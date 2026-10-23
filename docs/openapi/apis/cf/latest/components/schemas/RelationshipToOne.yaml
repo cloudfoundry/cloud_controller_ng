@@ -2,7 +2,11 @@ type: object
 properties:
   data:
     type: [object, "null"]
-    $ref: './Relationship.yaml'
+    properties:
+      guid:
+        type: string
+        format: uuid
+        description: The GUID of the resource
   links:
     type: object
     properties:
