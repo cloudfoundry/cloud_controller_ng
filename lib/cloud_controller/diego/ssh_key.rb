@@ -8,7 +8,7 @@ module VCAP
   module CloudController
     module Diego
       class SSHKey
-        def initialize(bits=2048)
+        def initialize(bits=4096)
           @bits = bits
         end
 
