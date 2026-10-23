@@ -27,9 +27,7 @@ module VCAP::CloudController
         else
           user_guid = VCAP::CloudController::UserAuditInfo.from_context(VCAP::CloudController::SecurityContext).user_guid
 
-          if VCAP::CloudController::Config.config.get(:jobs, :enable_dynamic_job_priorities) && user_guid
-            job.values[:priority] += PollableJobModel.number_of_active_jobs_by_user(user_guid)
-          end
+          job.values[:priority] += active_jobs_count_for_priority(user_guid) if VCAP::CloudController::Config.config.get(:jobs, :enable_dynamic_job_priorities) && user_guid
 
           PollableJobModel.create(
             delayed_job_guid: job.guid,
@@ -86,6 +84,14 @@ module VCAP::CloudController
       end
 
       private
+
+      def active_jobs_count_for_priority(user_guid)
+        if @handler.try(:display_name) == 'package.upload'
+          PollableJobModel.number_of_active_package_uploads_by_user(user_guid)
+        else
+          PollableJobModel.number_of_active_jobs_by_user(user_guid)
+        end
+      end
 
       def convert_to_v3_api_error(exception)
         v3_hasher = V3ErrorHasher.new(exception)

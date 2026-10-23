@@ -859,6 +859,10 @@ RSpec.describe 'Packages' do
 
         expect(Delayed::Job.count).to eq 1
 
+        pollable_job = VCAP::CloudController::PollableJobModel.last
+        expect(pollable_job.operation).to eq('package.upload')
+        expect(pollable_job.resource_guid).to eq(guid)
+
         expected_response = {
           'type' => package_model.type,
           'guid' => guid,

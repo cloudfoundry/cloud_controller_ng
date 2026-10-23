@@ -14,7 +14,7 @@ module VCAP::CloudController
         package.state = PackageModel::PENDING_STATE
         package.save
 
-        enqueued_job = Jobs::Enqueuer.new(queue: Jobs::Queues.local(config)).enqueue(upload_job)
+        enqueued_job = Jobs::Enqueuer.new(queue: Jobs::Queues.local(config)).enqueue_pollable(upload_job)
 
         record_upload(package, user_audit_info) if record_event
       end
@@ -25,7 +25,23 @@ module VCAP::CloudController
     end
 
     def upload_async_without_event(message:, package:, config:)
-      upload_async(message: message, package: package, config: config, user_audit_info: UserAuditInfo.new(user_email: nil, user_guid: nil), record_event: false)
+      logger.info("uploading package bits for package #{package.guid}")
+
+      upload_job = build_job(message, package)
+      enqueued_job = nil
+
+      package.db.transaction do
+        package.lock!
+
+        package.state = PackageModel::PENDING_STATE
+        package.save
+
+        enqueued_job = Jobs::Enqueuer.new(queue: Jobs::Queues.local(config)).enqueue(upload_job)
+      end
+
+      enqueued_job
+    rescue Sequel::ValidationFailed => e
+      raise InvalidPackage.new(e.message)
     end
 
     def upload_sync_without_event(message, package)
