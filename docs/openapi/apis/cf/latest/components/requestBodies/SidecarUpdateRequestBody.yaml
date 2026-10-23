@@ -1,4 +1,4 @@
-description: Sidecar object that needs to be updated
+description: The sidecar fields to update
 required: true
 content:
   application/json:
@@ -17,8 +17,9 @@ content:
             type: string
           description: A list of process types the sidecar applies to
         memory_in_mb:
-          type: integer
+          type: [integer, "null"]
           description: Reserved memory for sidecar
+      description: Request schema for updating a sidecar
     examples:
       default:
         summary: default

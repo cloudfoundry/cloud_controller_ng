@@ -1,7 +1,10 @@
 /v3/environment_variable_groups/{name}:
   get:
     summary: Get an environment variable group
-    description: Retrieve an environment variable group.
+    description: |-
+      Retrieve an environment variable group.
+
+      **Permitted roles:** All Roles
     operationId: getEnvironmentVariableGroup
     tags:
       - Environment Variable Groups
@@ -14,6 +17,7 @@
           enum:
             - running
             - staging
+        description: The name of the group; can only be `running` or `staging`
     responses:
       '200':
         description: OK
@@ -32,30 +36,27 @@
                   links:
                     self:
                       href: https://api.example.org/v3/environment_variable_groups/running
-      '400':
-        $ref: ../components/responses/BadRequest.yaml
       '401':
         $ref: ../components/responses/Unauthorized.yaml
       '403':
         $ref: ../components/responses/Forbidden.yaml
       '404':
         $ref: ../components/responses/NotFound.yaml
-      '409':
-        $ref: ../components/responses/Conflict.yaml
-      '422':
-        $ref: ../components/responses/UnprocessableEntity.yaml
       '500':
         $ref: ../components/responses/500.yaml
-      '502':
-        $ref: ../components/responses/BadGateway.yaml
       '503':
         $ref: ../components/responses/ServiceUnavailable.yaml
   patch:
     summary: Update environment variable group
     description: |-
-      Update the environment variable group. The variables given in the request will be merged with the existing environment variable group. Any requested variables with a value of `null` will be removed from the group. Environment variable names may not start with VCAP_. PORT is not a valid environment variable.
+      Update the environment variable group.
+      The variables given in the request will be merged with the existing environment variable group.
+      Any requested variables with a value of `null` will be removed from the group.
+      Environment variable names may not start with VCAP_. PORT is not a valid environment variable.
 
-      Variables updated in the **running** environment variable group will not take effect until apps are restarted.
+      > **Note:** Variables updated in the **running** environment variable group will not take effect until apps are restarted.
+
+      **Permitted roles:** Admin
     operationId: updateEnvironmentVariableGroup
     tags:
       - Environment Variable Groups
@@ -68,6 +69,7 @@
           enum:
             - running
             - staging
+        description: The name of the group; can only be `running` or `staging`
     requestBody:
       description: The environment variables to update
       required: true
@@ -79,8 +81,15 @@
               var:
                 type: object
                 additionalProperties:
-                  type: string
-                description: Environment variables to inject; keys and values must be strings
+                  type: [string, "null"]
+                description: Environment variables to inject; keys and values must be strings. A value of `null` removes the variable from the group
+          examples:
+            default:
+              summary: default
+              value:
+                var:
+                  DEBUG: 'false'
+                  USER: null
     responses:
       '200':
         description: OK
@@ -92,12 +101,14 @@
               default:
                 summary: default
                 value:
+                  updated_at: '2016-05-04T17:00:41Z'
+                  name: running
                   var:
                     RAILS_ENV: production
                     DEBUG: 'false'
                   links:
                     self:
-                      href: https://api.example.org/v3/environment_variable_groups/[name]
+                      href: https://api.example.org/v3/environment_variable_groups/running
       '400':
         $ref: ../components/responses/BadRequest.yaml
       '401':
@@ -106,8 +117,6 @@
         $ref: ../components/responses/Forbidden.yaml
       '404':
         $ref: ../components/responses/NotFound.yaml
-      '409':
-        $ref: ../components/responses/Conflict.yaml
       '422':
         $ref: ../components/responses/UnprocessableEntity.yaml
       '500':
