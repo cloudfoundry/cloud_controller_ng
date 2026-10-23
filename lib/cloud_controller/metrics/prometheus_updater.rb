@@ -63,6 +63,39 @@ module VCAP::CloudController::Metrics
       { type: :histogram, name: :cc_job_duration_seconds, docstring: 'Job processing time (start to finish)', labels: %i[queue worker], buckets: DELAYED_JOB_METRIC_BUCKETS }
     ].freeze
 
+    STORAGE_CLI_DURATION_BUCKETS = [0.01, 0.05, 0.1, 0.5, 1, 5, 10, 30, 60].freeze
+    STORAGE_CLI_PUT_OPERATION = 'put'.freeze
+    STORAGE_CLI_SIZE_BUCKETS = [1_024, 10_240, 102_400, 1_048_576, 10_485_760, 104_857_600, 1_073_741_824].freeze
+    STORAGE_CLI_METRICS_EXECUTION_CONTEXTS = [
+      VCAP::CloudController::ExecutionContext::CC_WORKER,
+      VCAP::CloudController::ExecutionContext::API_PUMA_MAIN,
+      VCAP::CloudController::ExecutionContext::API_PUMA_WORKER
+    ].freeze
+
+    STORAGE_CLI_OPERATIONS_TOTAL_DOCSTRING =
+      'Total storage-cli subprocess invocations by operation and exit_code. ' \
+      'exit_code=0: success; exit_code=3: not-found (expected for exists); ' \
+      'exit_code=-1: spawn failure (binary missing or permission denied); ' \
+      'exit_code=-2: process exited with neither exitstatus nor termsig (platform anomaly); ' \
+      'exit_code=-3: source file open/read failure before CLI invocation; ' \
+      'exit_code=-4: upload skipped locally because blob size is outside configured limits; ' \
+      'exit_code=-5: local non-StandardError before CLI invocation (for example Interrupt or SignalException); ' \
+      'exit_code=-6: signal received after CLI invocation began (Interrupt or SignalException mid-execution); ' \
+      'exit_code=-7: fatal non-signal exception escaping run_cli (e.g. NoMemoryError)'.freeze
+    STORAGE_CLI_METRICS = [
+      { type: :counter, name: :cc_storage_cli_operations_total,
+        docstring: STORAGE_CLI_OPERATIONS_TOTAL_DOCSTRING,
+        labels: %i[operation exit_code] },
+      { type: :histogram, name: :cc_storage_cli_duration_seconds,
+        docstring: 'Duration of individual storage-cli subprocess invocations. ' \
+                   'Counts per-retry, not per logical operation.',
+        labels: %i[operation exit_code], buckets: STORAGE_CLI_DURATION_BUCKETS },
+      { type: :histogram, name: :cc_storage_cli_blob_size_bytes,
+        docstring: 'Local source file size for storage-cli put operations ' \
+                   '(only emitted on success; reflects pre-upload size, not remote stored size)',
+        labels: %i[operation], buckets: STORAGE_CLI_SIZE_BUCKETS }
+    ].freeze
+
     VITAL_METRICS = [
       { type: :gauge, name: :cc_vitals_started_at, docstring: 'CloudController Vitals: started_at', aggregation: :most_recent },
       { type: :gauge, name: :cc_vitals_mem_bytes, docstring: 'CloudController Vitals: mem_bytes', aggregation: :most_recent },
@@ -78,8 +111,8 @@ module VCAP::CloudController::Metrics
       @registry = registry
       @execution_context = VCAP::CloudController::ExecutionContext.from_process_type_env
 
-      register_metrics_for_process
-      return if @execution_context.nil? # In unit tests, the execution context might not be set - thus skip initialization
+      register_metrics_for_process unless @execution_context.nil?
+      return if @execution_context.nil?
 
       initialize_cc_db_connection_pool_timeouts_total
     end
@@ -92,6 +125,7 @@ module VCAP::CloudController::Metrics
       when VCAP::CloudController::ExecutionContext::CC_WORKER
         DB_CONNECTION_POOL_METRICS.each { |metric| register(metric) }
         DELAYED_JOB_METRICS.each { |metric| register(metric) }
+        STORAGE_CLI_METRICS.each { |metric| register(metric) }
         VITAL_METRICS.each { |metric| register(metric) }
       when VCAP::CloudController::ExecutionContext::CLOCK, VCAP::CloudController::ExecutionContext::DEPLOYMENT_UPDATER
         DB_CONNECTION_POOL_METRICS.each { |metric| register(metric) }
@@ -99,6 +133,7 @@ module VCAP::CloudController::Metrics
       when VCAP::CloudController::ExecutionContext::API_PUMA_MAIN, VCAP::CloudController::ExecutionContext::API_PUMA_WORKER
         DB_CONNECTION_POOL_METRICS.each { |metric| register(metric) }
         DELAYED_JOB_METRICS.each { |metric| register(metric) }
+        STORAGE_CLI_METRICS.each { |metric| register(metric) }
         VITAL_METRICS.each { |metric| register(metric) }
         METRICS.each { |metric| register(metric) }
         PUMA_METRICS.each { |metric| register(metric) }
@@ -210,6 +245,34 @@ module VCAP::CloudController::Metrics
       update_histogram_metric(:cc_staging_failed_duration_seconds, nanoseconds_to_seconds(duration_ns))
     end
 
+    def report_storage_cli_metrics(operation:, exit_code:, duration_seconds:, blob_size: nil)
+      missing_metrics = []
+
+      if @registry.exist?(:cc_storage_cli_operations_total)
+        @registry.get(:cc_storage_cli_operations_total).increment(labels: { operation: operation, exit_code: exit_code.to_s })
+      else
+        missing_metrics << :cc_storage_cli_operations_total
+      end
+
+      if @registry.exist?(:cc_storage_cli_duration_seconds)
+        update_histogram_metric(:cc_storage_cli_duration_seconds, duration_seconds, labels: { operation: operation, exit_code: exit_code.to_s })
+      else
+        missing_metrics << :cc_storage_cli_duration_seconds
+      end
+
+      if !blob_size.nil? && exit_code == 0 && operation == STORAGE_CLI_PUT_OPERATION
+        if @registry.exist?(:cc_storage_cli_blob_size_bytes)
+          update_histogram_metric(:cc_storage_cli_blob_size_bytes, blob_size, labels: { operation: operation })
+        else
+          missing_metrics << :cc_storage_cli_blob_size_bytes
+        end
+      end
+
+      return if missing_metrics.empty?
+
+      Steno.logger('cc.metrics').warn("report_storage_cli_metrics: missing storage_cli metrics #{missing_metrics.join(', ')}")
+    end
+
     private
 
     def register(metric)
@@ -230,7 +293,7 @@ module VCAP::CloudController::Metrics
       when :histogram
         @registry.histogram(name, docstring: message, labels: labels, buckets: buckets, store_settings: store_settings)
       else
-        throw ArgumentError("Metric type #{type} does not exist.")
+        raise ArgumentError.new("Metric type #{type} does not exist.")
       end
     end
 

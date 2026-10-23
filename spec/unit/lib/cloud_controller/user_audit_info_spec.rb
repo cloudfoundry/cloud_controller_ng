@@ -20,9 +20,14 @@ module VCAP::CloudController
     end
 
     describe '#hash_for_logs' do
-      it 'returns only the non-sensitive identity fields' do
+      it 'returns only the user_guid' do
         info = UserAuditInfo.new(user_email: 'e', user_name: 'n', user_guid: 'g')
-        expect(info.hash_for_logs).to eq(user_guid: 'g', user_email: 'e', user_name: 'n')
+        expect(info.hash_for_logs).to eq(user_guid: 'g')
+      end
+
+      it 'includes user_guid key even when guid is nil' do
+        info = UserAuditInfo.new(user_email: 'e', user_name: 'n', user_guid: nil)
+        expect(info.hash_for_logs).to eq(user_guid: nil)
       end
     end
 

@@ -1,3 +1,4 @@
+require 'find'
 require 'shellwords'
 
 module CloudController
@@ -24,11 +25,22 @@ module CloudController
 
       def populate_resource_cache(app_packager, app_contents_path)
         FileUtils.mkdir(app_contents_path)
-        app_packager.unzip(app_contents_path)
+
+        t = Time.now.utc
+        begin
+          app_packager.unzip(app_contents_path)
+        ensure
+          logger.info('packer.unzip', duration_seconds: Time.now.utc - t)
+        end
 
         remove_symlinks(app_contents_path)
 
-        global_app_bits_cache.cp_r_to_blobstore(app_contents_path)
+        t = Time.now.utc
+        begin
+          global_app_bits_cache.cp_r_to_blobstore(app_contents_path)
+        ensure
+          logger.info('packer.resource-cache-upload', duration_seconds: Time.now.utc - t)
+        end
       end
 
       def remove_symlinks(app_contents_path)
@@ -43,19 +55,35 @@ module CloudController
 
         FileUtils.mkdir(cached_resources_dir)
         checksum_mismatch = false
-        matched_resources.each do |local_destination, file_sha, mode|
-          file_path = File.join(cached_resources_dir, local_destination)
-          global_app_bits_cache.download_from_blobstore(file_sha, file_path, mode:)
+        download_count = 0
+        download_attempts = 0
 
-          if Digester.new.digest_path(file_path) != file_sha
-            checksum_mismatch = true
-            global_app_bits_cache.delete(file_sha)
+        t = Time.now.utc
+        begin
+          matched_resources.each do |local_destination, file_sha, mode|
+            file_path = File.join(cached_resources_dir, local_destination)
+            download_attempts += 1
+            global_app_bits_cache.download_from_blobstore(file_sha, file_path, mode:)
+
+            if Digester.new.digest_path(file_path) != file_sha
+              checksum_mismatch = true
+              global_app_bits_cache.delete(file_sha)
+            end
+
+            download_count += 1
           end
+        ensure
+          logger.info('packer.resource-cache-download', duration_seconds: Time.now.utc - t, count: download_count, attempted: download_attempts)
         end
 
         raise CloudController::Errors::ApiError.new_from_details('ResourceChecksumMismatch') if checksum_mismatch
 
-        app_packager.append_dir_contents(cached_resources_dir)
+        t = Time.now.utc
+        begin
+          app_packager.append_dir_contents(cached_resources_dir)
+        ensure
+          logger.info('packer.repackage', duration_seconds: Time.now.utc - t)
+        end
       end
 
       def match_resources_and_validate_package(root_path, uploaded_package_zip, cached_files_fingerprints)
@@ -81,6 +109,10 @@ module CloudController
 
       def global_app_bits_cache
         CloudController::DependencyLocator.instance.global_app_bits_cache
+      end
+
+      def logger
+        @logger ||= Steno.logger('cc.packer')
       end
     end
   end
