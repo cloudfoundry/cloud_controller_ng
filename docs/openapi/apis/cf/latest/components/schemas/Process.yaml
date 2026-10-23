@@ -26,6 +26,7 @@ allOf:
         description: The disk in MB allocated per instance
       log_rate_limit_in_bytes_per_second:
         type: integer
+        format: int64
         description: The log rate in bytes per second allocated per instance
       health_check:
         $ref: './HealthCheck.yaml'
