@@ -124,6 +124,22 @@ module VCAP::CloudController
           end
         end
       end
+
+      context 'when updating an existing custom-stack app without requesting a stack' do
+        let(:app) { create(:app_model, :cnb) }
+        let(:message) { AppUpdateMessage.new({ lifecycle: { type: 'cnb', data: { buildpacks: ['default-stack-buildpack'] } } }) }
+
+        before do
+          app.cnb_lifecycle_data.update(stack: 'docker://registry.example.com/custom-stack:latest')
+          create(:buildpack, name: 'default-stack-buildpack', stack: Stack.default.name, lifecycle: Lifecycles::CNB)
+        end
+
+        it 'rejects a buildpack pinned to the default stack' do
+          lifecycle = AppCNBLifecycle.new(message, app)
+          expect(lifecycle).not_to be_valid
+          expect(lifecycle.errors[:buildpack]).to include('"default-stack-buildpack" must be an existing admin buildpack or a valid git URI')
+        end
+      end
     end
 
     describe '#update_lifecycle_data_model credentials handling' do

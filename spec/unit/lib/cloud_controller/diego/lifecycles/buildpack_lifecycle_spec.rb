@@ -218,6 +218,8 @@ module VCAP::CloudController
         expect(BuildpackLifecycleDataValidator).to have_received(:new).with(
           buildpack_infos: [],
           stack: 'foo',
+          stack_name: Stack.default.name,
+          lifecycle_type: Lifecycles::BUILDPACK,
           credentials: nil,
           credentials_from_message: false
         )

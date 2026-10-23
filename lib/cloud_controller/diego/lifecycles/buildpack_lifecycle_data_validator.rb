@@ -4,10 +4,13 @@ module VCAP::CloudController
   class BuildpackLifecycleDataValidator
     include ActiveModel::Model
 
-    attr_accessor :buildpack_infos, :stack, :credentials, :credentials_from_message
+    attr_accessor :buildpack_infos, :stack, :stack_name, :lifecycle_type, :credentials, :credentials_from_message
 
     validate :buildpacks_are_uri_or_nil
+    validate :custom_stack_uri_is_valid
     validate :stack_exists_in_db
+    validate :custom_stack_has_auto_detect_buildpack
+    validate :no_custom_stack_userinfo
     validate :no_dual_credential_sources
 
     def buildpacks_are_uri_or_nil
@@ -25,7 +28,30 @@ module VCAP::CloudController
     end
 
     def stack_exists_in_db
+      return if UriUtils.is_custom_stack_uri?(stack_name) && FeatureFlag.enabled?(:diego_custom_stacks)
+      return if custom_stack_uri?(stack_name) && !UriUtils.is_custom_stack_uri?(stack_name)
+
       errors.add(:stack, 'must be an existing stack') if stack.nil?
+    end
+
+    def custom_stack_uri_is_valid
+      return unless custom_stack_uri?(stack_name)
+      return if UriUtils.is_custom_stack_uri?(stack_name)
+
+      errors.add(:stack, 'must be a valid container image URI')
+    end
+
+    def no_custom_stack_userinfo
+      return unless UriUtils.is_custom_stack_uri?(stack_name) && UriUtils.url_has_userinfo?(stack_name)
+
+      errors.add(:stack, 'Custom stack URIs must not contain credentials; use data.credentials instead')
+    end
+
+    def custom_stack_has_auto_detect_buildpack
+      return unless UriUtils.is_custom_stack_uri?(stack_name) && buildpack_infos.empty?
+      return if unpinned_admin_buildpack_exists?
+
+      errors.add(:buildpack, 'must specify a custom buildpack URL or an enabled unpinned admin buildpack when using a custom stack')
     end
 
     def no_dual_credential_sources
@@ -41,8 +67,17 @@ module VCAP::CloudController
 
     private
 
+    def unpinned_admin_buildpack_exists?
+      lifecycle = lifecycle_type || Config.config.get(:default_app_lifecycle)
+      Buildpack.list_admin_buildpacks(nil, lifecycle).any? { |buildpack| buildpack.stack.nil? && buildpack.enabled? }
+    end
+
     def url_has_userinfo?
       buildpack_infos.any? { |bi| bi.buildpack_url && UriUtils.url_has_userinfo?(bi.buildpack_url) }
+    end
+
+    def custom_stack_uri?(stack_name)
+      stack_name.is_a?(String) && stack_name.start_with?('docker://')
     end
   end
 end
