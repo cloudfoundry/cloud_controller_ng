@@ -33,7 +33,7 @@ RSpec.describe 'security groups spaces unique index', isolation: :truncation, ty
       expect(db[:security_groups_spaces].where(security_group_id: sec_group_2.id, space_id: space_2.id).count).to eq(3)
 
       # === UP MIGRATION ===
-      expect { Sequel::Migrator.run(db, migrations_path, target: current_migration_index, allow_missing_migration_files: true) }.not_to raise_error
+      expect { run_migration }.not_to raise_error
 
       # Verify duplicates are removed after migration
       expect(db[:security_groups_spaces].where(security_group_id: sec_group_1.id, space_id: space_1.id).count).to eq(1)
@@ -46,16 +46,16 @@ RSpec.describe 'security groups spaces unique index', isolation: :truncation, ty
       expect(db.indexes(:security_groups_spaces)).to include(:security_groups_spaces_ids)
 
       # Test up migration idempotency
-      expect { Sequel::Migrator.run(db, migrations_path, target: current_migration_index, allow_missing_migration_files: true) }.not_to raise_error
+      test_up_migration_idempotency
       expect(db.indexes(:security_groups_spaces)).to include(:security_groups_spaces_ids)
 
       # === DOWN MIGRATION ===
-      expect { Sequel::Migrator.run(db, migrations_path, target: current_migration_index - 1, allow_missing_migration_files: true) }.not_to raise_error
+      expect { revert_migration }.not_to raise_error
       expect(db.indexes(:security_groups_spaces)).to include(:sgs_spaces_ids)
       expect(db.indexes(:security_groups_spaces)).not_to include(:security_groups_spaces_ids)
 
       # Test down migration idempotency
-      expect { Sequel::Migrator.run(db, migrations_path, target: current_migration_index - 1, allow_missing_migration_files: true) }.not_to raise_error
+      test_down_migration_idempotency
       expect(db.indexes(:security_groups_spaces)).to include(:sgs_spaces_ids)
       expect(db.indexes(:security_groups_spaces)).not_to include(:security_groups_spaces_ids)
     end

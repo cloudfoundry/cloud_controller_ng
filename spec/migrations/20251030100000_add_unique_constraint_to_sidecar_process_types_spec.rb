@@ -31,7 +31,7 @@ RSpec.describe 'add unique constraint to sidecar process types', isolation: :tru
     # =========================================================================================
     # UP MIGRATION: Run the migration to apply the unique constraints.
     # =========================================================================================
-    Sequel::Migrator.run(db, migrations_path, target: current_migration_index, allow_missing_migration_files: true)
+    run_migration
 
     # =========================================================================================
     # ASSERT UP MIGRATION: Verify that duplicates are removed and constraints are enforced.
@@ -47,12 +47,12 @@ RSpec.describe 'add unique constraint to sidecar process types', isolation: :tru
     # =========================================================================================
     # TEST IDEMPOTENCY: Running the migration again should not cause any errors.
     # =========================================================================================
-    expect { Sequel::Migrator.run(db, migrations_path, target: current_migration_index, allow_missing_migration_files: true) }.not_to raise_error
+    test_up_migration_idempotency
 
     # =========================================================================================
     # DOWN MIGRATION: Roll back the migration to remove the constraints.
     # =========================================================================================
-    Sequel::Migrator.run(db, migrations_path, target: current_migration_index - 1, allow_missing_migration_files: true)
+    revert_migration
 
     # =========================================================================================
     # ASSERT DOWN MIGRATION: Verify that constraints are removed and duplicates can be re-inserted.
@@ -62,5 +62,12 @@ RSpec.describe 'add unique constraint to sidecar process types', isolation: :tru
 
     expect(db.indexes(:revision_sidecar_process_types)).not_to include(:revision_sidecar_process_types_revision_sidecar_guid_type_index)
     expect { db[:revision_sidecar_process_types].insert(revision_sidecar_guid: revision_sidecar_guid, type: 'worker', guid: SecureRandom.uuid) }.not_to raise_error
+
+    # =========================================================================================
+    # TEST IDEMPOTENCY: Running the rollback again should not cause any errors.
+    # =========================================================================================
+    test_down_migration_idempotency
+    expect(db.indexes(:sidecar_process_types)).not_to include(:sidecar_process_types_sidecar_guid_type_index)
+    expect(db.indexes(:revision_sidecar_process_types)).not_to include(:revision_sidecar_process_types_revision_sidecar_guid_type_index)
   end
 end
