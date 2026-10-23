@@ -4,6 +4,8 @@ require 'cloud_controller/blobstore/error_handling_client'
 require 'cloud_controller/blobstore/local/local_client'
 require 'cloud_controller/blobstore/safe_delete_client'
 require 'cloud_controller/blobstore/storage_cli/storage_cli_client'
+require 'cloud_controller/execution_context'
+require 'cloud_controller/metrics/prometheus_updater'
 
 module CloudController
   module Blobstore
@@ -49,7 +51,8 @@ module CloudController
             resource_type: resource_type,
             root_dir: root_dir,
             min_size: options[:minimum_size],
-            max_size: options[:maximum_size]
+            max_size: options[:maximum_size],
+            metrics_updater: metrics_updater_if_registered
           )
 
           logger = Steno.logger('cc.blobstore.storage_cli_client')
@@ -57,6 +60,13 @@ module CloudController
           retryable_client = RetryableClient.new(client:, errors:, logger:)
 
           Client.new(SafeDeleteClient.new(retryable_client, root_dir))
+        end
+
+        def metrics_updater_if_registered
+          ctx = VCAP::CloudController::ExecutionContext.from_process_type_env
+          return nil unless VCAP::CloudController::Metrics::PrometheusUpdater::STORAGE_CLI_METRICS_EXECUTION_CONTEXTS.include?(ctx)
+
+          CloudController::DependencyLocator.instance.prometheus_updater
         end
       end
     end

@@ -368,6 +368,27 @@ module CloudController::Packager
           end
         end
       end
+
+      it 'logs timing for each phase' do
+        logger = instance_double(Steno::Logger)
+        allow(Steno).to receive(:logger).and_return(logger)
+        allow(logger).to receive(:info)
+        allow(logger).to receive(:debug)
+        allow(VCAP::CloudController::FeatureFlag).to receive(:disabled?).with(:resource_matching).and_return(false)
+        global_app_bits_cache.instance_variable_set(:@logger, logger)
+        package_blobstore.instance_variable_set(:@logger, logger)
+
+        packer.send_package_to_blobstore(blobstore_key, uploaded_files_path, cached_files_fingerprints)
+
+        expect(logger).to have_received(:info).with('packer.unzip', hash_including(:duration_seconds))
+        expect(logger).to have_received(:info).with('blobstore.cp_r.digest', hash_including(:duration_seconds, :count))
+        expect(logger).to have_received(:info).with('blobstore.cp_r.exists', hash_including(:duration_seconds, :count))
+        expect(logger).to have_received(:info).with('blobstore.cp_r.upload', hash_including(:duration_seconds, :count))
+        expect(logger).to have_received(:info).with('packer.resource-cache-upload', hash_including(:duration_seconds))
+        expect(logger).to have_received(:info).with('packer.resource-cache-download', hash_including(:duration_seconds, :count))
+        expect(logger).to have_received(:info).with('packer.repackage', hash_including(:duration_seconds))
+        expect(logger).to have_received(:info).with('packer.final-upload', hash_including(:duration_seconds, :blobstore_key))
+      end
     end
   end
 end
