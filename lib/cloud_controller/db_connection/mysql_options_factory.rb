@@ -24,6 +24,14 @@ module VCAP::CloudController
 
         options
       end
+
+      def self.reset_env(env)
+        env.delete('MARIADB_TLS_DISABLE_PEER_VERIFICATION')
+      end
+
+      def self.set_env(opts, env)
+        env['MARIADB_TLS_DISABLE_PEER_VERIFICATION'] = '1' unless opts[:ca_cert_path]
+      end
     end
   end
 end
