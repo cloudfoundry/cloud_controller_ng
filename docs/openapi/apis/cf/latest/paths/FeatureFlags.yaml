@@ -1,21 +1,26 @@
 /v3/feature_flags:
   get:
     summary: List feature flags
-    description: Retrieve all feature_flags.
+    description: |-
+      Retrieve all feature_flags.
+
+      **Permitted roles:** All Roles
     operationId: listFeatureFlags
     tags:
       - Feature Flags
     parameters:
       - $ref: ../components/parameters/Page.yaml
       - $ref: ../components/parameters/PerPage.yaml
-      - $ref: ../components/parameters/OrderBy.yaml
-      - name: updated_ats
+      - name: order_by
         in: query
         required: false
         schema:
           type: string
-        description: |
-          Timestamp to filter by. When filtering on equality, several comma-delimited timestamps may be passed.
+          enum:
+            - name
+            - '-name'
+        description: Value to sort by. Defaults to `name` ascending; prepend with `-` to sort descending. Valid value is `name`
+      - $ref: ../components/parameters/UpdatedAts.yaml
     responses:
       '200':
         description: OK
@@ -58,20 +63,17 @@
         $ref: ../components/responses/Unauthorized.yaml
       '403':
         $ref: ../components/responses/Forbidden.yaml
-      '409':
-        $ref: ../components/responses/Conflict.yaml
-      '422':
-        $ref: ../components/responses/UnprocessableEntity.yaml
       '500':
         $ref: ../components/responses/500.yaml
-      '502':
-        $ref: ../components/responses/BadGateway.yaml
       '503':
         $ref: ../components/responses/ServiceUnavailable.yaml
 /v3/feature_flags/{name}:
   get:
     summary: Get a feature flag
-    description: Get a feature flag.
+    description: |-
+      Get a feature flag.
+
+      **Permitted roles:** All Roles
     operationId: getFeatureFlag
     tags:
       - Feature Flags
@@ -87,6 +89,7 @@
             - diego_docker
             - diego_cnb
             - env_var_visibility
+            - hash_based_routing
             - hide_marketplace_from_unauthenticated_users
             - private_domain_creation
             - resource_matching
@@ -100,7 +103,7 @@
             - task_creation
             - unset_roles_by_username
             - user_org_creation
-        description: The name of the feature flag
+        description: The name of the feature flag; must be one of the names in the [list of feature flags](#list-of-feature-flags)
     responses:
       '200':
         description: Successfully retrieved feature flag
@@ -127,7 +130,10 @@
         $ref: ../components/responses/NotFound.yaml
   patch:
     summary: Update a feature flag
-    description: Update a feature flag.
+    description: |-
+      Update a feature flag.
+
+      **Permitted roles:** Admin
     operationId: updateFeatureFlag
     tags:
       - Feature Flags
@@ -143,6 +149,7 @@
             - diego_docker
             - diego_cnb
             - env_var_visibility
+            - hash_based_routing
             - hide_marketplace_from_unauthenticated_users
             - private_domain_creation
             - resource_matching
@@ -156,7 +163,7 @@
             - task_creation
             - unset_roles_by_username
             - user_org_creation
-        description: The name of the feature flag
+        description: The name of the feature flag; must be one of the names in the [list of feature flags](#list-of-feature-flags)
     requestBody:
       description: Feature flag object that needs to be updated
       required: true
@@ -169,7 +176,7 @@
                 type: boolean
                 description: Whether the feature flag is enabled
               custom_error_message:
-                type: string
+                type: [string, "null"]
                 description: The error string returned by the API when a client performs an action disabled by the feature flag
           examples:
             default:
@@ -203,8 +210,6 @@
         $ref: ../components/responses/Forbidden.yaml
       '404':
         $ref: ../components/responses/NotFound.yaml
-      '409':
-        $ref: ../components/responses/Conflict.yaml
       '422':
         $ref: ../components/responses/UnprocessableEntity.yaml
       '500':

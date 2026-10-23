@@ -1,12 +1,21 @@
 /v3/sidecars/{guid}:
   get:
     summary: Get a sidecar
-    description: Get a sidecar.
+    description: |-
+      Retrieve a sidecar.
+
+      **Permitted roles:** Admin, Admin Read-Only, Global Auditor, Org Manager, Space Auditor, Space Developer, Space Manager, Space Supporter
     operationId: getSidecar
     tags:
       - Sidecars
     parameters:
-      - $ref: ../components/parameters/Guid.yaml
+      - name: guid
+        in: path
+        required: true
+        schema:
+          type: string
+          format: uuid
+        description: The unique identifier for the sidecar
     responses:
       '200':
         description: OK
@@ -18,7 +27,7 @@
               default:
                 summary: default
                 value:
-                  guid: 123e4567-e89b-12d3-a456-426614174000
+                  guid: 885735b5-aea4-4cf5-8e44-961af0e41920
                   name: auth-sidecar
                   command: bundle exec rackup
                   process_types:
@@ -29,7 +38,7 @@
                   relationships:
                     app:
                       data:
-                        guid: 123e4567-e89b-12d3-a456-426614174000
+                        guid: 1cb006ee-fb05-47e1-b541-c34179ddc446
                   created_at: '2017-02-01T01:33:58Z'
                   updated_at: '2017-02-01T01:33:58Z'
         links:
@@ -58,12 +67,21 @@
         $ref: ../components/responses/ServiceUnavailable.yaml
   patch:
     summary: Update a sidecar
-    description: Update a sidecar.
+    description: |-
+      Update a sidecar.
+
+      **Permitted roles:** Admin, Space Developer
     operationId: updateSidecar
     tags:
       - Sidecars
     parameters:
-      - $ref: ../components/parameters/Guid.yaml
+      - name: guid
+        in: path
+        required: true
+        schema:
+          type: string
+          format: uuid
+        description: The unique identifier for the sidecar
     requestBody:
       $ref: ../components/requestBodies/SidecarUpdateRequestBody.yaml
     responses:
@@ -77,7 +95,7 @@
               default:
                 summary: default
                 value:
-                  guid: 123e4567-e89b-12d3-a456-426614174000
+                  guid: 885735b5-aea4-4cf5-8e44-961af0e41920
                   name: auth-sidecar
                   command: bundle exec rackup
                   process_types:
@@ -88,7 +106,7 @@
                   relationships:
                     app:
                       data:
-                        guid: 123e4567-e89b-12d3-a456-426614174000
+                        guid: 1cb006ee-fb05-47e1-b541-c34179ddc446
                   created_at: '2017-02-01T01:33:58Z'
                   updated_at: '2017-02-01T01:33:58Z'
         links:
@@ -115,12 +133,21 @@
         $ref: ../components/responses/ServiceUnavailable.yaml
   delete:
     summary: Delete a sidecar
-    description: Delete a sidecar.
+    description: |-
+      Delete a sidecar.
+
+      **Permitted roles:** Admin, Space Developer
     operationId: deleteSidecar
     tags:
       - Sidecars
     parameters:
-      - $ref: ../components/parameters/Guid.yaml
+      - name: guid
+        in: path
+        required: true
+        schema:
+          type: string
+          format: uuid
+        description: The unique identifier for the sidecar
     responses:
       '204':
         description: No Content
@@ -137,12 +164,36 @@
 /v3/apps/{guid}/sidecars:
   get:
     summary: List sidecars for app
-    description: Retrieves all sidecars associated with a app.
+    description: |-
+      Retrieves all sidecars associated with a app.
+
+      **Permitted roles:** Admin, Admin Read-Only, Global Auditor, Org Manager, Space Auditor, Space Developer, Space Manager, Space Supporter
     operationId: listAppSidecars
     tags:
       - Sidecars
     parameters:
-      - $ref: ../components/parameters/Guid.yaml
+      - name: guid
+        in: path
+        required: true
+        schema:
+          type: string
+          format: uuid
+        description: The unique identifier for the app
+      - $ref: ../components/parameters/Page.yaml
+      - $ref: ../components/parameters/PerPage.yaml
+      - name: order_by
+        in: query
+        required: false
+        schema:
+          type: string
+          enum:
+            - created_at
+            - "-created_at"
+            - updated_at
+            - "-updated_at"
+        description: Value to sort by. Defaults to ascending; prepend with `-` to sort descending. Valid values are `created_at`, `updated_at`
+      - $ref: ../components/parameters/CreatedAts.yaml
+      - $ref: ../components/parameters/UpdatedAts.yaml
     responses:
       '200':
         description: OK
@@ -158,14 +209,14 @@
                     total_results: 3
                     total_pages: 2
                     first:
-                      href: https://api.example.org?page=1&per_page=2
+                      href: https://api.example.org/v3/apps/c7bd571f-dc48-406e-a503-3d871d659551/sidecars?page=1&per_page=2
                     last:
-                      href: https://api.example.org?page=2&per_page=2
+                      href: https://api.example.org/v3/apps/c7bd571f-dc48-406e-a503-3d871d659551/sidecars?page=2&per_page=2
                     next:
-                      href: https://api.example.org?page=2&per_page=2
+                      href: https://api.example.org/v3/apps/c7bd571f-dc48-406e-a503-3d871d659551/sidecars?page=2&per_page=2
                     previous: null
                   resources:
-                    - guid: 123e4567-e89b-12d3-a456-426614174000
+                    - guid: 885735b5-aea4-4cf5-8e44-961af0e41920
                       name: auth-sidecar
                       command: bundle exec rackup
                       process_types:
@@ -176,10 +227,10 @@
                       relationships:
                         app:
                           data:
-                            guid: 123e4567-e89b-12d3-a456-426614174000
+                            guid: 1cb006ee-fb05-47e1-b541-c34179ddc446
                       created_at: '2017-02-01T01:33:58Z'
                       updated_at: '2017-02-01T01:33:58Z'
-                    - guid: 123e4567-e89b-12d3-a456-426614174000
+                    - guid: 885735b5-aea4-4cf5-8e44-961af0e41921
                       name: echo-sidecar
                       command: start-echo-server
                       process_types:
@@ -189,23 +240,36 @@
                       relationships:
                         app:
                           data:
-                            guid: 123e4567-e89b-12d3-a456-426614174000
+                            guid: 1cb006ee-fb05-47e1-b541-c34179ddc446
                       created_at: '2017-02-01T01:33:59Z'
                       updated_at: '2017-02-01T01:33:59Z'
+      '400':
+        $ref: ../components/responses/BadRequest.yaml
       '401':
         $ref: ../components/responses/Unauthorized.yaml
       '403':
         $ref: ../components/responses/Forbidden.yaml
       '404':
         $ref: ../components/responses/NotFound.yaml
+      '422':
+        $ref: ../components/responses/UnprocessableEntity.yaml
   post:
     summary: Create a sidecar associated with an app
-    description: Create a sidecar associated with an app.
+    description: |-
+      Create a sidecar associated with an app.
+
+      **Permitted roles:** Admin, Space Developer
     operationId: createSidecar
     tags:
       - Sidecars
     parameters:
-      - $ref: ../components/parameters/Guid.yaml
+      - name: guid
+        in: path
+        required: true
+        schema:
+          type: string
+          format: uuid
+        description: The unique identifier for the app
     requestBody:
       $ref: ../components/requestBodies/SidecarCreate.yaml
     responses:
@@ -219,7 +283,7 @@
               default:
                 summary: default
                 value:
-                  guid: 123e4567-e89b-12d3-a456-426614174000
+                  guid: 885735b5-aea4-4cf5-8e44-961af0e41920
                   name: auth-sidecar
                   command: bundle exec rackup
                   process_types:
@@ -230,7 +294,7 @@
                   relationships:
                     app:
                       data:
-                        guid: 123e4567-e89b-12d3-a456-426614174000
+                        guid: 1cb006ee-fb05-47e1-b541-c34179ddc446
                   created_at: '2017-02-01T01:33:58Z'
                   updated_at: '2017-02-01T01:33:58Z'
         links:
@@ -258,12 +322,36 @@
 /v3/processes/{guid}/sidecars:
   get:
     summary: List sidecars for process
-    description: Retrieves all sidecars associated with a process.
+    description: |-
+      Retrieves all sidecars associated with a process.
+
+      **Permitted roles:** Admin, Admin Read-Only, Global Auditor, Org Manager, Space Auditor, Space Developer, Space Manager, Space Supporter
     operationId: listProcessSidecars
     tags:
       - Sidecars
     parameters:
-      - $ref: ../components/parameters/Guid.yaml
+      - name: guid
+        in: path
+        required: true
+        schema:
+          type: string
+          format: uuid
+        description: The unique identifier for the process
+      - $ref: ../components/parameters/Page.yaml
+      - $ref: ../components/parameters/PerPage.yaml
+      - name: order_by
+        in: query
+        required: false
+        schema:
+          type: string
+          enum:
+            - created_at
+            - "-created_at"
+            - updated_at
+            - "-updated_at"
+        description: Value to sort by. Defaults to ascending; prepend with `-` to sort descending. Valid values are `created_at`, `updated_at`
+      - $ref: ../components/parameters/CreatedAts.yaml
+      - $ref: ../components/parameters/UpdatedAts.yaml
     responses:
       '200':
         description: OK
@@ -279,14 +367,14 @@
                     total_results: 3
                     total_pages: 2
                     first:
-                      href: https://api.example.org?page=1&per_page=2
+                      href: https://api.example.org/v3/processes/ccc25a0f-c8f4-4b39-9f1b-de9f328d0ee5/sidecars?page=1&per_page=2
                     last:
-                      href: https://api.example.org?page=2&per_page=2
+                      href: https://api.example.org/v3/processes/ccc25a0f-c8f4-4b39-9f1b-de9f328d0ee5/sidecars?page=2&per_page=2
                     next:
-                      href: https://api.example.org?page=2&per_page=2
+                      href: https://api.example.org/v3/processes/ccc25a0f-c8f4-4b39-9f1b-de9f328d0ee5/sidecars?page=2&per_page=2
                     previous: null
                   resources:
-                    - guid: 123e4567-e89b-12d3-a456-426614174000
+                    - guid: 885735b5-aea4-4cf5-8e44-961af0e41920
                       name: auth-sidecar
                       command: bundle exec rackup
                       process_types:
@@ -297,10 +385,10 @@
                       relationships:
                         app:
                           data:
-                            guid: 123e4567-e89b-12d3-a456-426614174000
+                            guid: 1cb006ee-fb05-47e1-b541-c34179ddc446
                       created_at: '2017-02-01T01:33:58Z'
                       updated_at: '2017-02-01T01:33:58Z'
-                    - guid: 123e4567-e89b-12d3-a456-426614174000
+                    - guid: 885735b5-aea4-4cf5-8e44-961af0e41921
                       name: echo-sidecar
                       command: start-echo-server
                       process_types:
@@ -310,12 +398,16 @@
                       relationships:
                         app:
                           data:
-                            guid: 123e4567-e89b-12d3-a456-426614174000
+                            guid: 1cb006ee-fb05-47e1-b541-c34179ddc446
                       created_at: '2017-02-01T01:33:59Z'
                       updated_at: '2017-02-01T01:33:59Z'
+      '400':
+        $ref: ../components/responses/BadRequest.yaml
       '401':
         $ref: ../components/responses/Unauthorized.yaml
       '403':
         $ref: ../components/responses/Forbidden.yaml
       '404':
         $ref: ../components/responses/NotFound.yaml
+      '422':
+        $ref: ../components/responses/UnprocessableEntity.yaml

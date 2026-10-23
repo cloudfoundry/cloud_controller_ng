@@ -1,4 +1,5 @@
-description: Droplet object that needs to be created
+description: |-
+  Droplet object that needs to be created. When the `source_guid` query parameter is supplied the droplet is copied instead, and `relationships.app` (the destination app) is the only accepted parameter.
 required: true
 content:
   application/json:
@@ -15,9 +16,11 @@ content:
             - app
         process_types:
           type: object
-          description: Process names and start commands for the droplet
-        metadata:
-          $ref: ../schemas/Metadata.yaml
+          additionalProperties:
+            type: string
+          default:
+            web: ''
+          description: Process names and start commands for the droplet; not accepted when copying a droplet
       required:
         - relationships
       description: Request schema for creating a droplet
@@ -32,3 +35,10 @@ content:
           process_types:
             rake: bundle exec rake
             web: bundle exec rackup config.ru -p $PORT
+      copy:
+        summary: copy (with the source_guid query parameter)
+        value:
+          relationships:
+            app:
+              data:
+                guid: 7b34f1cf-7e73-428a-bb5a-8a17a8058396

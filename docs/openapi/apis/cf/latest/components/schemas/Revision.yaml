@@ -2,35 +2,82 @@ type: object
 allOf:
   - $ref: './BaseSchema.yaml'
   - properties:
+      guid:
+        type: string
+        format: uuid
+        description: Unique identifier for the revision
+      created_at:
+        type: string
+        format: date-time
+        description: The time with zone when the object was created
+      updated_at:
+        type: string
+        format: date-time
+        description: The time with zone when the object was last updated
       version:
         type: integer
-        description: Version number of the revision
+        description: Human-readable identifier for the revision; starts at 1, increments by 1 for each new revision of the app, and rolls back over to 1 at 9999
+      droplet:
+        type: object
+        description: The droplet used by a process running the revision
+        properties:
+          guid:
+            type: string
+            format: uuid
+            description: The GUID of the droplet used by a process running the revision
+      processes:
+        $ref: './RevisionProcessSnapshot.yaml'
+        description: An object representing process types at this revision
+      sidecars:
+        type: array
+        items:
+          $ref: './RevisionSidecarSnapshot.yaml'
+        description: The array of sidecars used by processes running the revision
       description:
         type: [string, "null"]
-        description: Description of the revision, created by the user
-      droplet:
-        $ref: './RelationshipToOne.yaml'
-      relationships:
-        allOf:
-          - $ref: './Relationships.yaml'
-          - properties:
-              app:
-                $ref: './RelationshipToOne.yaml'
-      enabled:
+        description: A short description of the reason for revision
+      deployable:
         type: boolean
-        description: Whether the revision is enabled or not.
+        description: Indicates if the revision's droplet is staged and the revision can be used to [create a deployment](#create-a-deployment)
+      relationships:
+        type: object
+        description: Relationships to other resources
+        properties:
+          app:
+            $ref: './RelationshipToOne.yaml'
+            description: The app the revision is associated with
       metadata:
         $ref: './Metadata.yaml'
+        description: |-
+          `labels`: Labels applied to the revision
+
+          `annotations`: Annotations applied to the revision
       links:
         type: object
+        description: Links to related resources
         properties:
           self:
             $ref: './Link.yaml'
             description: The URL to get this revision
           app:
             $ref: './Link.yaml'
-            description: The URL to get the app for this revision
+            description: The URL to get the app the revision is associated with
           environment_variables:
             $ref: './Link.yaml'
             description: The URL to get the environment variables for this revision
-description: 'An App Revision is an immutable snapshot of an app at a particular point in time. Revisions are identified by a sequential version number. The "current" revision for an app is the revision that is currently deployed for all instances of the app.'
+description: |-
+  Revisions represent code used by an application at a specific time. The most recent revision for a running application represents code and configuration currently running in Cloud Foundry. Revisions are not created for Tasks.
+
+  Revision are created when the following is changed:
+
+  * A new droplet is deployed for an app
+
+  * An app is deployed with new environment variables
+
+  * The app is deployed with a new or changed custom start command
+
+  * An app rolls back to a prior revision
+
+  Each time a new revision is created the reason(s) for the revisions creation will be appended to its description field.
+
+  By default the cloud foundry API retains at most 100 revisions per app.

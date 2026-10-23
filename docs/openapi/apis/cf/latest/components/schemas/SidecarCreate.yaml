@@ -2,15 +2,21 @@ type: object
 properties:
   name:
     type: string
-    description: Name of the sidecar
+    description: Human-readable name for the sidecar
   command:
     type: string
-    description: Command to run for the sidecar
+    description: The command used to start the sidecar
   process_types:
     type: array
     items:
       type: string
-    description: Process types that the sidecar applies to
+    description: A list of process types the sidecar applies to
   memory_in_mb:
     type: [integer, "null"]
-    description: Memory limit for the sidecar in MB
+    description: Reserved memory for sidecar
+required:
+  - name
+  - command
+  - process_types
+description: |-
+  Request schema for creating a sidecar associated with an app.

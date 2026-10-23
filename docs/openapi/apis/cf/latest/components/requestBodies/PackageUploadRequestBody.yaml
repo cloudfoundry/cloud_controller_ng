@@ -1,4 +1,5 @@
-description: Package bits to be uploaded
+description: |-
+  A multi-part form for packages of type `bits`. The request requires either a [.zip file](https://en.wikipedia.org/wiki/Zip_(file_format)) uploaded under the `bits` field or a list of [resource match objects](#the-resource-match-object) under the `resources` field. These field may be used together.
 required: true
 content:
   multipart/form-data:
@@ -8,7 +9,16 @@ content:
         bits:
           type: string
           format: binary
+          description: A binary zip file containing the package bits
         resources:
           type: array
+          default: []
+          description: Fingerprints of the application bits that have previously been pushed to Cloud Foundry, formatted as [resource match objects](#the-resource-match-object). This field accepts the v2 resources object format.
           items:
-            $ref: '../schemas/ResourceMatch.yaml'
+            $ref: '../schemas/ResourceMatchObject.yaml'
+      description: Request schema for uploading package bits
+    encoding:
+      bits:
+        contentType: application/zip
+      resources:
+        contentType: application/json

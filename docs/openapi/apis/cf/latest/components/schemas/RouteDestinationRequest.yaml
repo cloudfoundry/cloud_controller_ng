@@ -1,0 +1,45 @@
+type: object
+properties:
+  app:
+    type: object
+    properties:
+      guid:
+        type: string
+        format: uuid
+        description: Unique identifier for the app to route traffic to
+      process:
+        type: object
+        properties:
+          type:
+            type: string
+            description: Type of the process belonging to the app to route traffic to; defaults to `web`
+        description: The process of the app to route traffic to
+    required:
+      - guid
+    description: The app to route traffic to
+  port:
+    type: integer
+    minimum: 1024
+    maximum: 65535
+    description: Port on the destination process to route traffic to
+  weight:
+    type:
+      - integer
+      - 'null'
+    minimum: 1
+    maximum: 100
+    deprecated: true
+    description: 'Percentage of traffic which will be routed to this destination. **DEPRECATED:** this feature was only available via the experimental Service Mesh routing plane. It is no longer supported.'
+  protocol:
+    type:
+      - string
+      - 'null'
+    enum:
+      - http1
+      - http2
+      - tcp
+      - null
+    description: Protocol to use for this destination. Valid protocols are `http1` or `http2` if route protocol is `http`, `tcp` if route protocol is `tcp`. A `null` value will set it either `http1` or `tcp` based on the route protocol; this feature is only available if you turn it on in routing release
+required:
+  - app
+description: A destination to add to a route. Destinations without `process.type` specified will get process type `web` by default.
