@@ -1,0 +1,956 @@
+---
+openapi: 3.0.3
+info:
+  title: Cloud Controller V3 API
+  version: v3
+  description: 'Audit events help Cloud Foundry operators monitor actions taken against
+    resources (such as apps) via user or system actions. For more information, see
+    the [Cloud Foundry docs](https://docs.cloudfoundry.org/running/managing-cf/audit-events.html).
+    #### Audit Event Types ##### App lifecycle - `audit.app.apply_manifest` - `audit.app.build.create`
+    - `audit.app.build.failed` - `audit.app.build.staged` - `audit.app.copy-bits`
+    - `audit.app.create` - `audit.app.delete-request` - `audit.app.deployment.cancel`
+    - `audit.app.deployment.create` - `audit.app.deployment.continue` - `audit.app.droplet.create`
+    - `audit.app.droplet.delete` - `audit.app.droplet.download` - `audit.app.droplet.mapped`
+    - `audit.app.droplet.upload` - `audit.app.environment.show` - `audit.app.environment_variables.show`
+    - `audit.app.map-route` - `audit.app.package.create` - `audit.app.package.delete`
+    - `audit.app.package.download` - `audit.app.package.upload` - `audit.app.process.crash`
+    - `audit.app.process.create` - `audit.app.process.delete` - `audit.app.process.ready`
+    - `audit.app.process.not-ready` - `audit.app.process.rescheduling` - `audit.app.process.scale`
+    - `audit.app.process.terminate_instance` - `audit.app.process.update` - `audit.app.restage`
+    - `audit.app.restart` - `audit.app.revision.create` - `audit.app.revision.environment_variables.show`
+    - `audit.app.ssh-authorized` - `audit.app.ssh-unauthorized` - `audit.app.start`
+    - `audit.app.stop` - `audit.app.task.cancel` - `audit.app.task.create` - `audit.app.unmap-route`
+    - `audit.app.update` - `audit.app.upload-bits` ##### Buildpack lifecycle - `audit.buildpack.create`
+    - `audit.buildpack.delete` - `audit.buildpack.update` - `audit.buildpack.upload`
+    ##### Organization lifecycle - `audit.organization.create` - `audit.organization.delete-request`
+    - `audit.organization.update` ##### Organization_quota lifecycle - `audit.organization_quota.apply`
+    - `audit.organization_quota.create` - `audit.organization_quota.delete` - `audit.organization_quota.update`
+    ##### Route lifecycle - `audit.route.create` - `audit.route.delete-request` -
+    `audit.route.share` - `audit.route.transfer-owner` - `audit.route.unshare` - `audit.route.update`
+    ##### Service lifecycle - `audit.service.create` - `audit.service.delete` - `audit.service.update`
+    ##### Service_binding lifecycle - `audit.service_binding.create` - `audit.service_binding.delete`
+    - `audit.service_binding.show` - `audit.service_binding.start_create` - `audit.service_binding.start_delete`
+    - `audit.service_binding.update` ##### Service_broker lifecycle - `audit.service_broker.create`
+    - `audit.service_broker.delete` - `audit.service_broker.update` ##### Service_dashboard_client
+    lifecycle - `audit.service_dashboard_client.create` - `audit.service_dashboard_client.delete`
+    ##### Service_instance lifecycle - `audit.service_instance.bind_route` - `audit.service_instance.create`
+    - `audit.service_instance.delete` - `audit.service_instance.purge` - `audit.service_instance.share`
+    - `audit.service_instance.show` - `audit.service_instance.start_create` - `audit.service_instance.start_delete`
+    - `audit.service_instance.start_update` - `audit.service_instance.unbind_route`
+    - `audit.service_instance.unshare` - `audit.service_instance.update` ##### Service_key
+    lifecycle - `audit.service_key.create` - `audit.service_key.delete` - `audit.service_key.show`
+    - `audit.service_key.start_create` - `audit.service_key.start_delete` - `audit.service_key.update`
+    ##### Service_plan lifecycle - `audit.service_plan.create` - `audit.service_plan.delete`
+    - `audit.service_plan.update` ##### Service_plan_visibility lifecycle - `audit.service_plan_visibility.create`
+    - `audit.service_plan_visibility.delete` - `audit.service_plan_visibility.update`
+    ##### Service_route_binding lifecycle - `audit.service_route_binding.create` -
+    `audit.service_route_binding.delete` - `audit.service_route_binding.start_create`
+    - `audit.service_route_binding.start_delete` - `audit.service_route_binding.update`
+    ##### Space lifecycle - `audit.space.create` - `audit.space.delete-request` -
+    `audit.space.update` ##### Space_quota lifecycle - `audit.space_quota.apply` -
+    `audit.space_quota.create` - `audit.space_quota.delete` - `audit.space_quota.remove`
+    - `audit.space_quota.update` ##### Stack lifecycle - `audit.stack.create` - `audit.stack.delete`
+    - `audit.stack.update` ##### User lifecycle - `audit.user.organization_auditor_add`
+    - `audit.user.organization_auditor_remove` - `audit.user.organization_billing_manager_add`
+    - `audit.user.organization_billing_manager_remove` - `audit.user.organization_manager_add`
+    - `audit.user.organization_manager_remove` - `audit.user.organization_user_add`
+    - `audit.user.organization_user_remove` - `audit.user.space_auditor_add` - `audit.user.space_auditor_remove`
+    - `audit.user.space_developer_add` - `audit.user.space_developer_remove` - `audit.user.space_manager_add`
+    - `audit.user.space_manager_remove` - `audit.user.space_supporter_add` - `audit.user.space_supporter_remove`
+    ##### User_provided_service_instance lifecycle - `audit.user_provided_service_instance.create`
+    - `audit.user_provided_service_instance.delete` - `audit.user_provided_service_instance.show`
+    - `audit.user_provided_service_instance.update` ##### Special events - `app.crash`
+    - `blob.remove_orphan`'
+servers: []
+paths:
+  "/v3/audit_events":
+    get:
+      summary: List audit events
+      tags:
+      - Event
+      parameters:
+      - name: organization_guids
+        in: query
+        required: false
+        schema:
+          type: string
+        example: bd5f627f-a75d-4a5f-b464-60384ef5c859
+        description: Comma-delimited list of organization guids to filter by
+      - name: space_guids
+        in: query
+        required: false
+        schema:
+          type: string
+        example: 5e0b3322-1569-4fd7-8b55-3e451733a42d
+        description: Comma-delimited list of space guids to filter by
+      - name: target_guids
+        in: query
+        required: false
+        schema:
+          type: string
+        example: cd198afc-1c17-4965-a7c0-5c5b33562f0a
+        description: Comma-delimited list of target guids to filter by. Also supports
+          filtering by exclusion.
+      - name: target_guids[not]
+        in: query
+        required: false
+        schema:
+          type: array
+          items:
+            type: string
+        example:
+        - 7f67bd48-71b7-4345-97d9-f5795e04a1e5
+      - name: types
+        in: query
+        required: false
+        schema:
+          type: string
+        example: audit.app.restart
+        description: Comma-delimited list of event types to filter by
+      responses:
+        '200':
+          description: returns filtered events
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  pagination:
+                    type: object
+                    properties:
+                      total_results:
+                        type: integer
+                      total_pages:
+                        type: integer
+                      first:
+                        type: object
+                        properties:
+                          href:
+                            type: string
+                        required:
+                        - href
+                      last:
+                        type: object
+                        properties:
+                          href:
+                            type: string
+                        required:
+                        - href
+                      next:
+                        nullable: true
+                      previous:
+                        nullable: true
+                    required:
+                    - total_results
+                    - total_pages
+                    - first
+                    - last
+                    - next
+                    - previous
+                  resources:
+                    type: array
+                    items:
+                      type: object
+                      properties:
+                        guid:
+                          type: string
+                        created_at:
+                          type: string
+                        updated_at:
+                          type: string
+                        type:
+                          type: string
+                        actor:
+                          type: object
+                          properties:
+                            guid:
+                              type: string
+                            type:
+                              type: string
+                            name:
+                              type: string
+                          required:
+                          - guid
+                          - type
+                          - name
+                        target:
+                          type: object
+                          properties:
+                            guid:
+                              type: string
+                            type:
+                              type: string
+                            name:
+                              type: string
+                          required:
+                          - guid
+                          - type
+                          - name
+                        data:
+                          type: object
+                          properties: {}
+                        space:
+                          nullable: true
+                          type: object
+                          properties:
+                            guid:
+                              type: string
+                          required:
+                          - guid
+                        organization:
+                          nullable: true
+                          type: object
+                          properties:
+                            guid:
+                              type: string
+                          required:
+                          - guid
+                        links:
+                          type: object
+                          properties:
+                            self:
+                              type: object
+                              properties:
+                                href:
+                                  type: string
+                              required:
+                              - href
+                          required:
+                          - self
+                      required:
+                      - guid
+                      - created_at
+                      - updated_at
+                      - type
+                      - actor
+                      - target
+                      - data
+                      - space
+                      - organization
+                      - links
+                required:
+                - pagination
+                - resources
+              example:
+                pagination:
+                  total_results: 2
+                  total_pages: 1
+                  first:
+                    href: http://api2.vcap.me/v3/audit_events?organization_guids=bd5f627f-a75d-4a5f-b464-60384ef5c859&page=1&per_page=50
+                  last:
+                    href: http://api2.vcap.me/v3/audit_events?organization_guids=bd5f627f-a75d-4a5f-b464-60384ef5c859&page=1&per_page=50
+                  next:
+                  previous:
+                resources:
+                - guid: f7f24c6f-14bb-4632-8e20-e8bd205854f8
+                  created_at: '2026-03-31T23:33:18Z'
+                  updated_at: '2026-03-31T23:33:18Z'
+                  type: audit.organization.create
+                  actor:
+                    guid: 46d97466-480b-472d-bdfe-3ffb139a4a99
+                    type: name-8572
+                    name: name-8573
+                  target:
+                    guid: bd5f627f-a75d-4a5f-b464-60384ef5c859
+                    type: name-8574
+                    name: name-8575
+                  data: {}
+                  space:
+                  organization:
+                    guid: bd5f627f-a75d-4a5f-b464-60384ef5c859
+                  links:
+                    self:
+                      href: http://api2.vcap.me/v3/audit_events/f7f24c6f-14bb-4632-8e20-e8bd205854f8
+                - guid: 38be766c-dc6b-4435-a9fe-aac664d4c6d4
+                  created_at: '2026-03-31T23:33:18Z'
+                  updated_at: '2026-03-31T23:33:18Z'
+                  type: audit.app.restart
+                  actor:
+                    guid: 43fa78ec-bca5-4fd1-98dd-5b8f0c1f061d
+                    type: name-8578
+                    name: name-8579
+                  target:
+                    guid: 1b5c851c-65af-4427-8f71-9decec77c35a
+                    type: name-8580
+                    name: name-8581
+                  data: {}
+                  space:
+                    guid: 4886ff4a-f5f0-4b7c-a91b-b7339ebe2ad1
+                  organization:
+                    guid: bd5f627f-a75d-4a5f-b464-60384ef5c859
+                  links:
+                    self:
+                      href: http://api2.vcap.me/v3/audit_events/38be766c-dc6b-4435-a9fe-aac664d4c6d4
+  "/v3/audit_events/{guid}":
+    get:
+      summary: Get an audit event
+      tags:
+      - Event
+      parameters:
+      - name: guid
+        in: path
+        required: true
+        schema:
+          type: string
+        example: does-not-exist
+      responses:
+        '401':
+          description: returns 401 for Unauthenticated requests
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  errors:
+                    type: array
+                    items:
+                      type: object
+                      properties:
+                        detail:
+                          type: string
+                        title:
+                          type: string
+                        code:
+                          type: integer
+                        test_mode_info:
+                          type: object
+                          properties:
+                            detail:
+                              type: string
+                            title:
+                              type: string
+                            backtrace:
+                              type: array
+                              items:
+                                type: string
+                          required:
+                          - detail
+                          - title
+                          - backtrace
+                      required:
+                      - detail
+                      - title
+                      - code
+                      - test_mode_info
+                required:
+                - errors
+              example:
+                errors:
+                - detail: Authentication error
+                  title: CF-NotAuthenticated
+                  code: 10002
+                  test_mode_info:
+                    detail: Authentication error
+                    title: CF-NotAuthenticated
+                    backtrace:
+                    - "/Users/sethboyles/workspace/capi-release/src/cloud_controller_ng/app/controllers/v3/application_controller.rb:203:in
+                      `validate_token!'"
+                    - "/Users/sethboyles/.gem/ruby/3.3.7/gems/activesupport-8.1.3/lib/active_support/callbacks.rb:362:in
+                      `block in make_lambda'"
+                    - "/Users/sethboyles/.gem/ruby/3.3.7/gems/activesupport-8.1.3/lib/active_support/callbacks.rb:179:in
+                      `block in call'"
+                    - "/Users/sethboyles/.gem/ruby/3.3.7/gems/actionpack-8.1.3/lib/abstract_controller/callbacks.rb:36:in
+                      `block (2 levels) in <module:Callbacks>'"
+                    - "/Users/sethboyles/.gem/ruby/3.3.7/gems/activesupport-8.1.3/lib/active_support/callbacks.rb:180:in
+                      `call'"
+                    - "/Users/sethboyles/.gem/ruby/3.3.7/gems/activesupport-8.1.3/lib/active_support/callbacks.rb:560:in
+                      `block in invoke_before'"
+                    - "/Users/sethboyles/.gem/ruby/3.3.7/gems/activesupport-8.1.3/lib/active_support/callbacks.rb:560:in
+                      `each'"
+                    - "/Users/sethboyles/.gem/ruby/3.3.7/gems/activesupport-8.1.3/lib/active_support/callbacks.rb:560:in
+                      `invoke_before'"
+                    - "/Users/sethboyles/.gem/ruby/3.3.7/gems/activesupport-8.1.3/lib/active_support/callbacks.rb:109:in
+                      `run_callbacks'"
+                    - "/Users/sethboyles/.gem/ruby/3.3.7/gems/actionpack-8.1.3/lib/abstract_controller/callbacks.rb:266:in
+                      `process_action'"
+                    - "/Users/sethboyles/.gem/ruby/3.3.7/gems/actionpack-8.1.3/lib/action_controller/metal/rescue.rb:36:in
+                      `process_action'"
+                    - "/Users/sethboyles/.gem/ruby/3.3.7/gems/actionpack-8.1.3/lib/action_controller/metal/instrumentation.rb:76:in
+                      `block in process_action'"
+                    - "/Users/sethboyles/.gem/ruby/3.3.7/gems/activesupport-8.1.3/lib/active_support/notifications.rb:210:in
+                      `block in instrument'"
+                    - "/Users/sethboyles/.gem/ruby/3.3.7/gems/activesupport-8.1.3/lib/active_support/notifications/instrumenter.rb:58:in
+                      `instrument'"
+                    - "/Users/sethboyles/.gem/ruby/3.3.7/gems/activesupport-8.1.3/lib/active_support/notifications.rb:210:in
+                      `instrument'"
+                    - "/Users/sethboyles/.gem/ruby/3.3.7/gems/actionpack-8.1.3/lib/action_controller/metal/instrumentation.rb:75:in
+                      `process_action'"
+                    - "/Users/sethboyles/.gem/ruby/3.3.7/gems/actionpack-8.1.3/lib/action_controller/metal/params_wrapper.rb:259:in
+                      `process_action'"
+                    - "/Users/sethboyles/.gem/ruby/3.3.7/gems/actionpack-8.1.3/lib/abstract_controller/base.rb:154:in
+                      `process'"
+                    - "/Users/sethboyles/.gem/ruby/3.3.7/gems/actionview-8.1.3/lib/action_view/rendering.rb:40:in
+                      `process'"
+                    - "/Users/sethboyles/.gem/ruby/3.3.7/gems/actionpack-8.1.3/lib/action_controller/metal.rb:252:in
+                      `dispatch'"
+                    - "/Users/sethboyles/.gem/ruby/3.3.7/gems/actionpack-8.1.3/lib/action_controller/metal.rb:335:in
+                      `dispatch'"
+                    - "/Users/sethboyles/.gem/ruby/3.3.7/gems/actionpack-8.1.3/lib/action_dispatch/routing/route_set.rb:65:in
+                      `dispatch'"
+                    - "/Users/sethboyles/.gem/ruby/3.3.7/gems/actionpack-8.1.3/lib/action_dispatch/routing/route_set.rb:50:in
+                      `serve'"
+                    - "/Users/sethboyles/.gem/ruby/3.3.7/gems/actionpack-8.1.3/lib/action_dispatch/journey/router.rb:35:in
+                      `block in serve'"
+                    - "/Users/sethboyles/.gem/ruby/3.3.7/gems/actionpack-8.1.3/lib/action_dispatch/journey/router.rb:86:in
+                      `block in recognize'"
+                    - "/Users/sethboyles/.gem/ruby/3.3.7/gems/actionpack-8.1.3/lib/action_dispatch/journey/router.rb:66:in
+                      `each'"
+                    - "/Users/sethboyles/.gem/ruby/3.3.7/gems/actionpack-8.1.3/lib/action_dispatch/journey/router.rb:66:in
+                      `recognize'"
+                    - "/Users/sethboyles/.gem/ruby/3.3.7/gems/actionpack-8.1.3/lib/action_dispatch/journey/router.rb:31:in
+                      `serve'"
+                    - "/Users/sethboyles/.gem/ruby/3.3.7/gems/actionpack-8.1.3/lib/action_dispatch/routing/route_set.rb:906:in
+                      `call'"
+                    - "/Users/sethboyles/.gem/ruby/3.3.7/gems/rack-3.2.5/lib/rack/tempfile_reaper.rb:20:in
+                      `call'"
+                    - "/Users/sethboyles/.gem/ruby/3.3.7/gems/actionpack-8.1.3/lib/action_dispatch/http/content_security_policy.rb:38:in
+                      `call'"
+                    - "/Users/sethboyles/.gem/ruby/3.3.7/gems/actionpack-8.1.3/lib/action_dispatch/middleware/callbacks.rb:31:in
+                      `block in call'"
+                    - "/Users/sethboyles/.gem/ruby/3.3.7/gems/activesupport-8.1.3/lib/active_support/callbacks.rb:101:in
+                      `run_callbacks'"
+                    - "/Users/sethboyles/.gem/ruby/3.3.7/gems/actionpack-8.1.3/lib/action_dispatch/middleware/callbacks.rb:30:in
+                      `call'"
+                    - "/Users/sethboyles/.gem/ruby/3.3.7/gems/actionpack-8.1.3/lib/action_dispatch/middleware/executor.rb:20:in
+                      `call'"
+                    - "/Users/sethboyles/.gem/ruby/3.3.7/gems/actionpack-8.1.3/lib/action_dispatch/middleware/actionable_exceptions.rb:18:in
+                      `call'"
+                    - "/Users/sethboyles/.gem/ruby/3.3.7/gems/actionpack-8.1.3/lib/action_dispatch/middleware/debug_exceptions.rb:31:in
+                      `call'"
+                    - "/Users/sethboyles/.gem/ruby/3.3.7/gems/actionpack-8.1.3/lib/action_dispatch/middleware/show_exceptions.rb:32:in
+                      `call'"
+                    - "/Users/sethboyles/.gem/ruby/3.3.7/gems/actionpack-8.1.3/lib/action_dispatch/middleware/remote_ip.rb:98:in
+                      `call'"
+                    - "/Users/sethboyles/.gem/ruby/3.3.7/gems/rack-3.2.5/lib/rack/runtime.rb:24:in
+                      `call'"
+                    - "/Users/sethboyles/.gem/ruby/3.3.7/gems/actionpack-8.1.3/lib/action_dispatch/middleware/executor.rb:20:in
+                      `call'"
+                    - "/Users/sethboyles/.gem/ruby/3.3.7/gems/rack-3.2.5/lib/rack/sendfile.rb:131:in
+                      `call'"
+                    - "/Users/sethboyles/.gem/ruby/3.3.7/gems/rack-3.2.5/lib/rack/urlmap.rb:76:in
+                      `block in call'"
+                    - "/Users/sethboyles/.gem/ruby/3.3.7/gems/rack-3.2.5/lib/rack/urlmap.rb:60:in
+                      `each'"
+                    - "/Users/sethboyles/.gem/ruby/3.3.7/gems/rack-3.2.5/lib/rack/urlmap.rb:60:in
+                      `call'"
+                    - "/Users/sethboyles/workspace/capi-release/src/cloud_controller_ng/middleware/request_logs.rb:14:in
+                      `call'"
+                    - "/Users/sethboyles/workspace/capi-release/src/cloud_controller_ng/middleware/zipkin.rb:32:in
+                      `call_app'"
+                    - "/Users/sethboyles/workspace/capi-release/src/cloud_controller_ng/middleware/zipkin.rb:9:in
+                      `call'"
+                    - "/Users/sethboyles/workspace/capi-release/src/cloud_controller_ng/middleware/security_context_setter.rb:41:in
+                      `call'"
+                    - "/Users/sethboyles/workspace/capi-release/src/cloud_controller_ng/middleware/vcap_request_context_setter.rb:17:in
+                      `call'"
+                    - "/Users/sethboyles/workspace/capi-release/src/cloud_controller_ng/middleware/cors.rb:50:in
+                      `call_app'"
+                    - "/Users/sethboyles/workspace/capi-release/src/cloud_controller_ng/middleware/cors.rb:14:in
+                      `call'"
+                    - "/Users/sethboyles/workspace/capi-release/src/cloud_controller_ng/middleware/request_metrics.rb:13:in
+                      `call'"
+                    - "/Users/sethboyles/.gem/ruby/3.3.7/gems/rack-3.2.5/lib/rack/builder.rb:283:in
+                      `call'"
+                    - "/Users/sethboyles/.gem/ruby/3.3.7/gems/rack-test-2.2.0/lib/rack/test.rb:360:in
+                      `process_request'"
+                    - "/Users/sethboyles/.gem/ruby/3.3.7/gems/rack-test-2.2.0/lib/rack/test.rb:163:in
+                      `custom_request'"
+                    - "/Users/sethboyles/.gem/ruby/3.3.7/gems/rack-test-2.2.0/lib/rack/test.rb:112:in
+                      `get'"
+                    - "/Users/sethboyles/.rubies/ruby-3.3.7/lib/ruby/3.3.0/forwardable.rb:240:in
+                      `get'"
+                    - "/Users/sethboyles/workspace/capi-release/src/cloud_controller_ng/spec/request/events_spec.rb:490:in
+                      `block (4 levels) in <main>'"
+                    - "/Users/sethboyles/.gem/ruby/3.3.7/gems/rspec-core-3.13.6/lib/rspec/core/example.rb:263:in
+                      `instance_exec'"
+                    - "/Users/sethboyles/.gem/ruby/3.3.7/gems/rspec-core-3.13.6/lib/rspec/core/example.rb:263:in
+                      `block in run'"
+                    - "/Users/sethboyles/.gem/ruby/3.3.7/gems/rspec-core-3.13.6/lib/rspec/core/example.rb:511:in
+                      `block in with_around_and_singleton_context_hooks'"
+                    - "/Users/sethboyles/.gem/ruby/3.3.7/gems/rspec-core-3.13.6/lib/rspec/core/example.rb:468:in
+                      `block in with_around_example_hooks'"
+                    - "/Users/sethboyles/.gem/ruby/3.3.7/gems/rspec-core-3.13.6/lib/rspec/core/hooks.rb:486:in
+                      `block in run'"
+                    - "/Users/sethboyles/.gem/ruby/3.3.7/gems/rspec-core-3.13.6/lib/rspec/core/hooks.rb:626:in
+                      `block in run_around_example_hooks_for'"
+                    - "/Users/sethboyles/.gem/ruby/3.3.7/gems/rspec-core-3.13.6/lib/rspec/core/example.rb:352:in
+                      `call'"
+                    - "/Users/sethboyles/workspace/capi-release/src/cloud_controller_ng/spec/spec_helper_helper.rb:155:in
+                      `block (3 levels) in each_run'"
+                    - "/Users/sethboyles/.gem/ruby/3.3.7/gems/sequel-5.102.0/lib/sequel/database/transactions.rb:257:in
+                      `_transaction'"
+                    - "/Users/sethboyles/.gem/ruby/3.3.7/gems/sequel-5.102.0/lib/sequel/database/transactions.rb:239:in
+                      `block in transaction'"
+                    - "/Users/sethboyles/.gem/ruby/3.3.7/gems/sequel-5.102.0/lib/sequel/connection_pool/threaded.rb:92:in
+                      `hold'"
+                    - "/Users/sethboyles/.gem/ruby/3.3.7/gems/sequel-5.102.0/lib/sequel/database/connecting.rb:283:in
+                      `synchronize'"
+                    - "/Users/sethboyles/.gem/ruby/3.3.7/gems/sequel-5.102.0/lib/sequel/database/transactions.rb:197:in
+                      `transaction'"
+                    - "/Users/sethboyles/workspace/capi-release/src/cloud_controller_ng/spec/support/database_isolation.rb:39:in
+                      `cleanly'"
+                    - "/Users/sethboyles/workspace/capi-release/src/cloud_controller_ng/spec/spec_helper_helper.rb:155:in
+                      `block (2 levels) in each_run'"
+                    - "/Users/sethboyles/.gem/ruby/3.3.7/gems/rspec-core-3.13.6/lib/rspec/core/example.rb:457:in
+                      `instance_exec'"
+                    - "/Users/sethboyles/.gem/ruby/3.3.7/gems/rspec-core-3.13.6/lib/rspec/core/example.rb:457:in
+                      `instance_exec'"
+                    - "/Users/sethboyles/.gem/ruby/3.3.7/gems/rspec-core-3.13.6/lib/rspec/core/hooks.rb:390:in
+                      `execute_with'"
+                    - "/Users/sethboyles/.gem/ruby/3.3.7/gems/rspec-core-3.13.6/lib/rspec/core/hooks.rb:628:in
+                      `block (2 levels) in run_around_example_hooks_for'"
+                    - "/Users/sethboyles/.gem/ruby/3.3.7/gems/rspec-core-3.13.6/lib/rspec/core/example.rb:352:in
+                      `call'"
+                    - "/Users/sethboyles/.gem/ruby/3.3.7/gems/webmock-3.26.2/lib/webmock/rspec.rb:39:in
+                      `block (2 levels) in <main>'"
+                    - "/Users/sethboyles/.gem/ruby/3.3.7/gems/rspec-core-3.13.6/lib/rspec/core/example.rb:457:in
+                      `instance_exec'"
+                    - "/Users/sethboyles/.gem/ruby/3.3.7/gems/rspec-core-3.13.6/lib/rspec/core/example.rb:457:in
+                      `instance_exec'"
+                    - "/Users/sethboyles/.gem/ruby/3.3.7/gems/rspec-core-3.13.6/lib/rspec/core/hooks.rb:390:in
+                      `execute_with'"
+                    - "/Users/sethboyles/.gem/ruby/3.3.7/gems/rspec-core-3.13.6/lib/rspec/core/hooks.rb:628:in
+                      `block (2 levels) in run_around_example_hooks_for'"
+                    - "/Users/sethboyles/.gem/ruby/3.3.7/gems/rspec-core-3.13.6/lib/rspec/core/example.rb:352:in
+                      `call'"
+                    - "/Users/sethboyles/.gem/ruby/3.3.7/gems/rspec-core-3.13.6/lib/rspec/core/hooks.rb:629:in
+                      `run_around_example_hooks_for'"
+                    - "/Users/sethboyles/.gem/ruby/3.3.7/gems/rspec-core-3.13.6/lib/rspec/core/hooks.rb:486:in
+                      `run'"
+                    - "/Users/sethboyles/.gem/ruby/3.3.7/gems/rspec-core-3.13.6/lib/rspec/core/example.rb:468:in
+                      `with_around_example_hooks'"
+                    - "/Users/sethboyles/.gem/ruby/3.3.7/gems/rspec-core-3.13.6/lib/rspec/core/example.rb:511:in
+                      `with_around_and_singleton_context_hooks'"
+                    - "/Users/sethboyles/.gem/ruby/3.3.7/gems/rspec-core-3.13.6/lib/rspec/core/example.rb:259:in
+                      `run'"
+                    - "/Users/sethboyles/.gem/ruby/3.3.7/gems/rspec-core-3.13.6/lib/rspec/core/example_group.rb:653:in
+                      `block in run_examples'"
+                    - "/Users/sethboyles/.gem/ruby/3.3.7/gems/rspec-core-3.13.6/lib/rspec/core/example_group.rb:649:in
+                      `map'"
+                    - "/Users/sethboyles/.gem/ruby/3.3.7/gems/rspec-core-3.13.6/lib/rspec/core/example_group.rb:649:in
+                      `run_examples'"
+                    - "/Users/sethboyles/.gem/ruby/3.3.7/gems/rspec-core-3.13.6/lib/rspec/core/example_group.rb:614:in
+                      `run'"
+                    - "/Users/sethboyles/.gem/ruby/3.3.7/gems/rspec-core-3.13.6/lib/rspec/core/example_group.rb:615:in
+                      `block in run'"
+                    - "/Users/sethboyles/.gem/ruby/3.3.7/gems/rspec-core-3.13.6/lib/rspec/core/example_group.rb:615:in
+                      `map'"
+                    - "/Users/sethboyles/.gem/ruby/3.3.7/gems/rspec-core-3.13.6/lib/rspec/core/example_group.rb:615:in
+                      `run'"
+                    - "/Users/sethboyles/.gem/ruby/3.3.7/gems/rspec-core-3.13.6/lib/rspec/core/example_group.rb:615:in
+                      `block in run'"
+                    - "/Users/sethboyles/.gem/ruby/3.3.7/gems/rspec-core-3.13.6/lib/rspec/core/example_group.rb:615:in
+                      `map'"
+                    - "/Users/sethboyles/.gem/ruby/3.3.7/gems/rspec-core-3.13.6/lib/rspec/core/example_group.rb:615:in
+                      `run'"
+                    - "/Users/sethboyles/.gem/ruby/3.3.7/gems/rspec-core-3.13.6/lib/rspec/core/runner.rb:121:in
+                      `block (3 levels) in run_specs'"
+                    - "/Users/sethboyles/.gem/ruby/3.3.7/gems/rspec-core-3.13.6/lib/rspec/core/runner.rb:121:in
+                      `map'"
+                    - "/Users/sethboyles/.gem/ruby/3.3.7/gems/rspec-core-3.13.6/lib/rspec/core/runner.rb:121:in
+                      `block (2 levels) in run_specs'"
+                    - "/Users/sethboyles/.gem/ruby/3.3.7/gems/rspec-core-3.13.6/lib/rspec/core/configuration.rb:2097:in
+                      `with_suite_hooks'"
+                    - "/Users/sethboyles/.gem/ruby/3.3.7/gems/rspec-core-3.13.6/lib/rspec/core/runner.rb:116:in
+                      `block in run_specs'"
+                    - "/Users/sethboyles/.gem/ruby/3.3.7/gems/rspec-core-3.13.6/lib/rspec/core/reporter.rb:74:in
+                      `report'"
+                    - "/Users/sethboyles/.gem/ruby/3.3.7/gems/rspec-core-3.13.6/lib/rspec/core/runner.rb:115:in
+                      `run_specs'"
+                    - "/Users/sethboyles/.gem/ruby/3.3.7/gems/rspec-core-3.13.6/lib/rspec/core/runner.rb:89:in
+                      `run'"
+                    - "/Users/sethboyles/.gem/ruby/3.3.7/gems/rspec-core-3.13.6/lib/rspec/core/runner.rb:71:in
+                      `run'"
+                    - "/Users/sethboyles/.gem/ruby/3.3.7/gems/rspec-core-3.13.6/lib/rspec/core/runner.rb:45:in
+                      `invoke'"
+                    - "/Users/sethboyles/.gem/ruby/3.3.7/gems/rspec-core-3.13.6/exe/rspec:4:in
+                      `<top (required)>'"
+                    - "/Users/sethboyles/.gem/ruby/3.3.7/bin/rspec:25:in `load'"
+                    - "/Users/sethboyles/.gem/ruby/3.3.7/bin/rspec:25:in `<top (required)>'"
+                    - "/Users/sethboyles/.gem/ruby/3.3.7/gems/bundler-2.6.9/lib/bundler/cli/exec.rb:59:in
+                      `load'"
+                    - "/Users/sethboyles/.gem/ruby/3.3.7/gems/bundler-2.6.9/lib/bundler/cli/exec.rb:59:in
+                      `kernel_load'"
+                    - "/Users/sethboyles/.gem/ruby/3.3.7/gems/bundler-2.6.9/lib/bundler/cli/exec.rb:23:in
+                      `run'"
+                    - "/Users/sethboyles/.gem/ruby/3.3.7/gems/bundler-2.6.9/lib/bundler/cli.rb:452:in
+                      `exec'"
+                    - "/Users/sethboyles/.gem/ruby/3.3.7/gems/bundler-2.6.9/lib/bundler/vendor/thor/lib/thor/command.rb:28:in
+                      `run'"
+                    - "/Users/sethboyles/.gem/ruby/3.3.7/gems/bundler-2.6.9/lib/bundler/vendor/thor/lib/thor/invocation.rb:127:in
+                      `invoke_command'"
+                    - "/Users/sethboyles/.gem/ruby/3.3.7/gems/bundler-2.6.9/lib/bundler/vendor/thor/lib/thor.rb:538:in
+                      `dispatch'"
+                    - "/Users/sethboyles/.gem/ruby/3.3.7/gems/bundler-2.6.9/lib/bundler/cli.rb:35:in
+                      `dispatch'"
+                    - "/Users/sethboyles/.gem/ruby/3.3.7/gems/bundler-2.6.9/lib/bundler/vendor/thor/lib/thor/base.rb:584:in
+                      `start'"
+                    - "/Users/sethboyles/.gem/ruby/3.3.7/gems/bundler-2.6.9/lib/bundler/cli.rb:29:in
+                      `start'"
+                    - "/Users/sethboyles/.gem/ruby/3.3.7/gems/bundler-2.6.9/exe/bundle:28:in
+                      `block in <top (required)>'"
+                    - "/Users/sethboyles/.gem/ruby/3.3.7/gems/bundler-2.6.9/lib/bundler/friendly_errors.rb:117:in
+                      `with_friendly_errors'"
+                    - "/Users/sethboyles/.gem/ruby/3.3.7/gems/bundler-2.6.9/exe/bundle:20:in
+                      `<top (required)>'"
+                    - "/Users/sethboyles/.gem/ruby/3.3.7/bin/bundle:25:in `load'"
+                    - "/Users/sethboyles/.gem/ruby/3.3.7/bin/bundle:25:in `<main>'"
+        '404':
+          description: returns a 404
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  errors:
+                    type: array
+                    items:
+                      type: object
+                      properties:
+                        detail:
+                          type: string
+                        title:
+                          type: string
+                        code:
+                          type: integer
+                        test_mode_info:
+                          type: object
+                          properties:
+                            detail:
+                              type: string
+                            title:
+                              type: string
+                            backtrace:
+                              type: array
+                              items:
+                                type: string
+                          required:
+                          - detail
+                          - title
+                          - backtrace
+                      required:
+                      - detail
+                      - title
+                      - code
+                      - test_mode_info
+                required:
+                - errors
+              example:
+                errors:
+                - detail: Event not found
+                  title: CF-ResourceNotFound
+                  code: 10010
+                  test_mode_info:
+                    detail: Event not found
+                    title: CF-ResourceNotFound
+                    backtrace:
+                    - "/Users/sethboyles/workspace/capi-release/src/cloud_controller_ng/app/controllers/v3/application_controller.rb:62:in
+                      `resource_not_found!'"
+                    - "/Users/sethboyles/workspace/capi-release/src/cloud_controller_ng/app/controllers/v3/events_controller.rb:30:in
+                      `event_not_found!'"
+                    - "/Users/sethboyles/workspace/capi-release/src/cloud_controller_ng/app/controllers/v3/events_controller.rb:22:in
+                      `show'"
+                    - "/Users/sethboyles/.gem/ruby/3.3.7/gems/actionpack-8.1.3/lib/action_controller/metal/basic_implicit_render.rb:8:in
+                      `send_action'"
+                    - "/Users/sethboyles/.gem/ruby/3.3.7/gems/actionpack-8.1.3/lib/abstract_controller/base.rb:221:in
+                      `process_action'"
+                    - "/Users/sethboyles/.gem/ruby/3.3.7/gems/actionpack-8.1.3/lib/action_controller/metal/rendering.rb:199:in
+                      `process_action'"
+                    - "/Users/sethboyles/.gem/ruby/3.3.7/gems/actionpack-8.1.3/lib/abstract_controller/callbacks.rb:267:in
+                      `block in process_action'"
+                    - "/Users/sethboyles/.gem/ruby/3.3.7/gems/activesupport-8.1.3/lib/active_support/callbacks.rb:110:in
+                      `run_callbacks'"
+                    - "/Users/sethboyles/.gem/ruby/3.3.7/gems/actionpack-8.1.3/lib/abstract_controller/callbacks.rb:266:in
+                      `process_action'"
+                    - "/Users/sethboyles/.gem/ruby/3.3.7/gems/actionpack-8.1.3/lib/action_controller/metal/rescue.rb:36:in
+                      `process_action'"
+                    - "/Users/sethboyles/.gem/ruby/3.3.7/gems/actionpack-8.1.3/lib/action_controller/metal/instrumentation.rb:76:in
+                      `block in process_action'"
+                    - "/Users/sethboyles/.gem/ruby/3.3.7/gems/activesupport-8.1.3/lib/active_support/notifications.rb:210:in
+                      `block in instrument'"
+                    - "/Users/sethboyles/.gem/ruby/3.3.7/gems/activesupport-8.1.3/lib/active_support/notifications/instrumenter.rb:58:in
+                      `instrument'"
+                    - "/Users/sethboyles/.gem/ruby/3.3.7/gems/activesupport-8.1.3/lib/active_support/notifications.rb:210:in
+                      `instrument'"
+                    - "/Users/sethboyles/.gem/ruby/3.3.7/gems/actionpack-8.1.3/lib/action_controller/metal/instrumentation.rb:75:in
+                      `process_action'"
+                    - "/Users/sethboyles/.gem/ruby/3.3.7/gems/actionpack-8.1.3/lib/action_controller/metal/params_wrapper.rb:259:in
+                      `process_action'"
+                    - "/Users/sethboyles/.gem/ruby/3.3.7/gems/actionpack-8.1.3/lib/abstract_controller/base.rb:154:in
+                      `process'"
+                    - "/Users/sethboyles/.gem/ruby/3.3.7/gems/actionview-8.1.3/lib/action_view/rendering.rb:40:in
+                      `process'"
+                    - "/Users/sethboyles/.gem/ruby/3.3.7/gems/actionpack-8.1.3/lib/action_controller/metal.rb:252:in
+                      `dispatch'"
+                    - "/Users/sethboyles/.gem/ruby/3.3.7/gems/actionpack-8.1.3/lib/action_controller/metal.rb:335:in
+                      `dispatch'"
+                    - "/Users/sethboyles/.gem/ruby/3.3.7/gems/actionpack-8.1.3/lib/action_dispatch/routing/route_set.rb:65:in
+                      `dispatch'"
+                    - "/Users/sethboyles/.gem/ruby/3.3.7/gems/actionpack-8.1.3/lib/action_dispatch/routing/route_set.rb:50:in
+                      `serve'"
+                    - "/Users/sethboyles/.gem/ruby/3.3.7/gems/actionpack-8.1.3/lib/action_dispatch/journey/router.rb:35:in
+                      `block in serve'"
+                    - "/Users/sethboyles/.gem/ruby/3.3.7/gems/actionpack-8.1.3/lib/action_dispatch/journey/router.rb:86:in
+                      `block in recognize'"
+                    - "/Users/sethboyles/.gem/ruby/3.3.7/gems/actionpack-8.1.3/lib/action_dispatch/journey/router.rb:66:in
+                      `each'"
+                    - "/Users/sethboyles/.gem/ruby/3.3.7/gems/actionpack-8.1.3/lib/action_dispatch/journey/router.rb:66:in
+                      `recognize'"
+                    - "/Users/sethboyles/.gem/ruby/3.3.7/gems/actionpack-8.1.3/lib/action_dispatch/journey/router.rb:31:in
+                      `serve'"
+                    - "/Users/sethboyles/.gem/ruby/3.3.7/gems/actionpack-8.1.3/lib/action_dispatch/routing/route_set.rb:906:in
+                      `call'"
+                    - "/Users/sethboyles/.gem/ruby/3.3.7/gems/rack-3.2.5/lib/rack/tempfile_reaper.rb:20:in
+                      `call'"
+                    - "/Users/sethboyles/.gem/ruby/3.3.7/gems/actionpack-8.1.3/lib/action_dispatch/http/content_security_policy.rb:38:in
+                      `call'"
+                    - "/Users/sethboyles/.gem/ruby/3.3.7/gems/actionpack-8.1.3/lib/action_dispatch/middleware/callbacks.rb:31:in
+                      `block in call'"
+                    - "/Users/sethboyles/.gem/ruby/3.3.7/gems/activesupport-8.1.3/lib/active_support/callbacks.rb:101:in
+                      `run_callbacks'"
+                    - "/Users/sethboyles/.gem/ruby/3.3.7/gems/actionpack-8.1.3/lib/action_dispatch/middleware/callbacks.rb:30:in
+                      `call'"
+                    - "/Users/sethboyles/.gem/ruby/3.3.7/gems/actionpack-8.1.3/lib/action_dispatch/middleware/executor.rb:20:in
+                      `call'"
+                    - "/Users/sethboyles/.gem/ruby/3.3.7/gems/actionpack-8.1.3/lib/action_dispatch/middleware/actionable_exceptions.rb:18:in
+                      `call'"
+                    - "/Users/sethboyles/.gem/ruby/3.3.7/gems/actionpack-8.1.3/lib/action_dispatch/middleware/debug_exceptions.rb:31:in
+                      `call'"
+                    - "/Users/sethboyles/.gem/ruby/3.3.7/gems/actionpack-8.1.3/lib/action_dispatch/middleware/show_exceptions.rb:32:in
+                      `call'"
+                    - "/Users/sethboyles/.gem/ruby/3.3.7/gems/actionpack-8.1.3/lib/action_dispatch/middleware/remote_ip.rb:98:in
+                      `call'"
+                    - "/Users/sethboyles/.gem/ruby/3.3.7/gems/rack-3.2.5/lib/rack/runtime.rb:24:in
+                      `call'"
+                    - "/Users/sethboyles/.gem/ruby/3.3.7/gems/actionpack-8.1.3/lib/action_dispatch/middleware/executor.rb:20:in
+                      `call'"
+                    - "/Users/sethboyles/.gem/ruby/3.3.7/gems/rack-3.2.5/lib/rack/sendfile.rb:131:in
+                      `call'"
+                    - "/Users/sethboyles/.gem/ruby/3.3.7/gems/rack-3.2.5/lib/rack/urlmap.rb:76:in
+                      `block in call'"
+                    - "/Users/sethboyles/.gem/ruby/3.3.7/gems/rack-3.2.5/lib/rack/urlmap.rb:60:in
+                      `each'"
+                    - "/Users/sethboyles/.gem/ruby/3.3.7/gems/rack-3.2.5/lib/rack/urlmap.rb:60:in
+                      `call'"
+                    - "/Users/sethboyles/workspace/capi-release/src/cloud_controller_ng/middleware/request_logs.rb:14:in
+                      `call'"
+                    - "/Users/sethboyles/workspace/capi-release/src/cloud_controller_ng/middleware/zipkin.rb:32:in
+                      `call_app'"
+                    - "/Users/sethboyles/workspace/capi-release/src/cloud_controller_ng/middleware/zipkin.rb:9:in
+                      `call'"
+                    - "/Users/sethboyles/workspace/capi-release/src/cloud_controller_ng/middleware/security_context_setter.rb:41:in
+                      `call'"
+                    - "/Users/sethboyles/workspace/capi-release/src/cloud_controller_ng/middleware/vcap_request_context_setter.rb:17:in
+                      `call'"
+                    - "/Users/sethboyles/workspace/capi-release/src/cloud_controller_ng/middleware/cors.rb:50:in
+                      `call_app'"
+                    - "/Users/sethboyles/workspace/capi-release/src/cloud_controller_ng/middleware/cors.rb:14:in
+                      `call'"
+                    - "/Users/sethboyles/workspace/capi-release/src/cloud_controller_ng/middleware/request_metrics.rb:13:in
+                      `call'"
+                    - "/Users/sethboyles/.gem/ruby/3.3.7/gems/rack-3.2.5/lib/rack/builder.rb:283:in
+                      `call'"
+                    - "/Users/sethboyles/.gem/ruby/3.3.7/gems/rack-test-2.2.0/lib/rack/test.rb:360:in
+                      `process_request'"
+                    - "/Users/sethboyles/.gem/ruby/3.3.7/gems/rack-test-2.2.0/lib/rack/test.rb:163:in
+                      `custom_request'"
+                    - "/Users/sethboyles/.gem/ruby/3.3.7/gems/rack-test-2.2.0/lib/rack/test.rb:112:in
+                      `get'"
+                    - "/Users/sethboyles/.rubies/ruby-3.3.7/lib/ruby/3.3.0/forwardable.rb:240:in
+                      `get'"
+                    - "/Users/sethboyles/workspace/capi-release/src/cloud_controller_ng/spec/request/events_spec.rb:466:in
+                      `block (4 levels) in <main>'"
+                    - "/Users/sethboyles/.gem/ruby/3.3.7/gems/rspec-core-3.13.6/lib/rspec/core/example.rb:263:in
+                      `instance_exec'"
+                    - "/Users/sethboyles/.gem/ruby/3.3.7/gems/rspec-core-3.13.6/lib/rspec/core/example.rb:263:in
+                      `block in run'"
+                    - "/Users/sethboyles/.gem/ruby/3.3.7/gems/rspec-core-3.13.6/lib/rspec/core/example.rb:511:in
+                      `block in with_around_and_singleton_context_hooks'"
+                    - "/Users/sethboyles/.gem/ruby/3.3.7/gems/rspec-core-3.13.6/lib/rspec/core/example.rb:468:in
+                      `block in with_around_example_hooks'"
+                    - "/Users/sethboyles/.gem/ruby/3.3.7/gems/rspec-core-3.13.6/lib/rspec/core/hooks.rb:486:in
+                      `block in run'"
+                    - "/Users/sethboyles/.gem/ruby/3.3.7/gems/rspec-core-3.13.6/lib/rspec/core/hooks.rb:626:in
+                      `block in run_around_example_hooks_for'"
+                    - "/Users/sethboyles/.gem/ruby/3.3.7/gems/rspec-core-3.13.6/lib/rspec/core/example.rb:352:in
+                      `call'"
+                    - "/Users/sethboyles/workspace/capi-release/src/cloud_controller_ng/spec/spec_helper_helper.rb:155:in
+                      `block (3 levels) in each_run'"
+                    - "/Users/sethboyles/.gem/ruby/3.3.7/gems/sequel-5.102.0/lib/sequel/database/transactions.rb:257:in
+                      `_transaction'"
+                    - "/Users/sethboyles/.gem/ruby/3.3.7/gems/sequel-5.102.0/lib/sequel/database/transactions.rb:239:in
+                      `block in transaction'"
+                    - "/Users/sethboyles/.gem/ruby/3.3.7/gems/sequel-5.102.0/lib/sequel/connection_pool/threaded.rb:92:in
+                      `hold'"
+                    - "/Users/sethboyles/.gem/ruby/3.3.7/gems/sequel-5.102.0/lib/sequel/database/connecting.rb:283:in
+                      `synchronize'"
+                    - "/Users/sethboyles/.gem/ruby/3.3.7/gems/sequel-5.102.0/lib/sequel/database/transactions.rb:197:in
+                      `transaction'"
+                    - "/Users/sethboyles/workspace/capi-release/src/cloud_controller_ng/spec/support/database_isolation.rb:39:in
+                      `cleanly'"
+                    - "/Users/sethboyles/workspace/capi-release/src/cloud_controller_ng/spec/spec_helper_helper.rb:155:in
+                      `block (2 levels) in each_run'"
+                    - "/Users/sethboyles/.gem/ruby/3.3.7/gems/rspec-core-3.13.6/lib/rspec/core/example.rb:457:in
+                      `instance_exec'"
+                    - "/Users/sethboyles/.gem/ruby/3.3.7/gems/rspec-core-3.13.6/lib/rspec/core/example.rb:457:in
+                      `instance_exec'"
+                    - "/Users/sethboyles/.gem/ruby/3.3.7/gems/rspec-core-3.13.6/lib/rspec/core/hooks.rb:390:in
+                      `execute_with'"
+                    - "/Users/sethboyles/.gem/ruby/3.3.7/gems/rspec-core-3.13.6/lib/rspec/core/hooks.rb:628:in
+                      `block (2 levels) in run_around_example_hooks_for'"
+                    - "/Users/sethboyles/.gem/ruby/3.3.7/gems/rspec-core-3.13.6/lib/rspec/core/example.rb:352:in
+                      `call'"
+                    - "/Users/sethboyles/.gem/ruby/3.3.7/gems/webmock-3.26.2/lib/webmock/rspec.rb:39:in
+                      `block (2 levels) in <main>'"
+                    - "/Users/sethboyles/.gem/ruby/3.3.7/gems/rspec-core-3.13.6/lib/rspec/core/example.rb:457:in
+                      `instance_exec'"
+                    - "/Users/sethboyles/.gem/ruby/3.3.7/gems/rspec-core-3.13.6/lib/rspec/core/example.rb:457:in
+                      `instance_exec'"
+                    - "/Users/sethboyles/.gem/ruby/3.3.7/gems/rspec-core-3.13.6/lib/rspec/core/hooks.rb:390:in
+                      `execute_with'"
+                    - "/Users/sethboyles/.gem/ruby/3.3.7/gems/rspec-core-3.13.6/lib/rspec/core/hooks.rb:628:in
+                      `block (2 levels) in run_around_example_hooks_for'"
+                    - "/Users/sethboyles/.gem/ruby/3.3.7/gems/rspec-core-3.13.6/lib/rspec/core/example.rb:352:in
+                      `call'"
+                    - "/Users/sethboyles/.gem/ruby/3.3.7/gems/rspec-core-3.13.6/lib/rspec/core/hooks.rb:629:in
+                      `run_around_example_hooks_for'"
+                    - "/Users/sethboyles/.gem/ruby/3.3.7/gems/rspec-core-3.13.6/lib/rspec/core/hooks.rb:486:in
+                      `run'"
+                    - "/Users/sethboyles/.gem/ruby/3.3.7/gems/rspec-core-3.13.6/lib/rspec/core/example.rb:468:in
+                      `with_around_example_hooks'"
+                    - "/Users/sethboyles/.gem/ruby/3.3.7/gems/rspec-core-3.13.6/lib/rspec/core/example.rb:511:in
+                      `with_around_and_singleton_context_hooks'"
+                    - "/Users/sethboyles/.gem/ruby/3.3.7/gems/rspec-core-3.13.6/lib/rspec/core/example.rb:259:in
+                      `run'"
+                    - "/Users/sethboyles/.gem/ruby/3.3.7/gems/rspec-core-3.13.6/lib/rspec/core/example_group.rb:653:in
+                      `block in run_examples'"
+                    - "/Users/sethboyles/.gem/ruby/3.3.7/gems/rspec-core-3.13.6/lib/rspec/core/example_group.rb:649:in
+                      `map'"
+                    - "/Users/sethboyles/.gem/ruby/3.3.7/gems/rspec-core-3.13.6/lib/rspec/core/example_group.rb:649:in
+                      `run_examples'"
+                    - "/Users/sethboyles/.gem/ruby/3.3.7/gems/rspec-core-3.13.6/lib/rspec/core/example_group.rb:614:in
+                      `run'"
+                    - "/Users/sethboyles/.gem/ruby/3.3.7/gems/rspec-core-3.13.6/lib/rspec/core/example_group.rb:615:in
+                      `block in run'"
+                    - "/Users/sethboyles/.gem/ruby/3.3.7/gems/rspec-core-3.13.6/lib/rspec/core/example_group.rb:615:in
+                      `map'"
+                    - "/Users/sethboyles/.gem/ruby/3.3.7/gems/rspec-core-3.13.6/lib/rspec/core/example_group.rb:615:in
+                      `run'"
+                    - "/Users/sethboyles/.gem/ruby/3.3.7/gems/rspec-core-3.13.6/lib/rspec/core/example_group.rb:615:in
+                      `block in run'"
+                    - "/Users/sethboyles/.gem/ruby/3.3.7/gems/rspec-core-3.13.6/lib/rspec/core/example_group.rb:615:in
+                      `map'"
+                    - "/Users/sethboyles/.gem/ruby/3.3.7/gems/rspec-core-3.13.6/lib/rspec/core/example_group.rb:615:in
+                      `run'"
+                    - "/Users/sethboyles/.gem/ruby/3.3.7/gems/rspec-core-3.13.6/lib/rspec/core/runner.rb:121:in
+                      `block (3 levels) in run_specs'"
+                    - "/Users/sethboyles/.gem/ruby/3.3.7/gems/rspec-core-3.13.6/lib/rspec/core/runner.rb:121:in
+                      `map'"
+                    - "/Users/sethboyles/.gem/ruby/3.3.7/gems/rspec-core-3.13.6/lib/rspec/core/runner.rb:121:in
+                      `block (2 levels) in run_specs'"
+                    - "/Users/sethboyles/.gem/ruby/3.3.7/gems/rspec-core-3.13.6/lib/rspec/core/configuration.rb:2097:in
+                      `with_suite_hooks'"
+                    - "/Users/sethboyles/.gem/ruby/3.3.7/gems/rspec-core-3.13.6/lib/rspec/core/runner.rb:116:in
+                      `block in run_specs'"
+                    - "/Users/sethboyles/.gem/ruby/3.3.7/gems/rspec-core-3.13.6/lib/rspec/core/reporter.rb:74:in
+                      `report'"
+                    - "/Users/sethboyles/.gem/ruby/3.3.7/gems/rspec-core-3.13.6/lib/rspec/core/runner.rb:115:in
+                      `run_specs'"
+                    - "/Users/sethboyles/.gem/ruby/3.3.7/gems/rspec-core-3.13.6/lib/rspec/core/runner.rb:89:in
+                      `run'"
+                    - "/Users/sethboyles/.gem/ruby/3.3.7/gems/rspec-core-3.13.6/lib/rspec/core/runner.rb:71:in
+                      `run'"
+                    - "/Users/sethboyles/.gem/ruby/3.3.7/gems/rspec-core-3.13.6/lib/rspec/core/runner.rb:45:in
+                      `invoke'"
+                    - "/Users/sethboyles/.gem/ruby/3.3.7/gems/rspec-core-3.13.6/exe/rspec:4:in
+                      `<top (required)>'"
+                    - "/Users/sethboyles/.gem/ruby/3.3.7/bin/rspec:25:in `load'"
+                    - "/Users/sethboyles/.gem/ruby/3.3.7/bin/rspec:25:in `<top (required)>'"
+                    - "/Users/sethboyles/.gem/ruby/3.3.7/gems/bundler-2.6.9/lib/bundler/cli/exec.rb:59:in
+                      `load'"
+                    - "/Users/sethboyles/.gem/ruby/3.3.7/gems/bundler-2.6.9/lib/bundler/cli/exec.rb:59:in
+                      `kernel_load'"
+                    - "/Users/sethboyles/.gem/ruby/3.3.7/gems/bundler-2.6.9/lib/bundler/cli/exec.rb:23:in
+                      `run'"
+                    - "/Users/sethboyles/.gem/ruby/3.3.7/gems/bundler-2.6.9/lib/bundler/cli.rb:452:in
+                      `exec'"
+                    - "/Users/sethboyles/.gem/ruby/3.3.7/gems/bundler-2.6.9/lib/bundler/vendor/thor/lib/thor/command.rb:28:in
+                      `run'"
+                    - "/Users/sethboyles/.gem/ruby/3.3.7/gems/bundler-2.6.9/lib/bundler/vendor/thor/lib/thor/invocation.rb:127:in
+                      `invoke_command'"
+                    - "/Users/sethboyles/.gem/ruby/3.3.7/gems/bundler-2.6.9/lib/bundler/vendor/thor/lib/thor.rb:538:in
+                      `dispatch'"
+                    - "/Users/sethboyles/.gem/ruby/3.3.7/gems/bundler-2.6.9/lib/bundler/cli.rb:35:in
+                      `dispatch'"
+                    - "/Users/sethboyles/.gem/ruby/3.3.7/gems/bundler-2.6.9/lib/bundler/vendor/thor/lib/thor/base.rb:584:in
+                      `start'"
+                    - "/Users/sethboyles/.gem/ruby/3.3.7/gems/bundler-2.6.9/lib/bundler/cli.rb:29:in
+                      `start'"
+                    - "/Users/sethboyles/.gem/ruby/3.3.7/gems/bundler-2.6.9/exe/bundle:28:in
+                      `block in <top (required)>'"
+                    - "/Users/sethboyles/.gem/ruby/3.3.7/gems/bundler-2.6.9/lib/bundler/friendly_errors.rb:117:in
+                      `with_friendly_errors'"
+                    - "/Users/sethboyles/.gem/ruby/3.3.7/gems/bundler-2.6.9/exe/bundle:20:in
+                      `<top (required)>'"
+                    - "/Users/sethboyles/.gem/ruby/3.3.7/bin/bundle:25:in `load'"
+                    - "/Users/sethboyles/.gem/ruby/3.3.7/bin/bundle:25:in `<main>'"
+tags:
+- name: Event
+  description: 'Audit events help Cloud Foundry operators monitor actions taken against
+    resources (such as apps) via user or system actions. For more information, see
+    the [Cloud Foundry docs](https://docs.cloudfoundry.org/running/managing-cf/audit-events.html).
+    #### Audit Event Types ##### App lifecycle - `audit.app.apply_manifest` - `audit.app.build.create`
+    - `audit.app.build.failed` - `audit.app.build.staged` - `audit.app.copy-bits`
+    - `audit.app.create` - `audit.app.delete-request` - `audit.app.deployment.cancel`
+    - `audit.app.deployment.create` - `audit.app.deployment.continue` - `audit.app.droplet.create`
+    - `audit.app.droplet.delete` - `audit.app.droplet.download` - `audit.app.droplet.mapped`
+    - `audit.app.droplet.upload` - `audit.app.environment.show` - `audit.app.environment_variables.show`
+    - `audit.app.map-route` - `audit.app.package.create` - `audit.app.package.delete`
+    - `audit.app.package.download` - `audit.app.package.upload` - `audit.app.process.crash`
+    - `audit.app.process.create` - `audit.app.process.delete` - `audit.app.process.ready`
+    - `audit.app.process.not-ready` - `audit.app.process.rescheduling` - `audit.app.process.scale`
+    - `audit.app.process.terminate_instance` - `audit.app.process.update` - `audit.app.restage`
+    - `audit.app.restart` - `audit.app.revision.create` - `audit.app.revision.environment_variables.show`
+    - `audit.app.ssh-authorized` - `audit.app.ssh-unauthorized` - `audit.app.start`
+    - `audit.app.stop` - `audit.app.task.cancel` - `audit.app.task.create` - `audit.app.unmap-route`
+    - `audit.app.update` - `audit.app.upload-bits` ##### Buildpack lifecycle - `audit.buildpack.create`
+    - `audit.buildpack.delete` - `audit.buildpack.update` - `audit.buildpack.upload`
+    ##### Organization lifecycle - `audit.organization.create` - `audit.organization.delete-request`
+    - `audit.organization.update` ##### Organization_quota lifecycle - `audit.organization_quota.apply`
+    - `audit.organization_quota.create` - `audit.organization_quota.delete` - `audit.organization_quota.update`
+    ##### Route lifecycle - `audit.route.create` - `audit.route.delete-request` -
+    `audit.route.share` - `audit.route.transfer-owner` - `audit.route.unshare` - `audit.route.update`
+    ##### Service lifecycle - `audit.service.create` - `audit.service.delete` - `audit.service.update`
+    ##### Service_binding lifecycle - `audit.service_binding.create` - `audit.service_binding.delete`
+    - `audit.service_binding.show` - `audit.service_binding.start_create` - `audit.service_binding.start_delete`
+    - `audit.service_binding.update` ##### Service_broker lifecycle - `audit.service_broker.create`
+    - `audit.service_broker.delete` - `audit.service_broker.update` ##### Service_dashboard_client
+    lifecycle - `audit.service_dashboard_client.create` - `audit.service_dashboard_client.delete`
+    ##### Service_instance lifecycle - `audit.service_instance.bind_route` - `audit.service_instance.create`
+    - `audit.service_instance.delete` - `audit.service_instance.purge` - `audit.service_instance.share`
+    - `audit.service_instance.show` - `audit.service_instance.start_create` - `audit.service_instance.start_delete`
+    - `audit.service_instance.start_update` - `audit.service_instance.unbind_route`
+    - `audit.service_instance.unshare` - `audit.service_instance.update` ##### Service_key
+    lifecycle - `audit.service_key.create` - `audit.service_key.delete` - `audit.service_key.show`
+    - `audit.service_key.start_create` - `audit.service_key.start_delete` - `audit.service_key.update`
+    ##### Service_plan lifecycle - `audit.service_plan.create` - `audit.service_plan.delete`
+    - `audit.service_plan.update` ##### Service_plan_visibility lifecycle - `audit.service_plan_visibility.create`
+    - `audit.service_plan_visibility.delete` - `audit.service_plan_visibility.update`
+    ##### Service_route_binding lifecycle - `audit.service_route_binding.create` -
+    `audit.service_route_binding.delete` - `audit.service_route_binding.start_create`
+    - `audit.service_route_binding.start_delete` - `audit.service_route_binding.update`
+    ##### Space lifecycle - `audit.space.create` - `audit.space.delete-request` -
+    `audit.space.update` ##### Space_quota lifecycle - `audit.space_quota.apply` -
+    `audit.space_quota.create` - `audit.space_quota.delete` - `audit.space_quota.remove`
+    - `audit.space_quota.update` ##### Stack lifecycle - `audit.stack.create` - `audit.stack.delete`
+    - `audit.stack.update` ##### User lifecycle - `audit.user.organization_auditor_add`
+    - `audit.user.organization_auditor_remove` - `audit.user.organization_billing_manager_add`
+    - `audit.user.organization_billing_manager_remove` - `audit.user.organization_manager_add`
+    - `audit.user.organization_manager_remove` - `audit.user.organization_user_add`
+    - `audit.user.organization_user_remove` - `audit.user.space_auditor_add` - `audit.user.space_auditor_remove`
+    - `audit.user.space_developer_add` - `audit.user.space_developer_remove` - `audit.user.space_manager_add`
+    - `audit.user.space_manager_remove` - `audit.user.space_supporter_add` - `audit.user.space_supporter_remove`
+    ##### User_provided_service_instance lifecycle - `audit.user_provided_service_instance.create`
+    - `audit.user_provided_service_instance.delete` - `audit.user_provided_service_instance.show`
+    - `audit.user_provided_service_instance.update` ##### Special events - `app.crash`
+    - `blob.remove_orphan`'
