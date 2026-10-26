@@ -9,14 +9,12 @@ RSpec.describe StagingJobPresenter do
       job
     end
 
-    let(:user) { TestConfig.config[:staging][:auth][:user] }
-    let(:password) { TestConfig.config[:staging][:auth][:password] }
     let(:expected_polling_url) do
-      "http://#{user}:#{CGI.escape(password)}@#{TestConfig.config[:internal_service_hostname]}:#{TestConfig.config[:external_port]}/staging/jobs/#{job.guid}"
+      "https://#{TestConfig.config[:internal_service_hostname]}:#{TestConfig.config[:tls_port]}/internal/v4/staging_jobs/#{job.guid}"
     end
 
-    it 'creates a valid JSON with the http internal URL' do
-      expect(StagingJobPresenter.new(job, 'http').to_hash).to eq(
+    it 'creates a valid JSON with the https internal URL' do
+      expect(StagingJobPresenter.new(job).to_hash).to eq(
         metadata: {
           guid: job.guid,
           created_at: job.created_at.iso8601,
@@ -27,26 +25,6 @@ RSpec.describe StagingJobPresenter do
           status: 'queued'
         }
       )
-    end
-
-    context 'when it talks over mtls' do
-      let(:expected_polling_url) do
-        "https://#{TestConfig.config[:internal_service_hostname]}:#{TestConfig.config[:tls_port]}/internal/v4/staging_jobs/#{job.guid}"
-      end
-
-      it 'creates a valid JSON with the https internal URL' do
-        expect(StagingJobPresenter.new(job, 'https').to_hash).to eq(
-          metadata: {
-            guid: job.guid,
-            created_at: job.created_at.iso8601,
-            url: expected_polling_url
-          },
-          entity: {
-            guid: job.guid,
-            status: 'queued'
-          }
-        )
-      end
     end
   end
 end

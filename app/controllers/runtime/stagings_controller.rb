@@ -25,7 +25,7 @@ module VCAP::CloudController
     get '/internal/v4/staging_jobs/:guid', :find_job_mtls
     def find_job_mtls(guid)
       job = Delayed::Job[guid:]
-      StagingJobPresenter.new(job, 'https').to_json
+      StagingJobPresenter.new(job).to_json
     end
 
     get '/staging/packages/:guid', :download_package
@@ -60,7 +60,7 @@ module VCAP::CloudController
     post '/internal/v4/droplets/:guid/upload', :upload_package_droplet_mtls
     def upload_package_droplet_mtls(guid)
       job = upload_droplet(guid)
-      [HTTP::OK, StagingJobPresenter.new(job, 'https').to_json]
+      [HTTP::OK, StagingJobPresenter.new(job).to_json]
     end
 
     post '/internal/v4/buildpack_cache/:stack_name/:guid/upload', :upload_v3_app_buildpack_cache
