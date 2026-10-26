@@ -14,16 +14,15 @@ In capi-release, nginx (`jobs/cloud_controller_ng/templates/nginx.conf.erb`) fro
 |----------|--------------------|------|--------|
 | mTLS internal | `cc.tls_port` (9023) | mTLS (`ssl_verify_client on`) | `/internal/v4/`, `/internal/v5/`, staging completion + upload regexes |
 | Public TLS | `cc.public_tls.port` (9024) | in-app (OAuth) | All public API routes; `/internal/v...` is 403'd here |
-| Public non-TLS | `cc.external_port` (9022) | in-app (OAuth) | Same route set as the public TLS listener |
 | Metrics mTLS | `cc.prom_metrics_server_tls_port` (9025) | mTLS (separate cert) | `/internal/v4/metrics` only |
 | Status | `9021` (hardcoded) | none (loopback) | `/internal/v4/status` health check only |
 
-The two public listeners (9024 and 9022) serve identical routes, differing only in TLS. Gorouter registers both for the `api` route but **prefers `tls_port` (9024)** ([route_registrar spec](https://github.com/cloudfoundry/routing-release/blob/develop/jobs/route_registrar/spec)), so external traffic lands on 9024; 9022 exists for on-VM plain-HTTP callers (e.g. BBR probes) and can be disabled via `temporary_disable_non_tls_endpoints`.
+The public TLS listener (9024) serves all public API routes. Gorouter registers it for the `api` route.
 
 Auth mechanisms below:
 
 - **mTLS** — Served on the mTLS internal listener (or the metrics listener for `/internal/v4/metrics`). An `/internal/*` path does not by itself imply mTLS — `ssh_access` is OAuth on the public listener, and `log_access` is mTLS **plus** an in-app OAuth check.
-- **OAuth** — CC validates the UAA token's scope in-app; served on the public listeners.
+- **OAuth** — CC validates the UAA token's scope in-app; served on the public TLS listener.
 
 ## Endpoints
 
@@ -41,9 +40,9 @@ Auth mechanisms below:
 
 **Intended Consumer:** SSH Proxy
 
-**Auth Mechanism:** mTLS and OAuth. The endpoint is served on the mutual-TLS listener (`cc.tls_port`, default `9023`), where the SSH Proxy authenticates with a client certificate. For backwards compatibility it also remains available over OAuth on the public listeners (`cc.external_port`, default `9022`, and `cc.public_tls.port`, default `9024`).
+**Auth Mechanism:** mTLS and OAuth. The SSH Proxy authenticates with a client certificate on the mTLS listener (`cc.tls_port`, default `9023`). The path `/internal/apps/...` does not match the public listener's `/internal/v` forbid rule, so it is also reachable on the public TLS listener (`cc.public_tls.port`, default `9024`) via OAuth.
 
-**Routing:** Public listeners (`cc.public_tls.port` 9024; also `cc.external_port` 9022). The path `/internal/apps/...` does not match the public listener's `/internal/v` forbid rule, so it is proxied to CC and authenticated in-app.
+**Routing:** mTLS internal listener (`cc.tls_port`, 9023) and public TLS listener (`cc.public_tls.port`, 9024).
 
 ### GET /internal/v4/droplets/:guid/:droplet_checksum/download
 **Description:** Permalink for downloading a droplet.
@@ -153,26 +152,13 @@ Auth mechanisms below:
 
 **Routing:** mTLS internal listener (`cc.tls_port`, 9023)
 
-## Deprecated endpoints
-
-These endpoints are deprecated and have no known live consumer. They are removal candidates.
-
-### GET /internal/v2/droplets/:guid/:droplet_checksum/download
-**Description:** (Deprecated) Non-mTLS (HTTP) permalink for downloading a droplet. Use `GET /internal/v4/droplets/:guid/:droplet_checksum/download` instead. **No live consumer, and effectively unreachable through nginx** — CC only generates this URL when `tls_port` is blank (never in a standard deploy, so it always emits the v4/mTLS URL instead). Even if generated, the path is `/internal/v2/droplets/...` on `external_port` (plain HTTP), which every nginx listener rejects: the public listeners 403 any `/internal/v` path, and the mTLS listener has no matching `location` (404).
-
-**Intended Consumer:** Diego running task or process (historical)
-
-**Auth Mechanism:** None enforced at the nginx layer — this is the plain-HTTP (non-mTLS) branch of the droplet URL generator (built with `external_port`). Contrast the v4 permalink, which is the HTTPS/mTLS path.
-
-**Routing:** No nginx listener serves this path (public listeners 403 `/internal/v`; mTLS listener has no matching location). Reachable only by bypassing nginx and hitting the CC app socket directly.
-
 ## Endpoints for local dev
 
 These endpoints are only used when CC is configured with `blobstore_type: local` or `local-temp-storage`, i.e. local development setups. They are **not routed in BOSH deployments**: capi-release does not emit a `location /staging/` nginx routing block, so `/staging/*` paths return 404 from the nginx catch-all. In any standard BOSH deployment, `storage-cli` is used and Diego fetches blobs via signed URLs directly from the blobstore, never calling these endpoints.
 
 ### Auth: Staging basic auth
 
-Enforced in-app by a Sinatra `before '/staging/*'` filter on the public listeners. The credentials are configured via `staging.auth.user` / `staging.auth.password` in the CC config (populated from `cc.staging_upload_user` / `cc.staging_upload_password` BOSH properties in local dev). In BOSH deployments, capi-release no longer renders these properties and the endpoints are not nginx-routed.
+Enforced in-app by a Sinatra `before '/staging/*'` filter on the public TLS listener. The credentials are configured via `staging.auth.user` / `staging.auth.password` in the CC config (populated from `cc.staging_upload_user` / `cc.staging_upload_password` BOSH properties in local dev). In BOSH deployments, capi-release no longer renders these properties and the endpoints are not nginx-routed.
 
 ### GET /v2/buildpacks/:guid/download
 **Description:** Download a buildpack file. This is a `/v2` public-namespace path, its `download` action is exempt from user OAuth and gated by staging basic auth instead.
@@ -181,7 +167,7 @@ Enforced in-app by a Sinatra `before '/staging/*'` filter on the public listener
 
 **Auth Mechanism:** Staging basic auth
 
-**Routing:** Public listeners (`cc.public_tls.port` 9024; also `cc.external_port` 9022) via `location /v2/` (when `cc.temporary_enable_v2` is true). Not called in BOSH deployments.
+**Routing:** Public TLS listener (`cc.public_tls.port`, 9024) via `location /v2/` (when `cc.temporary_enable_v2` is true). Not called in BOSH deployments.
 
 ### GET /staging/packages/:guid
 **Description:** Download a package from the local blobstore.
