@@ -39,7 +39,8 @@ module CloudController
           expect(uri.scheme).to eql 'https'
           expect(uri.host).to eql blobstore_host
           expect(uri.port).to eql tls_port
-          expect(uri.user).to be_nil
+          expect(uri.user).to eql 'username'
+          expect(uri.password).to eql 'password'
           expect(uri.path).to eql "/v2/buildpacks/#{buildpack.guid}/download"
         end
 
@@ -61,7 +62,8 @@ module CloudController
           expect(uri.scheme).to eql 'https'
           expect(uri.host).to eql blobstore_host
           expect(uri.port).to eql tls_port
-          expect(uri.user).to be_nil
+          expect(uri.user).to eql 'username'
+          expect(uri.password).to eql 'password'
           expect(uri.path).to eql "/staging/v3/buildpack_cache/#{stack}/#{app_model.guid}/download"
         end
 
@@ -82,7 +84,8 @@ module CloudController
           expect(uri.scheme).to eql 'https'
           expect(uri.host).to eql blobstore_host
           expect(uri.port).to eql tls_port
-          expect(uri.user).to be_nil
+          expect(uri.user).to eql 'username'
+          expect(uri.password).to eql 'password'
           expect(uri.path).to eql "/staging/v3/droplets/#{droplet.guid}/download"
         end
 
@@ -108,7 +111,8 @@ module CloudController
           expect(uri.scheme).to eql 'https'
           expect(uri.host).to eql blobstore_host
           expect(uri.port).to eql tls_port
-          expect(uri.user).to be_nil
+          expect(uri.user).to eql 'username'
+          expect(uri.password).to eql 'password'
           expect(uri.path).to eql "/staging/packages/#{package.guid}"
         end
 

@@ -17,19 +17,19 @@ module CloudController
       def package_download_url(package)
         return nil unless @package_blobstore.exists?(package.guid)
 
-        https_no_auth_uri("/staging/packages/#{package.guid}")
+        https_basic_auth_uri("/staging/packages/#{package.guid}")
       end
 
       def buildpack_cache_download_url(app_guid, stack)
         return nil unless @buildpack_cache_blobstore.exists?("#{app_guid}/#{stack}")
 
-        https_no_auth_uri("/staging/v3/buildpack_cache/#{stack}/#{app_guid}/download")
+        https_basic_auth_uri("/staging/v3/buildpack_cache/#{stack}/#{app_guid}/download")
       end
 
       def admin_buildpack_download_url(buildpack)
         return nil unless @admin_buildpack_blobstore.exists?(buildpack.key)
 
-        https_no_auth_uri("/v2/buildpacks/#{buildpack.guid}/download")
+        https_basic_auth_uri("/v2/buildpacks/#{buildpack.guid}/download")
       end
 
       def droplet_download_url(droplet)
@@ -43,7 +43,7 @@ module CloudController
           return nil
         end
 
-        https_no_auth_uri("/staging/v3/droplets/#{droplet.guid}/download")
+        https_basic_auth_uri("/staging/v3/droplets/#{droplet.guid}/download")
       end
 
       private
