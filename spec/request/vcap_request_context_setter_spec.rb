@@ -109,5 +109,30 @@ module VCAP::CloudController
         end
       end
     end
+
+    context 'when user lookup fails in middleware due to DB connectivity' do
+      let(:space) { create(:space) }
+      let(:user) { make_developer_for_space(space) }
+      let(:request_id) { 'db-outage-test' }
+
+      before do
+        allow_any_instance_of(VCAP::CloudController::Security::SecurityContextConfigurer).to receive(:configure_user).
+          and_raise(Sequel::DatabaseConnectionError.new('db is down'))
+      end
+
+      it 'returns a v3 503 error response and still sets X-VCAP-Request-ID' do
+        get '/v3/spaces', nil, headers_for(user, user_name: 'roto').merge('HTTP_X_VCAP_REQUEST_ID' => request_id)
+
+        expect(last_response.status).to eq(503)
+        expect(last_response.headers['Content-Type']).to include('application/json')
+        expect(last_response.headers['X-VCAP-Request-ID']).to include(request_id)
+
+        body = Oj.load(last_response.body)
+        expect(body['errors'].first).to include(
+          'title' => 'CF-ServiceUnavailable',
+          'detail' => 'Database connection failure'
+        )
+      end
+    end
   end
 end
