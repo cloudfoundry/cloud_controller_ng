@@ -3,7 +3,7 @@ require 'spec_helper'
 module VCAP::CloudController
   RSpec.describe CheckDatabaseKey do
     describe '#perform' do
-      let(:logger) { instance_double(Steno::Logger, info: nil, error: nil) }
+      let(:logger) { instance_double(Steno::Logger, info: nil, error: nil, debug: nil) }
 
       before do
         allow(Steno).to receive(:logger).and_return(logger)
@@ -30,8 +30,8 @@ module VCAP::CloudController
 
       context 'when all rows are encrypted with the current key' do
         before do
-          allow(AppModel).to receive(:exclude).and_return(double(or: double(count: 0)))
-          allow(TaskModel).to receive(:exclude).and_return(double(or: double(count: 0)))
+          allow(AppModel).to receive(:exclude).and_return(double(or: double(count: 0, group_and_count: [])))
+          allow(TaskModel).to receive(:exclude).and_return(double(or: double(count: 0, group_and_count: [])))
         end
 
         it 'exits with 0' do
@@ -67,6 +67,12 @@ module VCAP::CloudController
         it 'logs the total number of rows needing re-encryption' do
           expect { CheckDatabaseKey.perform }.to raise_error(SystemExit)
           expect(logger).to have_received(:info).with(a_string_matching(/\d+ row\(s\) need re-encryption with the current key/))
+        end
+
+        it 'logs per-table and per-label breakdown at debug level' do
+          expect { CheckDatabaseKey.perform }.to raise_error(SystemExit)
+          expect(logger).to have_received(:debug).with(a_string_matching(/Table apps: \d+ row\(s\) with encryption_key_label=old/))
+          expect(logger).to have_received(:debug).with(a_string_matching(/Table tasks: \d+ row\(s\) with encryption_key_label=old/))
         end
       end
 

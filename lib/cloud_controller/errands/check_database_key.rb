@@ -30,10 +30,16 @@ module VCAP::CloudController
       def count_rows_needing_rotation
         current_key_label = Encryptor.current_encryption_key_label
         Encryptor.encrypted_classes.sum do |klass|
-          klass.constantize.
-            exclude(encryption_key_label: current_key_label).
-            or(encryption_key_label: nil).
-            count
+          model = klass.constantize
+          rows = model.exclude(encryption_key_label: current_key_label).or(encryption_key_label: nil)
+          total = rows.count
+          if total > 0
+            rows.group_and_count(:encryption_key_label).each do |row|
+              label = row[:encryption_key_label].nil? ? '(nil)' : row[:encryption_key_label]
+              logger.debug("Table #{model.table_name}: #{row[:count]} row(s) with encryption_key_label=#{label}")
+            end
+          end
+          total
         end
       end
     end
