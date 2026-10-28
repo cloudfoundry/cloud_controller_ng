@@ -3,6 +3,7 @@ require 'cloud_controller/diego/lifecycle_bundle_uri_generator'
 require 'cloud_controller/diego/buildpack/task_action_builder'
 require 'cloud_controller/diego/docker/task_action_builder'
 require 'cloud_controller/diego/bbs_environment_builder'
+require 'cloud_controller/diego/image_credential_resolver'
 require 'cloud_controller/diego/task_completion_callback_generator'
 require 'cloud_controller/diego/task_cpu_weight_calculator'
 require 'cloud_controller/diego/service_binding_files_builder'
@@ -22,6 +23,7 @@ module VCAP::CloudController
         task_completion_callback = VCAP::CloudController::Diego::TaskCompletionCallbackGenerator.new(config).generate(task)
         app_volume_mounts        = VCAP::CloudController::Diego::Protocol::AppVolumeMounts.new(task.app).as_json
         task_action_builder      = LifecycleProtocol.protocol_for_type(task.droplet.lifecycle_type).task_action_builder(config, task)
+        image_credentials        = task_image_credentials(task)
 
         ::Diego::Bbs::Models::TaskDefinition.new({
           completion_callback_url: task_completion_callback,
@@ -52,8 +54,8 @@ module VCAP::CloudController
               "app:#{task.app_guid}"
             ]
           ),
-          image_username: task.droplet.docker_receipt_username,
-          image_password: task.droplet.docker_receipt_password,
+          image_username: image_credentials.username,
+          image_password: image_credentials.password,
           volume_mounted_files: ServiceBindingFilesBuilder.build(task.app)
         }.compact)
       rescue ServiceBindingFilesBuilder::IncompatibleBindings => e
@@ -63,6 +65,7 @@ module VCAP::CloudController
       def build_staging_task(config, staging_details)
         lifecycle_type = staging_details.lifecycle.type
         action_builder = LifecycleProtocol.protocol_for_type(lifecycle_type).staging_action_builder(config, staging_details)
+        image_credentials = staging_image_credentials(staging_details)
 
         ::Diego::Bbs::Models::TaskDefinition.new({
           completion_callback_url: staging_completion_callback(config, staging_details),
@@ -93,8 +96,8 @@ module VCAP::CloudController
               "app:#{staging_details.package.app_guid}"
             ]
           ),
-          image_username: staging_details.package.docker_username,
-          image_password: staging_details.package.docker_password,
+          image_username: image_credentials.username,
+          image_password: image_credentials.password,
           volume_mounted_files: ServiceBindingFilesBuilder.build(staging_details.package.app)
         }.compact)
       rescue ServiceBindingFilesBuilder::IncompatibleBindings => e
@@ -102,6 +105,23 @@ module VCAP::CloudController
       end
 
       private
+
+      def task_image_credentials(task)
+        droplet = task.droplet
+        ImageCredentialResolver.resolve(
+          primary_username: droplet.docker_receipt_username,
+          primary_password: droplet.docker_receipt_password,
+          lifecycle_data: task.app.lifecycle_data
+        )
+      end
+
+      def staging_image_credentials(staging_details)
+        ImageCredentialResolver.resolve_for_staging(
+          primary_username: staging_details.package.docker_username,
+          primary_password: staging_details.package.docker_password,
+          lifecycle: staging_details.lifecycle
+        )
+      end
 
       def metric_tags(source)
         {

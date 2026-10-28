@@ -40,8 +40,10 @@ Name | Type | Description
 ---- | ---- | -----------
 **type** | _string_ | `buildpack`
 **data.buildpacks** | _list of strings_ | A list of the names of buildpacks, URLs from which they may be downloaded, or `null` to auto-detect a suitable buildpack during staging
-**data.stack** | _string_ | The root filesystem to use with the buildpack, for example `cflinuxfs4`
-**data.credentials** | _object_ | Credentials used to download custom buildpacks from private git repositories, keyed by host. Each entry is a username/password pair. If any buildpack URL embeds credentials, **data.credentials** must be empty; provide credentials in one place only.
+**data.stack** | _string_ | The root filesystem to use with the buildpack, for example `cflinuxfs4`. <br/>When the `diego_custom_stacks` feature flag is enabled, this can also be a container image URI with the `docker://` scheme. A custom stack requires custom buildpacks or admin buildpacks that are not associated with a stack. Its image layers count toward the app instance's disk quota.
+**data.credentials** | _object_ | Credentials used to download custom buildpacks from private Git repositories or to pull custom stacks from private registries, keyed by host. Each entry contains a username/password pair. If any buildpack URL embeds credentials, **data.credentials** must be empty; provide credentials in one place only.
+
+For custom stacks, Cloud Foundry uses the final repository component of the image URI, excluding its tag or digest, as `CF_STACK`. For example, `docker://registry.example.com/team/cflinuxfs4:1.268.0` sets `CF_STACK` to `cflinuxfs4`. The custom stack and buildpack must be compatible.
 
 For records whose historical lifecycle data is no longer available,
 **data.buildpacks** may be an empty list and **data.stack** may be `null`.
@@ -84,8 +86,10 @@ Name | Type | Description
 ---- | ---- | -----------
 **type** | _string_ | `cnb`
 **data.buildpacks** | _list of strings_ | A list of URLs with either `docker://` or `http(s)://` scheme, pointing to the Cloud Native Buildpack OCI image. <br/>When the scheme is `http(s)://`, an OCI tarball is expected to be present at the specified location.
-**data.credentials** | _object_ | Credentials used to download the configured buildpacks, keyed by registry host. Each entry contains either a username/password pair or a token. CNB buildpack URLs must not embed credentials; use **data.credentials** instead.
-**data.stack** | _string_ | The root filesystem to use with the buildpack, for example `cflinuxfs4`
+**data.credentials** | _object_ | Credentials used to download the configured buildpacks or to pull custom stacks, keyed by registry host. Each entry contains a username/password pair or a token. Custom stack credentials must be a username/password pair. CNB buildpack URLs must not embed credentials; use **data.credentials** instead.
+**data.stack** | _string_ | The root filesystem to use with the buildpack, for example `cflinuxfs4`. <br/>When the `diego_custom_stacks` feature flag is enabled, this can also be a container image URI with the `docker://` scheme. A custom stack requires custom buildpacks or admin buildpacks that are not associated with a stack. Its image layers count toward the app instance's disk quota.
+
+For custom stacks, Cloud Foundry uses the final repository component of the image URI, excluding its tag or digest, as `CNB_STACK_ID`. For example, `docker://registry.example.com/team/cflinuxfs4:1.268.0` sets `CNB_STACK_ID` to `cflinuxfs4`. The custom stack and buildpack must be compatible.
 
 For records whose historical lifecycle data is no longer available,
 **data.buildpacks** may be an empty list and **data.stack** may be `null`.
