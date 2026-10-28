@@ -35,6 +35,7 @@ module VCAP::CloudController
       allow(periodic_updater).to receive(:setup_updates)
       allow(VCAP::PidFile).to receive(:new) { double(:pidfile, unlink_at_exit: nil) }
       allow(Puma::Server).to receive(:new).and_return(puma_server_double)
+      allow_any_instance_of(VCAP::CloudController::ApiMetricsWebserver).to receive(:start)
     end
 
     after do
