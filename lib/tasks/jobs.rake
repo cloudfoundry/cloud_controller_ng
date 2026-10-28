@@ -25,15 +25,19 @@ namespace :jobs do
 
   desc 'Start a delayed_job worker that works on jobs that require access to local resources.'
 
-  task :local, [:name] => :environment do |_t, args|
+  task :local, %i[name num_threads thread_grace_period_seconds] => :environment do |_t, args|
     require 'delayed_job/local_worker_drain_plugin'
     puts RUBY_DESCRIPTION
+    args.with_defaults(num_threads: nil)
+    args.with_defaults(thread_grace_period_seconds: nil)
     queue = VCAP::CloudController::Jobs::Queues.local(RakeConfig.config).to_s
     args.with_defaults(name: queue)
 
     RakeConfig.context = :api
 
     CloudController::DelayedWorker.new(queues: [queue],
+                                       num_threads: args.num_threads,
+                                       thread_grace_period_seconds: args.thread_grace_period_seconds,
                                        name: args.name).start_working
   end
 
