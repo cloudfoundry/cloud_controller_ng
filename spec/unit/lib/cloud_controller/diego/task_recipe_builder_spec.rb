@@ -238,6 +238,36 @@ module VCAP::CloudController
             expect(result.environment_variables).to eq(lifecycle_environment_variables)
           end
 
+          context 'when staging with a custom stack' do
+            let(:request_data) do
+              {
+                stack: 'docker://registry.example.com/team/stack:latest',
+                credentials: { 'registry.example.com' => { 'username' => 'stack-user', 'password' => 'stack-pass' } }
+              }
+            end
+
+            before do
+              create(:feature_flag, name: 'diego_custom_stacks', enabled: true)
+            end
+
+            it 'sets the registry credentials on the Diego task' do
+              result = task_recipe_builder.build_staging_task(config, staging_details)
+              expect(result.image_username).to eq('stack-user')
+              expect(result.image_password).to eq('stack-pass')
+            end
+
+            context 'with a CNB lifecycle' do
+              let(:app) { create(:app_model, :cnb, name: 'MyApp', guid: 'banana-guid', space: space) }
+              let(:lifecycle_type) { Lifecycles::CNB }
+
+              it 'sets the registry credentials on the Diego task' do
+                result = task_recipe_builder.build_staging_task(config, staging_details)
+                expect(result.image_username).to eq('stack-user')
+                expect(result.image_password).to eq('stack-pass')
+              end
+            end
+          end
+
           context 'when there is no isolation segment' do
             let(:isolation_segment) { nil }
 
@@ -397,6 +427,16 @@ module VCAP::CloudController
             result = task_recipe_builder.build_staging_task(config, staging_details)
             expect(result.image_username).to eq('dockeruser')
             expect(result.image_password).to eq('dockerpass')
+          end
+
+          context 'when Docker package credentials are incomplete' do
+            let(:package) { create(:package_model, :docker, app: app, docker_username: 'dockeruser', docker_password: nil) }
+
+            it 'does not pass the partial pair to Diego' do
+              result = task_recipe_builder.build_staging_task(config, staging_details)
+              expect(result.image_username).to be_empty
+              expect(result.image_password).to be_empty
+            end
           end
         end
       end
@@ -568,6 +608,29 @@ module VCAP::CloudController
             expect(result.volume_mounted_files).to be_empty
           end
 
+          context 'when the app uses a custom stack' do
+            before do
+              app.lifecycle_data.update(stack: 'docker://registry.example.com/team/stack:latest',
+                                        credentials: { 'registry.example.com' => { 'username' => 'stack-user', 'password' => 'stack-pass' } })
+            end
+
+            it 'sets the registry credentials on the Diego task' do
+              result = task_recipe_builder.build_app_task(config, task)
+              expect(result.image_username).to eq('stack-user')
+              expect(result.image_password).to eq('stack-pass')
+            end
+          end
+
+          context 'when the app has Docker lifecycle data but the task uses a buildpack droplet' do
+            let(:app) { create(:app_model, :docker, name: 'MyApp', guid: 'banana-guid', space: space) }
+
+            it 'does not try to read custom stack credentials from the Docker lifecycle' do
+              result = task_recipe_builder.build_app_task(config, task)
+              expect(result.image_username).to be_empty
+              expect(result.image_password).to be_empty
+            end
+          end
+
           context 'when a volume mount is provided' do
             let(:service_instance) { create(:managed_service_instance, space: app.space) }
             let(:multiple_volume_mounts) do
@@ -731,6 +794,34 @@ module VCAP::CloudController
             expect(result.image_password).to eq('dockerpassword')
 
             expect(result.volume_mounted_files).to be_empty
+          end
+
+          context 'when Docker droplet credentials are incomplete' do
+            let(:droplet) do
+              create(:droplet_model, :docker, app: app, docker_receipt_username: 'dockerusername', docker_receipt_password: nil)
+            end
+
+            it 'preserves the receipt username for the runtime task' do
+              result = task_recipe_builder.build_app_task(config, task)
+              expect(result.image_username).to eq('dockerusername')
+              expect(result.image_password).to be_empty
+            end
+          end
+
+          context 'when the buildpack app also has custom stack credentials' do
+            let(:droplet) { create(:droplet_model, :docker, app: app) }
+
+            before do
+              app.lifecycle_data.update(stack: 'docker://registry.example.com/team/stack:latest',
+                                        credentials: { 'registry.example.com' => { 'username' => 'stack-user', 'password' => 'stack-pass' } })
+            end
+
+            it 'does not use the stack credentials for the Docker task image' do
+              result = task_recipe_builder.build_app_task(config, task)
+              expect(result.root_fs).to eq('docker://potato-stack')
+              expect(result.image_username).to be_empty
+              expect(result.image_password).to be_empty
+            end
           end
 
           context 'when a volume mount is provided' do

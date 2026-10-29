@@ -377,6 +377,18 @@ module VCAP::CloudController
               expect(lrp.image_username).to eq('stack-user')
               expect(lrp.image_password).to eq('stack-password')
             end
+
+            context 'when a Docker droplet is assigned to the buildpack app' do
+              let(:droplet) do
+                create(:droplet_model, :docker, app: app_model, docker_receipt_username: 'docker-user', docker_receipt_password: 'docker-pass')
+              end
+
+              it 'uses credentials for the app stack rather than the Docker droplet image' do
+                lrp = builder.build_app_lrp
+                expect(lrp.image_username).to eq('stack-user')
+                expect(lrp.image_password).to eq('stack-password')
+              end
+            end
           end
 
           context 'when the space is not entitled to any isolation segments' do
@@ -1045,6 +1057,19 @@ module VCAP::CloudController
             expect(lrp.root_fs).to eq('buildpack_root_fs')
             expect(lrp.setup).to eq(expected_setup_action)
             expect(lrp.image_layers).to eq(expected_image_layers)
+          end
+
+          context 'when the CNB app uses a private custom stack' do
+            before do
+              app_model.cnb_lifecycle_data.update(stack: 'docker://registry.example.com/team/stack:latest',
+                                                  credentials: { 'registry.example.com' => { 'username' => 'stack-user', 'password' => 'stack-pass' } })
+            end
+
+            it 'passes the stack registry credentials to Diego' do
+              lrp = builder.build_app_lrp
+              expect(lrp.image_username).to eq('stack-user')
+              expect(lrp.image_password).to eq('stack-pass')
+            end
           end
 
           describe 'ssh' do
