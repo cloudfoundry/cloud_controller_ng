@@ -57,8 +57,8 @@ module VCAP::CloudController
 
           it 'is not valid' do
             expect(validator).not_to be_valid
-            expect(validator.errors[:buildpack]).to include(
-              'must specify a custom buildpack URL or an enabled unpinned admin buildpack when using a custom stack'
+            expect(validator.errors.full_messages).to include(
+              'You must either specify a custom buildpack URL or your platform operator must provide an enabled buildpack that is not pinned to a stack'
             )
           end
         end
@@ -85,8 +85,8 @@ module VCAP::CloudController
 
           it 'does not use an unpinned buildpack lifecycle admin buildpack' do
             expect(validator).not_to be_valid
-            expect(validator.errors[:buildpack]).to include(
-              'must specify a custom buildpack URL or an enabled unpinned admin buildpack when using a custom stack'
+            expect(validator.errors.full_messages).to include(
+              'You must either specify a custom buildpack URL or your platform operator must provide an enabled buildpack that is not pinned to a stack'
             )
           end
         end
@@ -105,7 +105,18 @@ module VCAP::CloudController
 
           it 'reports an invalid container image URI' do
             expect(validator).not_to be_valid
-            expect(validator.errors[:stack]).to contain_exactly('must be a valid container image URI')
+            expect(validator.errors.full_messages).to contain_exactly('Stack must be a valid container image URI starting with "docker://"')
+          end
+        end
+
+        context 'with a stack that is neither an existing stack nor a valid custom stack URI' do
+          let(:custom_stack_uri) { 'ocker://registry.example.com/org/stack:tag' }
+
+          it 'reports both supported stack formats' do
+            expect(validator).not_to be_valid
+            expect(validator.errors.full_messages).to contain_exactly(
+              'Stack must be an existing stack or a valid container image URI starting with "docker://"'
+            )
           end
         end
       end

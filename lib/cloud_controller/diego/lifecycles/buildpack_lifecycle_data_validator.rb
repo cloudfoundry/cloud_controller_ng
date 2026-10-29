@@ -30,15 +30,22 @@ module VCAP::CloudController
     def stack_exists_in_db
       return if UriUtils.is_custom_stack_uri?(stack_name) && FeatureFlag.enabled?(:diego_custom_stacks)
       return if custom_stack_uri?(stack_name) && !UriUtils.is_custom_stack_uri?(stack_name)
+      return unless stack.nil?
 
-      errors.add(:stack, 'must be an existing stack') if stack.nil?
+      message = if FeatureFlag.enabled?(:diego_custom_stacks)
+                  'must be an existing stack or a valid container image URI starting with "docker://"'
+                else
+                  'must be an existing stack'
+                end
+      errors.add(:stack, message)
     end
 
     def custom_stack_uri_is_valid
+      return if stack
       return unless custom_stack_uri?(stack_name)
       return if UriUtils.is_custom_stack_uri?(stack_name)
 
-      errors.add(:stack, 'must be a valid container image URI')
+      errors.add(:stack, 'must be a valid container image URI starting with "docker://"')
     end
 
     def no_custom_stack_userinfo
@@ -51,7 +58,7 @@ module VCAP::CloudController
       return unless UriUtils.is_custom_stack_uri?(stack_name) && buildpack_infos.empty?
       return if unpinned_admin_buildpack_exists?
 
-      errors.add(:buildpack, 'must specify a custom buildpack URL or an enabled unpinned admin buildpack when using a custom stack')
+      errors.add(:base, 'You must either specify a custom buildpack URL or your platform operator must provide an enabled buildpack that is not pinned to a stack')
     end
 
     def no_dual_credential_sources
