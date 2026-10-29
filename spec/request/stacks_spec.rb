@@ -763,6 +763,23 @@ RSpec.describe 'Stacks Request' do
         }
       )
     end
+
+    it 'updates the description of a stack' do
+      patch "/v3/stacks/#{stack.guid}", { description: 'Preview stack, do not use in production' }.to_json, headers
+
+      expect(last_response.status).to eq(200)
+      expect(parsed_response['description']).to eq('Preview stack, do not use in production')
+
+      stack.reload
+      expect(stack.description).to eq('Preview stack, do not use in production')
+    end
+
+    it 'returns 422 when description is empty' do
+      patch "/v3/stacks/#{stack.guid}", { description: '' }.to_json, headers
+
+      expect(last_response.status).to eq(422)
+      expect(last_response).to have_error_message("Description can't be blank")
+    end
   end
 
   describe 'DELETE /v3/stacks/:guid' do

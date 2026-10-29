@@ -64,6 +64,14 @@ RSpec.describe VCAP::CloudController::StackCreateMessage do
     end
 
     describe 'description' do
+      context 'when it is not provided' do
+        let(:params) { valid_params }
+
+        it 'is valid' do
+          expect(subject).to be_valid
+        end
+      end
+
       context 'when it is just long enough' do
         let(:params) { valid_params.merge({ description: 'A' * MAX_DESCRIPTION_LENGTH }) }
 
@@ -78,6 +86,33 @@ RSpec.describe VCAP::CloudController::StackCreateMessage do
         it 'returns an error' do
           expect(subject).not_to be_valid
           expect(subject.errors[:description]).to eq ["is too long (maximum is #{MAX_DESCRIPTION_LENGTH} characters)"]
+        end
+      end
+
+      context 'when it is an empty string' do
+        let(:params) { valid_params.merge({ description: '' }) }
+
+        it 'returns an error' do
+          expect(subject).not_to be_valid
+          expect(subject.errors[:description]).to include("can't be blank")
+        end
+      end
+
+      context 'when it is only whitespace' do
+        let(:params) { valid_params.merge({ description: '   ' }) }
+
+        it 'returns an error' do
+          expect(subject).not_to be_valid
+          expect(subject.errors[:description]).to include("can't be blank")
+        end
+      end
+
+      context 'when it is explicitly null' do
+        let(:params) { valid_params.merge({ description: nil }) }
+
+        it 'returns an error' do
+          expect(subject).not_to be_valid
+          expect(subject.errors[:description]).to include("can't be blank")
         end
       end
     end
