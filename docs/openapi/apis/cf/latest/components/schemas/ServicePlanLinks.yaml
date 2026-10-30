@@ -1,0 +1,15 @@
+type: object
+description: Links to related resources
+properties:
+  self:
+    $ref: './Link.yaml'
+    description: The URL of this service plan
+  service_offering:
+    $ref: './Link.yaml'
+    description: The URL of the service offering that this service plan relates to
+  visibility:
+    $ref: './Link.yaml'
+    description: The URL of the visibility of this service plan
+  space:
+    $ref: './Link.yaml'
+    description: The URL of the space of the service broker; only present for service plans from space-scoped service brokers
