@@ -130,10 +130,6 @@ RSpec.describe VCAP::CloudController::StackUpdateMessage do
         it 'is valid' do
           expect(subject).to be_valid
         end
-
-        it 'reports description not requested' do
-          expect(subject.description_requested?).to be false
-        end
       end
 
       context 'when it is provided' do
@@ -142,10 +138,6 @@ RSpec.describe VCAP::CloudController::StackUpdateMessage do
         it 'is valid' do
           expect(subject).to be_valid
           expect(subject.description).to eq('Preview stack, do not use in production')
-        end
-
-        it 'reports description requested' do
-          expect(subject.description_requested?).to be true
         end
       end
 
@@ -169,27 +161,16 @@ RSpec.describe VCAP::CloudController::StackUpdateMessage do
       context 'when it is an empty string' do
         let(:params) { valid_params.merge({ description: '' }) }
 
-        it 'returns an error' do
-          expect(subject).not_to be_valid
-          expect(subject.errors[:description]).to include("can't be blank")
-        end
-      end
-
-      context 'when it is only whitespace' do
-        let(:params) { valid_params.merge({ description: '   ' }) }
-
-        it 'returns an error' do
-          expect(subject).not_to be_valid
-          expect(subject.errors[:description]).to include("can't be blank")
+        it 'is valid' do
+          expect(subject).to be_valid
         end
       end
 
       context 'when it is explicitly null' do
         let(:params) { valid_params.merge({ description: nil }) }
 
-        it 'returns an error' do
-          expect(subject).not_to be_valid
-          expect(subject.errors[:description]).to include("can't be blank")
+        it 'is valid' do
+          expect(subject).to be_valid
         end
       end
     end

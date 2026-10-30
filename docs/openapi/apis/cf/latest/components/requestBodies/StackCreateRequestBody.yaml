@@ -10,9 +10,9 @@ content:
           description: Name of the stack; must be unique and no longer than 250 characters
           maxLength: 250
         description:
-          type: string
-          description: Description of the stack; must be non-empty and no longer than 250 characters
-          maxLength: 250
+          type: [string, "null"]
+          description: Description of the stack; must be no longer than 5000 characters
+          maxLength: 5000
         metadata:
           $ref: '../schemas/Metadata.yaml'
       required:

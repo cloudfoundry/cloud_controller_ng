@@ -15,7 +15,7 @@ module VCAP::CloudController
         stack_updates = {}
         stack_updates[:state] = message.state if message.requested?(:state)
         stack_updates[:state_reason] = message.state_reason if message.state_reason_requested?
-        stack_updates[:description] = message.description if message.description_requested?
+        stack_updates[:description] = message.description if message.requested?(:description)
         stack.update(stack_updates) if stack_updates.any?
 
         MetadataUpdate.update(stack, message)

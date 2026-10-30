@@ -774,11 +774,11 @@ RSpec.describe 'Stacks Request' do
       expect(stack.description).to eq('Preview stack, do not use in production')
     end
 
-    it 'returns 422 when description is empty' do
-      patch "/v3/stacks/#{stack.guid}", { description: '' }.to_json, headers
+    it 'returns 422 when description exceeds the maximum length' do
+      patch "/v3/stacks/#{stack.guid}", { description: 'A' * 5001 }.to_json, headers
 
       expect(last_response.status).to eq(422)
-      expect(last_response).to have_error_message("Description can't be blank")
+      expect(last_response).to have_error_message('Description is too long (maximum is 5000 characters)')
     end
   end
 

@@ -155,7 +155,7 @@
             properties:
               description:
                 type: string
-                description: Description of the stack; must be non-empty and no longer than 250 characters
+                description: Description of the stack; must be no longer than 5000 characters
                 maxLength: 250
               metadata:
                 $ref: ../components/schemas/Metadata.yaml
