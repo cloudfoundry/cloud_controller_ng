@@ -40,7 +40,7 @@ module VCAP::CloudController
           index: Integer, # Component index (cc-0, cc-1, etc)
           name: String, # Component name (api_z1, api_z2)
 
-          external_port: Integer,
+          optional(:external_port) => Integer,
           tls_port: Integer,
           internal_service_hostname: String,
           external_domain: String,
