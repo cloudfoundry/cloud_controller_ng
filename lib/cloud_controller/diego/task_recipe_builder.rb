@@ -23,7 +23,6 @@ module VCAP::CloudController
         task_completion_callback = VCAP::CloudController::Diego::TaskCompletionCallbackGenerator.new(config).generate(task)
         app_volume_mounts        = VCAP::CloudController::Diego::Protocol::AppVolumeMounts.new(task.app).as_json
         task_action_builder      = LifecycleProtocol.protocol_for_type(task.droplet.lifecycle_type).task_action_builder(config, task)
-        image_credentials        = task_image_credentials(task)
 
         ::Diego::Bbs::Models::TaskDefinition.new({
           completion_callback_url: task_completion_callback,
@@ -54,8 +53,7 @@ module VCAP::CloudController
               "app:#{task.app_guid}"
             ]
           ),
-          image_username: image_credentials[:username],
-          image_password: image_credentials[:password],
+          **task_image_credentials(task),
           volume_mounted_files: ServiceBindingFilesBuilder.build(task.app)
         }.compact)
       rescue ServiceBindingFilesBuilder::IncompatibleBindings => e
@@ -65,7 +63,6 @@ module VCAP::CloudController
       def build_staging_task(config, staging_details)
         lifecycle_type = staging_details.lifecycle.type
         action_builder = LifecycleProtocol.protocol_for_type(lifecycle_type).staging_action_builder(config, staging_details)
-        image_credentials = staging_image_credentials(staging_details)
 
         ::Diego::Bbs::Models::TaskDefinition.new({
           completion_callback_url: staging_completion_callback(config, staging_details),
@@ -96,8 +93,7 @@ module VCAP::CloudController
               "app:#{staging_details.package.app_guid}"
             ]
           ),
-          image_username: image_credentials[:username],
-          image_password: image_credentials[:password],
+          **staging_image_credentials(staging_details),
           volume_mounted_files: ServiceBindingFilesBuilder.build(staging_details.package.app)
         }.compact)
       rescue ServiceBindingFilesBuilder::IncompatibleBindings => e
@@ -109,7 +105,7 @@ module VCAP::CloudController
       def task_image_credentials(task)
         # The droplet lifecycle determines the task rootfs, even if the app lifecycle differs.
         if task.droplet.docker?
-          { username: task.droplet.docker_receipt_username, password: task.droplet.docker_receipt_password }
+          { image_username: task.droplet.docker_receipt_username, image_password: task.droplet.docker_receipt_password }
         else
           lifecycle_data = task.app.lifecycle_data
           credentials_by_host = lifecycle_data.credentials if lifecycle_data.respond_to?(:credentials)
@@ -121,9 +117,9 @@ module VCAP::CloudController
         if staging_details.lifecycle.type == Lifecycles::DOCKER
           username = staging_details.package.docker_username
           password = staging_details.package.docker_password
-          return { username:, password: } if username.present? && password.present?
+          return { image_username: username, image_password: password } if username.present? && password.present?
 
-          { username: nil, password: nil }
+          { image_username: nil, image_password: nil }
         else
           lifecycle = staging_details.lifecycle
           CustomStackCredentialResolver.resolve(stack_uri: lifecycle.staging_stack, credentials_by_host: lifecycle.credentials_for_staging)

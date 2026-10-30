@@ -10,6 +10,7 @@ module VCAP::CloudController
     let(:lifecycle_request_data) { {} }
 
     it_behaves_like 'a app lifecycle'
+    it_behaves_like 'custom-stack lifecycle updates', 'buildpack', 'https://example.com/buildpack.zip'
 
     describe '#create_lifecycle_data_model' do
       let!(:app) { create(:app_model) }
@@ -279,22 +280,6 @@ module VCAP::CloudController
 
         it 'does not raise when resolving credentials from docker lifecycle data' do
           expect { AppBuildpackLifecycle.new(message, app) }.not_to raise_error
-        end
-      end
-
-      context 'when updating an existing custom-stack app without requesting a stack' do
-        let(:app) { create(:app_model, :buildpack) }
-        let(:message) { AppUpdateMessage.new({ lifecycle: { type: 'buildpack', data: { buildpacks: ['default-stack-buildpack'] } } }) }
-
-        before do
-          app.buildpack_lifecycle_data.update(stack: 'docker://registry.example.com/custom-stack:latest')
-          create(:buildpack, name: 'default-stack-buildpack', stack: Stack.default.name)
-        end
-
-        it 'rejects a buildpack pinned to the default stack' do
-          lifecycle = AppBuildpackLifecycle.new(message, app)
-          expect(lifecycle).not_to be_valid
-          expect(lifecycle.errors[:buildpack]).to include('"default-stack-buildpack" must be an existing admin buildpack or a valid git URI')
         end
       end
     end

@@ -115,6 +115,7 @@ RSpec.describe UriUtils do
       expect(UriUtils.is_custom_stack_uri?('cflinuxfs4')).to be(false)
       expect(UriUtils.is_custom_stack_uri?('https://example.com/stack')).to be(false)
       expect(UriUtils.is_custom_stack_uri?('docker://')).to be(false)
+      expect(UriUtils.is_custom_stack_uri?('docker://registry.example.com/team/')).to be(false)
     end
   end
 
@@ -207,6 +208,12 @@ RSpec.describe UriUtils do
       expect { UriUtils.parse_docker_uri('publish/buildpack:') }.to raise_error(UriUtils::InvalidDockerURI)
       expect { UriUtils.parse_docker_uri('publish/buildpack:?@sha256:e118d023acaee5cf13471ead39f68416ad6172ff0899f3257ce1481cd2b28a6a') }.to raise_error(UriUtils::InvalidDockerURI)
       expect { UriUtils.parse_docker_uri('publish/buildpack@sha256:e118d0') }.to raise_error(UriUtils::InvalidDockerURI)
+    end
+
+    it 'rejects empty repository path components' do
+      %w[registry.example.com/team/ registry.example.com//stack registry.example.com/team//stack].each do |image|
+        expect { UriUtils.parse_docker_uri(image) }.to raise_error(UriUtils::InvalidDockerURI, /Invalid image name/)
+      end
     end
   end
 

@@ -53,10 +53,12 @@ module VCAP::CloudController
     end
 
     def validating_stored_buildpacks?
+      return false if message.buildpack_data.requested?(:buildpacks)
+      return true if message.buildpack_data.requested?(:stack) && message.buildpack_data.stack.present?
+
       # Stored URLs are needed to detect embedded userinfo when credentials are added separately.
       message.buildpack_data.requested?(:credentials) &&
-        message.buildpack_data.credentials.present? &&
-        !message.buildpack_data.requested?(:buildpacks)
+        message.buildpack_data.credentials.present?
     end
 
     def effective_credentials(app)

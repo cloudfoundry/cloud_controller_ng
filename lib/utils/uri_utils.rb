@@ -112,7 +112,7 @@ module UriUtils
       path = 'library/' + path if (official_docker_registry(name_parts[0]) || missing_registry(name_parts)) && path.exclude?('/')
       path, tag_digest = parse_docker_tag_digest_from_path(path)
 
-      raise InvalidDockerURI.new "Invalid image name [#{path}]" unless DOCKER_PATH_REGEX =~ path
+      raise InvalidDockerURI.new "Invalid image name [#{path}]" unless valid_docker_path?(path)
       raise InvalidDockerURI.new "Invalid image tag [#{tag_digest}]" if tag_digest && DOCKER_TAG_DIGEST_REGEX !~ tag_digest
 
       # if only sha256 presented, we add hash value as fragment to the uri,
@@ -127,6 +127,10 @@ module UriUtils
     end
 
     private
+
+    def valid_docker_path?(path)
+      DOCKER_PATH_REGEX.match?(path) && path.split('/', -1).none?(&:empty?)
+    end
 
     def official_docker_registry(host)
       host == DOCKER_INDEX_SERVER

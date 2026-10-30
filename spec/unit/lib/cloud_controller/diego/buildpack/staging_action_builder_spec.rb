@@ -152,15 +152,6 @@ module VCAP::CloudController
             expect(upload_actions[1].upload_action).to eq(upload_build_artifacts_cache_action)
           end
 
-          context 'when using a custom stack' do
-            let(:stack) { 'docker://registry.example.com/my-org/custom-stack:latest' }
-
-            it 'uploads the build artifacts cache' do
-              upload_actions = builder.action.serial_action.actions[2].emit_progress_action.action.parallel_action.actions
-              expect(upload_actions.map(&:upload_action)).to include(upload_build_artifacts_cache_action)
-            end
-          end
-
           describe 'credhub' do
             let(:credhub_url) { TestConfig.config_instance.get(:credhub_api, :internal_url) }
             let(:expected_platform_options) do

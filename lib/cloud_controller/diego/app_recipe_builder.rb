@@ -55,7 +55,6 @@ module VCAP::CloudController
         desired_lrp_builder = LifecycleProtocol.protocol_for_type(process.app.lifecycle_type).desired_lrp_builder(config, process)
         ports = desired_lrp_builder.ports.dup
         routes = generate_routes(routing_info)
-        image_credentials = lrp_image_credentials
 
         if allow_ssh?
           ports << DEFAULT_SSH_PORT
@@ -103,8 +102,7 @@ module VCAP::CloudController
           certificate_properties: ::Diego::Bbs::Models::CertificateProperties.new(
             organizational_unit: ["organization:#{process.organization.guid}", "space:#{process.space.guid}", "app:#{process.app_guid}"]
           ),
-          image_username: image_credentials[:username],
-          image_password: image_credentials[:password],
+          **lrp_image_credentials,
           volume_mounted_files: ServiceBindingFilesBuilder.build(process)
         }.compact
       rescue ServiceBindingFilesBuilder::IncompatibleBindings => e
@@ -115,7 +113,7 @@ module VCAP::CloudController
         # The app lifecycle determines the LRP rootfs, even if its droplet has a different lifecycle.
         if process.app.docker?
           droplet = process.desired_droplet
-          { username: droplet.docker_receipt_username, password: droplet.docker_receipt_password }
+          { image_username: droplet.docker_receipt_username, image_password: droplet.docker_receipt_password }
         else
           lifecycle_data = process.app.lifecycle_data
           CustomStackCredentialResolver.resolve(stack_uri: lifecycle_data.stack, credentials_by_host: lifecycle_data.credentials)

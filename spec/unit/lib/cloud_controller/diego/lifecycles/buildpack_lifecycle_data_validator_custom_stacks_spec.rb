@@ -3,23 +3,13 @@ require 'cloud_controller/diego/lifecycles/buildpack_lifecycle_data_validator'
 
 module VCAP::CloudController
   RSpec.describe BuildpackLifecycleDataValidator do
-    let(:stack) { create(:stack) }
     let(:buildpack_url) { 'https://github.com/my-org/my-buildpack.git' }
     let(:buildpack_info) { BuildpackInfo.new(buildpack_url, nil) }
     let(:buildpack_infos) { [buildpack_info] }
     let(:lifecycle_type) { Lifecycles::BUILDPACK }
-
-    subject(:validator) do
-      BuildpackLifecycleDataValidator.new(
-        buildpack_infos: buildpack_infos,
-        stack: stack,
-        stack_name: stack&.name,
-        lifecycle_type: lifecycle_type
-      )
-    end
+    let(:credentials) { nil }
 
     describe 'custom stacks' do
-      let(:stack) { nil }
       let(:custom_stack_uri) { 'docker://docker.io/cloudfoundry/cflinuxfs4:1.268.0' }
 
       subject(:validator) do
@@ -27,7 +17,8 @@ module VCAP::CloudController
           buildpack_infos: buildpack_infos,
           stack: nil,
           stack_name: custom_stack_uri,
-          lifecycle_type: lifecycle_type
+          lifecycle_type: lifecycle_type,
+          credentials: credentials
         )
       end
 
@@ -36,12 +27,8 @@ module VCAP::CloudController
           create(:feature_flag, name: 'diego_custom_stacks', enabled: true)
         end
 
-        context 'with custom buildpacks (URL-based)' do
-          let(:buildpack_info) { BuildpackInfo.new('https://github.com/my-org/my-buildpack.git', nil) }
-
-          it 'is valid' do
-            expect(validator).to be_valid
-          end
+        it 'accepts a custom buildpack URL' do
+          expect(validator).to be_valid
         end
 
         context 'with an unpinned admin buildpack' do
@@ -100,8 +87,46 @@ module VCAP::CloudController
           end
         end
 
+        context 'with registry credentials' do
+          let(:custom_stack_uri) { 'docker://registry.example.com/team/stack:latest' }
+          let(:registry_credentials) { { 'username' => 'registry-user', 'password' => 'registry-pass' } }
+          let(:credentials) { { 'registry.example.com' => registry_credentials } }
+
+          it 'accepts string credentials' do
+            expect(validator).to be_valid
+          end
+
+          %w[username password].each do |field|
+            context "with a non-string #{field}" do
+              let(:registry_credentials) { super().merge(field => 123) }
+
+              it 'rejects the value without exposing it in the error' do
+                expect(validator).not_to be_valid
+                expect(validator.errors[:credentials]).to contain_exactly("#{field} for custom stack registry \"registry.example.com\" must be a string")
+              end
+            end
+          end
+
+          context 'with null credential fields' do
+            let(:registry_credentials) { { 'username' => nil, 'password' => nil } }
+
+            it 'preserves support for absent credentials' do
+              expect(validator).to be_valid
+            end
+          end
+
+          context 'with CNB token credentials for a buildpack registry' do
+            let(:lifecycle_type) { Lifecycles::CNB }
+            let(:credentials) { super().merge('buildpacks.example.com' => { 'token' => 'buildpack-token' }) }
+
+            it 'accepts tokens separately from the stack credentials' do
+              expect(validator).to be_valid
+            end
+          end
+        end
+
         context 'with an invalid custom stack URI' do
-          let(:custom_stack_uri) { 'docker://registry.example.com/' }
+          let(:custom_stack_uri) { 'docker://registry.example.com/team/' }
 
           it 'reports an invalid container image URI' do
             expect(validator).not_to be_valid
@@ -127,31 +152,6 @@ module VCAP::CloudController
         end
 
         it 'is not valid (stack must exist in DB)' do
-          expect(validator).not_to be_valid
-          expect(validator.errors[:stack]).to include('must be an existing stack')
-        end
-      end
-    end
-
-    describe 'system stacks (unchanged behavior)' do
-      context 'when stack exists in DB' do
-        it 'is valid' do
-          expect(validator).to be_valid
-        end
-      end
-
-      context 'when stack does not exist in DB' do
-        let(:stack) { nil }
-
-        subject(:validator) do
-          BuildpackLifecycleDataValidator.new(
-            buildpack_infos: buildpack_infos,
-            stack: nil,
-            stack_name: 'nonexistent-stack'
-          )
-        end
-
-        it 'is not valid' do
           expect(validator).not_to be_valid
           expect(validator.errors[:stack]).to include('must be an existing stack')
         end

@@ -45,7 +45,7 @@ module VCAP::CloudController
           ::Diego::Bbs::Models::CachedDependency.new(
             from: LifecycleBundleUriGenerator.uri(config.get(:diego, :lifecycle_bundles)[lifecycle_bundle_key]),
             to: '/tmp/lifecycle',
-            cache_key: "#{@prefix}-#{lifecycle_stack}-lifecycle"
+            cache_key: "#{@prefix}-#{lifecycle_bundle_stack}-lifecycle"
           )
         ]
 
@@ -94,7 +94,7 @@ module VCAP::CloudController
 
         layers = [
           ::Diego::Bbs::Models::ImageLayer.new(
-            name: "#{@prefix}-#{lifecycle_stack}-lifecycle",
+            name: "#{@prefix}-#{lifecycle_bundle_stack}-lifecycle",
             url: LifecycleBundleUriGenerator.uri(config.get(:diego, :lifecycle_bundles)[lifecycle_bundle_key]),
             destination_path: '/tmp/lifecycle',
             layer_type: ::Diego::Bbs::Models::ImageLayer::Type::SHARED,
@@ -178,23 +178,21 @@ module VCAP::CloudController
       end
 
       def upload_actions
-        actions = [
+        [
           ::Diego::Bbs::Models::UploadAction.new(
             user: 'vcap',
             artifact: 'droplet',
             from: '/tmp/droplet',
             to: upload_droplet_uri.to_s
+          ),
+
+          ::Diego::Bbs::Models::UploadAction.new(
+            user: 'vcap',
+            artifact: 'build artifacts cache',
+            from: @cache_source,
+            to: upload_buildpack_artifacts_cache_uri.to_s
           )
         ]
-
-        actions << ::Diego::Bbs::Models::UploadAction.new(
-          user: 'vcap',
-          artifact: 'build artifacts cache',
-          from: @cache_source,
-          to: upload_buildpack_artifacts_cache_uri.to_s
-        )
-
-        actions
       end
 
       def skip_detect?
@@ -202,7 +200,11 @@ module VCAP::CloudController
       end
 
       def lifecycle_bundle_key
-        :"#{@prefix}/#{LifecycleBundleStackResolver.resolve(lifecycle_stack)}"
+        :"#{@prefix}/#{lifecycle_bundle_stack}"
+      end
+
+      def lifecycle_bundle_stack
+        LifecycleBundleStackResolver.resolve(lifecycle_stack)
       end
 
       def upload_buildpack_artifacts_cache_uri

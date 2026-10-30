@@ -11,6 +11,7 @@ module VCAP::CloudController
     validate :stack_exists_in_db
     validate :custom_stack_has_auto_detect_buildpack
     validate :no_custom_stack_userinfo
+    validate :custom_stack_credentials_are_strings
     validate :no_dual_credential_sources
 
     def buildpacks_are_uri_or_nil
@@ -59,6 +60,21 @@ module VCAP::CloudController
       return if unpinned_admin_buildpack_exists?
 
       errors.add(:base, 'You must either specify a custom buildpack URL or your platform operator must provide an enabled buildpack that is not pinned to a stack')
+    end
+
+    def custom_stack_credentials_are_strings
+      registry_host = UriUtils.custom_stack_registry_host(stack_name)
+      return unless registry_host && credentials.is_a?(Hash)
+
+      registry_credentials = credentials.deep_stringify_keys[registry_host]
+      return unless registry_credentials.is_a?(Hash)
+
+      %w[username password].each do |field|
+        value = registry_credentials[field]
+        next if value.nil? || value.is_a?(String)
+
+        errors.add(:credentials, "#{field} for custom stack registry \"#{registry_host}\" must be a string")
+      end
     end
 
     def no_dual_credential_sources

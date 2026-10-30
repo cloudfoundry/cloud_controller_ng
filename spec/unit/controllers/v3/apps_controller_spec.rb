@@ -589,15 +589,14 @@ RSpec.describe AppsV3Controller, type: :controller do
       end
 
       before do
-        create(:feature_flag, name: 'diego_custom_stacks', enabled: false, error_message: nil)
+        create(:feature_flag, name: 'diego_custom_stacks', enabled: false)
       end
 
       it 'raises 403' do
         post :create, params: request_body, as: :json
 
         expect(response).to have_http_status(:forbidden)
-        expect(response.body).to include('FeatureDisabled')
-        expect(response.body).to include('diego_custom_stacks')
+        expect(response.body).to include('FeatureDisabled', 'diego_custom_stacks')
       end
     end
   end
@@ -652,15 +651,14 @@ RSpec.describe AppsV3Controller, type: :controller do
       end
 
       before do
-        create(:feature_flag, name: 'diego_custom_stacks', enabled: false, error_message: nil)
+        create(:feature_flag, name: 'diego_custom_stacks', enabled: false)
       end
 
       it 'raises 403' do
         patch :update, params: { guid: app_model.guid }.merge(request_body), as: :json
 
         expect(response).to have_http_status(:forbidden)
-        expect(response.body).to include('FeatureDisabled')
-        expect(response.body).to include('diego_custom_stacks')
+        expect(response.body).to include('FeatureDisabled', 'diego_custom_stacks')
       end
     end
 
@@ -1323,15 +1321,14 @@ RSpec.describe AppsV3Controller, type: :controller do
     context 'when starting an app with a custom stack and diego_custom_stacks is disabled' do
       before do
         app_model.lifecycle_data.update(stack: 'docker://registry.example.com/org/stack:tag')
-        create(:feature_flag, name: 'diego_custom_stacks', enabled: false, error_message: nil)
+        create(:feature_flag, name: 'diego_custom_stacks', enabled: false)
       end
 
       it 'raises 403' do
         put :start, params: { guid: app_model.guid }, as: :json
 
         expect(response).to have_http_status(:forbidden)
-        expect(response.body).to include('FeatureDisabled')
-        expect(response.body).to include('diego_custom_stacks')
+        expect(response.body).to include('FeatureDisabled', 'diego_custom_stacks')
       end
     end
   end
@@ -1443,15 +1440,14 @@ RSpec.describe AppsV3Controller, type: :controller do
         allow_user_read_access_for(user, spaces: [space])
         allow_user_write_access(user, space:)
         app_model.lifecycle_data.update(stack: 'docker://registry.example.com/org/stack:tag')
-        create(:feature_flag, name: 'diego_custom_stacks', enabled: false, error_message: nil)
+        create(:feature_flag, name: 'diego_custom_stacks', enabled: false)
       end
 
       it 'raises 403' do
         post :restart, params: { guid: app_model.guid }, as: :json
 
         expect(response).to have_http_status(:forbidden)
-        expect(response.body).to include('FeatureDisabled')
-        expect(response.body).to include('diego_custom_stacks')
+        expect(response.body).to include('FeatureDisabled', 'diego_custom_stacks')
       end
     end
 

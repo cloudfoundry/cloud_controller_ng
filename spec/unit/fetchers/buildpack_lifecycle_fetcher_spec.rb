@@ -53,7 +53,7 @@ module VCAP::CloudController
 
       context 'with a custom stack' do
         let(:custom_stack) { 'docker://registry.example.com/org/stack:tag' }
-        let!(:unpinned_buildpack) { create(:buildpack, :nil_stack, name: 'buildpack-3') }
+        let(:unpinned_buildpack) { create(:buildpack, :nil_stack, name: 'buildpack-3') }
 
         it 'returns unpinned admin buildpacks and custom buildpacks' do
           returned_hash = BuildpackLifecycleFetcher.fetch([unpinned_buildpack.name, 'https://example.com/buildpack.git'], custom_stack)

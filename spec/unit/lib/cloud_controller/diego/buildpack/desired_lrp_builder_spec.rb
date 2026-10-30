@@ -276,6 +276,45 @@ module VCAP::CloudController
           end
         end
 
+        context 'with a custom stack' do
+          let(:stack) { 'docker://docker.io/cloudfoundry/cflinuxfs4:1.268.0' }
+          let(:lifecycle_bundles) { { "buildpack/#{Stack.default.name}": 'platform-lifecycle-bundle' } }
+          let(:droplet_destinations) { { Stack.default.name.to_sym => '/value/from/config/based/on/stack' } }
+
+          before do
+            allow(LifecycleBundleUriGenerator).to receive(:uri).with('platform-lifecycle-bundle').and_return('foo://bar.baz')
+          end
+
+          it 'uses the custom image as the rootfs' do
+            expect(builder.root_fs).to eq('docker://docker.io/cloudfoundry/cflinuxfs4#1.268.0')
+          end
+
+          it 'uses the default stack lifecycle bundle' do
+            expect(builder.cached_dependencies.first).to have_attributes(
+              from: 'foo://bar.baz',
+              cache_key: "buildpack-#{Stack.default.name}-lifecycle"
+            )
+          end
+
+          context 'with declarative asset downloads enabled' do
+            let(:enable_declarative_asset_downloads) { true }
+            let(:opts) { super().merge(checksum_algorithm: 'sha256') }
+
+            it 'uses the default stack for the lifecycle bundle and droplet destination' do
+              layers = builder.image_layers
+              expect(layers.first).to have_attributes(
+                name: "buildpack-#{Stack.default.name}-lifecycle",
+                url: 'foo://bar.baz',
+                destination_path: '/tmp/lifecycle'
+              )
+              expect(layers.find { |layer| layer.name == 'droplet' }).to have_attributes(
+                url: 'http://droplet-uri.com:1234?token=&%40home---%3E',
+                destination_path: '/value/from/config/based/on/stack'
+              )
+            end
+          end
+        end
+
         describe '#global_environment_variables' do
           context 'when there are additional container-level env vars provided' do
             let(:additional_env_vars) do
