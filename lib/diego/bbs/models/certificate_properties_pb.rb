@@ -5,15 +5,16 @@
 require 'google/protobuf'
 
 
-descriptor_data = "\n\x1c\x63\x65rtificate_properties.proto\x12\x10\x64iego.bbs.models\"4\n\x15\x43\x65rtificateProperties\x12\x1b\n\x13organizational_unit\x18\x01 \x03(\tb\x06proto3"
+descriptor_data = "\n\x1c\x63\x65rtificate_properties.proto\x12\x10\x64iego.bbs.models\"o\n\x15\x43\x65rtificateProperties\x12\x1b\n\x13organizational_unit\x18\x01 \x03(\t\x12\x39\n\x0fservice_account\x18\x02 \x01(\x0b\x32 .diego.bbs.models.ServiceAccount\"\x1e\n\x0eServiceAccount\x12\x0c\n\x04name\x18\x01 \x01(\tb\x06proto3"
 
-pool = Google::Protobuf::DescriptorPool.generated_pool
+pool = ::Google::Protobuf::DescriptorPool.generated_pool
 pool.add_serialized_file(descriptor_data)
 
 module Diego
   module Bbs
     module Models
       CertificateProperties = ::Google::Protobuf::DescriptorPool.generated_pool.lookup("diego.bbs.models.CertificateProperties").msgclass
+      ServiceAccount = ::Google::Protobuf::DescriptorPool.generated_pool.lookup("diego.bbs.models.ServiceAccount").msgclass
     end
   end
 end

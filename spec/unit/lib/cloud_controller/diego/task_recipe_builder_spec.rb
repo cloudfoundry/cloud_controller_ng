@@ -524,6 +524,14 @@ module VCAP::CloudController
             allow(TaskCpuWeightCalculator).to receive(:new).with(memory_in_mb: task.memory_in_mb).and_return(calculator)
           end
 
+          it 'propagates a ready service account as typed task certificate properties' do
+            config.config_hash[:service_account_runtime_enabled] = true
+            account = ServiceAccountModel.create(name: 'payments-worker', space: app.space, status: 'ready')
+            app.update(service_account: account)
+            task.update(service_account_guid: account.guid, service_account_snapshot: true)
+            expect(task_recipe_builder.build_app_task(config, task).certificate_properties.service_account.name).to eq(account.name)
+          end
+
           it 'constructs a TaskDefinition with app task instructions' do
             result = task_recipe_builder.build_app_task(config, task)
             expected_callback_url = "https://#{internal_service_hostname}:#{tls_port}/internal/v4/tasks/#{task.guid}/completed"

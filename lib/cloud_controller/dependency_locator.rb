@@ -26,6 +26,8 @@ require 'credhub/client'
 require 'cloud_controller/metrics/prometheus_updater'
 require 'statsd/instrument'
 require 'cloud_controller/execution_context'
+require 'cloud_controller/uaa/service_account_client'
+require 'actions/service_account_provision'
 
 module CloudController
   class DependencyLocator
@@ -303,6 +305,26 @@ module CloudController
         secret: config.get(:cloud_controller_username_lookup_client_secret),
         ca_file: config.get(:uaa, :ca_file)
       )
+    end
+
+    def service_account_provisioner
+      return @dependencies[:service_account_provisioner] if @dependencies[:service_account_provisioner]
+
+      settings = config.get(:service_account_provisioning)
+      configured = ->(key) { settings[key].is_a?(String) && settings[key].present? }
+      # Inline CA certificates are not supported: clients reference a UAA trust bundle.
+      unless settings.is_a?(Hash) && %i[client_id client_secret identity_ca_ref].all?(&configured) && !settings.key?(:identity_ca)
+        raise 'service account provisioning is not configured'
+      end
+
+      clients = ServiceAccountClient.new(
+        uaa_target: config.get(:uaa, :internal_url),
+        client_id: settings[:client_id],
+        secret: settings[:client_secret],
+        ca_file: config.get(:uaa, :ca_file)
+      )
+      register(:service_account_provisioner,
+               ServiceAccountProvision.new(clients, identity_ca_ref: settings[:identity_ca_ref]))
     end
 
     def uaa_shadow_user_creation_client
