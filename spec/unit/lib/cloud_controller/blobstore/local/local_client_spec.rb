@@ -104,6 +104,47 @@ module CloudController
         end
       end
 
+      describe '#cp_r_to_blobstore' do
+        it 'logs completed: false when traversal is interrupted before any files are processed' do
+          allow(Find).to receive(:find).and_raise(Errno::EACCES)
+
+          expect do
+            client.cp_r_to_blobstore(base_path)
+          end.to raise_error(Errno::EACCES)
+
+          expect(logger).to have_received(:info).with('blobstore.cp_r.digest', hash_including(count: 0, completed: false))
+          expect(logger).to have_received(:info).with('blobstore.cp_r.exists', hash_including(count: 0, completed: false))
+          expect(logger).to have_received(:info).with('blobstore.cp_r.upload', hash_including(count: 0, attempted: 0, completed: false))
+        end
+
+        it 'skips broken symlinks without aborting traversal' do
+          source_dir = File.join(base_path, 'source')
+          FileUtils.mkdir_p(source_dir)
+          File.write(File.join(source_dir, 'file.txt'), 'contents')
+          File.symlink(File.join(source_dir, 'missing-target.txt'), File.join(source_dir, 'broken-link.txt'))
+
+          expect do
+            client.cp_r_to_blobstore(source_dir)
+          end.not_to raise_error
+        end
+
+        it 'counts a digest attempt even when digest_path raises' do
+          source_dir = File.join(base_path, 'source')
+          FileUtils.mkdir_p(source_dir)
+          File.write(File.join(source_dir, 'file.txt'), 'contents')
+
+          digester = instance_double(Digester)
+          allow(digester).to receive(:digest_path).and_raise(StandardError.new('digest failed'))
+          allow(Digester).to receive(:new).and_return(digester)
+
+          expect do
+            client.cp_r_to_blobstore(source_dir)
+          end.to raise_error(StandardError, 'digest failed')
+
+          expect(logger).to have_received(:info).with('blobstore.cp_r.digest', hash_including(count: 1, completed: false))
+        end
+      end
+
       describe '#download_from_blobstore' do
         it 'downloads a file from the blobstore' do
           key = 'abcdef123456'

@@ -23,18 +23,31 @@ module VCAP::CloudController::Metrics
       end
 
       it_behaves_like 'metric registration based on execution context', VCAP::CloudController::ExecutionContext::API_PUMA_MAIN,
-                      [PrometheusUpdater::METRICS, PrometheusUpdater::PUMA_METRICS, PrometheusUpdater::DB_CONNECTION_POOL_METRICS, PrometheusUpdater::DELAYED_JOB_METRICS, PrometheusUpdater::VITAL_METRICS]
+                      [PrometheusUpdater::METRICS, PrometheusUpdater::PUMA_METRICS, PrometheusUpdater::DB_CONNECTION_POOL_METRICS,
+                       PrometheusUpdater::DELAYED_JOB_METRICS, PrometheusUpdater::STORAGE_CLI_METRICS, PrometheusUpdater::VITAL_METRICS]
       it_behaves_like 'metric registration based on execution context', VCAP::CloudController::ExecutionContext::API_PUMA_WORKER,
-                      [PrometheusUpdater::METRICS, PrometheusUpdater::PUMA_METRICS, PrometheusUpdater::DB_CONNECTION_POOL_METRICS, PrometheusUpdater::DELAYED_JOB_METRICS, PrometheusUpdater::VITAL_METRICS]
+                      [PrometheusUpdater::METRICS, PrometheusUpdater::PUMA_METRICS, PrometheusUpdater::DB_CONNECTION_POOL_METRICS,
+                       PrometheusUpdater::DELAYED_JOB_METRICS, PrometheusUpdater::STORAGE_CLI_METRICS, PrometheusUpdater::VITAL_METRICS]
       it_behaves_like 'metric registration based on execution context', VCAP::CloudController::ExecutionContext::CC_WORKER,
-                      [PrometheusUpdater::DB_CONNECTION_POOL_METRICS, PrometheusUpdater::DELAYED_JOB_METRICS, PrometheusUpdater::VITAL_METRICS]
+                      [PrometheusUpdater::DB_CONNECTION_POOL_METRICS, PrometheusUpdater::DELAYED_JOB_METRICS, PrometheusUpdater::STORAGE_CLI_METRICS, PrometheusUpdater::VITAL_METRICS]
       it_behaves_like 'metric registration based on execution context', VCAP::CloudController::ExecutionContext::CLOCK, [PrometheusUpdater::DB_CONNECTION_POOL_METRICS, PrometheusUpdater::VITAL_METRICS]
       it_behaves_like 'metric registration based on execution context', VCAP::CloudController::ExecutionContext::DEPLOYMENT_UPDATER,
                       [PrometheusUpdater::DB_CONNECTION_POOL_METRICS, PrometheusUpdater::VITAL_METRICS]
 
-      it 'raises error when execution context is nil' do
+      it 'skips metric registration when execution context is nil and PROCESS_TYPE is unset' do
         allow(VCAP::CloudController::ExecutionContext).to receive(:from_process_type_env).and_return(nil)
-        expect { updater }.to raise_error('Could not register Prometheus metrics: Unexpected execution context: nil')
+        allow(ENV).to receive(:fetch).with('PROCESS_TYPE', nil).and_return(nil)
+
+        expect { updater }.not_to raise_error
+        expect(prom_client.metrics).to be_empty
+      end
+
+      it 'skips metric registration when execution context is nil even if PROCESS_TYPE is set' do
+        allow(VCAP::CloudController::ExecutionContext).to receive(:from_process_type_env).and_return(nil)
+        allow(ENV).to receive(:fetch).with('PROCESS_TYPE', nil).and_return('mystery')
+
+        expect { updater }.not_to raise_error
+        expect(prom_client.metrics).to be_empty
       end
 
       context 'when execution context is set' do
@@ -273,6 +286,69 @@ module VCAP::CloudController::Metrics
 
         metric = prom_client.get :cc_staging_failed_duration_seconds
         expect(metric.get).to eq({ '5' => 0.0, '10' => 0.0, '30' => 0.0, '60' => 0.0, '300' => 0.0, '600' => 0.0, '890' => 0.0, 'sum' => 900.0, '+Inf' => 1.0 })
+      end
+    end
+
+    describe '#report_storage_cli_metrics' do
+      before do
+        allow(VCAP::CloudController::ExecutionContext).to receive(:from_process_type_env).and_return(
+          VCAP::CloudController::ExecutionContext::CC_WORKER
+        )
+      end
+
+      it 'increments the operations counter with operation and exit_code labels' do
+        updater.report_storage_cli_metrics(operation: 'get', exit_code: 0, duration_seconds: 0.1)
+
+        metric = prom_client.get(:cc_storage_cli_operations_total)
+        expect(metric.get(labels: { operation: 'get', exit_code: '0' })).to eq(1.0)
+      end
+
+      it 'observes duration with exit_code label' do
+        updater.report_storage_cli_metrics(operation: 'put', exit_code: 0, duration_seconds: 1.5)
+
+        metric = prom_client.get(:cc_storage_cli_duration_seconds)
+        expect(metric.get(labels: { operation: 'put', exit_code: '0' })['sum']).to eq(1.5)
+      end
+
+      it 'records blob_size when exit_code is 0' do
+        updater.report_storage_cli_metrics(operation: 'put', exit_code: 0, duration_seconds: 0.2, blob_size: 1_048_576)
+
+        metric = prom_client.get(:cc_storage_cli_blob_size_bytes)
+        expect(metric.get(labels: { operation: 'put' })['sum']).to eq(1_048_576.0)
+      end
+
+      it 'does not record blob_size when exit_code is non-zero' do
+        updater.report_storage_cli_metrics(operation: 'put', exit_code: 1, duration_seconds: 0.2, blob_size: 1_048_576)
+
+        metric = prom_client.get(:cc_storage_cli_blob_size_bytes)
+        expect(metric.get(labels: { operation: 'put' })['sum']).to eq(0.0)
+      end
+
+      it 'does not record blob_size when blob_size is nil' do
+        updater.report_storage_cli_metrics(operation: 'get', exit_code: 0, duration_seconds: 0.1, blob_size: nil)
+
+        metric = prom_client.get(:cc_storage_cli_blob_size_bytes)
+        expect(metric.get(labels: { operation: 'get' })['sum']).to eq(0.0)
+      end
+
+      it 'still updates registered storage-cli metrics when one metric is missing' do
+        allow(prom_client).to receive(:exist?).and_call_original
+        allow(prom_client).to receive(:exist?).with(:cc_storage_cli_blob_size_bytes).and_return(false)
+
+        updater.report_storage_cli_metrics(operation: 'put', exit_code: 0, duration_seconds: 0.2, blob_size: 1_048_576)
+
+        operations_metric = prom_client.get(:cc_storage_cli_operations_total)
+        duration_metric = prom_client.get(:cc_storage_cli_duration_seconds)
+
+        expect(operations_metric.get(labels: { operation: 'put', exit_code: '0' })).to eq(1.0)
+        expect(duration_metric.get(labels: { operation: 'put', exit_code: '0' })['sum']).to eq(0.2)
+      end
+
+      it 'is a no-op when storage cli metrics are not registered' do
+        allow(VCAP::CloudController::ExecutionContext).to receive(:from_process_type_env).and_return(
+          VCAP::CloudController::ExecutionContext::CLOCK
+        )
+        expect { updater.report_storage_cli_metrics(operation: 'get', exit_code: 0, duration_seconds: 0.1) }.not_to raise_error
       end
     end
   end

@@ -107,6 +107,52 @@ RSpec.describe Sequel::DelayedJobsLogRedaction do
       expect(logs.string).not_to include('[REDACTED]')
     end
 
+    it 'leaves last_error intact even when it contains !ruby content (e.g. job failed processing YAML input)' do
+      sql = %(UPDATE "delayed_jobs" SET "last_error" = '--- !ruby/object:Foo pw: s3cr3t', "attempts" = 2 WHERE "id" = 71)
+      db.log_connection_yield(sql, nil) {}
+
+      expect(logs.string).to include('s3cr3t')
+      expect(logs.string).not_to include('[REDACTED]')
+    end
+
+    it 'leaves last_error bound args intact even when they contain !ruby content' do
+      sql = 'UPDATE "delayed_jobs" SET "last_error" = $1 WHERE "id" = 71'
+
+      db.log_connection_yield(sql, nil, ['--- !ruby/object:Foo pw: s3cr3t']) {}
+
+      expect(logs.string).to include('s3cr3t')
+      expect(logs.string).not_to include('[REDACTED]')
+    end
+
+    it 'redacts only the handler bound arg when UPDATE includes other !ruby-like args' do
+      sql = 'UPDATE "delayed_jobs" SET "handler" = $1, "last_error" = $2 WHERE "id" = 71'
+
+      db.log_connection_yield(sql, nil, ['--- !ruby/object:Foo pw: s3cr3t', '--- !ruby/object:Bar debug detail']) {}
+
+      expect(logs.string).to include('[REDACTED]')
+      expect(logs.string).to include('debug detail')
+      expect(logs.string).not_to include('s3cr3t')
+    end
+
+    it 'redacts handler bound arg even when a value contains the word WHERE' do
+      # last_error may contain SQL snippets with WHERE; a lazy SET-clause regex would stop too early
+      sql = 'UPDATE "delayed_jobs" SET "handler" = $1, "last_error" = $2 WHERE "id" = 71'
+
+      db.log_connection_yield(sql, nil, ['--- !ruby/object:Foo pw: s3cr3t', 'query failed WHERE x = 1']) {}
+
+      expect(logs.string).to include('[REDACTED]')
+      expect(logs.string).to include('WHERE x = 1')
+      expect(logs.string).not_to include('s3cr3t')
+    end
+
+    it 'does not redact column names that end in handler (e.g. request_handler)' do
+      sql = %(UPDATE "delayed_jobs" SET "request_handler" = 'some-value', "attempts" = 1 WHERE "id" = 5)
+      db.log_connection_yield(sql, nil) {}
+
+      expect(logs.string).to include('some-value')
+      expect(logs.string).not_to include('[REDACTED]')
+    end
+
     it 'leaves statements for other tables untouched' do
       sql = %(INSERT INTO "apps" ("name", "handler") VALUES ('my-app', 'not-a-secret'))
       db.log_connection_yield(sql, nil) {}
@@ -115,9 +161,36 @@ RSpec.describe Sequel::DelayedJobsLogRedaction do
       expect(logs.string).not_to include('[REDACTED]')
     end
 
+    it 'does not redact tables whose names start with delayed_jobs (e.g. delayed_jobs_v2, delayed_jobs_staging)' do
+      handler = '--- !ruby/object:Foo systempassword: s3cr3t-value'
+      %w[delayed_jobs_v2 delayed_jobs_staging].each do |table|
+        sql = %(INSERT INTO "#{table}" ("handler") VALUES ('#{handler}'))
+        db.log_connection_yield(sql, nil) {}
+      end
+
+      expect(logs.string).not_to include('[REDACTED]')
+    end
+
+    it 'does not redact bound args for tables whose names start with delayed_jobs' do
+      sql = 'INSERT INTO "delayed_jobs_v2" ("handler") VALUES ($1)'
+
+      db.log_connection_yield(sql, nil, ['--- !ruby/object:Foo systempassword: s3cr3t-value']) {}
+
+      expect(logs.string).to include('s3cr3t-value')
+      expect(logs.string).not_to include('[REDACTED]')
+    end
+
     it 'handles embedded doubled-quote escapes in the handler literal' do
       sql = %(INSERT INTO "delayed_jobs" ("handler") ) +
             %(VALUES ('--- !ruby/object:Foo note: it''s secret s3cr3t-value'))
+      db.log_connection_yield(sql, nil) {}
+
+      expect(logs.string).to include('[REDACTED]')
+      expect(logs.string).not_to include('s3cr3t-value')
+    end
+
+    it 'redacts handler literals even when they have leading whitespace before the YAML tag' do
+      sql = %(INSERT INTO "delayed_jobs" ("handler") VALUES (' --- !ruby/object:Foo pw: s3cr3t-value'))
       db.log_connection_yield(sql, nil) {}
 
       expect(logs.string).to include('[REDACTED]')
