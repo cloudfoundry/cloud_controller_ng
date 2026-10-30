@@ -775,10 +775,10 @@ RSpec.describe 'Stacks Request' do
     end
 
     it 'returns 422 when description exceeds the maximum length' do
-      patch "/v3/stacks/#{stack.guid}", { description: 'A' * 5001 }.to_json, headers
+      patch "/v3/stacks/#{stack.guid}", { description: 'A' * 251 }.to_json, headers
 
       expect(last_response.status).to eq(422)
-      expect(last_response).to have_error_message('Description is too long (maximum is 5000 characters)')
+      expect(last_response).to have_error_message('Description is too long (maximum is 250 characters)')
     end
   end
 
