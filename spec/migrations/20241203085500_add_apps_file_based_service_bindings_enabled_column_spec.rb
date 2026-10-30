@@ -15,7 +15,7 @@ RSpec.describe 'migration to add file_based_service_bindings_enabled column to a
       expect(db[:apps].columns).not_to include(:file_based_service_bindings_enabled)
 
       # Run migration
-      Sequel::Migrator.run(db, migrations_path, target: current_migration_index, allow_missing_migration_files: true)
+      run_migration
 
       # Verify column was added
       expect(db[:apps].columns).to include(:file_based_service_bindings_enabled)

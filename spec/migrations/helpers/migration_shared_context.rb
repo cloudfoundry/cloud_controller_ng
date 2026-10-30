@@ -12,7 +12,7 @@ RSpec.shared_context 'migration' do
     Sequel.extension :migration
 
     # Revert the given migration and everything newer so we are at the database version exactly before our migration we want to test.
-    Sequel::Migrator.run(db, migrations_path, target: current_migration_index - 1, allow_missing_migration_files: true)
+    revert_migration
   end
 
   after do
@@ -22,5 +22,23 @@ RSpec.shared_context 'migration' do
 
     # Complete the migration to not leave the test database half migrated and following tests fail due to this
     Sequel::Migrator.run(db, migrations_path, target: last_migration_index, allow_missing_migration_files: true)
+  end
+
+  def run_migration
+    Sequel::Migrator.run(db, migrations_path, target: current_migration_index, allow_missing_migration_files: true)
+  end
+
+  def revert_migration
+    Sequel::Migrator.run(db, migrations_path, target: current_migration_index - 1, allow_missing_migration_files: true)
+  end
+
+  def test_up_migration_idempotency
+    db[:schema_migrations].where(filename: migration_filename).delete
+    expect { run_migration }.not_to raise_error
+  end
+
+  def test_down_migration_idempotency
+    db[:schema_migrations].insert(filename: migration_filename)
+    expect { revert_migration }.not_to raise_error
   end
 end

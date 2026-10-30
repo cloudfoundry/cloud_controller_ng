@@ -12,19 +12,19 @@ RSpec.describe 'migration to add user column to tasks table', isolation: :trunca
       expect(db[:tasks].columns).not_to include(:user)
 
       # === UP MIGRATION ===
-      expect { Sequel::Migrator.run(db, migrations_path, target: current_migration_index, allow_missing_migration_files: true) }.not_to raise_error
+      expect { run_migration }.not_to raise_error
       expect(db[:tasks].columns).to include(:user)
 
       # Test up migration idempotency
-      expect { Sequel::Migrator.run(db, migrations_path, target: current_migration_index, allow_missing_migration_files: true) }.not_to raise_error
+      test_up_migration_idempotency
       expect(db[:tasks].columns).to include(:user)
 
       # === DOWN MIGRATION ===
-      expect { Sequel::Migrator.run(db, migrations_path, target: current_migration_index - 1, allow_missing_migration_files: true) }.not_to raise_error
+      expect { revert_migration }.not_to raise_error
       expect(db[:tasks].columns).not_to include(:user)
 
       # Test down migration idempotency
-      expect { Sequel::Migrator.run(db, migrations_path, target: current_migration_index - 1, allow_missing_migration_files: true) }.not_to raise_error
+      test_down_migration_idempotency
       expect(db[:tasks].columns).not_to include(:user)
     end
   end

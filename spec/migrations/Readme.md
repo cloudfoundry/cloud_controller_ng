@@ -82,10 +82,20 @@ Sequel migration tests have a distinct operation compared to conventional RSpec 
 1. **Shared Context**: It's recommended to use the `migration` shared context, as it ensures that the database schema first reverts to the version before the migration you aim to test. This shared context also provides a directory containing a single migration for running a particular migration within a test. When the test is done, this shared context makes sure to restore the correct schema by running the migrations that post-date the one being tested. Thus, avoiding cases of a half-migrated database that could result in random test failures. It also makes sure to test not every migration that comes after the test migration, but just a single migration is executed and then the expected behavior is evaluated.
 1. **Performance**: Running migrations (`Sequel::Migrator.run(...)`) can be time-consuming and take serval seconds with each call. Therefore, it's advisable to limit the number of migration calls within a single spec file as much as possible. Group related tests into a single it block even if it does not follow the usual RSpec best practices. This approach minimizes the number of migration calls and enhances test performance.
 
+### Helper methods
+
+The `migration` shared context uses the `migration_filename` variable, containing the filename of the migration under review. It also provides a path to all migrations in `migrations_path` as well as the index of the current migration in the `current_migration_index` variable. On top of these, it exposes four helper methods that should be used instead of calling `Sequel::Migrator.run(...)` directly. They keep specs readable and ensure idempotency is tested correctly:
+
+1. `run_migration` – runs the migration under test (migrates up to `current_migration_index`).
+1. `revert_migration` – reverts the migration under test (migrates down to `current_migration_index - 1`). Use this to test the down part of a migration.
+1. `test_up_migration_idempotency` – asserts that running the migration's up part a second time does not raise. It removes the migration's row from the `schema_migrations` table and then calls `run_migration`, which forces the up part to actually execute again rather than being skipped. **This only passes if the migration body itself is idempotent** (see rule 4 in [Rules when writing migrations](#rules-when-writing-migrations)); a non-idempotent body will fail here with errors like `DuplicateColumn`.
+1. `test_down_migration_idempotency` – the counterpart for the down part. It re-inserts the migration's row into `schema_migrations` and then calls `revert_migration`, forcing the down part to execute again.
+
+All other processes, including migrating one version before the test migration and fully migrating the schema after the test has finished, are handled automatically by the shared context.
+
 ### Usage
 
-Here’s a guide on how to write a migration spec. The `migration` shared context uses the `migration_file` variable, containing the filename of the migration under review. This shared context also provides a path to all migrations in `migrations_path` as well as the index of the current migration in `current_migration_index` variable to perform the specific migration. All other processes, including migrating one version before the test migration and fully migrating the table after the test has finished, are handled automatically.
-For testing the down part of a migration one can use `Sequel::Migrator.run(db, migrations_path, target: current_migration_index - 1, allow_missing_migration_files: true)`
+Here’s a guide on how to write a migration spec.
 ```ruby
 require 'spec_helper'
 require 'migrations/helpers/migration_shared_context'
@@ -99,16 +109,32 @@ RSpec.describe 'migration to modify isolation_segments', isolation: :truncation 
     it 'retains the initial name and guid' do
       db[:isolation_segments].insert(name: 'name', guid: '123')
       a1 = db[:isolation_segment_annotations].first(resource_guid: '123')
-      expect { Sequel::Migrator.run(db, migrations_path, target: current_migration_index, allow_missing_migration_files: true) }.not_to raise_error
+
+      # Run the migration under test
+      run_migration
+
       b1 = db[:isolation_segment_annotations].first(resource_guid: '123')
       expect(b1[:guid]).to eq a1[:guid]
       expect(b1[:name]).to eq a1[:name]
-      
-      # Test idempotency of the migration
-      expect { Sequel::Migrator.run(db, migrations_path, target: current_migration_index, allow_missing_migration_files: true) }.not_to raise_error
+
+      # Test idempotency of the up migration
+      test_up_migration_idempotency
     end
   end
 end
 ```
 
 The code mentioned above tests a migration that alters the isolation_segments table. It confirms that the initial name and guid remain intact even after the migration operation. Note that in this scenario, the CC models are not used. Instead, the selects and inserts are performed directly with Sequel, keeping in mind the schema that exists before and after the migration. This approach ensures accuracy, and the test will continue to work even if later migrations alter the table, CC code and models, or even drop tables, etc. Essentially, the migration is tested in the state that the DB was in at the time of writing the migration.
+
+If the migration is reversible, test the down part as well with `revert_migration` and, where the body is idempotent, `test_down_migration_idempotency`:
+```ruby
+      # Run the migration under test
+      run_migration
+      # ... assert the post-up state ...
+      test_up_migration_idempotency
+
+      # Revert the migration under test
+      revert_migration
+      # ... assert the post-down state ...
+      test_down_migration_idempotency
+```
