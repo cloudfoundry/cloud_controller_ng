@@ -105,7 +105,7 @@ Name | Type | Description
 **name** | _string_ | Name of the app
 **lifecycle** | _string_ | Type of the lifecycle; valid values are `buildpack`, `cnb`, `docker`. Defaults to `buildpack`, unless the **docker** property is present.
 **buildpacks** | _list of strings_ | a) An empty array, which will automatically select the appropriate default buildpack according to the coding language (incompatible with **lifecycle: cnb**) <br>b) An array of one or more URLs pointing to buildpacks <br>c) An array of one or more installed buildpack names <br>Replaces the legacy `buildpack` field
-**credentials** | _object_ | Credentials used to download custom buildpacks (buildpack lifecycle) or buildpack OCI images (cnb lifecycle) from private git repositories or registries, keyed by host. For the buildpack lifecycle each entry is a username/password pair; for the cnb lifecycle each entry is a username/password pair or a token. Set to `null` to clear previously stored credentials. If any buildpack URL embeds credentials, **credentials** must be empty; provide credentials in one place only.
+**credentials** | _object_ | Credentials used to download custom buildpacks or to pull custom stacks, keyed by host. Each entry contains a username/password pair; CNB buildpack credentials can instead contain a token. Custom stack credentials must be a username/password pair. Set to `null` to clear previously stored credentials. If any buildpack URL embeds credentials, **credentials** must be empty; provide credentials in one place only.
 **cnb-credentials** | _object_ | Backward-compatible alias for **credentials**. Specifying both **credentials** and **cnb-credentials** is an error.
 **docker** | _object_ | If present, the created app will have Docker lifecycle type; the value of this key is ignored by the API but may be used by clients to source the registry address of the image and credentials, if needed; the [generate manifest endpoint](#generate-a-manifest-for-an-app) will return the registry address of the image and username provided with this key
 **env** | _object_ | A key-value mapping of environment variables to be used for the app when running
@@ -117,11 +117,10 @@ Name | Type | Description
 **routes** | _array of [route configurations](#space-manifest-route-level-configuration)_  | List declaring HTTP and TCP routes to be mapped to the app.
 **services** | _array of [service configurations](#space-manifest-service-level-configuration)_ | A list of service-instances to bind to the app
 **sidecars** | _array of [sidecar configurations](#space-manifest-sidecar-level-configuration)_ | A list of configurations for individual sidecars
-**stack** | _string_ | The root filesystem to use with the buildpack, for example `cflinuxfs4`
+**stack** | _string_ | The root filesystem to use with the buildpack, for example `cflinuxfs4`. <br>When the `diego_custom_stacks` feature flag is enabled, this can also be a container image URI with the `docker://` scheme. A custom stack requires custom buildpacks or admin buildpacks that are not associated with a stack. Custom stack URIs must not include credentials; use **credentials** instead. Custom stack image layers count toward each process instance's **disk_quota**.
 **metadata.labels** | _[label object](#labels)_ | Labels applied to the app
 **metadata.annotations** | _[annotation object](#annotations)_ | Annotations applied to the app
 **buildpack**  | _string_ | **DEPRECATED in favor of the `buildpacks` field above**
-
 
 #### <a name="space-manifest-process-level-configuration"></a> Process-level configuration
 This configuration is for the individual process. Each process is created if it does not already exist.

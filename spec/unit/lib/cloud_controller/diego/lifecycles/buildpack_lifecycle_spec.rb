@@ -119,9 +119,24 @@ module VCAP::CloudController
       it 'provides staging environment variables' do
         staging_message.buildpack_data.stack = 'cool-stack'
 
-        expect(buildpack_lifecycle.staging_environment_variables).to eq({
-                                                                          'CF_STACK' => 'cool-stack'
-                                                                        })
+        expect(buildpack_lifecycle.staging_environment_variables).to eq({ 'CF_STACK' => 'cool-stack' })
+      end
+
+      context 'with a custom stack' do
+        let(:request_data) do
+          {
+            buildpacks: ['https://github.com/cloudfoundry/nodejs-buildpack'],
+            stack: 'docker://registry.example.com/team/cflinuxfs4:1.268.0'
+          }
+        end
+
+        before do
+          create(:feature_flag, name: 'diego_custom_stacks', enabled: true)
+        end
+
+        it 'uses the final image repository component as CF_STACK' do
+          expect(buildpack_lifecycle.staging_environment_variables).to eq({ 'CF_STACK' => 'cflinuxfs4' })
+        end
       end
     end
 
@@ -218,6 +233,8 @@ module VCAP::CloudController
         expect(BuildpackLifecycleDataValidator).to have_received(:new).with(
           buildpack_infos: [],
           stack: 'foo',
+          stack_name: Stack.default.name,
+          lifecycle_type: Lifecycles::BUILDPACK,
           credentials: nil,
           credentials_from_message: false
         )

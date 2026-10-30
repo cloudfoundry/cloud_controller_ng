@@ -51,6 +51,24 @@ module VCAP::CloudController
         end
       end
 
+      context 'with a custom stack' do
+        let(:custom_stack) { 'docker://registry.example.com/org/stack:tag' }
+        let(:unpinned_buildpack) { create(:buildpack, :nil_stack, name: 'buildpack-3') }
+
+        it 'returns unpinned admin buildpacks and custom buildpacks' do
+          returned_hash = BuildpackLifecycleFetcher.fetch([unpinned_buildpack.name, 'https://example.com/buildpack.git'], custom_stack)
+
+          expect(returned_hash[:stack]).to be_nil
+          expect(returned_hash[:buildpack_infos].map(&:buildpack_record)).to eq([unpinned_buildpack, nil])
+        end
+
+        it 'does not return admin buildpacks pinned to another stack' do
+          returned_hash = BuildpackLifecycleFetcher.fetch([buildpack.name], custom_stack)
+
+          expect(returned_hash[:buildpack_infos].first.buildpack_record).to be_nil
+        end
+      end
+
       context 'when the stack and buildpack are not found' do
         it 'returns nil for both' do
           returned_hash = BuildpackLifecycleFetcher.fetch(['bogus-buildpack'], 'bogus-stack')

@@ -1,6 +1,8 @@
 require 'credhub/config_helpers'
 require 'diego/action_builder'
 require 'digest/xxhash'
+require 'cloud_controller/diego/docker/docker_uri_converter'
+require 'cloud_controller/diego/lifecycle_bundle_stack_resolver'
 
 module VCAP::CloudController
   module Diego
@@ -43,7 +45,7 @@ module VCAP::CloudController
           ::Diego::Bbs::Models::CachedDependency.new(
             from: LifecycleBundleUriGenerator.uri(config.get(:diego, :lifecycle_bundles)[lifecycle_bundle_key]),
             to: '/tmp/lifecycle',
-            cache_key: "#{@prefix}-#{lifecycle_stack}-lifecycle"
+            cache_key: "#{@prefix}-#{lifecycle_bundle_stack}-lifecycle"
           )
         ]
 
@@ -92,7 +94,7 @@ module VCAP::CloudController
 
         layers = [
           ::Diego::Bbs::Models::ImageLayer.new(
-            name: "#{@prefix}-#{lifecycle_stack}-lifecycle",
+            name: "#{@prefix}-#{lifecycle_bundle_stack}-lifecycle",
             url: LifecycleBundleUriGenerator.uri(config.get(:diego, :lifecycle_bundles)[lifecycle_bundle_key]),
             destination_path: '/tmp/lifecycle',
             layer_type: ::Diego::Bbs::Models::ImageLayer::Type::SHARED,
@@ -130,10 +132,14 @@ module VCAP::CloudController
       end
 
       def stack
-        @stack ||= Stack.find(name: lifecycle_stack)
-        raise CloudController::Errors::ApiError.new_from_details('StackNotFound', lifecycle_stack) unless @stack
+        @stack ||= if UriUtils.is_custom_stack_uri?(lifecycle_stack)
+                     DockerURIConverter.new.convert(lifecycle_stack.delete_prefix('docker://'))
+                   else
+                     stack_obj = Stack.find(name: lifecycle_stack)
+                     raise CloudController::Errors::ApiError.new_from_details('StackNotFound', lifecycle_stack) unless stack_obj
 
-        "preloaded:#{@stack.build_rootfs_image}"
+                     "preloaded:#{stack_obj.build_rootfs_image}"
+                   end
       end
 
       def lifecycle_stack
@@ -194,7 +200,11 @@ module VCAP::CloudController
       end
 
       def lifecycle_bundle_key
-        :"#{@prefix}/#{lifecycle_data[:stack]}"
+        :"#{@prefix}/#{lifecycle_bundle_stack}"
+      end
+
+      def lifecycle_bundle_stack
+        LifecycleBundleStackResolver.resolve(lifecycle_stack)
       end
 
       def upload_buildpack_artifacts_cache_uri

@@ -1,4 +1,5 @@
 require 'uri'
+require 'digest'
 
 module UriUtils
   SSH_REGEX = %r{ \A (?:ssh://)? git@ .+? : .+? \.git \z }x
@@ -44,6 +45,37 @@ module UriUtils
       false
     end
 
+    def is_custom_stack_uri?(candidate)
+      !custom_stack_registry_host(candidate).nil?
+    end
+
+    def custom_stack_registry_host(stack_uri)
+      return nil unless stack_uri.is_a?(String) && stack_uri.start_with?('docker://')
+
+      body = stack_uri.delete_prefix('docker://')
+      return nil if body.empty?
+
+      host, = parse_docker_uri(body)
+      host.presence || DOCKER_INDEX_SERVER
+    rescue InvalidDockerURI
+      nil
+    end
+
+    def custom_stack_buildpack_identifier(stack_uri)
+      return nil unless stack_uri.is_a?(String) && stack_uri.start_with?('docker://')
+
+      _, path, = parse_docker_uri(stack_uri.delete_prefix('docker://'))
+      path.delete_suffix('@sha256').split('/').last
+    rescue InvalidDockerURI
+      nil
+    end
+
+    def buildpack_cache_key(stack)
+      return stack unless is_custom_stack_uri?(stack)
+
+      Digest::SHA256.hexdigest(stack)
+    end
+
     def is_uri_path?(candidate)
       !!(candidate.is_a?(String) && candidate =~ %r{^(?:/|/([^\s/]\S*)?)$})
     end
@@ -75,10 +107,12 @@ module UriUtils
         path = docker_uri
       end
 
+      raise InvalidDockerURI.new "Invalid image name [#{docker_uri}]" if path.blank?
+
       path = 'library/' + path if (official_docker_registry(name_parts[0]) || missing_registry(name_parts)) && path.exclude?('/')
       path, tag_digest = parse_docker_tag_digest_from_path(path)
 
-      raise InvalidDockerURI.new "Invalid image name [#{path}]" unless DOCKER_PATH_REGEX =~ path
+      raise InvalidDockerURI.new "Invalid image name [#{path}]" unless valid_docker_path?(path)
       raise InvalidDockerURI.new "Invalid image tag [#{tag_digest}]" if tag_digest && DOCKER_TAG_DIGEST_REGEX !~ tag_digest
 
       # if only sha256 presented, we add hash value as fragment to the uri,
@@ -93,6 +127,10 @@ module UriUtils
     end
 
     private
+
+    def valid_docker_path?(path)
+      DOCKER_PATH_REGEX.match?(path) && path.split('/', -1).none?(&:empty?)
+    end
 
     def official_docker_registry(host)
       host == DOCKER_INDEX_SERVER

@@ -4,6 +4,7 @@ require 'cloud_controller/diego/protocol/routing_info'
 require 'cloud_controller/diego/buildpack/desired_lrp_builder'
 require 'cloud_controller/diego/docker/desired_lrp_builder'
 require 'cloud_controller/diego/cnb/desired_lrp_builder'
+require 'cloud_controller/diego/custom_stack_credential_resolver'
 require 'cloud_controller/diego/process_guid'
 require 'cloud_controller/diego/ssh_key'
 require 'cloud_controller/diego/service_binding_files_builder'
@@ -101,12 +102,22 @@ module VCAP::CloudController
           certificate_properties: ::Diego::Bbs::Models::CertificateProperties.new(
             organizational_unit: ["organization:#{process.organization.guid}", "space:#{process.space.guid}", "app:#{process.app_guid}"]
           ),
-          image_username: process.desired_droplet.docker_receipt_username,
-          image_password: process.desired_droplet.docker_receipt_password,
+          **lrp_image_credentials,
           volume_mounted_files: ServiceBindingFilesBuilder.build(process)
         }.compact
       rescue ServiceBindingFilesBuilder::IncompatibleBindings => e
         raise CloudController::Errors::ApiError.new_from_details('UnprocessableEntity', "Cannot build service binding files for app - #{e.message}")
+      end
+
+      def lrp_image_credentials
+        # The app lifecycle determines the LRP rootfs, even if its droplet has a different lifecycle.
+        if process.app.docker?
+          droplet = process.desired_droplet
+          { image_username: droplet.docker_receipt_username, image_password: droplet.docker_receipt_password }
+        else
+          lifecycle_data = process.app.lifecycle_data
+          CustomStackCredentialResolver.resolve(stack_uri: lifecycle_data.stack, credentials_by_host: lifecycle_data.credentials)
+        end
       end
 
       def metric_tags(process)

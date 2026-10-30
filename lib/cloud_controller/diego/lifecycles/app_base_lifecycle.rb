@@ -6,6 +6,7 @@ module VCAP::CloudController
   class AppBaseLifecycle
     def initialize(message, app=nil)
       @message = message
+      @app_stack = app&.lifecycle_data&.stack
 
       validation_data = lifecycle_data_for_validation(app)
       db_result = BuildpackLifecycleFetcher.fetch(validation_data[:buildpacks], validation_data[:stack], type)
@@ -13,6 +14,8 @@ module VCAP::CloudController
       @validator = validator_class.new(
         buildpack_infos: db_result[:buildpack_infos],
         stack: db_result[:stack],
+        stack_name: stack,
+        lifecycle_type: type,
         credentials: effective_credentials(app),
         credentials_from_message: message.buildpack_data.requested?(:credentials)
       )
@@ -50,10 +53,12 @@ module VCAP::CloudController
     end
 
     def validating_stored_buildpacks?
+      return false if message.buildpack_data.requested?(:buildpacks)
+      return true if message.buildpack_data.requested?(:stack) && message.buildpack_data.stack.present?
+
       # Stored URLs are needed to detect embedded userinfo when credentials are added separately.
       message.buildpack_data.requested?(:credentials) &&
-        message.buildpack_data.credentials.present? &&
-        !message.buildpack_data.requested?(:buildpacks)
+        message.buildpack_data.credentials.present?
     end
 
     def effective_credentials(app)
@@ -68,6 +73,8 @@ module VCAP::CloudController
     def stack
       if message.buildpack_data.requested?(:stack) && !message.buildpack_data.stack.nil?
         message.buildpack_data.stack
+      elsif message.buildpack_data.requested?(:buildpacks) || validating_stored_buildpacks?
+        @app_stack || Stack.default.name
       else
         Stack.default.name
       end

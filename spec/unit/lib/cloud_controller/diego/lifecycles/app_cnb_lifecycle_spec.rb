@@ -10,6 +10,7 @@ module VCAP::CloudController
     let(:lifecycle_request_data) { { buildpacks: ['http://acme.com'] } }
 
     it_behaves_like 'a app lifecycle'
+    it_behaves_like 'custom-stack lifecycle updates', 'cnb', 'docker://registry.example.com/team/buildpack:latest'
 
     describe '#create_lifecycle_data_model' do
       let!(:app) { create(:app_model) }

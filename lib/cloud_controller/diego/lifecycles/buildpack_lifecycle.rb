@@ -19,11 +19,15 @@ module VCAP::CloudController
 
     def staging_environment_variables
       {
-        'CF_STACK' => staging_stack
+        'CF_STACK' => buildpack_stack
       }
     end
 
     private
+
+    def buildpack_stack
+      UriUtils.custom_stack_buildpack_identifier(staging_stack) || staging_stack
+    end
 
     def app_stack
       @package.app.buildpack_lifecycle_data.try(:stack)
