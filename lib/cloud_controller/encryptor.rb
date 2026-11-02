@@ -102,10 +102,10 @@ module VCAP::CloudController
       extend ActiveSupport::Concern
 
       def before_create
-        if Encryptor.encrypted_classes.include?(self.class.name) && Encryptor.current_encryption_key_label.present?
+        if self.class.ancestors.any? { |a| Encryptor.encrypted_classes.include?(a.name) } && Encryptor.current_encryption_key_label.present?
           self.encryption_key_label = Encryptor.current_encryption_key_label
         end
-        super
+        super if defined?(super)
       end
 
       private

@@ -453,6 +453,62 @@ module VCAP::CloudController
         end
       end
 
+      describe '#before_create' do
+        let(:columns) { %i[sekret salt encryption_key_label encryption_iterations] }
+
+        let(:sti_parent_class) do
+          Class.new(base_class) do
+            set_field_as_encrypted :sekret
+
+            def db; end
+
+            def self.name
+              'StiParentClass'
+            end
+          end
+        end
+
+        let(:sti_child_class) do
+          Class.new(sti_parent_class) do
+            def self.name
+              'StiChildClass'
+            end
+          end
+        end
+
+        before do
+          allow(Encryptor).to receive_messages(current_encryption_key_label: 'some-label', encrypted_classes: ['StiParentClass'])
+        end
+
+        context 'when the class itself is registered in encrypted_classes' do
+          it 'sets encryption_key_label' do
+            instance = sti_parent_class.new
+            instance.before_create
+            expect(instance.encryption_key_label).to eq('some-label')
+          end
+        end
+
+        context 'when an STI subclass is not directly registered in encrypted_classes' do
+          it 'still sets encryption_key_label via ancestor lookup' do
+            instance = sti_child_class.new
+            instance.before_create
+            expect(instance.encryption_key_label).to eq('some-label')
+          end
+        end
+
+        context 'when no current encryption key label is set' do
+          before do
+            allow(Encryptor).to receive(:current_encryption_key_label).and_return(nil)
+          end
+
+          it 'does not set encryption_key_label' do
+            instance = sti_child_class.new
+            instance.before_create
+            expect(instance.encryption_key_label).to be_nil
+          end
+        end
+      end
+
       describe 'key rotation' do
         let(:salt) { Encryptor.generate_salt }
         let(:unencrypted_string) { 'unencrypted' }
