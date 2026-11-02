@@ -1,0 +1,521 @@
+---
+openapi: 3.0.3
+info:
+  title: Cloud Controller V3 API
+  version: v3
+servers: []
+paths:
+  "/v3/apps":
+    post:
+      summary: Create an app
+      tags:
+      - AppsV3
+      requestBody:
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                name:
+                  type: string
+                lifecycle:
+                  type: object
+                  properties:
+                    type:
+                      type: string
+                    data:
+                      type: object
+                      properties:
+                        stack:
+                          type: string
+                        buildpacks:
+                          type: array
+                          items:
+                            type: string
+                      required:
+                      - stack
+                      - buildpacks
+                  required:
+                  - type
+                  - data
+                relationships:
+                  type: object
+                  properties:
+                    space:
+                      type: object
+                      properties:
+                        data:
+                          type: object
+                          properties:
+                            guid:
+                              type: string
+                          required:
+                          - guid
+                      required:
+                      - data
+                  required:
+                  - space
+              required:
+              - name
+              - lifecycle
+              - relationships
+            example:
+              name: my_app
+              lifecycle:
+                type: buildpack
+                data:
+                  stack: name-12990
+                  buildpacks:
+                  - name-12991
+              relationships:
+                space:
+                  data:
+                    guid: dc211e74-3b97-4fc3-8952-6e998978bf73
+      responses:
+        '201':
+          description: includes user-agent in telemetry logs when making a request
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  guid:
+                    type: string
+                  created_at:
+                    type: string
+                  updated_at:
+                    type: string
+                  name:
+                    type: string
+                  state:
+                    type: string
+                  lifecycle:
+                    type: object
+                    properties:
+                      type:
+                        type: string
+                      data:
+                        type: object
+                        properties:
+                          buildpacks:
+                            type: array
+                            items:
+                              type: string
+                          stack:
+                            type: string
+                        required:
+                        - buildpacks
+                        - stack
+                    required:
+                    - type
+                    - data
+                  relationships:
+                    type: object
+                    properties:
+                      space:
+                        type: object
+                        properties:
+                          data:
+                            type: object
+                            properties:
+                              guid:
+                                type: string
+                            required:
+                            - guid
+                        required:
+                        - data
+                      current_droplet:
+                        type: object
+                        properties:
+                          data:
+                            type: object
+                            properties:
+                              guid:
+                                nullable: true
+                            required:
+                            - guid
+                        required:
+                        - data
+                    required:
+                    - space
+                    - current_droplet
+                  metadata:
+                    type: object
+                    properties:
+                      labels:
+                        type: object
+                        properties: {}
+                      annotations:
+                        type: object
+                        properties: {}
+                    required:
+                    - labels
+                    - annotations
+                  links:
+                    type: object
+                    properties:
+                      self:
+                        type: object
+                        properties:
+                          href:
+                            type: string
+                        required:
+                        - href
+                      environment_variables:
+                        type: object
+                        properties:
+                          href:
+                            type: string
+                        required:
+                        - href
+                      space:
+                        type: object
+                        properties:
+                          href:
+                            type: string
+                        required:
+                        - href
+                      processes:
+                        type: object
+                        properties:
+                          href:
+                            type: string
+                        required:
+                        - href
+                      packages:
+                        type: object
+                        properties:
+                          href:
+                            type: string
+                        required:
+                        - href
+                      current_droplet:
+                        type: object
+                        properties:
+                          href:
+                            type: string
+                        required:
+                        - href
+                      droplets:
+                        type: object
+                        properties:
+                          href:
+                            type: string
+                        required:
+                        - href
+                      tasks:
+                        type: object
+                        properties:
+                          href:
+                            type: string
+                        required:
+                        - href
+                      start:
+                        type: object
+                        properties:
+                          href:
+                            type: string
+                          method:
+                            type: string
+                        required:
+                        - href
+                        - method
+                      stop:
+                        type: object
+                        properties:
+                          href:
+                            type: string
+                          method:
+                            type: string
+                        required:
+                        - href
+                        - method
+                      clear_buildpack_cache:
+                        type: object
+                        properties:
+                          href:
+                            type: string
+                          method:
+                            type: string
+                        required:
+                        - href
+                        - method
+                      revisions:
+                        type: object
+                        properties:
+                          href:
+                            type: string
+                        required:
+                        - href
+                      deployed_revisions:
+                        type: object
+                        properties:
+                          href:
+                            type: string
+                        required:
+                        - href
+                      features:
+                        type: object
+                        properties:
+                          href:
+                            type: string
+                        required:
+                        - href
+                    required:
+                    - self
+                    - environment_variables
+                    - space
+                    - processes
+                    - packages
+                    - current_droplet
+                    - droplets
+                    - tasks
+                    - start
+                    - stop
+                    - clear_buildpack_cache
+                    - revisions
+                    - deployed_revisions
+                    - features
+                required:
+                - guid
+                - created_at
+                - updated_at
+                - name
+                - state
+                - lifecycle
+                - relationships
+                - metadata
+                - links
+              example:
+                guid: 4eaf8f80-60e5-448b-be43-f63d554aa01f
+                created_at: '2026-03-31T23:33:31Z'
+                updated_at: '2026-03-31T23:33:31Z'
+                name: my_app
+                state: STOPPED
+                lifecycle:
+                  type: buildpack
+                  data:
+                    buildpacks:
+                    - name-12991
+                    stack: name-12990
+                relationships:
+                  space:
+                    data:
+                      guid: dc211e74-3b97-4fc3-8952-6e998978bf73
+                  current_droplet:
+                    data:
+                      guid:
+                metadata:
+                  labels: {}
+                  annotations: {}
+                links:
+                  self:
+                    href: http://api2.vcap.me/v3/apps/4eaf8f80-60e5-448b-be43-f63d554aa01f
+                  environment_variables:
+                    href: http://api2.vcap.me/v3/apps/4eaf8f80-60e5-448b-be43-f63d554aa01f/environment_variables
+                  space:
+                    href: http://api2.vcap.me/v3/spaces/dc211e74-3b97-4fc3-8952-6e998978bf73
+                  processes:
+                    href: http://api2.vcap.me/v3/apps/4eaf8f80-60e5-448b-be43-f63d554aa01f/processes
+                  packages:
+                    href: http://api2.vcap.me/v3/apps/4eaf8f80-60e5-448b-be43-f63d554aa01f/packages
+                  current_droplet:
+                    href: http://api2.vcap.me/v3/apps/4eaf8f80-60e5-448b-be43-f63d554aa01f/droplets/current
+                  droplets:
+                    href: http://api2.vcap.me/v3/apps/4eaf8f80-60e5-448b-be43-f63d554aa01f/droplets
+                  tasks:
+                    href: http://api2.vcap.me/v3/apps/4eaf8f80-60e5-448b-be43-f63d554aa01f/tasks
+                  start:
+                    href: http://api2.vcap.me/v3/apps/4eaf8f80-60e5-448b-be43-f63d554aa01f/actions/start
+                    method: POST
+                  stop:
+                    href: http://api2.vcap.me/v3/apps/4eaf8f80-60e5-448b-be43-f63d554aa01f/actions/stop
+                    method: POST
+                  clear_buildpack_cache:
+                    href: http://api2.vcap.me/v3/apps/4eaf8f80-60e5-448b-be43-f63d554aa01f/actions/clear_buildpack_cache
+                    method: POST
+                  revisions:
+                    href: http://api2.vcap.me/v3/apps/4eaf8f80-60e5-448b-be43-f63d554aa01f/revisions
+                  deployed_revisions:
+                    href: http://api2.vcap.me/v3/apps/4eaf8f80-60e5-448b-be43-f63d554aa01f/revisions/deployed
+                  features:
+                    href: http://api2.vcap.me/v3/apps/4eaf8f80-60e5-448b-be43-f63d554aa01f/features
+  "/v3/spaces":
+    get:
+      summary: List spaces
+      tags:
+      - SpacesV3
+      responses:
+        '200':
+          description: sets VCAP::Request.user_agent during the request
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  pagination:
+                    type: object
+                    properties:
+                      total_results:
+                        type: integer
+                      total_pages:
+                        type: integer
+                      first:
+                        type: object
+                        properties:
+                          href:
+                            type: string
+                        required:
+                        - href
+                      last:
+                        type: object
+                        properties:
+                          href:
+                            type: string
+                        required:
+                        - href
+                      next:
+                        nullable: true
+                      previous:
+                        nullable: true
+                    required:
+                    - total_results
+                    - total_pages
+                    - first
+                    - last
+                    - next
+                    - previous
+                  resources:
+                    type: array
+                    items:
+                      type: object
+                      properties:
+                        guid:
+                          type: string
+                        created_at:
+                          type: string
+                        updated_at:
+                          type: string
+                        name:
+                          type: string
+                        relationships:
+                          type: object
+                          properties:
+                            organization:
+                              type: object
+                              properties:
+                                data:
+                                  type: object
+                                  properties:
+                                    guid:
+                                      type: string
+                                  required:
+                                  - guid
+                              required:
+                              - data
+                            quota:
+                              type: object
+                              properties:
+                                data:
+                                  nullable: true
+                              required:
+                              - data
+                          required:
+                          - organization
+                          - quota
+                        metadata:
+                          type: object
+                          properties:
+                            labels:
+                              type: object
+                              properties: {}
+                            annotations:
+                              type: object
+                              properties: {}
+                          required:
+                          - labels
+                          - annotations
+                        links:
+                          type: object
+                          properties:
+                            self:
+                              type: object
+                              properties:
+                                href:
+                                  type: string
+                              required:
+                              - href
+                            organization:
+                              type: object
+                              properties:
+                                href:
+                                  type: string
+                              required:
+                              - href
+                            features:
+                              type: object
+                              properties:
+                                href:
+                                  type: string
+                              required:
+                              - href
+                            apply_manifest:
+                              type: object
+                              properties:
+                                href:
+                                  type: string
+                                method:
+                                  type: string
+                              required:
+                              - href
+                              - method
+                          required:
+                          - self
+                          - organization
+                          - features
+                          - apply_manifest
+                      required:
+                      - guid
+                      - created_at
+                      - updated_at
+                      - name
+                      - relationships
+                      - metadata
+                      - links
+                required:
+                - pagination
+                - resources
+              example:
+                pagination:
+                  total_results: 1
+                  total_pages: 1
+                  first:
+                    href: http://api2.vcap.me/v3/spaces?page=1&per_page=50
+                  last:
+                    href: http://api2.vcap.me/v3/spaces?page=1&per_page=50
+                  next:
+                  previous:
+                resources:
+                - guid: 5f1bee97-8224-4d7c-9325-8845f74a1112
+                  created_at: '2026-03-31T23:33:31Z'
+                  updated_at: '2026-03-31T23:33:31Z'
+                  name: name-12996
+                  relationships:
+                    organization:
+                      data:
+                        guid: 0124c516-72bd-4a66-83b4-ead4f539e229
+                    quota:
+                      data:
+                  metadata:
+                    labels: {}
+                    annotations: {}
+                  links:
+                    self:
+                      href: http://api2.vcap.me/v3/spaces/5f1bee97-8224-4d7c-9325-8845f74a1112
+                    organization:
+                      href: http://api2.vcap.me/v3/organizations/0124c516-72bd-4a66-83b4-ead4f539e229
+                    features:
+                      href: http://api2.vcap.me/v3/spaces/5f1bee97-8224-4d7c-9325-8845f74a1112/features
+                    apply_manifest:
+                      href: http://api2.vcap.me/v3/spaces/5f1bee97-8224-4d7c-9325-8845f74a1112/actions/apply_manifest
+                      method: POST

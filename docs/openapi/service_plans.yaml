@@ -1,0 +1,2835 @@
+---
+openapi: 3.0.3
+info:
+  title: Cloud Controller V3 API
+  version: v3
+  description: Service plans represent the service plans offered by a service offering.
+    A service offering will have one or more service plans. Service offerings and
+    service plans are created and updated when a service broker is registered or updated.
+servers: []
+paths:
+  "/v3/service_offerings/{guid}":
+    get:
+      summary: Get a service offering
+      tags:
+      - ServiceOffering
+      parameters:
+      - name: guid
+        in: path
+        required: true
+        schema:
+          type: string
+        example: 81b307f1-f32b-4909-84f4-0800b7d005cb
+        description: Unique identifier for the resource
+      responses:
+        '200':
+          description: links to service offerings
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  guid:
+                    type: string
+                  created_at:
+                    type: string
+                  updated_at:
+                    type: string
+                  name:
+                    type: string
+                  description:
+                    type: string
+                  available:
+                    type: boolean
+                  tags:
+                    type: array
+                    items: {}
+                  requires:
+                    type: array
+                    items: {}
+                  shareable:
+                    type: boolean
+                  documentation_url:
+                    type: string
+                  broker_catalog:
+                    type: object
+                    properties:
+                      id:
+                        type: string
+                      metadata:
+                        type: object
+                        properties:
+                          shareable:
+                            type: boolean
+                          documentationUrl:
+                            type: string
+                        required:
+                        - shareable
+                        - documentationUrl
+                      features:
+                        type: object
+                        properties:
+                          plan_updateable:
+                            type: boolean
+                          bindable:
+                            type: boolean
+                          instances_retrievable:
+                            type: boolean
+                          bindings_retrievable:
+                            type: boolean
+                          allow_context_updates:
+                            type: boolean
+                        required:
+                        - plan_updateable
+                        - bindable
+                        - instances_retrievable
+                        - bindings_retrievable
+                        - allow_context_updates
+                    required:
+                    - id
+                    - metadata
+                    - features
+                  relationships:
+                    type: object
+                    properties:
+                      service_broker:
+                        type: object
+                        properties:
+                          data:
+                            type: object
+                            properties:
+                              guid:
+                                type: string
+                            required:
+                            - guid
+                        required:
+                        - data
+                    required:
+                    - service_broker
+                  metadata:
+                    type: object
+                    properties:
+                      labels:
+                        type: object
+                        properties: {}
+                      annotations:
+                        type: object
+                        properties: {}
+                    required:
+                    - labels
+                    - annotations
+                  links:
+                    type: object
+                    properties:
+                      self:
+                        type: object
+                        properties:
+                          href:
+                            type: string
+                        required:
+                        - href
+                      service_plans:
+                        type: object
+                        properties:
+                          href:
+                            type: string
+                        required:
+                        - href
+                      service_broker:
+                        type: object
+                        properties:
+                          href:
+                            type: string
+                        required:
+                        - href
+                    required:
+                    - self
+                    - service_plans
+                    - service_broker
+                required:
+                - guid
+                - created_at
+                - updated_at
+                - name
+                - description
+                - available
+                - tags
+                - requires
+                - shareable
+                - documentation_url
+                - broker_catalog
+                - relationships
+                - metadata
+                - links
+              example:
+                guid: 81b307f1-f32b-4909-84f4-0800b7d005cb
+                created_at: '2026-03-31T23:34:16Z'
+                updated_at: '2026-03-31T23:34:16Z'
+                name: label-360
+                description: desc-4057
+                available: true
+                tags: []
+                requires: []
+                shareable: true
+                documentation_url: https://some.url.for.docs/
+                broker_catalog:
+                  id: 94a6164b-8b5c-40aa-8eee-631487abee0e
+                  metadata:
+                    shareable: true
+                    documentationUrl: https://some.url.for.docs/
+                  features:
+                    plan_updateable: false
+                    bindable: true
+                    instances_retrievable: false
+                    bindings_retrievable: false
+                    allow_context_updates: false
+                relationships:
+                  service_broker:
+                    data:
+                      guid: 0c4e68d9-09e9-4b45-a79a-3cad85d670d9
+                metadata:
+                  labels: {}
+                  annotations: {}
+                links:
+                  self:
+                    href: http://api2.vcap.me/v3/service_offerings/81b307f1-f32b-4909-84f4-0800b7d005cb
+                  service_plans:
+                    href: http://api2.vcap.me/v3/service_plans?service_offering_guids=81b307f1-f32b-4909-84f4-0800b7d005cb
+                  service_broker:
+                    href: http://api2.vcap.me/v3/service_brokers/0c4e68d9-09e9-4b45-a79a-3cad85d670d9
+  "/v3/service_plans":
+    get:
+      summary: List service plans
+      tags:
+      - ServicePlan
+      responses:
+        '200':
+          description: returns an empty list
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  pagination:
+                    type: object
+                    properties:
+                      total_results:
+                        type: integer
+                      total_pages:
+                        type: integer
+                      first:
+                        type: object
+                        properties:
+                          href:
+                            type: string
+                        required:
+                        - href
+                      last:
+                        type: object
+                        properties:
+                          href:
+                            type: string
+                        required:
+                        - href
+                      next:
+                        nullable: true
+                      previous:
+                        nullable: true
+                    required:
+                    - total_results
+                    - total_pages
+                    - first
+                    - last
+                    - next
+                    - previous
+                  resources:
+                    type: array
+                    items:
+                      type: object
+                      properties:
+                        guid:
+                          type: string
+                        created_at:
+                          type: string
+                        updated_at:
+                          type: string
+                        name:
+                          type: string
+                        visibility_type:
+                          type: string
+                        available:
+                          type: boolean
+                        free:
+                          type: boolean
+                        costs:
+                          type: array
+                          items: {}
+                        description:
+                          type: string
+                        maintenance_info:
+                          type: object
+                          properties: {}
+                        broker_catalog:
+                          type: object
+                          properties:
+                            id:
+                              type: string
+                            metadata:
+                              type: object
+                              properties: {}
+                            maximum_polling_duration:
+                              nullable: true
+                            features:
+                              type: object
+                              properties:
+                                bindable:
+                                  type: boolean
+                                plan_updateable:
+                                  type: boolean
+                              required:
+                              - bindable
+                              - plan_updateable
+                          required:
+                          - id
+                          - metadata
+                          - maximum_polling_duration
+                          - features
+                        schemas:
+                          type: object
+                          properties:
+                            service_instance:
+                              type: object
+                              properties:
+                                create:
+                                  type: object
+                                  properties:
+                                    parameters:
+                                      type: object
+                                      properties: {}
+                                  required:
+                                  - parameters
+                                update:
+                                  type: object
+                                  properties:
+                                    parameters:
+                                      type: object
+                                      properties: {}
+                                  required:
+                                  - parameters
+                              required:
+                              - create
+                              - update
+                            service_binding:
+                              type: object
+                              properties:
+                                create:
+                                  type: object
+                                  properties:
+                                    parameters:
+                                      type: object
+                                      properties: {}
+                                  required:
+                                  - parameters
+                              required:
+                              - create
+                          required:
+                          - service_instance
+                          - service_binding
+                        relationships:
+                          type: object
+                          properties:
+                            service_offering:
+                              type: object
+                              properties:
+                                data:
+                                  type: object
+                                  properties:
+                                    guid:
+                                      type: string
+                                  required:
+                                  - guid
+                              required:
+                              - data
+                            space:
+                              type: object
+                              properties:
+                                data:
+                                  type: object
+                                  properties:
+                                    guid:
+                                      type: string
+                                  required:
+                                  - guid
+                              required:
+                              - data
+                              nullable: true
+                          required:
+                          - service_offering
+                        metadata:
+                          type: object
+                          properties:
+                            labels:
+                              type: object
+                              properties:
+                                one:
+                                  type: string
+                                  nullable: true
+                                two:
+                                  type: string
+                                  nullable: true
+                                flavor:
+                                  type: string
+                            annotations:
+                              type: object
+                              properties:
+                                alpha:
+                                  type: string
+                                  nullable: true
+                                beta:
+                                  type: string
+                                  nullable: true
+                          required:
+                          - labels
+                          - annotations
+                        links:
+                          type: object
+                          properties:
+                            self:
+                              type: object
+                              properties:
+                                href:
+                                  type: string
+                              required:
+                              - href
+                            service_offering:
+                              type: object
+                              properties:
+                                href:
+                                  type: string
+                              required:
+                              - href
+                            visibility:
+                              type: object
+                              properties:
+                                href:
+                                  type: string
+                              required:
+                              - href
+                            space:
+                              type: object
+                              properties:
+                                href:
+                                  type: string
+                              required:
+                              - href
+                              nullable: true
+                          required:
+                          - self
+                          - service_offering
+                          - visibility
+                      required:
+                      - guid
+                      - created_at
+                      - updated_at
+                      - name
+                      - visibility_type
+                      - available
+                      - free
+                      - costs
+                      - description
+                      - maintenance_info
+                      - broker_catalog
+                      - schemas
+                      - relationships
+                      - metadata
+                      - links
+                  included:
+                    type: object
+                    properties:
+                      service_offerings:
+                        type: array
+                        items:
+                          type: object
+                          properties:
+                            guid:
+                              type: string
+                            created_at:
+                              type: string
+                            updated_at:
+                              type: string
+                            name:
+                              type: string
+                            description:
+                              type: string
+                            available:
+                              type: boolean
+                            tags:
+                              type: array
+                              items: {}
+                            requires:
+                              type: array
+                              items: {}
+                            shareable:
+                              type: boolean
+                            documentation_url:
+                              type: string
+                            broker_catalog:
+                              type: object
+                              properties:
+                                id:
+                                  type: string
+                                metadata:
+                                  type: object
+                                  properties:
+                                    shareable:
+                                      type: boolean
+                                    documentationUrl:
+                                      type: string
+                                  required:
+                                  - shareable
+                                  - documentationUrl
+                                features:
+                                  type: object
+                                  properties:
+                                    plan_updateable:
+                                      type: boolean
+                                    bindable:
+                                      type: boolean
+                                    instances_retrievable:
+                                      type: boolean
+                                    bindings_retrievable:
+                                      type: boolean
+                                    allow_context_updates:
+                                      type: boolean
+                                  required:
+                                  - plan_updateable
+                                  - bindable
+                                  - instances_retrievable
+                                  - bindings_retrievable
+                                  - allow_context_updates
+                              required:
+                              - id
+                              - metadata
+                              - features
+                            relationships:
+                              type: object
+                              properties:
+                                service_broker:
+                                  type: object
+                                  properties:
+                                    data:
+                                      type: object
+                                      properties:
+                                        guid:
+                                          type: string
+                                      required:
+                                      - guid
+                                  required:
+                                  - data
+                              required:
+                              - service_broker
+                            metadata:
+                              type: object
+                              properties:
+                                labels:
+                                  type: object
+                                  properties: {}
+                                annotations:
+                                  type: object
+                                  properties: {}
+                              required:
+                              - labels
+                              - annotations
+                            links:
+                              type: object
+                              properties:
+                                self:
+                                  type: object
+                                  properties:
+                                    href:
+                                      type: string
+                                  required:
+                                  - href
+                                service_plans:
+                                  type: object
+                                  properties:
+                                    href:
+                                      type: string
+                                  required:
+                                  - href
+                                service_broker:
+                                  type: object
+                                  properties:
+                                    href:
+                                      type: string
+                                  required:
+                                  - href
+                              required:
+                              - self
+                              - service_plans
+                              - service_broker
+                          required:
+                          - guid
+                          - created_at
+                          - updated_at
+                          - name
+                          - description
+                          - available
+                          - tags
+                          - requires
+                          - shareable
+                          - documentation_url
+                          - broker_catalog
+                          - relationships
+                          - metadata
+                          - links
+                      spaces:
+                        type: array
+                        items:
+                          type: object
+                          properties:
+                            guid:
+                              type: string
+                            created_at:
+                              type: string
+                            updated_at:
+                              type: string
+                            name:
+                              type: string
+                            relationships:
+                              type: object
+                              properties:
+                                organization:
+                                  type: object
+                                  properties:
+                                    data:
+                                      type: object
+                                      properties:
+                                        guid:
+                                          type: string
+                                      required:
+                                      - guid
+                                  required:
+                                  - data
+                                quota:
+                                  type: object
+                                  properties:
+                                    data:
+                                      nullable: true
+                                  required:
+                                  - data
+                              required:
+                              - organization
+                              - quota
+                            metadata:
+                              type: object
+                              properties:
+                                labels:
+                                  type: object
+                                  properties: {}
+                                annotations:
+                                  type: object
+                                  properties: {}
+                              required:
+                              - labels
+                              - annotations
+                            links:
+                              type: object
+                              properties:
+                                self:
+                                  type: object
+                                  properties:
+                                    href:
+                                      type: string
+                                  required:
+                                  - href
+                                organization:
+                                  type: object
+                                  properties:
+                                    href:
+                                      type: string
+                                  required:
+                                  - href
+                                features:
+                                  type: object
+                                  properties:
+                                    href:
+                                      type: string
+                                  required:
+                                  - href
+                                apply_manifest:
+                                  type: object
+                                  properties:
+                                    href:
+                                      type: string
+                                    method:
+                                      type: string
+                                  required:
+                                  - href
+                                  - method
+                              required:
+                              - self
+                              - organization
+                              - features
+                              - apply_manifest
+                          required:
+                          - guid
+                          - created_at
+                          - updated_at
+                          - name
+                          - relationships
+                          - metadata
+                          - links
+                      organizations:
+                        type: array
+                        items:
+                          type: object
+                          properties:
+                            guid:
+                              type: string
+                            created_at:
+                              type: string
+                            updated_at:
+                              type: string
+                            name:
+                              type: string
+                            suspended:
+                              type: boolean
+                            relationships:
+                              type: object
+                              properties:
+                                quota:
+                                  type: object
+                                  properties:
+                                    data:
+                                      type: object
+                                      properties:
+                                        guid:
+                                          type: string
+                                      required:
+                                      - guid
+                                  required:
+                                  - data
+                              required:
+                              - quota
+                            metadata:
+                              type: object
+                              properties:
+                                labels:
+                                  type: object
+                                  properties: {}
+                                annotations:
+                                  type: object
+                                  properties: {}
+                              required:
+                              - labels
+                              - annotations
+                            links:
+                              type: object
+                              properties:
+                                self:
+                                  type: object
+                                  properties:
+                                    href:
+                                      type: string
+                                  required:
+                                  - href
+                                domains:
+                                  type: object
+                                  properties:
+                                    href:
+                                      type: string
+                                  required:
+                                  - href
+                                default_domain:
+                                  type: object
+                                  properties:
+                                    href:
+                                      type: string
+                                  required:
+                                  - href
+                                quota:
+                                  type: object
+                                  properties:
+                                    href:
+                                      type: string
+                                  required:
+                                  - href
+                              required:
+                              - self
+                              - domains
+                              - default_domain
+                              - quota
+                          required:
+                          - guid
+                          - created_at
+                          - updated_at
+                          - name
+                          - suspended
+                          - relationships
+                          - metadata
+                          - links
+                      service_brokers:
+                        type: array
+                        items:
+                          type: object
+                          properties:
+                            name:
+                              type: string
+                            guid:
+                              type: string
+                          required:
+                          - name
+                          - guid
+                required:
+                - pagination
+                - resources
+                items:
+                  type: object
+                  properties:
+                    name:
+                      type: string
+                    free:
+                      type: boolean
+                    description:
+                      type: string
+                    service_guid:
+                      type: string
+                    extra:
+                      nullable: true
+                    unique_id:
+                      type: string
+                    public:
+                      type: boolean
+                    bindable:
+                      nullable: true
+                    plan_updateable:
+                      nullable: true
+                    active:
+                      type: boolean
+                    maximum_polling_duration:
+                      nullable: true
+                    maintenance_info:
+                      nullable: true
+                    create_instance_schema:
+                      nullable: true
+                    update_instance_schema:
+                      nullable: true
+                    create_binding_schema:
+                      nullable: true
+                  required:
+                  - name
+                  - free
+                  - description
+                  - service_guid
+                  - extra
+                  - unique_id
+                  - public
+                  - bindable
+                  - plan_updateable
+                  - active
+                  - maximum_polling_duration
+                  - maintenance_info
+                  - create_instance_schema
+                  - update_instance_schema
+                  - create_binding_schema
+              example:
+                pagination:
+                  total_results: 0
+                  total_pages: 1
+                  first:
+                    href: http://api2.vcap.me/v3/service_plans?page=1&per_page=50
+                  last:
+                    href: http://api2.vcap.me/v3/service_plans?page=1&per_page=50
+                  next:
+                  previous:
+                resources: []
+                included:
+                  service_brokers:
+                  - name: name-22668
+                    guid: 699f9b3a-cc9b-42f5-8b21-356b926d7bb5
+                  - name: name-22671
+                    guid: 2cffa96d-cd56-4ea3-a261-882d9afbd700
+      parameters:
+      - name: available
+        in: query
+        required: false
+        schema:
+          type: string
+        example: 'false'
+        description: Filter by the available property; valid values are true or false
+      - name: broker_catalog_ids
+        in: query
+        required: false
+        schema:
+          type: string
+        example: 1193afb3-f166-4e86-8ead-87c293f06d90
+        description: Comma-delimited list of IDs provided by the service broker for
+          the service plan to filter by
+      - name: fields[service_offering.service_broker]
+        in: query
+        required: false
+        schema:
+          type: array
+          items:
+            type: string
+        example:
+        - name
+        - guid
+      - name: include
+        in: query
+        required: false
+        schema:
+          type: string
+        example: space.organization
+        description: Optionally include a list of unique related resources in the
+          response;  valid values are space.organization and service_offering
+      - name: label_selector
+        in: query
+        required: false
+        schema:
+          type: string
+        example: flavor=orange
+        description: A query string containing a list of label selector requirements
+      - name: organization_guids
+        in: query
+        required: false
+        schema:
+          type: string
+        example: 31b83bbc-31dc-41f9-968e-58883999fd6b,7814355d-e12f-479c-8ca1-1a8325390bf3
+        description: Comma-delimited list of organization GUIDs to filter by
+      - name: service_broker_names
+        in: query
+        required: false
+        schema:
+          type: string
+        example: space_broker
+        description: Comma-delimited list of service broker names to filter by
+      - name: service_instance_guids
+        in: query
+        required: false
+        schema:
+          type: string
+        example: b9817b3c-6e43-4913-adc9-6d3ab9579d7f,d5e6d70b-141a-49f5-a2e6-95e974fefdf4
+        description: Comma-delimited list of service Instance GUIDs to filter by
+      - name: service_offering_names
+        in: query
+        required: false
+        schema:
+          type: string
+        example: label-529,label-530
+        description: Comma-delimited list of service Offering names to filter by
+      - name: space_guids
+        in: query
+        required: false
+        schema:
+          type: string
+        example: d75ea138-5cf9-47c5-9415-64a7f11a3006,6c8fa815-fecf-49b0-b036-f54c1f321715
+        description: Comma-delimited list of space GUIDs to filter by
+  "/v3/service_plans/{guid}":
+    delete:
+      summary: Delete a service plan
+      tags:
+      - ServicePlan
+      parameters:
+      - name: guid
+        in: path
+        required: true
+        schema:
+          type: string
+        example: fcf0d6ff-0aa6-4c4a-bae6-e3c49df2a397
+      responses:
+        '204':
+          description: emits an audit event
+        '422':
+          description: fails with a 422 unprocessable entity
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  errors:
+                    type: array
+                    items:
+                      type: object
+                      properties:
+                        detail:
+                          type: string
+                        title:
+                          type: string
+                        code:
+                          type: integer
+                        test_mode_info:
+                          type: object
+                          properties:
+                            detail:
+                              type: string
+                            title:
+                              type: string
+                            backtrace:
+                              type: array
+                              items:
+                                type: string
+                          required:
+                          - detail
+                          - title
+                          - backtrace
+                      required:
+                      - detail
+                      - title
+                      - code
+                      - test_mode_info
+                required:
+                - errors
+              example:
+                errors:
+                - detail: Please delete the service_instances associations for your
+                    service_plans.
+                  title: CF-UnprocessableEntity
+                  code: 10008
+                  test_mode_info:
+                    detail: Please delete the service_instances associations for your
+                      service_plans.
+                    title: CF-UnprocessableEntity
+                    backtrace:
+                    - "/Users/sethboyles/workspace/capi-release/src/cloud_controller_ng/app/controllers/v3/application_controller.rb:18:in
+                      `unprocessable!'"
+                    - "/Users/sethboyles/workspace/capi-release/src/cloud_controller_ng/app/controllers/v3/service_plans_controller.rb:104:in
+                      `rescue in destroy'"
+                    - "/Users/sethboyles/workspace/capi-release/src/cloud_controller_ng/app/controllers/v3/service_plans_controller.rb:92:in
+                      `destroy'"
+                    - "/Users/sethboyles/.gem/ruby/3.3.7/gems/actionpack-8.1.3/lib/action_controller/metal/basic_implicit_render.rb:8:in
+                      `send_action'"
+                    - "/Users/sethboyles/.gem/ruby/3.3.7/gems/actionpack-8.1.3/lib/abstract_controller/base.rb:221:in
+                      `process_action'"
+                    - "/Users/sethboyles/.gem/ruby/3.3.7/gems/actionpack-8.1.3/lib/action_controller/metal/rendering.rb:199:in
+                      `process_action'"
+                    - "/Users/sethboyles/.gem/ruby/3.3.7/gems/actionpack-8.1.3/lib/abstract_controller/callbacks.rb:267:in
+                      `block in process_action'"
+                    - "/Users/sethboyles/.gem/ruby/3.3.7/gems/activesupport-8.1.3/lib/active_support/callbacks.rb:110:in
+                      `run_callbacks'"
+                    - "/Users/sethboyles/.gem/ruby/3.3.7/gems/actionpack-8.1.3/lib/abstract_controller/callbacks.rb:266:in
+                      `process_action'"
+                    - "/Users/sethboyles/.gem/ruby/3.3.7/gems/actionpack-8.1.3/lib/action_controller/metal/rescue.rb:36:in
+                      `process_action'"
+                    - "/Users/sethboyles/.gem/ruby/3.3.7/gems/actionpack-8.1.3/lib/action_controller/metal/instrumentation.rb:76:in
+                      `block in process_action'"
+                    - "/Users/sethboyles/.gem/ruby/3.3.7/gems/activesupport-8.1.3/lib/active_support/notifications.rb:210:in
+                      `block in instrument'"
+                    - "/Users/sethboyles/.gem/ruby/3.3.7/gems/activesupport-8.1.3/lib/active_support/notifications/instrumenter.rb:58:in
+                      `instrument'"
+                    - "/Users/sethboyles/.gem/ruby/3.3.7/gems/activesupport-8.1.3/lib/active_support/notifications.rb:210:in
+                      `instrument'"
+                    - "/Users/sethboyles/.gem/ruby/3.3.7/gems/actionpack-8.1.3/lib/action_controller/metal/instrumentation.rb:75:in
+                      `process_action'"
+                    - "/Users/sethboyles/.gem/ruby/3.3.7/gems/actionpack-8.1.3/lib/action_controller/metal/params_wrapper.rb:259:in
+                      `process_action'"
+                    - "/Users/sethboyles/.gem/ruby/3.3.7/gems/actionpack-8.1.3/lib/abstract_controller/base.rb:154:in
+                      `process'"
+                    - "/Users/sethboyles/.gem/ruby/3.3.7/gems/actionview-8.1.3/lib/action_view/rendering.rb:40:in
+                      `process'"
+                    - "/Users/sethboyles/.gem/ruby/3.3.7/gems/actionpack-8.1.3/lib/action_controller/metal.rb:252:in
+                      `dispatch'"
+                    - "/Users/sethboyles/.gem/ruby/3.3.7/gems/actionpack-8.1.3/lib/action_controller/metal.rb:335:in
+                      `dispatch'"
+                    - "/Users/sethboyles/.gem/ruby/3.3.7/gems/actionpack-8.1.3/lib/action_dispatch/routing/route_set.rb:65:in
+                      `dispatch'"
+                    - "/Users/sethboyles/.gem/ruby/3.3.7/gems/actionpack-8.1.3/lib/action_dispatch/routing/route_set.rb:50:in
+                      `serve'"
+                    - "/Users/sethboyles/.gem/ruby/3.3.7/gems/actionpack-8.1.3/lib/action_dispatch/journey/router.rb:35:in
+                      `block in serve'"
+                    - "/Users/sethboyles/.gem/ruby/3.3.7/gems/actionpack-8.1.3/lib/action_dispatch/journey/router.rb:86:in
+                      `block in recognize'"
+                    - "/Users/sethboyles/.gem/ruby/3.3.7/gems/actionpack-8.1.3/lib/action_dispatch/journey/router.rb:66:in
+                      `each'"
+                    - "/Users/sethboyles/.gem/ruby/3.3.7/gems/actionpack-8.1.3/lib/action_dispatch/journey/router.rb:66:in
+                      `recognize'"
+                    - "/Users/sethboyles/.gem/ruby/3.3.7/gems/actionpack-8.1.3/lib/action_dispatch/journey/router.rb:31:in
+                      `serve'"
+                    - "/Users/sethboyles/.gem/ruby/3.3.7/gems/actionpack-8.1.3/lib/action_dispatch/routing/route_set.rb:906:in
+                      `call'"
+                    - "/Users/sethboyles/.gem/ruby/3.3.7/gems/rack-3.2.5/lib/rack/tempfile_reaper.rb:20:in
+                      `call'"
+                    - "/Users/sethboyles/.gem/ruby/3.3.7/gems/actionpack-8.1.3/lib/action_dispatch/http/content_security_policy.rb:38:in
+                      `call'"
+                    - "/Users/sethboyles/.gem/ruby/3.3.7/gems/actionpack-8.1.3/lib/action_dispatch/middleware/callbacks.rb:31:in
+                      `block in call'"
+                    - "/Users/sethboyles/.gem/ruby/3.3.7/gems/activesupport-8.1.3/lib/active_support/callbacks.rb:101:in
+                      `run_callbacks'"
+                    - "/Users/sethboyles/.gem/ruby/3.3.7/gems/actionpack-8.1.3/lib/action_dispatch/middleware/callbacks.rb:30:in
+                      `call'"
+                    - "/Users/sethboyles/.gem/ruby/3.3.7/gems/actionpack-8.1.3/lib/action_dispatch/middleware/executor.rb:20:in
+                      `call'"
+                    - "/Users/sethboyles/.gem/ruby/3.3.7/gems/actionpack-8.1.3/lib/action_dispatch/middleware/actionable_exceptions.rb:18:in
+                      `call'"
+                    - "/Users/sethboyles/.gem/ruby/3.3.7/gems/actionpack-8.1.3/lib/action_dispatch/middleware/debug_exceptions.rb:31:in
+                      `call'"
+                    - "/Users/sethboyles/.gem/ruby/3.3.7/gems/actionpack-8.1.3/lib/action_dispatch/middleware/show_exceptions.rb:32:in
+                      `call'"
+                    - "/Users/sethboyles/.gem/ruby/3.3.7/gems/actionpack-8.1.3/lib/action_dispatch/middleware/remote_ip.rb:98:in
+                      `call'"
+                    - "/Users/sethboyles/.gem/ruby/3.3.7/gems/rack-3.2.5/lib/rack/runtime.rb:24:in
+                      `call'"
+                    - "/Users/sethboyles/.gem/ruby/3.3.7/gems/actionpack-8.1.3/lib/action_dispatch/middleware/executor.rb:20:in
+                      `call'"
+                    - "/Users/sethboyles/.gem/ruby/3.3.7/gems/rack-3.2.5/lib/rack/sendfile.rb:131:in
+                      `call'"
+                    - "/Users/sethboyles/.gem/ruby/3.3.7/gems/rack-3.2.5/lib/rack/urlmap.rb:76:in
+                      `block in call'"
+                    - "/Users/sethboyles/.gem/ruby/3.3.7/gems/rack-3.2.5/lib/rack/urlmap.rb:60:in
+                      `each'"
+                    - "/Users/sethboyles/.gem/ruby/3.3.7/gems/rack-3.2.5/lib/rack/urlmap.rb:60:in
+                      `call'"
+                    - "/Users/sethboyles/workspace/capi-release/src/cloud_controller_ng/middleware/request_logs.rb:14:in
+                      `call'"
+                    - "/Users/sethboyles/workspace/capi-release/src/cloud_controller_ng/middleware/zipkin.rb:32:in
+                      `call_app'"
+                    - "/Users/sethboyles/workspace/capi-release/src/cloud_controller_ng/middleware/zipkin.rb:9:in
+                      `call'"
+                    - "/Users/sethboyles/workspace/capi-release/src/cloud_controller_ng/middleware/security_context_setter.rb:41:in
+                      `call'"
+                    - "/Users/sethboyles/workspace/capi-release/src/cloud_controller_ng/middleware/vcap_request_context_setter.rb:17:in
+                      `call'"
+                    - "/Users/sethboyles/workspace/capi-release/src/cloud_controller_ng/middleware/cors.rb:50:in
+                      `call_app'"
+                    - "/Users/sethboyles/workspace/capi-release/src/cloud_controller_ng/middleware/cors.rb:14:in
+                      `call'"
+                    - "/Users/sethboyles/workspace/capi-release/src/cloud_controller_ng/middleware/request_metrics.rb:13:in
+                      `call'"
+                    - "/Users/sethboyles/.gem/ruby/3.3.7/gems/rack-3.2.5/lib/rack/builder.rb:283:in
+                      `call'"
+                    - "/Users/sethboyles/.gem/ruby/3.3.7/gems/rack-test-2.2.0/lib/rack/test.rb:360:in
+                      `process_request'"
+                    - "/Users/sethboyles/.gem/ruby/3.3.7/gems/rack-test-2.2.0/lib/rack/test.rb:163:in
+                      `custom_request'"
+                    - "/Users/sethboyles/.gem/ruby/3.3.7/gems/rack-test-2.2.0/lib/rack/test.rb:112:in
+                      `delete'"
+                    - "/Users/sethboyles/.rubies/ruby-3.3.7/lib/ruby/3.3.0/forwardable.rb:240:in
+                      `delete'"
+                    - "/Users/sethboyles/workspace/capi-release/src/cloud_controller_ng/spec/request/service_plans_spec.rb:752:in
+                      `block (4 levels) in <main>'"
+                    - "/Users/sethboyles/.gem/ruby/3.3.7/gems/rspec-core-3.13.6/lib/rspec/core/example.rb:263:in
+                      `instance_exec'"
+                    - "/Users/sethboyles/.gem/ruby/3.3.7/gems/rspec-core-3.13.6/lib/rspec/core/example.rb:263:in
+                      `block in run'"
+                    - "/Users/sethboyles/.gem/ruby/3.3.7/gems/rspec-core-3.13.6/lib/rspec/core/example.rb:511:in
+                      `block in with_around_and_singleton_context_hooks'"
+                    - "/Users/sethboyles/.gem/ruby/3.3.7/gems/rspec-core-3.13.6/lib/rspec/core/example.rb:468:in
+                      `block in with_around_example_hooks'"
+                    - "/Users/sethboyles/.gem/ruby/3.3.7/gems/rspec-core-3.13.6/lib/rspec/core/hooks.rb:486:in
+                      `block in run'"
+                    - "/Users/sethboyles/.gem/ruby/3.3.7/gems/rspec-core-3.13.6/lib/rspec/core/hooks.rb:626:in
+                      `block in run_around_example_hooks_for'"
+                    - "/Users/sethboyles/.gem/ruby/3.3.7/gems/rspec-core-3.13.6/lib/rspec/core/example.rb:352:in
+                      `call'"
+                    - "/Users/sethboyles/workspace/capi-release/src/cloud_controller_ng/spec/spec_helper_helper.rb:155:in
+                      `block (3 levels) in each_run'"
+                    - "/Users/sethboyles/.gem/ruby/3.3.7/gems/sequel-5.102.0/lib/sequel/database/transactions.rb:257:in
+                      `_transaction'"
+                    - "/Users/sethboyles/.gem/ruby/3.3.7/gems/sequel-5.102.0/lib/sequel/database/transactions.rb:239:in
+                      `block in transaction'"
+                    - "/Users/sethboyles/.gem/ruby/3.3.7/gems/sequel-5.102.0/lib/sequel/connection_pool/threaded.rb:92:in
+                      `hold'"
+                    - "/Users/sethboyles/.gem/ruby/3.3.7/gems/sequel-5.102.0/lib/sequel/database/connecting.rb:283:in
+                      `synchronize'"
+                    - "/Users/sethboyles/.gem/ruby/3.3.7/gems/sequel-5.102.0/lib/sequel/database/transactions.rb:197:in
+                      `transaction'"
+                    - "/Users/sethboyles/workspace/capi-release/src/cloud_controller_ng/spec/support/database_isolation.rb:39:in
+                      `cleanly'"
+                    - "/Users/sethboyles/workspace/capi-release/src/cloud_controller_ng/spec/spec_helper_helper.rb:155:in
+                      `block (2 levels) in each_run'"
+                    - "/Users/sethboyles/.gem/ruby/3.3.7/gems/rspec-core-3.13.6/lib/rspec/core/example.rb:457:in
+                      `instance_exec'"
+                    - "/Users/sethboyles/.gem/ruby/3.3.7/gems/rspec-core-3.13.6/lib/rspec/core/example.rb:457:in
+                      `instance_exec'"
+                    - "/Users/sethboyles/.gem/ruby/3.3.7/gems/rspec-core-3.13.6/lib/rspec/core/hooks.rb:390:in
+                      `execute_with'"
+                    - "/Users/sethboyles/.gem/ruby/3.3.7/gems/rspec-core-3.13.6/lib/rspec/core/hooks.rb:628:in
+                      `block (2 levels) in run_around_example_hooks_for'"
+                    - "/Users/sethboyles/.gem/ruby/3.3.7/gems/rspec-core-3.13.6/lib/rspec/core/example.rb:352:in
+                      `call'"
+                    - "/Users/sethboyles/.gem/ruby/3.3.7/gems/webmock-3.26.2/lib/webmock/rspec.rb:39:in
+                      `block (2 levels) in <main>'"
+                    - "/Users/sethboyles/.gem/ruby/3.3.7/gems/rspec-core-3.13.6/lib/rspec/core/example.rb:457:in
+                      `instance_exec'"
+                    - "/Users/sethboyles/.gem/ruby/3.3.7/gems/rspec-core-3.13.6/lib/rspec/core/example.rb:457:in
+                      `instance_exec'"
+                    - "/Users/sethboyles/.gem/ruby/3.3.7/gems/rspec-core-3.13.6/lib/rspec/core/hooks.rb:390:in
+                      `execute_with'"
+                    - "/Users/sethboyles/.gem/ruby/3.3.7/gems/rspec-core-3.13.6/lib/rspec/core/hooks.rb:628:in
+                      `block (2 levels) in run_around_example_hooks_for'"
+                    - "/Users/sethboyles/.gem/ruby/3.3.7/gems/rspec-core-3.13.6/lib/rspec/core/example.rb:352:in
+                      `call'"
+                    - "/Users/sethboyles/.gem/ruby/3.3.7/gems/rspec-core-3.13.6/lib/rspec/core/hooks.rb:629:in
+                      `run_around_example_hooks_for'"
+                    - "/Users/sethboyles/.gem/ruby/3.3.7/gems/rspec-core-3.13.6/lib/rspec/core/hooks.rb:486:in
+                      `run'"
+                    - "/Users/sethboyles/.gem/ruby/3.3.7/gems/rspec-core-3.13.6/lib/rspec/core/example.rb:468:in
+                      `with_around_example_hooks'"
+                    - "/Users/sethboyles/.gem/ruby/3.3.7/gems/rspec-core-3.13.6/lib/rspec/core/example.rb:511:in
+                      `with_around_and_singleton_context_hooks'"
+                    - "/Users/sethboyles/.gem/ruby/3.3.7/gems/rspec-core-3.13.6/lib/rspec/core/example.rb:259:in
+                      `run'"
+                    - "/Users/sethboyles/.gem/ruby/3.3.7/gems/rspec-core-3.13.6/lib/rspec/core/example_group.rb:653:in
+                      `block in run_examples'"
+                    - "/Users/sethboyles/.gem/ruby/3.3.7/gems/rspec-core-3.13.6/lib/rspec/core/example_group.rb:649:in
+                      `map'"
+                    - "/Users/sethboyles/.gem/ruby/3.3.7/gems/rspec-core-3.13.6/lib/rspec/core/example_group.rb:649:in
+                      `run_examples'"
+                    - "/Users/sethboyles/.gem/ruby/3.3.7/gems/rspec-core-3.13.6/lib/rspec/core/example_group.rb:614:in
+                      `run'"
+                    - "/Users/sethboyles/.gem/ruby/3.3.7/gems/rspec-core-3.13.6/lib/rspec/core/example_group.rb:615:in
+                      `block in run'"
+                    - "/Users/sethboyles/.gem/ruby/3.3.7/gems/rspec-core-3.13.6/lib/rspec/core/example_group.rb:615:in
+                      `map'"
+                    - "/Users/sethboyles/.gem/ruby/3.3.7/gems/rspec-core-3.13.6/lib/rspec/core/example_group.rb:615:in
+                      `run'"
+                    - "/Users/sethboyles/.gem/ruby/3.3.7/gems/rspec-core-3.13.6/lib/rspec/core/example_group.rb:615:in
+                      `block in run'"
+                    - "/Users/sethboyles/.gem/ruby/3.3.7/gems/rspec-core-3.13.6/lib/rspec/core/example_group.rb:615:in
+                      `map'"
+                    - "/Users/sethboyles/.gem/ruby/3.3.7/gems/rspec-core-3.13.6/lib/rspec/core/example_group.rb:615:in
+                      `run'"
+                    - "/Users/sethboyles/.gem/ruby/3.3.7/gems/rspec-core-3.13.6/lib/rspec/core/runner.rb:121:in
+                      `block (3 levels) in run_specs'"
+                    - "/Users/sethboyles/.gem/ruby/3.3.7/gems/rspec-core-3.13.6/lib/rspec/core/runner.rb:121:in
+                      `map'"
+                    - "/Users/sethboyles/.gem/ruby/3.3.7/gems/rspec-core-3.13.6/lib/rspec/core/runner.rb:121:in
+                      `block (2 levels) in run_specs'"
+                    - "/Users/sethboyles/.gem/ruby/3.3.7/gems/rspec-core-3.13.6/lib/rspec/core/configuration.rb:2097:in
+                      `with_suite_hooks'"
+                    - "/Users/sethboyles/.gem/ruby/3.3.7/gems/rspec-core-3.13.6/lib/rspec/core/runner.rb:116:in
+                      `block in run_specs'"
+                    - "/Users/sethboyles/.gem/ruby/3.3.7/gems/rspec-core-3.13.6/lib/rspec/core/reporter.rb:74:in
+                      `report'"
+                    - "/Users/sethboyles/.gem/ruby/3.3.7/gems/rspec-core-3.13.6/lib/rspec/core/runner.rb:115:in
+                      `run_specs'"
+                    - "/Users/sethboyles/.gem/ruby/3.3.7/gems/rspec-core-3.13.6/lib/rspec/core/runner.rb:89:in
+                      `run'"
+                    - "/Users/sethboyles/.gem/ruby/3.3.7/gems/rspec-core-3.13.6/lib/rspec/core/runner.rb:71:in
+                      `run'"
+                    - "/Users/sethboyles/.gem/ruby/3.3.7/gems/rspec-core-3.13.6/lib/rspec/core/runner.rb:45:in
+                      `invoke'"
+                    - "/Users/sethboyles/.gem/ruby/3.3.7/gems/rspec-core-3.13.6/exe/rspec:4:in
+                      `<top (required)>'"
+                    - "/Users/sethboyles/.gem/ruby/3.3.7/bin/rspec:25:in `load'"
+                    - "/Users/sethboyles/.gem/ruby/3.3.7/bin/rspec:25:in `<top (required)>'"
+                    - "/Users/sethboyles/.gem/ruby/3.3.7/gems/bundler-2.6.9/lib/bundler/cli/exec.rb:59:in
+                      `load'"
+                    - "/Users/sethboyles/.gem/ruby/3.3.7/gems/bundler-2.6.9/lib/bundler/cli/exec.rb:59:in
+                      `kernel_load'"
+                    - "/Users/sethboyles/.gem/ruby/3.3.7/gems/bundler-2.6.9/lib/bundler/cli/exec.rb:23:in
+                      `run'"
+                    - "/Users/sethboyles/.gem/ruby/3.3.7/gems/bundler-2.6.9/lib/bundler/cli.rb:452:in
+                      `exec'"
+                    - "/Users/sethboyles/.gem/ruby/3.3.7/gems/bundler-2.6.9/lib/bundler/vendor/thor/lib/thor/command.rb:28:in
+                      `run'"
+                    - "/Users/sethboyles/.gem/ruby/3.3.7/gems/bundler-2.6.9/lib/bundler/vendor/thor/lib/thor/invocation.rb:127:in
+                      `invoke_command'"
+                    - "/Users/sethboyles/.gem/ruby/3.3.7/gems/bundler-2.6.9/lib/bundler/vendor/thor/lib/thor.rb:538:in
+                      `dispatch'"
+                    - "/Users/sethboyles/.gem/ruby/3.3.7/gems/bundler-2.6.9/lib/bundler/cli.rb:35:in
+                      `dispatch'"
+                    - "/Users/sethboyles/.gem/ruby/3.3.7/gems/bundler-2.6.9/lib/bundler/vendor/thor/lib/thor/base.rb:584:in
+                      `start'"
+                    - "/Users/sethboyles/.gem/ruby/3.3.7/gems/bundler-2.6.9/lib/bundler/cli.rb:29:in
+                      `start'"
+                    - "/Users/sethboyles/.gem/ruby/3.3.7/gems/bundler-2.6.9/exe/bundle:28:in
+                      `block in <top (required)>'"
+                    - "/Users/sethboyles/.gem/ruby/3.3.7/gems/bundler-2.6.9/lib/bundler/friendly_errors.rb:117:in
+                      `with_friendly_errors'"
+                    - "/Users/sethboyles/.gem/ruby/3.3.7/gems/bundler-2.6.9/exe/bundle:20:in
+                      `<top (required)>'"
+                    - "/Users/sethboyles/.gem/ruby/3.3.7/bin/bundle:25:in `load'"
+                    - "/Users/sethboyles/.gem/ruby/3.3.7/bin/bundle:25:in `<main>'"
+    get:
+      summary: Get a service plan
+      tags:
+      - ServicePlan
+      parameters:
+      - name: fields[service_offering.service_broker]
+        in: query
+        required: false
+        schema:
+          type: array
+          items:
+            type: string
+        example:
+        - name
+        - guid
+      - name: guid
+        in: path
+        required: true
+        schema:
+          type: string
+        example: adeb706c-4e3d-4707-a617-16098a80fbe3
+        description: Unique identifier for the resource
+      - name: include
+        in: query
+        required: false
+        schema:
+          type: string
+        example: space.organization
+        description: Optionally include a list of related resources in the response;  valid
+          values are space.organization and service_offering
+      responses:
+        '200':
+          description: can include service broker name and guid
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  guid:
+                    type: string
+                  created_at:
+                    type: string
+                  updated_at:
+                    type: string
+                  name:
+                    type: string
+                  visibility_type:
+                    type: string
+                  available:
+                    type: boolean
+                  free:
+                    type: boolean
+                  costs:
+                    type: array
+                    items: {}
+                  description:
+                    type: string
+                  maintenance_info:
+                    type: object
+                    properties: {}
+                  broker_catalog:
+                    type: object
+                    properties:
+                      id:
+                        type: string
+                      metadata:
+                        type: object
+                        properties: {}
+                      maximum_polling_duration:
+                        nullable: true
+                      features:
+                        type: object
+                        properties:
+                          bindable:
+                            type: boolean
+                          plan_updateable:
+                            type: boolean
+                        required:
+                        - bindable
+                        - plan_updateable
+                    required:
+                    - id
+                    - metadata
+                    - maximum_polling_duration
+                    - features
+                  schemas:
+                    type: object
+                    properties:
+                      service_instance:
+                        type: object
+                        properties:
+                          create:
+                            type: object
+                            properties:
+                              parameters:
+                                type: object
+                                properties: {}
+                            required:
+                            - parameters
+                          update:
+                            type: object
+                            properties:
+                              parameters:
+                                type: object
+                                properties: {}
+                            required:
+                            - parameters
+                        required:
+                        - create
+                        - update
+                      service_binding:
+                        type: object
+                        properties:
+                          create:
+                            type: object
+                            properties:
+                              parameters:
+                                type: object
+                                properties: {}
+                            required:
+                            - parameters
+                        required:
+                        - create
+                    required:
+                    - service_instance
+                    - service_binding
+                  relationships:
+                    type: object
+                    properties:
+                      service_offering:
+                        type: object
+                        properties:
+                          data:
+                            type: object
+                            properties:
+                              guid:
+                                type: string
+                            required:
+                            - guid
+                        required:
+                        - data
+                      space:
+                        type: object
+                        properties:
+                          data:
+                            type: object
+                            properties:
+                              guid:
+                                type: string
+                            required:
+                            - guid
+                        required:
+                        - data
+                    required:
+                    - service_offering
+                  metadata:
+                    type: object
+                    properties:
+                      labels:
+                        type: object
+                        properties: {}
+                      annotations:
+                        type: object
+                        properties: {}
+                    required:
+                    - labels
+                    - annotations
+                  links:
+                    type: object
+                    properties:
+                      self:
+                        type: object
+                        properties:
+                          href:
+                            type: string
+                        required:
+                        - href
+                      service_offering:
+                        type: object
+                        properties:
+                          href:
+                            type: string
+                        required:
+                        - href
+                      visibility:
+                        type: object
+                        properties:
+                          href:
+                            type: string
+                        required:
+                        - href
+                      space:
+                        type: object
+                        properties:
+                          href:
+                            type: string
+                        required:
+                        - href
+                    required:
+                    - self
+                    - service_offering
+                    - visibility
+                  included:
+                    type: object
+                    properties:
+                      service_offerings:
+                        type: array
+                        items:
+                          type: object
+                          properties:
+                            guid:
+                              type: string
+                            created_at:
+                              type: string
+                            updated_at:
+                              type: string
+                            name:
+                              type: string
+                            description:
+                              type: string
+                            available:
+                              type: boolean
+                            tags:
+                              type: array
+                              items: {}
+                            requires:
+                              type: array
+                              items: {}
+                            shareable:
+                              type: boolean
+                            documentation_url:
+                              type: string
+                            broker_catalog:
+                              type: object
+                              properties:
+                                id:
+                                  type: string
+                                metadata:
+                                  type: object
+                                  properties:
+                                    shareable:
+                                      type: boolean
+                                    documentationUrl:
+                                      type: string
+                                  required:
+                                  - shareable
+                                  - documentationUrl
+                                features:
+                                  type: object
+                                  properties:
+                                    plan_updateable:
+                                      type: boolean
+                                    bindable:
+                                      type: boolean
+                                    instances_retrievable:
+                                      type: boolean
+                                    bindings_retrievable:
+                                      type: boolean
+                                    allow_context_updates:
+                                      type: boolean
+                                  required:
+                                  - plan_updateable
+                                  - bindable
+                                  - instances_retrievable
+                                  - bindings_retrievable
+                                  - allow_context_updates
+                              required:
+                              - id
+                              - metadata
+                              - features
+                            relationships:
+                              type: object
+                              properties:
+                                service_broker:
+                                  type: object
+                                  properties:
+                                    data:
+                                      type: object
+                                      properties:
+                                        guid:
+                                          type: string
+                                      required:
+                                      - guid
+                                  required:
+                                  - data
+                              required:
+                              - service_broker
+                            metadata:
+                              type: object
+                              properties:
+                                labels:
+                                  type: object
+                                  properties: {}
+                                annotations:
+                                  type: object
+                                  properties: {}
+                              required:
+                              - labels
+                              - annotations
+                            links:
+                              type: object
+                              properties:
+                                self:
+                                  type: object
+                                  properties:
+                                    href:
+                                      type: string
+                                  required:
+                                  - href
+                                service_plans:
+                                  type: object
+                                  properties:
+                                    href:
+                                      type: string
+                                  required:
+                                  - href
+                                service_broker:
+                                  type: object
+                                  properties:
+                                    href:
+                                      type: string
+                                  required:
+                                  - href
+                              required:
+                              - self
+                              - service_plans
+                              - service_broker
+                          required:
+                          - guid
+                          - created_at
+                          - updated_at
+                          - name
+                          - description
+                          - available
+                          - tags
+                          - requires
+                          - shareable
+                          - documentation_url
+                          - broker_catalog
+                          - relationships
+                          - metadata
+                          - links
+                      spaces:
+                        type: array
+                        items:
+                          type: object
+                          properties:
+                            guid:
+                              type: string
+                            created_at:
+                              type: string
+                            updated_at:
+                              type: string
+                            name:
+                              type: string
+                            relationships:
+                              type: object
+                              properties:
+                                organization:
+                                  type: object
+                                  properties:
+                                    data:
+                                      type: object
+                                      properties:
+                                        guid:
+                                          type: string
+                                      required:
+                                      - guid
+                                  required:
+                                  - data
+                                quota:
+                                  type: object
+                                  properties:
+                                    data:
+                                      nullable: true
+                                  required:
+                                  - data
+                              required:
+                              - organization
+                              - quota
+                            metadata:
+                              type: object
+                              properties:
+                                labels:
+                                  type: object
+                                  properties: {}
+                                annotations:
+                                  type: object
+                                  properties: {}
+                              required:
+                              - labels
+                              - annotations
+                            links:
+                              type: object
+                              properties:
+                                self:
+                                  type: object
+                                  properties:
+                                    href:
+                                      type: string
+                                  required:
+                                  - href
+                                organization:
+                                  type: object
+                                  properties:
+                                    href:
+                                      type: string
+                                  required:
+                                  - href
+                                features:
+                                  type: object
+                                  properties:
+                                    href:
+                                      type: string
+                                  required:
+                                  - href
+                                apply_manifest:
+                                  type: object
+                                  properties:
+                                    href:
+                                      type: string
+                                    method:
+                                      type: string
+                                  required:
+                                  - href
+                                  - method
+                              required:
+                              - self
+                              - organization
+                              - features
+                              - apply_manifest
+                          required:
+                          - guid
+                          - created_at
+                          - updated_at
+                          - name
+                          - relationships
+                          - metadata
+                          - links
+                      organizations:
+                        type: array
+                        items:
+                          type: object
+                          properties:
+                            guid:
+                              type: string
+                            created_at:
+                              type: string
+                            updated_at:
+                              type: string
+                            name:
+                              type: string
+                            suspended:
+                              type: boolean
+                            relationships:
+                              type: object
+                              properties:
+                                quota:
+                                  type: object
+                                  properties:
+                                    data:
+                                      type: object
+                                      properties:
+                                        guid:
+                                          type: string
+                                      required:
+                                      - guid
+                                  required:
+                                  - data
+                              required:
+                              - quota
+                            metadata:
+                              type: object
+                              properties:
+                                labels:
+                                  type: object
+                                  properties: {}
+                                annotations:
+                                  type: object
+                                  properties: {}
+                              required:
+                              - labels
+                              - annotations
+                            links:
+                              type: object
+                              properties:
+                                self:
+                                  type: object
+                                  properties:
+                                    href:
+                                      type: string
+                                  required:
+                                  - href
+                                domains:
+                                  type: object
+                                  properties:
+                                    href:
+                                      type: string
+                                  required:
+                                  - href
+                                default_domain:
+                                  type: object
+                                  properties:
+                                    href:
+                                      type: string
+                                  required:
+                                  - href
+                                quota:
+                                  type: object
+                                  properties:
+                                    href:
+                                      type: string
+                                  required:
+                                  - href
+                              required:
+                              - self
+                              - domains
+                              - default_domain
+                              - quota
+                          required:
+                          - guid
+                          - created_at
+                          - updated_at
+                          - name
+                          - suspended
+                          - relationships
+                          - metadata
+                          - links
+                      service_brokers:
+                        type: array
+                        items:
+                          type: object
+                          properties:
+                            name:
+                              type: string
+                            guid:
+                              type: string
+                          required:
+                          - name
+                          - guid
+                required:
+                - guid
+                - created_at
+                - updated_at
+                - name
+                - visibility_type
+                - available
+                - free
+                - costs
+                - description
+                - maintenance_info
+                - broker_catalog
+                - schemas
+                - relationships
+                - metadata
+                - links
+              example:
+                guid: adeb706c-4e3d-4707-a617-16098a80fbe3
+                created_at: '2026-03-31T23:34:17Z'
+                updated_at: '2026-03-31T23:34:17Z'
+                name: name-22503
+                visibility_type: public
+                available: true
+                free: false
+                costs: []
+                description: desc-4136
+                maintenance_info: {}
+                broker_catalog:
+                  id: 497abc52-e3e4-4a9d-bb37-ec0e0561480d
+                  metadata: {}
+                  maximum_polling_duration:
+                  features:
+                    bindable: true
+                    plan_updateable: false
+                schemas:
+                  service_instance:
+                    create:
+                      parameters: {}
+                    update:
+                      parameters: {}
+                  service_binding:
+                    create:
+                      parameters: {}
+                relationships:
+                  service_offering:
+                    data:
+                      guid: e67e4327-9a32-46ce-803b-e58da8364e2e
+                  space:
+                    data:
+                      guid: 5825cbe8-023b-4b79-b7e0-b169a6e218a3
+                metadata:
+                  labels: {}
+                  annotations: {}
+                links:
+                  self:
+                    href: http://api2.vcap.me/v3/service_plans/adeb706c-4e3d-4707-a617-16098a80fbe3
+                  service_offering:
+                    href: http://api2.vcap.me/v3/service_offerings/e67e4327-9a32-46ce-803b-e58da8364e2e
+                  visibility:
+                    href: http://api2.vcap.me/v3/service_plans/adeb706c-4e3d-4707-a617-16098a80fbe3/visibility
+                  space:
+                    href: http://api2.vcap.me/v3/spaces/5825cbe8-023b-4b79-b7e0-b169a6e218a3
+                included:
+                  service_offerings:
+                  - guid: aa5ff924-1100-412d-893d-6444fdd03bb0
+                    created_at: '2026-03-31T23:34:17Z'
+                    updated_at: '2026-03-31T23:34:17Z'
+                    name: label-385
+                    description: desc-4106
+                    available: true
+                    tags: []
+                    requires: []
+                    shareable: true
+                    documentation_url: https://some.url.for.docs/
+                    broker_catalog:
+                      id: 7b067bcd-fd59-40bd-a341-78af35df8746
+                      metadata:
+                        shareable: true
+                        documentationUrl: https://some.url.for.docs/
+                      features:
+                        plan_updateable: false
+                        bindable: true
+                        instances_retrievable: false
+                        bindings_retrievable: false
+                        allow_context_updates: false
+                    relationships:
+                      service_broker:
+                        data:
+                          guid: b0e5a449-a899-443d-adf8-552fc4a7c4ee
+                    metadata:
+                      labels: {}
+                      annotations: {}
+                    links:
+                      self:
+                        href: http://api2.vcap.me/v3/service_offerings/aa5ff924-1100-412d-893d-6444fdd03bb0
+                      service_plans:
+                        href: http://api2.vcap.me/v3/service_plans?service_offering_guids=aa5ff924-1100-412d-893d-6444fdd03bb0
+                      service_broker:
+                        href: http://api2.vcap.me/v3/service_brokers/b0e5a449-a899-443d-adf8-552fc4a7c4ee
+                  spaces:
+                  - guid: 5825cbe8-023b-4b79-b7e0-b169a6e218a3
+                    created_at: '2026-03-31T23:34:17Z'
+                    updated_at: '2026-03-31T23:34:17Z'
+                    name: name-22409
+                    relationships:
+                      organization:
+                        data:
+                          guid: 746551db-ad59-4fda-99eb-6ab63a3e3b81
+                      quota:
+                        data:
+                    metadata:
+                      labels: {}
+                      annotations: {}
+                    links:
+                      self:
+                        href: http://api2.vcap.me/v3/spaces/5825cbe8-023b-4b79-b7e0-b169a6e218a3
+                      organization:
+                        href: http://api2.vcap.me/v3/organizations/746551db-ad59-4fda-99eb-6ab63a3e3b81
+                      features:
+                        href: http://api2.vcap.me/v3/spaces/5825cbe8-023b-4b79-b7e0-b169a6e218a3/features
+                      apply_manifest:
+                        href: http://api2.vcap.me/v3/spaces/5825cbe8-023b-4b79-b7e0-b169a6e218a3/actions/apply_manifest
+                        method: POST
+                  organizations:
+                  - guid: 746551db-ad59-4fda-99eb-6ab63a3e3b81
+                    created_at: '2026-03-31T23:34:17Z'
+                    updated_at: '2026-03-31T23:34:17Z'
+                    name: name-22407
+                    suspended: false
+                    relationships:
+                      quota:
+                        data:
+                          guid: 6438d654-105c-4954-ac99-0d4a6cd74040
+                    metadata:
+                      labels: {}
+                      annotations: {}
+                    links:
+                      self:
+                        href: http://api2.vcap.me/v3/organizations/746551db-ad59-4fda-99eb-6ab63a3e3b81
+                      domains:
+                        href: http://api2.vcap.me/v3/organizations/746551db-ad59-4fda-99eb-6ab63a3e3b81/domains
+                      default_domain:
+                        href: http://api2.vcap.me/v3/organizations/746551db-ad59-4fda-99eb-6ab63a3e3b81/domains/default
+                      quota:
+                        href: http://api2.vcap.me/v3/organization_quotas/6438d654-105c-4954-ac99-0d4a6cd74040
+                  service_brokers:
+                  - name: name-22504
+                    guid: 9dcb178d-97fa-4de8-849f-524f28c153ef
+    patch:
+      summary: Update a service plan
+      tags:
+      - ServicePlan
+      parameters:
+      - name: guid
+        in: path
+        required: true
+        schema:
+          type: string
+        example: 8a0f25c7-d418-4db1-98b7-5d3c14434a0a
+        description: Unique identifier for the resource
+      requestBody:
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                metadata:
+                  type: object
+                  properties:
+                    labels:
+                      type: object
+                      properties:
+                        potato:
+                          type: string
+                      required:
+                      - potato
+                    annotations:
+                      type: object
+                      properties:
+                        style:
+                          type: string
+                        amount:
+                          type: string
+                      required:
+                      - style
+                      - amount
+                  required:
+                  - labels
+                  - annotations
+              required:
+              - metadata
+            example:
+              metadata:
+                labels:
+                  potato: sweet
+                annotations:
+                  style: mashed
+                  amount: all
+      responses:
+        '200':
+          description: can update labels and annotations
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  guid:
+                    type: string
+                  created_at:
+                    type: string
+                  updated_at:
+                    type: string
+                  name:
+                    type: string
+                  visibility_type:
+                    type: string
+                  available:
+                    type: boolean
+                  free:
+                    type: boolean
+                  costs:
+                    type: array
+                    items: {}
+                  description:
+                    type: string
+                  maintenance_info:
+                    type: object
+                    properties: {}
+                  broker_catalog:
+                    type: object
+                    properties:
+                      id:
+                        type: string
+                      metadata:
+                        type: object
+                        properties: {}
+                      maximum_polling_duration:
+                        nullable: true
+                      features:
+                        type: object
+                        properties:
+                          bindable:
+                            type: boolean
+                          plan_updateable:
+                            type: boolean
+                        required:
+                        - bindable
+                        - plan_updateable
+                    required:
+                    - id
+                    - metadata
+                    - maximum_polling_duration
+                    - features
+                  schemas:
+                    type: object
+                    properties:
+                      service_instance:
+                        type: object
+                        properties:
+                          create:
+                            type: object
+                            properties:
+                              parameters:
+                                type: object
+                                properties: {}
+                            required:
+                            - parameters
+                          update:
+                            type: object
+                            properties:
+                              parameters:
+                                type: object
+                                properties: {}
+                            required:
+                            - parameters
+                        required:
+                        - create
+                        - update
+                      service_binding:
+                        type: object
+                        properties:
+                          create:
+                            type: object
+                            properties:
+                              parameters:
+                                type: object
+                                properties: {}
+                            required:
+                            - parameters
+                        required:
+                        - create
+                    required:
+                    - service_instance
+                    - service_binding
+                  relationships:
+                    type: object
+                    properties:
+                      service_offering:
+                        type: object
+                        properties:
+                          data:
+                            type: object
+                            properties:
+                              guid:
+                                type: string
+                            required:
+                            - guid
+                        required:
+                        - data
+                    required:
+                    - service_offering
+                  metadata:
+                    type: object
+                    properties:
+                      labels:
+                        type: object
+                        properties:
+                          potato:
+                            type: string
+                        required:
+                        - potato
+                      annotations:
+                        type: object
+                        properties:
+                          amount:
+                            type: string
+                          style:
+                            type: string
+                        required:
+                        - amount
+                        - style
+                    required:
+                    - labels
+                    - annotations
+                  links:
+                    type: object
+                    properties:
+                      self:
+                        type: object
+                        properties:
+                          href:
+                            type: string
+                        required:
+                        - href
+                      service_offering:
+                        type: object
+                        properties:
+                          href:
+                            type: string
+                        required:
+                        - href
+                      visibility:
+                        type: object
+                        properties:
+                          href:
+                            type: string
+                        required:
+                        - href
+                    required:
+                    - self
+                    - service_offering
+                    - visibility
+                required:
+                - guid
+                - created_at
+                - updated_at
+                - name
+                - visibility_type
+                - available
+                - free
+                - costs
+                - description
+                - maintenance_info
+                - broker_catalog
+                - schemas
+                - relationships
+                - metadata
+                - links
+              example:
+                guid: 1ed2e4e5-830d-4775-b2e0-1ae82ce447c5
+                created_at: '2026-03-31T23:34:19Z'
+                updated_at: '2026-03-31T23:34:19Z'
+                name: name-22906
+                visibility_type: public
+                available: true
+                free: false
+                costs: []
+                description: desc-4425
+                maintenance_info: {}
+                broker_catalog:
+                  id: 96a84566-121e-4f65-ba0c-e0897d226cd9
+                  metadata: {}
+                  maximum_polling_duration:
+                  features:
+                    bindable: true
+                    plan_updateable: false
+                schemas:
+                  service_instance:
+                    create:
+                      parameters: {}
+                    update:
+                      parameters: {}
+                  service_binding:
+                    create:
+                      parameters: {}
+                relationships:
+                  service_offering:
+                    data:
+                      guid: d8414de0-93cc-4a00-a443-88f9c4c9800a
+                metadata:
+                  labels:
+                    potato: sweet
+                  annotations:
+                    amount: all
+                    style: mashed
+                links:
+                  self:
+                    href: http://api2.vcap.me/v3/service_plans/1ed2e4e5-830d-4775-b2e0-1ae82ce447c5
+                  service_offering:
+                    href: http://api2.vcap.me/v3/service_offerings/d8414de0-93cc-4a00-a443-88f9c4c9800a
+                  visibility:
+                    href: http://api2.vcap.me/v3/service_plans/1ed2e4e5-830d-4775-b2e0-1ae82ce447c5/visibility
+        '404':
+          description: returns a not found error
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  errors:
+                    type: array
+                    items:
+                      type: object
+                      properties:
+                        detail:
+                          type: string
+                        title:
+                          type: string
+                        code:
+                          type: integer
+                        test_mode_info:
+                          type: object
+                          properties:
+                            detail:
+                              type: string
+                            title:
+                              type: string
+                            backtrace:
+                              type: array
+                              items:
+                                type: string
+                          required:
+                          - detail
+                          - title
+                          - backtrace
+                      required:
+                      - detail
+                      - title
+                      - code
+                      - test_mode_info
+                required:
+                - errors
+              example:
+                errors:
+                - detail: Service plan not found
+                  title: CF-ResourceNotFound
+                  code: 10010
+                  test_mode_info:
+                    detail: Service plan not found
+                    title: CF-ResourceNotFound
+                    backtrace:
+                    - "/Users/sethboyles/workspace/capi-release/src/cloud_controller_ng/app/controllers/v3/application_controller.rb:62:in
+                      `resource_not_found!'"
+                    - "/Users/sethboyles/workspace/capi-release/src/cloud_controller_ng/app/controllers/v3/service_plans_controller.rb:118:in
+                      `service_plan_not_found!'"
+                    - "/Users/sethboyles/workspace/capi-release/src/cloud_controller_ng/app/controllers/v3/service_plans_controller.rb:80:in
+                      `update'"
+                    - "/Users/sethboyles/.gem/ruby/3.3.7/gems/actionpack-8.1.3/lib/action_controller/metal/basic_implicit_render.rb:8:in
+                      `send_action'"
+                    - "/Users/sethboyles/.gem/ruby/3.3.7/gems/actionpack-8.1.3/lib/abstract_controller/base.rb:221:in
+                      `process_action'"
+                    - "/Users/sethboyles/.gem/ruby/3.3.7/gems/actionpack-8.1.3/lib/action_controller/metal/rendering.rb:199:in
+                      `process_action'"
+                    - "/Users/sethboyles/.gem/ruby/3.3.7/gems/actionpack-8.1.3/lib/abstract_controller/callbacks.rb:267:in
+                      `block in process_action'"
+                    - "/Users/sethboyles/.gem/ruby/3.3.7/gems/activesupport-8.1.3/lib/active_support/callbacks.rb:110:in
+                      `run_callbacks'"
+                    - "/Users/sethboyles/.gem/ruby/3.3.7/gems/actionpack-8.1.3/lib/abstract_controller/callbacks.rb:266:in
+                      `process_action'"
+                    - "/Users/sethboyles/.gem/ruby/3.3.7/gems/actionpack-8.1.3/lib/action_controller/metal/rescue.rb:36:in
+                      `process_action'"
+                    - "/Users/sethboyles/.gem/ruby/3.3.7/gems/actionpack-8.1.3/lib/action_controller/metal/instrumentation.rb:76:in
+                      `block in process_action'"
+                    - "/Users/sethboyles/.gem/ruby/3.3.7/gems/activesupport-8.1.3/lib/active_support/notifications.rb:210:in
+                      `block in instrument'"
+                    - "/Users/sethboyles/.gem/ruby/3.3.7/gems/activesupport-8.1.3/lib/active_support/notifications/instrumenter.rb:58:in
+                      `instrument'"
+                    - "/Users/sethboyles/.gem/ruby/3.3.7/gems/activesupport-8.1.3/lib/active_support/notifications.rb:210:in
+                      `instrument'"
+                    - "/Users/sethboyles/.gem/ruby/3.3.7/gems/actionpack-8.1.3/lib/action_controller/metal/instrumentation.rb:75:in
+                      `process_action'"
+                    - "/Users/sethboyles/.gem/ruby/3.3.7/gems/actionpack-8.1.3/lib/action_controller/metal/params_wrapper.rb:259:in
+                      `process_action'"
+                    - "/Users/sethboyles/.gem/ruby/3.3.7/gems/actionpack-8.1.3/lib/abstract_controller/base.rb:154:in
+                      `process'"
+                    - "/Users/sethboyles/.gem/ruby/3.3.7/gems/actionview-8.1.3/lib/action_view/rendering.rb:40:in
+                      `process'"
+                    - "/Users/sethboyles/.gem/ruby/3.3.7/gems/actionpack-8.1.3/lib/action_controller/metal.rb:252:in
+                      `dispatch'"
+                    - "/Users/sethboyles/.gem/ruby/3.3.7/gems/actionpack-8.1.3/lib/action_controller/metal.rb:335:in
+                      `dispatch'"
+                    - "/Users/sethboyles/.gem/ruby/3.3.7/gems/actionpack-8.1.3/lib/action_dispatch/routing/route_set.rb:65:in
+                      `dispatch'"
+                    - "/Users/sethboyles/.gem/ruby/3.3.7/gems/actionpack-8.1.3/lib/action_dispatch/routing/route_set.rb:50:in
+                      `serve'"
+                    - "/Users/sethboyles/.gem/ruby/3.3.7/gems/actionpack-8.1.3/lib/action_dispatch/journey/router.rb:35:in
+                      `block in serve'"
+                    - "/Users/sethboyles/.gem/ruby/3.3.7/gems/actionpack-8.1.3/lib/action_dispatch/journey/router.rb:86:in
+                      `block in recognize'"
+                    - "/Users/sethboyles/.gem/ruby/3.3.7/gems/actionpack-8.1.3/lib/action_dispatch/journey/router.rb:66:in
+                      `each'"
+                    - "/Users/sethboyles/.gem/ruby/3.3.7/gems/actionpack-8.1.3/lib/action_dispatch/journey/router.rb:66:in
+                      `recognize'"
+                    - "/Users/sethboyles/.gem/ruby/3.3.7/gems/actionpack-8.1.3/lib/action_dispatch/journey/router.rb:31:in
+                      `serve'"
+                    - "/Users/sethboyles/.gem/ruby/3.3.7/gems/actionpack-8.1.3/lib/action_dispatch/routing/route_set.rb:906:in
+                      `call'"
+                    - "/Users/sethboyles/.gem/ruby/3.3.7/gems/rack-3.2.5/lib/rack/tempfile_reaper.rb:20:in
+                      `call'"
+                    - "/Users/sethboyles/.gem/ruby/3.3.7/gems/actionpack-8.1.3/lib/action_dispatch/http/content_security_policy.rb:38:in
+                      `call'"
+                    - "/Users/sethboyles/.gem/ruby/3.3.7/gems/actionpack-8.1.3/lib/action_dispatch/middleware/callbacks.rb:31:in
+                      `block in call'"
+                    - "/Users/sethboyles/.gem/ruby/3.3.7/gems/activesupport-8.1.3/lib/active_support/callbacks.rb:101:in
+                      `run_callbacks'"
+                    - "/Users/sethboyles/.gem/ruby/3.3.7/gems/actionpack-8.1.3/lib/action_dispatch/middleware/callbacks.rb:30:in
+                      `call'"
+                    - "/Users/sethboyles/.gem/ruby/3.3.7/gems/actionpack-8.1.3/lib/action_dispatch/middleware/executor.rb:20:in
+                      `call'"
+                    - "/Users/sethboyles/.gem/ruby/3.3.7/gems/actionpack-8.1.3/lib/action_dispatch/middleware/actionable_exceptions.rb:18:in
+                      `call'"
+                    - "/Users/sethboyles/.gem/ruby/3.3.7/gems/actionpack-8.1.3/lib/action_dispatch/middleware/debug_exceptions.rb:31:in
+                      `call'"
+                    - "/Users/sethboyles/.gem/ruby/3.3.7/gems/actionpack-8.1.3/lib/action_dispatch/middleware/show_exceptions.rb:32:in
+                      `call'"
+                    - "/Users/sethboyles/.gem/ruby/3.3.7/gems/actionpack-8.1.3/lib/action_dispatch/middleware/remote_ip.rb:98:in
+                      `call'"
+                    - "/Users/sethboyles/.gem/ruby/3.3.7/gems/rack-3.2.5/lib/rack/runtime.rb:24:in
+                      `call'"
+                    - "/Users/sethboyles/.gem/ruby/3.3.7/gems/actionpack-8.1.3/lib/action_dispatch/middleware/executor.rb:20:in
+                      `call'"
+                    - "/Users/sethboyles/.gem/ruby/3.3.7/gems/rack-3.2.5/lib/rack/sendfile.rb:131:in
+                      `call'"
+                    - "/Users/sethboyles/.gem/ruby/3.3.7/gems/rack-3.2.5/lib/rack/urlmap.rb:76:in
+                      `block in call'"
+                    - "/Users/sethboyles/.gem/ruby/3.3.7/gems/rack-3.2.5/lib/rack/urlmap.rb:60:in
+                      `each'"
+                    - "/Users/sethboyles/.gem/ruby/3.3.7/gems/rack-3.2.5/lib/rack/urlmap.rb:60:in
+                      `call'"
+                    - "/Users/sethboyles/workspace/capi-release/src/cloud_controller_ng/middleware/request_logs.rb:14:in
+                      `call'"
+                    - "/Users/sethboyles/workspace/capi-release/src/cloud_controller_ng/middleware/zipkin.rb:32:in
+                      `call_app'"
+                    - "/Users/sethboyles/workspace/capi-release/src/cloud_controller_ng/middleware/zipkin.rb:9:in
+                      `call'"
+                    - "/Users/sethboyles/workspace/capi-release/src/cloud_controller_ng/middleware/security_context_setter.rb:41:in
+                      `call'"
+                    - "/Users/sethboyles/workspace/capi-release/src/cloud_controller_ng/middleware/vcap_request_context_setter.rb:17:in
+                      `call'"
+                    - "/Users/sethboyles/workspace/capi-release/src/cloud_controller_ng/middleware/cors.rb:50:in
+                      `call_app'"
+                    - "/Users/sethboyles/workspace/capi-release/src/cloud_controller_ng/middleware/cors.rb:14:in
+                      `call'"
+                    - "/Users/sethboyles/workspace/capi-release/src/cloud_controller_ng/middleware/request_metrics.rb:13:in
+                      `call'"
+                    - "/Users/sethboyles/.gem/ruby/3.3.7/gems/rack-3.2.5/lib/rack/builder.rb:283:in
+                      `call'"
+                    - "/Users/sethboyles/.gem/ruby/3.3.7/gems/rack-test-2.2.0/lib/rack/test.rb:360:in
+                      `process_request'"
+                    - "/Users/sethboyles/.gem/ruby/3.3.7/gems/rack-test-2.2.0/lib/rack/test.rb:163:in
+                      `custom_request'"
+                    - "/Users/sethboyles/.gem/ruby/3.3.7/gems/rack-test-2.2.0/lib/rack/test.rb:112:in
+                      `patch'"
+                    - "/Users/sethboyles/.rubies/ruby-3.3.7/lib/ruby/3.3.0/forwardable.rb:240:in
+                      `patch'"
+                    - "/Users/sethboyles/workspace/capi-release/src/cloud_controller_ng/spec/request/service_plans_spec.rb:824:in
+                      `block (4 levels) in <main>'"
+                    - "/Users/sethboyles/.gem/ruby/3.3.7/gems/rspec-core-3.13.6/lib/rspec/core/example.rb:263:in
+                      `instance_exec'"
+                    - "/Users/sethboyles/.gem/ruby/3.3.7/gems/rspec-core-3.13.6/lib/rspec/core/example.rb:263:in
+                      `block in run'"
+                    - "/Users/sethboyles/.gem/ruby/3.3.7/gems/rspec-core-3.13.6/lib/rspec/core/example.rb:511:in
+                      `block in with_around_and_singleton_context_hooks'"
+                    - "/Users/sethboyles/.gem/ruby/3.3.7/gems/rspec-core-3.13.6/lib/rspec/core/example.rb:468:in
+                      `block in with_around_example_hooks'"
+                    - "/Users/sethboyles/.gem/ruby/3.3.7/gems/rspec-core-3.13.6/lib/rspec/core/hooks.rb:486:in
+                      `block in run'"
+                    - "/Users/sethboyles/.gem/ruby/3.3.7/gems/rspec-core-3.13.6/lib/rspec/core/hooks.rb:626:in
+                      `block in run_around_example_hooks_for'"
+                    - "/Users/sethboyles/.gem/ruby/3.3.7/gems/rspec-core-3.13.6/lib/rspec/core/example.rb:352:in
+                      `call'"
+                    - "/Users/sethboyles/workspace/capi-release/src/cloud_controller_ng/spec/spec_helper_helper.rb:155:in
+                      `block (3 levels) in each_run'"
+                    - "/Users/sethboyles/.gem/ruby/3.3.7/gems/sequel-5.102.0/lib/sequel/database/transactions.rb:257:in
+                      `_transaction'"
+                    - "/Users/sethboyles/.gem/ruby/3.3.7/gems/sequel-5.102.0/lib/sequel/database/transactions.rb:239:in
+                      `block in transaction'"
+                    - "/Users/sethboyles/.gem/ruby/3.3.7/gems/sequel-5.102.0/lib/sequel/connection_pool/threaded.rb:92:in
+                      `hold'"
+                    - "/Users/sethboyles/.gem/ruby/3.3.7/gems/sequel-5.102.0/lib/sequel/database/connecting.rb:283:in
+                      `synchronize'"
+                    - "/Users/sethboyles/.gem/ruby/3.3.7/gems/sequel-5.102.0/lib/sequel/database/transactions.rb:197:in
+                      `transaction'"
+                    - "/Users/sethboyles/workspace/capi-release/src/cloud_controller_ng/spec/support/database_isolation.rb:39:in
+                      `cleanly'"
+                    - "/Users/sethboyles/workspace/capi-release/src/cloud_controller_ng/spec/spec_helper_helper.rb:155:in
+                      `block (2 levels) in each_run'"
+                    - "/Users/sethboyles/.gem/ruby/3.3.7/gems/rspec-core-3.13.6/lib/rspec/core/example.rb:457:in
+                      `instance_exec'"
+                    - "/Users/sethboyles/.gem/ruby/3.3.7/gems/rspec-core-3.13.6/lib/rspec/core/example.rb:457:in
+                      `instance_exec'"
+                    - "/Users/sethboyles/.gem/ruby/3.3.7/gems/rspec-core-3.13.6/lib/rspec/core/hooks.rb:390:in
+                      `execute_with'"
+                    - "/Users/sethboyles/.gem/ruby/3.3.7/gems/rspec-core-3.13.6/lib/rspec/core/hooks.rb:628:in
+                      `block (2 levels) in run_around_example_hooks_for'"
+                    - "/Users/sethboyles/.gem/ruby/3.3.7/gems/rspec-core-3.13.6/lib/rspec/core/example.rb:352:in
+                      `call'"
+                    - "/Users/sethboyles/.gem/ruby/3.3.7/gems/webmock-3.26.2/lib/webmock/rspec.rb:39:in
+                      `block (2 levels) in <main>'"
+                    - "/Users/sethboyles/.gem/ruby/3.3.7/gems/rspec-core-3.13.6/lib/rspec/core/example.rb:457:in
+                      `instance_exec'"
+                    - "/Users/sethboyles/.gem/ruby/3.3.7/gems/rspec-core-3.13.6/lib/rspec/core/example.rb:457:in
+                      `instance_exec'"
+                    - "/Users/sethboyles/.gem/ruby/3.3.7/gems/rspec-core-3.13.6/lib/rspec/core/hooks.rb:390:in
+                      `execute_with'"
+                    - "/Users/sethboyles/.gem/ruby/3.3.7/gems/rspec-core-3.13.6/lib/rspec/core/hooks.rb:628:in
+                      `block (2 levels) in run_around_example_hooks_for'"
+                    - "/Users/sethboyles/.gem/ruby/3.3.7/gems/rspec-core-3.13.6/lib/rspec/core/example.rb:352:in
+                      `call'"
+                    - "/Users/sethboyles/.gem/ruby/3.3.7/gems/rspec-core-3.13.6/lib/rspec/core/hooks.rb:629:in
+                      `run_around_example_hooks_for'"
+                    - "/Users/sethboyles/.gem/ruby/3.3.7/gems/rspec-core-3.13.6/lib/rspec/core/hooks.rb:486:in
+                      `run'"
+                    - "/Users/sethboyles/.gem/ruby/3.3.7/gems/rspec-core-3.13.6/lib/rspec/core/example.rb:468:in
+                      `with_around_example_hooks'"
+                    - "/Users/sethboyles/.gem/ruby/3.3.7/gems/rspec-core-3.13.6/lib/rspec/core/example.rb:511:in
+                      `with_around_and_singleton_context_hooks'"
+                    - "/Users/sethboyles/.gem/ruby/3.3.7/gems/rspec-core-3.13.6/lib/rspec/core/example.rb:259:in
+                      `run'"
+                    - "/Users/sethboyles/.gem/ruby/3.3.7/gems/rspec-core-3.13.6/lib/rspec/core/example_group.rb:653:in
+                      `block in run_examples'"
+                    - "/Users/sethboyles/.gem/ruby/3.3.7/gems/rspec-core-3.13.6/lib/rspec/core/example_group.rb:649:in
+                      `map'"
+                    - "/Users/sethboyles/.gem/ruby/3.3.7/gems/rspec-core-3.13.6/lib/rspec/core/example_group.rb:649:in
+                      `run_examples'"
+                    - "/Users/sethboyles/.gem/ruby/3.3.7/gems/rspec-core-3.13.6/lib/rspec/core/example_group.rb:614:in
+                      `run'"
+                    - "/Users/sethboyles/.gem/ruby/3.3.7/gems/rspec-core-3.13.6/lib/rspec/core/example_group.rb:615:in
+                      `block in run'"
+                    - "/Users/sethboyles/.gem/ruby/3.3.7/gems/rspec-core-3.13.6/lib/rspec/core/example_group.rb:615:in
+                      `map'"
+                    - "/Users/sethboyles/.gem/ruby/3.3.7/gems/rspec-core-3.13.6/lib/rspec/core/example_group.rb:615:in
+                      `run'"
+                    - "/Users/sethboyles/.gem/ruby/3.3.7/gems/rspec-core-3.13.6/lib/rspec/core/example_group.rb:615:in
+                      `block in run'"
+                    - "/Users/sethboyles/.gem/ruby/3.3.7/gems/rspec-core-3.13.6/lib/rspec/core/example_group.rb:615:in
+                      `map'"
+                    - "/Users/sethboyles/.gem/ruby/3.3.7/gems/rspec-core-3.13.6/lib/rspec/core/example_group.rb:615:in
+                      `run'"
+                    - "/Users/sethboyles/.gem/ruby/3.3.7/gems/rspec-core-3.13.6/lib/rspec/core/runner.rb:121:in
+                      `block (3 levels) in run_specs'"
+                    - "/Users/sethboyles/.gem/ruby/3.3.7/gems/rspec-core-3.13.6/lib/rspec/core/runner.rb:121:in
+                      `map'"
+                    - "/Users/sethboyles/.gem/ruby/3.3.7/gems/rspec-core-3.13.6/lib/rspec/core/runner.rb:121:in
+                      `block (2 levels) in run_specs'"
+                    - "/Users/sethboyles/.gem/ruby/3.3.7/gems/rspec-core-3.13.6/lib/rspec/core/configuration.rb:2097:in
+                      `with_suite_hooks'"
+                    - "/Users/sethboyles/.gem/ruby/3.3.7/gems/rspec-core-3.13.6/lib/rspec/core/runner.rb:116:in
+                      `block in run_specs'"
+                    - "/Users/sethboyles/.gem/ruby/3.3.7/gems/rspec-core-3.13.6/lib/rspec/core/reporter.rb:74:in
+                      `report'"
+                    - "/Users/sethboyles/.gem/ruby/3.3.7/gems/rspec-core-3.13.6/lib/rspec/core/runner.rb:115:in
+                      `run_specs'"
+                    - "/Users/sethboyles/.gem/ruby/3.3.7/gems/rspec-core-3.13.6/lib/rspec/core/runner.rb:89:in
+                      `run'"
+                    - "/Users/sethboyles/.gem/ruby/3.3.7/gems/rspec-core-3.13.6/lib/rspec/core/runner.rb:71:in
+                      `run'"
+                    - "/Users/sethboyles/.gem/ruby/3.3.7/gems/rspec-core-3.13.6/lib/rspec/core/runner.rb:45:in
+                      `invoke'"
+                    - "/Users/sethboyles/.gem/ruby/3.3.7/gems/rspec-core-3.13.6/exe/rspec:4:in
+                      `<top (required)>'"
+                    - "/Users/sethboyles/.gem/ruby/3.3.7/bin/rspec:25:in `load'"
+                    - "/Users/sethboyles/.gem/ruby/3.3.7/bin/rspec:25:in `<top (required)>'"
+                    - "/Users/sethboyles/.gem/ruby/3.3.7/gems/bundler-2.6.9/lib/bundler/cli/exec.rb:59:in
+                      `load'"
+                    - "/Users/sethboyles/.gem/ruby/3.3.7/gems/bundler-2.6.9/lib/bundler/cli/exec.rb:59:in
+                      `kernel_load'"
+                    - "/Users/sethboyles/.gem/ruby/3.3.7/gems/bundler-2.6.9/lib/bundler/cli/exec.rb:23:in
+                      `run'"
+                    - "/Users/sethboyles/.gem/ruby/3.3.7/gems/bundler-2.6.9/lib/bundler/cli.rb:452:in
+                      `exec'"
+                    - "/Users/sethboyles/.gem/ruby/3.3.7/gems/bundler-2.6.9/lib/bundler/vendor/thor/lib/thor/command.rb:28:in
+                      `run'"
+                    - "/Users/sethboyles/.gem/ruby/3.3.7/gems/bundler-2.6.9/lib/bundler/vendor/thor/lib/thor/invocation.rb:127:in
+                      `invoke_command'"
+                    - "/Users/sethboyles/.gem/ruby/3.3.7/gems/bundler-2.6.9/lib/bundler/vendor/thor/lib/thor.rb:538:in
+                      `dispatch'"
+                    - "/Users/sethboyles/.gem/ruby/3.3.7/gems/bundler-2.6.9/lib/bundler/cli.rb:35:in
+                      `dispatch'"
+                    - "/Users/sethboyles/.gem/ruby/3.3.7/gems/bundler-2.6.9/lib/bundler/vendor/thor/lib/thor/base.rb:584:in
+                      `start'"
+                    - "/Users/sethboyles/.gem/ruby/3.3.7/gems/bundler-2.6.9/lib/bundler/cli.rb:29:in
+                      `start'"
+                    - "/Users/sethboyles/.gem/ruby/3.3.7/gems/bundler-2.6.9/exe/bundle:28:in
+                      `block in <top (required)>'"
+                    - "/Users/sethboyles/.gem/ruby/3.3.7/gems/bundler-2.6.9/lib/bundler/friendly_errors.rb:117:in
+                      `with_friendly_errors'"
+                    - "/Users/sethboyles/.gem/ruby/3.3.7/gems/bundler-2.6.9/exe/bundle:20:in
+                      `<top (required)>'"
+                    - "/Users/sethboyles/.gem/ruby/3.3.7/bin/bundle:25:in `load'"
+                    - "/Users/sethboyles/.gem/ruby/3.3.7/bin/bundle:25:in `<main>'"
+        '422':
+          description: returns a proper failure
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  errors:
+                    type: array
+                    items:
+                      type: object
+                      properties:
+                        detail:
+                          type: string
+                        title:
+                          type: string
+                        code:
+                          type: integer
+                        test_mode_info:
+                          type: object
+                          properties:
+                            detail:
+                              type: string
+                            title:
+                              type: string
+                            backtrace:
+                              type: array
+                              items:
+                                type: string
+                          required:
+                          - detail
+                          - title
+                          - backtrace
+                      required:
+                      - detail
+                      - title
+                      - code
+                      - test_mode_info
+                required:
+                - errors
+              example:
+                errors:
+                - detail: 'Metadata label value error: ''sweet invalid potato'' contains
+                    invalid characters'
+                  title: CF-UnprocessableEntity
+                  code: 10008
+                  test_mode_info:
+                    detail: 'Metadata label value error: ''sweet invalid potato''
+                      contains invalid characters'
+                    title: CF-UnprocessableEntity
+                    backtrace:
+                    - "/Users/sethboyles/workspace/capi-release/src/cloud_controller_ng/app/controllers/v3/application_controller.rb:18:in
+                      `unprocessable!'"
+                    - "/Users/sethboyles/workspace/capi-release/src/cloud_controller_ng/app/controllers/v3/service_plans_controller.rb:84:in
+                      `update'"
+                    - "/Users/sethboyles/.gem/ruby/3.3.7/gems/actionpack-8.1.3/lib/action_controller/metal/basic_implicit_render.rb:8:in
+                      `send_action'"
+                    - "/Users/sethboyles/.gem/ruby/3.3.7/gems/actionpack-8.1.3/lib/abstract_controller/base.rb:221:in
+                      `process_action'"
+                    - "/Users/sethboyles/.gem/ruby/3.3.7/gems/actionpack-8.1.3/lib/action_controller/metal/rendering.rb:199:in
+                      `process_action'"
+                    - "/Users/sethboyles/.gem/ruby/3.3.7/gems/actionpack-8.1.3/lib/abstract_controller/callbacks.rb:267:in
+                      `block in process_action'"
+                    - "/Users/sethboyles/.gem/ruby/3.3.7/gems/activesupport-8.1.3/lib/active_support/callbacks.rb:110:in
+                      `run_callbacks'"
+                    - "/Users/sethboyles/.gem/ruby/3.3.7/gems/actionpack-8.1.3/lib/abstract_controller/callbacks.rb:266:in
+                      `process_action'"
+                    - "/Users/sethboyles/.gem/ruby/3.3.7/gems/actionpack-8.1.3/lib/action_controller/metal/rescue.rb:36:in
+                      `process_action'"
+                    - "/Users/sethboyles/.gem/ruby/3.3.7/gems/actionpack-8.1.3/lib/action_controller/metal/instrumentation.rb:76:in
+                      `block in process_action'"
+                    - "/Users/sethboyles/.gem/ruby/3.3.7/gems/activesupport-8.1.3/lib/active_support/notifications.rb:210:in
+                      `block in instrument'"
+                    - "/Users/sethboyles/.gem/ruby/3.3.7/gems/activesupport-8.1.3/lib/active_support/notifications/instrumenter.rb:58:in
+                      `instrument'"
+                    - "/Users/sethboyles/.gem/ruby/3.3.7/gems/activesupport-8.1.3/lib/active_support/notifications.rb:210:in
+                      `instrument'"
+                    - "/Users/sethboyles/.gem/ruby/3.3.7/gems/actionpack-8.1.3/lib/action_controller/metal/instrumentation.rb:75:in
+                      `process_action'"
+                    - "/Users/sethboyles/.gem/ruby/3.3.7/gems/actionpack-8.1.3/lib/action_controller/metal/params_wrapper.rb:259:in
+                      `process_action'"
+                    - "/Users/sethboyles/.gem/ruby/3.3.7/gems/actionpack-8.1.3/lib/abstract_controller/base.rb:154:in
+                      `process'"
+                    - "/Users/sethboyles/.gem/ruby/3.3.7/gems/actionview-8.1.3/lib/action_view/rendering.rb:40:in
+                      `process'"
+                    - "/Users/sethboyles/.gem/ruby/3.3.7/gems/actionpack-8.1.3/lib/action_controller/metal.rb:252:in
+                      `dispatch'"
+                    - "/Users/sethboyles/.gem/ruby/3.3.7/gems/actionpack-8.1.3/lib/action_controller/metal.rb:335:in
+                      `dispatch'"
+                    - "/Users/sethboyles/.gem/ruby/3.3.7/gems/actionpack-8.1.3/lib/action_dispatch/routing/route_set.rb:65:in
+                      `dispatch'"
+                    - "/Users/sethboyles/.gem/ruby/3.3.7/gems/actionpack-8.1.3/lib/action_dispatch/routing/route_set.rb:50:in
+                      `serve'"
+                    - "/Users/sethboyles/.gem/ruby/3.3.7/gems/actionpack-8.1.3/lib/action_dispatch/journey/router.rb:35:in
+                      `block in serve'"
+                    - "/Users/sethboyles/.gem/ruby/3.3.7/gems/actionpack-8.1.3/lib/action_dispatch/journey/router.rb:86:in
+                      `block in recognize'"
+                    - "/Users/sethboyles/.gem/ruby/3.3.7/gems/actionpack-8.1.3/lib/action_dispatch/journey/router.rb:66:in
+                      `each'"
+                    - "/Users/sethboyles/.gem/ruby/3.3.7/gems/actionpack-8.1.3/lib/action_dispatch/journey/router.rb:66:in
+                      `recognize'"
+                    - "/Users/sethboyles/.gem/ruby/3.3.7/gems/actionpack-8.1.3/lib/action_dispatch/journey/router.rb:31:in
+                      `serve'"
+                    - "/Users/sethboyles/.gem/ruby/3.3.7/gems/actionpack-8.1.3/lib/action_dispatch/routing/route_set.rb:906:in
+                      `call'"
+                    - "/Users/sethboyles/.gem/ruby/3.3.7/gems/rack-3.2.5/lib/rack/tempfile_reaper.rb:20:in
+                      `call'"
+                    - "/Users/sethboyles/.gem/ruby/3.3.7/gems/actionpack-8.1.3/lib/action_dispatch/http/content_security_policy.rb:38:in
+                      `call'"
+                    - "/Users/sethboyles/.gem/ruby/3.3.7/gems/actionpack-8.1.3/lib/action_dispatch/middleware/callbacks.rb:31:in
+                      `block in call'"
+                    - "/Users/sethboyles/.gem/ruby/3.3.7/gems/activesupport-8.1.3/lib/active_support/callbacks.rb:101:in
+                      `run_callbacks'"
+                    - "/Users/sethboyles/.gem/ruby/3.3.7/gems/actionpack-8.1.3/lib/action_dispatch/middleware/callbacks.rb:30:in
+                      `call'"
+                    - "/Users/sethboyles/.gem/ruby/3.3.7/gems/actionpack-8.1.3/lib/action_dispatch/middleware/executor.rb:20:in
+                      `call'"
+                    - "/Users/sethboyles/.gem/ruby/3.3.7/gems/actionpack-8.1.3/lib/action_dispatch/middleware/actionable_exceptions.rb:18:in
+                      `call'"
+                    - "/Users/sethboyles/.gem/ruby/3.3.7/gems/actionpack-8.1.3/lib/action_dispatch/middleware/debug_exceptions.rb:31:in
+                      `call'"
+                    - "/Users/sethboyles/.gem/ruby/3.3.7/gems/actionpack-8.1.3/lib/action_dispatch/middleware/show_exceptions.rb:32:in
+                      `call'"
+                    - "/Users/sethboyles/.gem/ruby/3.3.7/gems/actionpack-8.1.3/lib/action_dispatch/middleware/remote_ip.rb:98:in
+                      `call'"
+                    - "/Users/sethboyles/.gem/ruby/3.3.7/gems/rack-3.2.5/lib/rack/runtime.rb:24:in
+                      `call'"
+                    - "/Users/sethboyles/.gem/ruby/3.3.7/gems/actionpack-8.1.3/lib/action_dispatch/middleware/executor.rb:20:in
+                      `call'"
+                    - "/Users/sethboyles/.gem/ruby/3.3.7/gems/rack-3.2.5/lib/rack/sendfile.rb:131:in
+                      `call'"
+                    - "/Users/sethboyles/.gem/ruby/3.3.7/gems/rack-3.2.5/lib/rack/urlmap.rb:76:in
+                      `block in call'"
+                    - "/Users/sethboyles/.gem/ruby/3.3.7/gems/rack-3.2.5/lib/rack/urlmap.rb:60:in
+                      `each'"
+                    - "/Users/sethboyles/.gem/ruby/3.3.7/gems/rack-3.2.5/lib/rack/urlmap.rb:60:in
+                      `call'"
+                    - "/Users/sethboyles/workspace/capi-release/src/cloud_controller_ng/middleware/request_logs.rb:14:in
+                      `call'"
+                    - "/Users/sethboyles/workspace/capi-release/src/cloud_controller_ng/middleware/zipkin.rb:32:in
+                      `call_app'"
+                    - "/Users/sethboyles/workspace/capi-release/src/cloud_controller_ng/middleware/zipkin.rb:9:in
+                      `call'"
+                    - "/Users/sethboyles/workspace/capi-release/src/cloud_controller_ng/middleware/security_context_setter.rb:41:in
+                      `call'"
+                    - "/Users/sethboyles/workspace/capi-release/src/cloud_controller_ng/middleware/vcap_request_context_setter.rb:17:in
+                      `call'"
+                    - "/Users/sethboyles/workspace/capi-release/src/cloud_controller_ng/middleware/cors.rb:50:in
+                      `call_app'"
+                    - "/Users/sethboyles/workspace/capi-release/src/cloud_controller_ng/middleware/cors.rb:14:in
+                      `call'"
+                    - "/Users/sethboyles/workspace/capi-release/src/cloud_controller_ng/middleware/request_metrics.rb:13:in
+                      `call'"
+                    - "/Users/sethboyles/.gem/ruby/3.3.7/gems/rack-3.2.5/lib/rack/builder.rb:283:in
+                      `call'"
+                    - "/Users/sethboyles/.gem/ruby/3.3.7/gems/rack-test-2.2.0/lib/rack/test.rb:360:in
+                      `process_request'"
+                    - "/Users/sethboyles/.gem/ruby/3.3.7/gems/rack-test-2.2.0/lib/rack/test.rb:163:in
+                      `custom_request'"
+                    - "/Users/sethboyles/.gem/ruby/3.3.7/gems/rack-test-2.2.0/lib/rack/test.rb:112:in
+                      `patch'"
+                    - "/Users/sethboyles/.rubies/ruby-3.3.7/lib/ruby/3.3.0/forwardable.rb:240:in
+                      `patch'"
+                    - "/Users/sethboyles/workspace/capi-release/src/cloud_controller_ng/spec/request/service_plans_spec.rb:803:in
+                      `block (4 levels) in <main>'"
+                    - "/Users/sethboyles/.gem/ruby/3.3.7/gems/rspec-core-3.13.6/lib/rspec/core/example.rb:263:in
+                      `instance_exec'"
+                    - "/Users/sethboyles/.gem/ruby/3.3.7/gems/rspec-core-3.13.6/lib/rspec/core/example.rb:263:in
+                      `block in run'"
+                    - "/Users/sethboyles/.gem/ruby/3.3.7/gems/rspec-core-3.13.6/lib/rspec/core/example.rb:511:in
+                      `block in with_around_and_singleton_context_hooks'"
+                    - "/Users/sethboyles/.gem/ruby/3.3.7/gems/rspec-core-3.13.6/lib/rspec/core/example.rb:468:in
+                      `block in with_around_example_hooks'"
+                    - "/Users/sethboyles/.gem/ruby/3.3.7/gems/rspec-core-3.13.6/lib/rspec/core/hooks.rb:486:in
+                      `block in run'"
+                    - "/Users/sethboyles/.gem/ruby/3.3.7/gems/rspec-core-3.13.6/lib/rspec/core/hooks.rb:626:in
+                      `block in run_around_example_hooks_for'"
+                    - "/Users/sethboyles/.gem/ruby/3.3.7/gems/rspec-core-3.13.6/lib/rspec/core/example.rb:352:in
+                      `call'"
+                    - "/Users/sethboyles/workspace/capi-release/src/cloud_controller_ng/spec/spec_helper_helper.rb:155:in
+                      `block (3 levels) in each_run'"
+                    - "/Users/sethboyles/.gem/ruby/3.3.7/gems/sequel-5.102.0/lib/sequel/database/transactions.rb:257:in
+                      `_transaction'"
+                    - "/Users/sethboyles/.gem/ruby/3.3.7/gems/sequel-5.102.0/lib/sequel/database/transactions.rb:239:in
+                      `block in transaction'"
+                    - "/Users/sethboyles/.gem/ruby/3.3.7/gems/sequel-5.102.0/lib/sequel/connection_pool/threaded.rb:92:in
+                      `hold'"
+                    - "/Users/sethboyles/.gem/ruby/3.3.7/gems/sequel-5.102.0/lib/sequel/database/connecting.rb:283:in
+                      `synchronize'"
+                    - "/Users/sethboyles/.gem/ruby/3.3.7/gems/sequel-5.102.0/lib/sequel/database/transactions.rb:197:in
+                      `transaction'"
+                    - "/Users/sethboyles/workspace/capi-release/src/cloud_controller_ng/spec/support/database_isolation.rb:39:in
+                      `cleanly'"
+                    - "/Users/sethboyles/workspace/capi-release/src/cloud_controller_ng/spec/spec_helper_helper.rb:155:in
+                      `block (2 levels) in each_run'"
+                    - "/Users/sethboyles/.gem/ruby/3.3.7/gems/rspec-core-3.13.6/lib/rspec/core/example.rb:457:in
+                      `instance_exec'"
+                    - "/Users/sethboyles/.gem/ruby/3.3.7/gems/rspec-core-3.13.6/lib/rspec/core/example.rb:457:in
+                      `instance_exec'"
+                    - "/Users/sethboyles/.gem/ruby/3.3.7/gems/rspec-core-3.13.6/lib/rspec/core/hooks.rb:390:in
+                      `execute_with'"
+                    - "/Users/sethboyles/.gem/ruby/3.3.7/gems/rspec-core-3.13.6/lib/rspec/core/hooks.rb:628:in
+                      `block (2 levels) in run_around_example_hooks_for'"
+                    - "/Users/sethboyles/.gem/ruby/3.3.7/gems/rspec-core-3.13.6/lib/rspec/core/example.rb:352:in
+                      `call'"
+                    - "/Users/sethboyles/.gem/ruby/3.3.7/gems/webmock-3.26.2/lib/webmock/rspec.rb:39:in
+                      `block (2 levels) in <main>'"
+                    - "/Users/sethboyles/.gem/ruby/3.3.7/gems/rspec-core-3.13.6/lib/rspec/core/example.rb:457:in
+                      `instance_exec'"
+                    - "/Users/sethboyles/.gem/ruby/3.3.7/gems/rspec-core-3.13.6/lib/rspec/core/example.rb:457:in
+                      `instance_exec'"
+                    - "/Users/sethboyles/.gem/ruby/3.3.7/gems/rspec-core-3.13.6/lib/rspec/core/hooks.rb:390:in
+                      `execute_with'"
+                    - "/Users/sethboyles/.gem/ruby/3.3.7/gems/rspec-core-3.13.6/lib/rspec/core/hooks.rb:628:in
+                      `block (2 levels) in run_around_example_hooks_for'"
+                    - "/Users/sethboyles/.gem/ruby/3.3.7/gems/rspec-core-3.13.6/lib/rspec/core/example.rb:352:in
+                      `call'"
+                    - "/Users/sethboyles/.gem/ruby/3.3.7/gems/rspec-core-3.13.6/lib/rspec/core/hooks.rb:629:in
+                      `run_around_example_hooks_for'"
+                    - "/Users/sethboyles/.gem/ruby/3.3.7/gems/rspec-core-3.13.6/lib/rspec/core/hooks.rb:486:in
+                      `run'"
+                    - "/Users/sethboyles/.gem/ruby/3.3.7/gems/rspec-core-3.13.6/lib/rspec/core/example.rb:468:in
+                      `with_around_example_hooks'"
+                    - "/Users/sethboyles/.gem/ruby/3.3.7/gems/rspec-core-3.13.6/lib/rspec/core/example.rb:511:in
+                      `with_around_and_singleton_context_hooks'"
+                    - "/Users/sethboyles/.gem/ruby/3.3.7/gems/rspec-core-3.13.6/lib/rspec/core/example.rb:259:in
+                      `run'"
+                    - "/Users/sethboyles/.gem/ruby/3.3.7/gems/rspec-core-3.13.6/lib/rspec/core/example_group.rb:653:in
+                      `block in run_examples'"
+                    - "/Users/sethboyles/.gem/ruby/3.3.7/gems/rspec-core-3.13.6/lib/rspec/core/example_group.rb:649:in
+                      `map'"
+                    - "/Users/sethboyles/.gem/ruby/3.3.7/gems/rspec-core-3.13.6/lib/rspec/core/example_group.rb:649:in
+                      `run_examples'"
+                    - "/Users/sethboyles/.gem/ruby/3.3.7/gems/rspec-core-3.13.6/lib/rspec/core/example_group.rb:614:in
+                      `run'"
+                    - "/Users/sethboyles/.gem/ruby/3.3.7/gems/rspec-core-3.13.6/lib/rspec/core/example_group.rb:615:in
+                      `block in run'"
+                    - "/Users/sethboyles/.gem/ruby/3.3.7/gems/rspec-core-3.13.6/lib/rspec/core/example_group.rb:615:in
+                      `map'"
+                    - "/Users/sethboyles/.gem/ruby/3.3.7/gems/rspec-core-3.13.6/lib/rspec/core/example_group.rb:615:in
+                      `run'"
+                    - "/Users/sethboyles/.gem/ruby/3.3.7/gems/rspec-core-3.13.6/lib/rspec/core/example_group.rb:615:in
+                      `block in run'"
+                    - "/Users/sethboyles/.gem/ruby/3.3.7/gems/rspec-core-3.13.6/lib/rspec/core/example_group.rb:615:in
+                      `map'"
+                    - "/Users/sethboyles/.gem/ruby/3.3.7/gems/rspec-core-3.13.6/lib/rspec/core/example_group.rb:615:in
+                      `run'"
+                    - "/Users/sethboyles/.gem/ruby/3.3.7/gems/rspec-core-3.13.6/lib/rspec/core/runner.rb:121:in
+                      `block (3 levels) in run_specs'"
+                    - "/Users/sethboyles/.gem/ruby/3.3.7/gems/rspec-core-3.13.6/lib/rspec/core/runner.rb:121:in
+                      `map'"
+                    - "/Users/sethboyles/.gem/ruby/3.3.7/gems/rspec-core-3.13.6/lib/rspec/core/runner.rb:121:in
+                      `block (2 levels) in run_specs'"
+                    - "/Users/sethboyles/.gem/ruby/3.3.7/gems/rspec-core-3.13.6/lib/rspec/core/configuration.rb:2097:in
+                      `with_suite_hooks'"
+                    - "/Users/sethboyles/.gem/ruby/3.3.7/gems/rspec-core-3.13.6/lib/rspec/core/runner.rb:116:in
+                      `block in run_specs'"
+                    - "/Users/sethboyles/.gem/ruby/3.3.7/gems/rspec-core-3.13.6/lib/rspec/core/reporter.rb:74:in
+                      `report'"
+                    - "/Users/sethboyles/.gem/ruby/3.3.7/gems/rspec-core-3.13.6/lib/rspec/core/runner.rb:115:in
+                      `run_specs'"
+                    - "/Users/sethboyles/.gem/ruby/3.3.7/gems/rspec-core-3.13.6/lib/rspec/core/runner.rb:89:in
+                      `run'"
+                    - "/Users/sethboyles/.gem/ruby/3.3.7/gems/rspec-core-3.13.6/lib/rspec/core/runner.rb:71:in
+                      `run'"
+                    - "/Users/sethboyles/.gem/ruby/3.3.7/gems/rspec-core-3.13.6/lib/rspec/core/runner.rb:45:in
+                      `invoke'"
+                    - "/Users/sethboyles/.gem/ruby/3.3.7/gems/rspec-core-3.13.6/exe/rspec:4:in
+                      `<top (required)>'"
+                    - "/Users/sethboyles/.gem/ruby/3.3.7/bin/rspec:25:in `load'"
+                    - "/Users/sethboyles/.gem/ruby/3.3.7/bin/rspec:25:in `<top (required)>'"
+                    - "/Users/sethboyles/.gem/ruby/3.3.7/gems/bundler-2.6.9/lib/bundler/cli/exec.rb:59:in
+                      `load'"
+                    - "/Users/sethboyles/.gem/ruby/3.3.7/gems/bundler-2.6.9/lib/bundler/cli/exec.rb:59:in
+                      `kernel_load'"
+                    - "/Users/sethboyles/.gem/ruby/3.3.7/gems/bundler-2.6.9/lib/bundler/cli/exec.rb:23:in
+                      `run'"
+                    - "/Users/sethboyles/.gem/ruby/3.3.7/gems/bundler-2.6.9/lib/bundler/cli.rb:452:in
+                      `exec'"
+                    - "/Users/sethboyles/.gem/ruby/3.3.7/gems/bundler-2.6.9/lib/bundler/vendor/thor/lib/thor/command.rb:28:in
+                      `run'"
+                    - "/Users/sethboyles/.gem/ruby/3.3.7/gems/bundler-2.6.9/lib/bundler/vendor/thor/lib/thor/invocation.rb:127:in
+                      `invoke_command'"
+                    - "/Users/sethboyles/.gem/ruby/3.3.7/gems/bundler-2.6.9/lib/bundler/vendor/thor/lib/thor.rb:538:in
+                      `dispatch'"
+                    - "/Users/sethboyles/.gem/ruby/3.3.7/gems/bundler-2.6.9/lib/bundler/cli.rb:35:in
+                      `dispatch'"
+                    - "/Users/sethboyles/.gem/ruby/3.3.7/gems/bundler-2.6.9/lib/bundler/vendor/thor/lib/thor/base.rb:584:in
+                      `start'"
+                    - "/Users/sethboyles/.gem/ruby/3.3.7/gems/bundler-2.6.9/lib/bundler/cli.rb:29:in
+                      `start'"
+                    - "/Users/sethboyles/.gem/ruby/3.3.7/gems/bundler-2.6.9/exe/bundle:28:in
+                      `block in <top (required)>'"
+                    - "/Users/sethboyles/.gem/ruby/3.3.7/gems/bundler-2.6.9/lib/bundler/friendly_errors.rb:117:in
+                      `with_friendly_errors'"
+                    - "/Users/sethboyles/.gem/ruby/3.3.7/gems/bundler-2.6.9/exe/bundle:20:in
+                      `<top (required)>'"
+                    - "/Users/sethboyles/.gem/ruby/3.3.7/bin/bundle:25:in `load'"
+                    - "/Users/sethboyles/.gem/ruby/3.3.7/bin/bundle:25:in `<main>'"
+  "/v3/service_plans/{guid}/visibility":
+    get:
+      summary: Get a service plan visibility
+      tags:
+      - ServicePlanVisibility
+      parameters:
+      - name: guid
+        in: path
+        required: true
+        schema:
+          type: string
+        example: 622c1923-6449-40f9-8e72-e061abe5e826
+      responses:
+        '200':
+          description: links to visibilities
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  type:
+                    type: string
+                required:
+                - type
+              example:
+                type: public
+tags:
+- name: ServiceOffering
+  description: Service plans represent the service plans offered by a service offering.
+    A service offering will have one or more service plans. Service offerings and
+    service plans are created and updated when a service broker is registered or updated.

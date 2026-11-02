@@ -1,0 +1,358 @@
+---
+openapi: 3.0.3
+info:
+  title: Cloud Controller V3 API
+  version: v3
+servers: []
+paths:
+  "/v3/":
+    get:
+      summary: v3_root
+      tags:
+      - Root
+      responses:
+        '200':
+          description: returns a list of links to resources available on the v3 API
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  links:
+                    type: object
+                    properties:
+                      self:
+                        type: object
+                        properties:
+                          href:
+                            type: string
+                        required:
+                        - href
+                      app_usage_events:
+                        type: object
+                        properties:
+                          href:
+                            type: string
+                        required:
+                        - href
+                      apps:
+                        type: object
+                        properties:
+                          href:
+                            type: string
+                        required:
+                        - href
+                      audit_events:
+                        type: object
+                        properties:
+                          href:
+                            type: string
+                        required:
+                        - href
+                      buildpacks:
+                        type: object
+                        properties:
+                          href:
+                            type: string
+                        required:
+                        - href
+                      builds:
+                        type: object
+                        properties:
+                          href:
+                            type: string
+                        required:
+                        - href
+                      deployments:
+                        type: object
+                        properties:
+                          href:
+                            type: string
+                        required:
+                        - href
+                      domains:
+                        type: object
+                        properties:
+                          href:
+                            type: string
+                        required:
+                        - href
+                      droplets:
+                        type: object
+                        properties:
+                          href:
+                            type: string
+                        required:
+                        - href
+                      environment_variable_groups:
+                        type: object
+                        properties:
+                          href:
+                            type: string
+                        required:
+                        - href
+                      feature_flags:
+                        type: object
+                        properties:
+                          href:
+                            type: string
+                        required:
+                        - href
+                      info:
+                        type: object
+                        properties:
+                          href:
+                            type: string
+                        required:
+                        - href
+                      isolation_segments:
+                        type: object
+                        properties:
+                          href:
+                            type: string
+                        required:
+                        - href
+                      organizations:
+                        type: object
+                        properties:
+                          href:
+                            type: string
+                        required:
+                        - href
+                      organization_quotas:
+                        type: object
+                        properties:
+                          href:
+                            type: string
+                        required:
+                        - href
+                      packages:
+                        type: object
+                        properties:
+                          href:
+                            type: string
+                        required:
+                        - href
+                      processes:
+                        type: object
+                        properties:
+                          href:
+                            type: string
+                        required:
+                        - href
+                      resource_matches:
+                        type: object
+                        properties:
+                          href:
+                            type: string
+                        required:
+                        - href
+                      roles:
+                        type: object
+                        properties:
+                          href:
+                            type: string
+                        required:
+                        - href
+                      routes:
+                        type: object
+                        properties:
+                          href:
+                            type: string
+                        required:
+                        - href
+                      security_groups:
+                        type: object
+                        properties:
+                          href:
+                            type: string
+                        required:
+                        - href
+                      service_brokers:
+                        type: object
+                        properties:
+                          href:
+                            type: string
+                        required:
+                        - href
+                      service_instances:
+                        type: object
+                        properties:
+                          href:
+                            type: string
+                        required:
+                        - href
+                      service_credential_bindings:
+                        type: object
+                        properties:
+                          href:
+                            type: string
+                        required:
+                        - href
+                      service_offerings:
+                        type: object
+                        properties:
+                          href:
+                            type: string
+                        required:
+                        - href
+                      service_plans:
+                        type: object
+                        properties:
+                          href:
+                            type: string
+                        required:
+                        - href
+                      service_route_bindings:
+                        type: object
+                        properties:
+                          href:
+                            type: string
+                        required:
+                        - href
+                      service_usage_events:
+                        type: object
+                        properties:
+                          href:
+                            type: string
+                        required:
+                        - href
+                      spaces:
+                        type: object
+                        properties:
+                          href:
+                            type: string
+                        required:
+                        - href
+                      space_quotas:
+                        type: object
+                        properties:
+                          href:
+                            type: string
+                        required:
+                        - href
+                      stacks:
+                        type: object
+                        properties:
+                          href:
+                            type: string
+                        required:
+                        - href
+                      tasks:
+                        type: object
+                        properties:
+                          href:
+                            type: string
+                        required:
+                        - href
+                      users:
+                        type: object
+                        properties:
+                          href:
+                            type: string
+                        required:
+                        - href
+                    required:
+                    - self
+                    - app_usage_events
+                    - apps
+                    - audit_events
+                    - buildpacks
+                    - builds
+                    - deployments
+                    - domains
+                    - droplets
+                    - environment_variable_groups
+                    - feature_flags
+                    - info
+                    - isolation_segments
+                    - organizations
+                    - organization_quotas
+                    - packages
+                    - processes
+                    - resource_matches
+                    - roles
+                    - routes
+                    - security_groups
+                    - service_brokers
+                    - service_instances
+                    - service_credential_bindings
+                    - service_offerings
+                    - service_plans
+                    - service_route_bindings
+                    - service_usage_events
+                    - spaces
+                    - space_quotas
+                    - stacks
+                    - tasks
+                    - users
+                required:
+                - links
+              example:
+                links:
+                  self:
+                    href: http://api2.vcap.me/v3
+                  app_usage_events:
+                    href: http://api2.vcap.me/v3/app_usage_events
+                  apps:
+                    href: http://api2.vcap.me/v3/apps
+                  audit_events:
+                    href: http://api2.vcap.me/v3/audit_events
+                  buildpacks:
+                    href: http://api2.vcap.me/v3/buildpacks
+                  builds:
+                    href: http://api2.vcap.me/v3/builds
+                  deployments:
+                    href: http://api2.vcap.me/v3/deployments
+                  domains:
+                    href: http://api2.vcap.me/v3/domains
+                  droplets:
+                    href: http://api2.vcap.me/v3/droplets
+                  environment_variable_groups:
+                    href: http://api2.vcap.me/v3/environment_variable_groups
+                  feature_flags:
+                    href: http://api2.vcap.me/v3/feature_flags
+                  info:
+                    href: http://api2.vcap.me/v3/info
+                  isolation_segments:
+                    href: http://api2.vcap.me/v3/isolation_segments
+                  organizations:
+                    href: http://api2.vcap.me/v3/organizations
+                  organization_quotas:
+                    href: http://api2.vcap.me/v3/organization_quotas
+                  packages:
+                    href: http://api2.vcap.me/v3/packages
+                  processes:
+                    href: http://api2.vcap.me/v3/processes
+                  resource_matches:
+                    href: http://api2.vcap.me/v3/resource_matches
+                  roles:
+                    href: http://api2.vcap.me/v3/roles
+                  routes:
+                    href: http://api2.vcap.me/v3/routes
+                  security_groups:
+                    href: http://api2.vcap.me/v3/security_groups
+                  service_brokers:
+                    href: http://api2.vcap.me/v3/service_brokers
+                  service_instances:
+                    href: http://api2.vcap.me/v3/service_instances
+                  service_credential_bindings:
+                    href: http://api2.vcap.me/v3/service_credential_bindings
+                  service_offerings:
+                    href: http://api2.vcap.me/v3/service_offerings
+                  service_plans:
+                    href: http://api2.vcap.me/v3/service_plans
+                  service_route_bindings:
+                    href: http://api2.vcap.me/v3/service_route_bindings
+                  service_usage_events:
+                    href: http://api2.vcap.me/v3/service_usage_events
+                  spaces:
+                    href: http://api2.vcap.me/v3/spaces
+                  space_quotas:
+                    href: http://api2.vcap.me/v3/space_quotas
+                  stacks:
+                    href: http://api2.vcap.me/v3/stacks
+                  tasks:
+                    href: http://api2.vcap.me/v3/tasks
+                  users:
+                    href: http://api2.vcap.me/v3/users
