@@ -141,6 +141,11 @@ module CloudFoundry
             expect(status).to eq(502)
           end
 
+          it 'sets the Content-Type header' do
+            _, headers, = middleware.call(env)
+            expect(headers['Content-Type']).to eq('application/json')
+          end
+
           context 'when the path is /v2/*' do
             it 'throws an error' do
               _, _, body = middleware.call(env)
