@@ -232,10 +232,11 @@ module CloudFoundry
             let(:request_body) { 'upload_start_time=9999999999' }
 
             it 'clamps the reference time to now' do
-              expect(VCAP::CloudController::UaaTokenDecoder).to receive(:new).
-                with(anything, alternate_reference_time: be_within(2).of(Time.now.to_i)).and_return(token_decoder)
-
-              middleware.call(upload_env)
+              Timecop.freeze do
+                expect(VCAP::CloudController::UaaTokenDecoder).to receive(:new).
+                  with(anything, alternate_reference_time: Time.now.to_i).and_return(token_decoder)
+                middleware.call(upload_env)
+              end
             end
           end
 
