@@ -186,6 +186,85 @@ module CloudFoundry
             expect { middleware.call(env) }.to raise_error(error)
           end
         end
+
+        context 'when the request targets an upload endpoint' do
+          let(:path_info) { '/v3/packages/0b6a2f0e-9c5a-4c1d-8e2f-1a2b3c4d5e6f/upload' }
+          let(:upload_env) do
+            {
+              'HTTP_AUTHORIZATION' => 'auth-token',
+              'PATH_INFO' => path_info,
+              'REQUEST_PATH' => path_info,
+              'REQUEST_METHOD' => 'POST',
+              'QUERY_STRING' => query_string,
+              'CONTENT_TYPE' => content_type,
+              'rack.input' => StringIO.new(request_body)
+            }
+          end
+          let(:query_string) { '' }
+          let(:content_type) { 'application/x-www-form-urlencoded' }
+          let(:request_body) { '' }
+
+          context 'when upload_start_time is absent from the POST body' do
+            it 'uses the strict token decoder' do
+              expect(VCAP::CloudController::UaaTokenDecoder).not_to receive(:new)
+
+              middleware.call(upload_env)
+            end
+          end
+
+          context 'when upload_start_time is passed as a query parameter (client-supplied, ignored)' do
+            let(:query_string) { 'upload_start_time=123' }
+
+            it 'ignores it and uses the strict token decoder' do
+              expect(VCAP::CloudController::UaaTokenDecoder).not_to receive(:new)
+
+              middleware.call(upload_env)
+            end
+          end
+
+          context 'when upload_start_time is in the POST body (as injected by nginx upload module)' do
+            let(:request_body) { 'upload_start_time=123' }
+
+            it 'uses a relaxed token decoder with the given reference time' do
+              expect(VCAP::CloudController::UaaTokenDecoder).to receive(:new).
+                with(anything, alternate_reference_time: 123).and_return(token_decoder)
+
+              middleware.call(upload_env)
+            end
+          end
+
+          context 'when upload_start_time in the POST body is in the future' do
+            let(:request_body) { 'upload_start_time=9999999999' }
+
+            it 'clamps the reference time to now' do
+              Timecop.freeze do
+                expect(VCAP::CloudController::UaaTokenDecoder).to receive(:new).
+                  with(anything, alternate_reference_time: Time.now.to_i).and_return(token_decoder)
+                middleware.call(upload_env)
+              end
+            end
+          end
+
+          context 'when upload_start_time in the POST body is not a positive integer' do
+            let(:request_body) { 'upload_start_time=abc' }
+
+            it 'uses the strict token decoder' do
+              expect(VCAP::CloudController::UaaTokenDecoder).not_to receive(:new)
+
+              middleware.call(upload_env)
+            end
+          end
+
+          context 'when upload_start_time in the POST body is empty' do
+            let(:request_body) { 'upload_start_time=' }
+
+            it 'uses the strict token decoder' do
+              expect(VCAP::CloudController::UaaTokenDecoder).not_to receive(:new)
+
+              middleware.call(upload_env)
+            end
+          end
+        end
       end
     end
   end
