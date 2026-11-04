@@ -1066,14 +1066,16 @@ specified, then the app will default to the operator-configured default stack.</
 <tr>
 <td><strong>data.stack</strong></td>
 <td><em>string</em></td>
-<td>The root filesystem to use with the buildpack, for example <code class="prettyprint">cflinuxfs4</code></td>
+<td>The root filesystem to use with the buildpack, for example <code class="prettyprint">cflinuxfs4</code>. <br/>When the <code class="prettyprint">diego_custom_stacks</code> feature flag is enabled, this can also be a container image URI with the <code class="prettyprint">docker://</code> scheme (experimental; subject to change). A custom stack requires custom buildpacks or admin buildpacks that are not associated with a stack. Its image layers count toward the app instance&rsquo;s disk quota.</td>
 </tr>
 <tr>
 <td><strong>data.credentials</strong></td>
 <td><em>object</em></td>
-<td>Credentials used to download custom buildpacks from private git repositories, keyed by host. Each entry is a username/password pair. If any buildpack URL embeds credentials, <strong>data.credentials</strong> must be empty; provide credentials in one place only.</td>
+<td>Credentials used to download custom buildpacks from private Git repositories or to pull custom stacks from private registries, keyed by host. Each entry contains a username/password pair. If any buildpack URL embeds credentials, <strong>data.credentials</strong> must be empty; provide credentials in one place only. <br/>For private custom stacks, configure credentials on the app lifecycle for running instances and tasks.</td>
 </tr>
 </tbody></table>
+
+<p>During staging with a custom stack, Cloud Foundry uses the final repository component of the image URI, excluding its tag or digest, as <code class="prettyprint">CF_STACK</code>. For example, <code class="prettyprint">docker://registry.example.com/team/cflinuxfs4:1.268.0</code> sets <code class="prettyprint">CF_STACK</code> to <code class="prettyprint">cflinuxfs4</code>. The custom stack and buildpack must be compatible.</p>
 
 <p>For records whose historical lifecycle data is no longer available,
 <strong>data.buildpacks</strong> may be an empty list and <strong>data.stack</strong> may be <code class="prettyprint">null</code>.</p>
@@ -1126,14 +1128,16 @@ specified, then the app will default to the operator-configured default stack.</
 <tr>
 <td><strong>data.credentials</strong></td>
 <td><em>object</em></td>
-<td>Credentials used to download the configured buildpacks, keyed by registry host. Each entry contains either a username/password pair or a token. CNB buildpack URLs must not embed credentials; use <strong>data.credentials</strong> instead.</td>
+<td>Credentials used to download the configured buildpacks or to pull custom stacks, keyed by registry host. Each entry contains a username/password pair or a token. Custom stack credentials must be a username/password pair. CNB buildpack URLs must not embed credentials; use <strong>data.credentials</strong> instead. <br/>For private custom stacks, configure credentials on the app lifecycle for running instances and tasks.</td>
 </tr>
 <tr>
 <td><strong>data.stack</strong></td>
 <td><em>string</em></td>
-<td>The root filesystem to use with the buildpack, for example <code class="prettyprint">cflinuxfs4</code></td>
+<td>The root filesystem to use with the buildpack, for example <code class="prettyprint">cflinuxfs4</code>. <br/>When the <code class="prettyprint">diego_custom_stacks</code> feature flag is enabled, this can also be a container image URI with the <code class="prettyprint">docker://</code> scheme (experimental; subject to change). A custom stack requires custom buildpacks or admin buildpacks that are not associated with a stack. Its image layers count toward the app instance&rsquo;s disk quota.</td>
 </tr>
 </tbody></table>
+
+<p>During staging with a custom stack, Cloud Foundry uses the final repository component of the image URI, excluding its tag or digest, as <code class="prettyprint">CNB_STACK_ID</code>. For example, <code class="prettyprint">docker://registry.example.com/team/cflinuxfs4:1.268.0</code> sets <code class="prettyprint">CNB_STACK_ID</code> to <code class="prettyprint">cflinuxfs4</code>. The custom stack and buildpack must be compatible.</p>
 
 <p>For records whose historical lifecycle data is no longer available,
 <strong>data.buildpacks</strong> may be an empty list and <strong>data.stack</strong> may be <code class="prettyprint">null</code>.</p>
@@ -5311,7 +5315,7 @@ resource can be created to initiate the staging process. A successful build resu
 <tr>
 <td><strong>lifecycle</strong></td>
 <td><a href="#the-lifecycle-object"><em>lifecycle object</em></a></td>
-<td>Lifecycle information for a build</td>
+<td>Lifecycle information for a build. <br/>Credentials supplied here apply only to staging and do not update the app&rsquo;s stored credentials.</td>
 <td>lifecycle on the app</td>
 </tr>
 <tr>
@@ -10159,6 +10163,9 @@ Environment variable names may not start with VCAP_. PORT is not a valid environ
 <td><strong>Name:</strong> <code class="prettyprint">diego_cnb (experimental)</code><br><strong>Default:</strong> <code class="prettyprint">false</code> <br><strong>Description:</strong> When enabled, the staging process using Cloud Native Buildpacks is supported.</td>
 </tr>
 <tr>
+<td><strong>Name:</strong> <code class="prettyprint">diego_custom_stacks</code><br><strong>Default:</strong> <code class="prettyprint">false</code> <br><strong>Description:</strong> When enabled, users can specify a container image URI as the stack for apps that use the buildpack or CNB lifecycle. When disabled, apps can use only platform-provided stacks. Custom stacks are experimental and subject to change.</td>
+</tr>
+<tr>
 <td><strong>Name:</strong> <code class="prettyprint">env_var_visibility</code><br><strong>Default:</strong> <code class="prettyprint">true</code> <br><strong>Description:</strong> When enabled, all users can see their environment variables. When disabled, no users can see environment variables.</td>
 </tr>
 <tr>
@@ -11509,7 +11516,7 @@ In the case where the specified isolation segment is the system-wide shared segm
 <tr>
 <td><strong>credentials</strong></td>
 <td><em>object</em></td>
-<td>Credentials used to download custom buildpacks (buildpack lifecycle) or buildpack OCI images (cnb lifecycle) from private git repositories or registries, keyed by host. For the buildpack lifecycle each entry is a username/password pair; for the cnb lifecycle each entry is a username/password pair or a token. Set to <code class="prettyprint">null</code> to clear previously stored credentials. If any buildpack URL embeds credentials, <strong>credentials</strong> must be empty; provide credentials in one place only.</td>
+<td>Credentials used to download custom buildpacks or to pull custom stacks, keyed by host. Each entry contains a username/password pair; CNB buildpack credentials can instead contain a token. Custom stack credentials must be a username/password pair. Set to <code class="prettyprint">null</code> to clear previously stored credentials. If any buildpack URL embeds credentials, <strong>credentials</strong> must be empty; provide credentials in one place only.</td>
 </tr>
 <tr>
 <td><strong>cnb-credentials</strong></td>
@@ -11569,7 +11576,7 @@ In the case where the specified isolation segment is the system-wide shared segm
 <tr>
 <td><strong>stack</strong></td>
 <td><em>string</em></td>
-<td>The root filesystem to use with the buildpack, for example <code class="prettyprint">cflinuxfs4</code></td>
+<td>The root filesystem to use with the buildpack, for example <code class="prettyprint">cflinuxfs4</code>. <br>When the <code class="prettyprint">diego_custom_stacks</code> feature flag is enabled, this can also be a container image URI with the <code class="prettyprint">docker://</code> scheme (experimental; subject to change). A custom stack requires custom buildpacks or admin buildpacks that are not associated with a stack. Custom stack URIs must not include credentials; use <strong>credentials</strong> instead. Custom stack image layers count toward each process instance&rsquo;s <strong>disk_quota</strong>.</td>
 </tr>
 <tr>
 <td><strong>metadata.labels</strong></td>
