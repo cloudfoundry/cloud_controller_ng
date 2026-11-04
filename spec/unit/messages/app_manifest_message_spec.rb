@@ -2181,7 +2181,10 @@ module VCAP::CloudController
           end
 
           context 'when cnb_credentials key is specified' do
-            let(:parsed_yaml) { { name: 'cnb', lifecycle: 'cnb', buildpacks: %w[nodejs java], stack: stack.name, cnb_credentials: { registry: { username: 'password' } } } }
+            let(:parsed_yaml) do
+              { name: 'cnb', lifecycle: 'cnb', buildpacks: %w[nodejs java], stack: stack.name,
+                cnb_credentials: { 'registry.example.com' => { 'username' => 'user', 'password' => 'pass' } } }
+            end
 
             it 'adds credentials to the lifecycle_data' do
               message = AppManifestMessage.create_from_yml(parsed_yaml)
@@ -2190,7 +2193,7 @@ module VCAP::CloudController
               expect(message.app_update_message.lifecycle_type).to eq(Lifecycles::CNB)
               expect(message.app_update_message.buildpack_data.buildpacks).to eq(%w[nodejs java])
               expect(message.app_update_message.buildpack_data.stack).to eq(stack.name)
-              expect(message.app_update_message.buildpack_data.credentials).to eq({ registry: { username: 'password' } })
+              expect(message.app_update_message.buildpack_data.credentials).to eq({ 'registry.example.com': { username: 'user', password: 'pass' } })
             end
           end
 
@@ -2307,6 +2310,27 @@ module VCAP::CloudController
             expect(message).not_to be_valid
             expect(message.errors).to have(1).items
             expect(message.errors.full_messages).to include('Feature Disabled: I am a banana')
+          end
+        end
+
+        context 'when custom stacks are disabled' do
+          let(:parsed_yaml) do
+            {
+              name: 'custom-stack-app',
+              stack: 'docker://registry.example.com/org/stack:tag',
+              buildpacks: ['https://example.com/buildpack.git']
+            }
+          end
+
+          before do
+            create(:feature_flag, name: 'diego_custom_stacks', enabled: false, error_message: 'custom stacks are disabled')
+          end
+
+          it 'is not valid' do
+            message = AppManifestMessage.create_from_yml(parsed_yaml)
+
+            expect(message).not_to be_valid
+            expect(message.errors.full_messages).to include('Feature Disabled: custom stacks are disabled')
           end
         end
       end

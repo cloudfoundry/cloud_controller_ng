@@ -1,3 +1,7 @@
+require 'cloud_controller/diego/docker/docker_uri_converter'
+require 'cloud_controller/diego/lifecycle_bundle_stack_resolver'
+require 'utils/uri_utils'
+
 module VCAP::CloudController
   module Diego
     module Buildpack
@@ -25,7 +29,6 @@ module VCAP::CloudController
         def cached_dependencies
           return nil if @config.get(:diego, :enable_declarative_asset_downloads)
 
-          lifecycle_bundle_key = :"buildpack/#{@stack}"
           lifecycle_bundle = @config.get(:diego, :lifecycle_bundles)[lifecycle_bundle_key]
           raise InvalidStack.new("no compiler defined for requested stack '#{@stack}'") unless lifecycle_bundle
 
@@ -33,12 +36,14 @@ module VCAP::CloudController
             ::Diego::Bbs::Models::CachedDependency.new(
               from: LifecycleBundleUriGenerator.uri(lifecycle_bundle),
               to: '/tmp/lifecycle',
-              cache_key: "buildpack-#{@stack}-lifecycle"
+              cache_key: "buildpack-#{lifecycle_bundle_stack}-lifecycle"
             )
           ]
         end
 
         def root_fs
+          return DockerURIConverter.new.convert(@stack.delete_prefix('docker://')) if UriUtils.is_custom_stack_uri?(@stack)
+
           @stack_obj ||= Stack.find(name: @stack)
           raise CloudController::Errors::ApiError.new_from_details('StackNotFound', @stack) unless @stack_obj
 
@@ -64,16 +69,15 @@ module VCAP::CloudController
         def image_layers
           return [] unless @config.get(:diego, :enable_declarative_asset_downloads)
 
-          lifecycle_bundle_key = :"buildpack/#{@stack}"
           lifecycle_bundle = @config.get(:diego, :lifecycle_bundles)[lifecycle_bundle_key]
           raise InvalidStack.new("no compiler defined for requested stack '#{@stack}'") unless lifecycle_bundle
 
-          destination = @config.get(:diego, :droplet_destinations)[@stack.to_sym]
+          destination = @config.get(:diego, :droplet_destinations)[lifecycle_bundle_stack.to_sym]
           raise InvalidStack.new("no droplet destination defined for requested stack '#{@stack}'") unless destination
 
           layers = [
             ::Diego::Bbs::Models::ImageLayer.new(
-              name: "buildpack-#{@stack}-lifecycle",
+              name: "buildpack-#{lifecycle_bundle_stack}-lifecycle",
               url: LifecycleBundleUriGenerator.uri(lifecycle_bundle),
               destination_path: '/tmp/lifecycle',
               layer_type: ::Diego::Bbs::Models::ImageLayer::Type::SHARED,
@@ -116,6 +120,16 @@ module VCAP::CloudController
 
         def privileged?
           @config.get(:diego, :use_privileged_containers_for_running)
+        end
+
+        private
+
+        def lifecycle_bundle_key
+          :"buildpack/#{lifecycle_bundle_stack}"
+        end
+
+        def lifecycle_bundle_stack
+          LifecycleBundleStackResolver.resolve(@stack)
         end
       end
     end

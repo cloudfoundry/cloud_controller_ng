@@ -51,6 +51,7 @@ module VCAP
             let(:package) { create(:package_model, app:) }
             let(:droplet) { create(:droplet_model, package:, app:) }
             let(:buildpack) { nil }
+            let(:stack) { 'potato-stack' }
             let(:buildpack_infos) { [BuildpackInfo.new(buildpack, VCAP::CloudController::Buildpack.find(name: buildpack))] }
 
             let(:staging_details) do
@@ -60,7 +61,7 @@ module VCAP
                 details.environment_variables = { 'nightshade_fruit' => 'potato' }
                 details.staging_memory_in_mb  = 42
                 details.staging_disk_in_mb    = 51
-                details.lifecycle             = instance_double(BuildpackLifecycle, staging_stack: 'potato-stack', buildpack_infos: buildpack_infos,
+                details.lifecycle             = instance_double(BuildpackLifecycle, staging_stack: stack, buildpack_infos: buildpack_infos,
                                                                                     credentials_for_staging: nil)
               end
             end
@@ -122,6 +123,19 @@ module VCAP
 
                 bp = lifecycle_data[:buildpacks][0]
                 expect(bp[:url]).to eq('https://kamin:kaylah@tanagra.example.com/kamin/resht-buildpack')
+              end
+            end
+
+            context 'when using a custom stack' do
+              let(:stack) { 'docker://registry.example.com/my-org/custom-stack:latest' }
+              let(:buildpack) { 'http://custom-buildpack.example.com' }
+
+              it 'uses a safe cache key while retaining buildpack-artifact caching' do
+                lifecycle_protocol.lifecycle_data(staging_details)
+
+                cache_key = Digest::SHA256.hexdigest(stack)
+                expect(blobstore_url_generator).to have_received(:buildpack_cache_download_url).with(app.guid, cache_key)
+                expect(blobstore_url_generator).to have_received(:buildpack_cache_upload_url).with(app.guid, cache_key)
               end
             end
 

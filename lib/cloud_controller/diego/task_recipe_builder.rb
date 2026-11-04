@@ -3,6 +3,7 @@ require 'cloud_controller/diego/lifecycle_bundle_uri_generator'
 require 'cloud_controller/diego/buildpack/task_action_builder'
 require 'cloud_controller/diego/docker/task_action_builder'
 require 'cloud_controller/diego/bbs_environment_builder'
+require 'cloud_controller/diego/custom_stack_credential_resolver'
 require 'cloud_controller/diego/task_completion_callback_generator'
 require 'cloud_controller/diego/task_cpu_weight_calculator'
 require 'cloud_controller/diego/service_binding_files_builder'
@@ -52,8 +53,7 @@ module VCAP::CloudController
               "app:#{task.app_guid}"
             ]
           ),
-          image_username: task.droplet.docker_receipt_username,
-          image_password: task.droplet.docker_receipt_password,
+          **task_image_credentials(task),
           volume_mounted_files: ServiceBindingFilesBuilder.build(task.app)
         }.compact)
       rescue ServiceBindingFilesBuilder::IncompatibleBindings => e
@@ -93,8 +93,7 @@ module VCAP::CloudController
               "app:#{staging_details.package.app_guid}"
             ]
           ),
-          image_username: staging_details.package.docker_username,
-          image_password: staging_details.package.docker_password,
+          **staging_image_credentials(staging_details),
           volume_mounted_files: ServiceBindingFilesBuilder.build(staging_details.package.app)
         }.compact)
       rescue ServiceBindingFilesBuilder::IncompatibleBindings => e
@@ -102,6 +101,30 @@ module VCAP::CloudController
       end
 
       private
+
+      def task_image_credentials(task)
+        # The droplet lifecycle determines the task rootfs, even if the app lifecycle differs.
+        if task.droplet.docker?
+          { image_username: task.droplet.docker_receipt_username, image_password: task.droplet.docker_receipt_password }
+        else
+          lifecycle_data = task.app.lifecycle_data
+          credentials_by_host = lifecycle_data.credentials if lifecycle_data.respond_to?(:credentials)
+          CustomStackCredentialResolver.resolve(stack_uri: lifecycle_data.stack, credentials_by_host: credentials_by_host)
+        end
+      end
+
+      def staging_image_credentials(staging_details)
+        if staging_details.lifecycle.type == Lifecycles::DOCKER
+          username = staging_details.package.docker_username
+          password = staging_details.package.docker_password
+          return { image_username: username, image_password: password } if username.present? && password.present?
+
+          { image_username: nil, image_password: nil }
+        else
+          lifecycle = staging_details.lifecycle
+          CustomStackCredentialResolver.resolve(stack_uri: lifecycle.staging_stack, credentials_by_host: lifecycle.credentials_for_staging)
+        end
+      end
 
       def metric_tags(source)
         {

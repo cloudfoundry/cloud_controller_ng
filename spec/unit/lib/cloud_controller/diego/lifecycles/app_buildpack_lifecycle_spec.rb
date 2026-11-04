@@ -10,6 +10,7 @@ module VCAP::CloudController
     let(:lifecycle_request_data) { {} }
 
     it_behaves_like 'a app lifecycle'
+    it_behaves_like 'custom-stack lifecycle updates', 'buildpack', 'https://example.com/buildpack.zip'
 
     describe '#create_lifecycle_data_model' do
       let!(:app) { create(:app_model) }
@@ -118,6 +119,8 @@ module VCAP::CloudController
         expect(BuildpackLifecycleDataValidator).to have_received(:new).with(
           buildpack_infos: [],
           stack: 'foo',
+          stack_name: Stack.default.name,
+          lifecycle_type: Lifecycles::BUILDPACK,
           credentials: nil,
           credentials_from_message: false
         )

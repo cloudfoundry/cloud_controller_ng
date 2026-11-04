@@ -359,6 +359,14 @@ module VCAP::CloudController
               expect(builder.stack).to eq('preloaded:build-image')
             end
           end
+
+          context 'when the stack is a custom image' do
+            let(:stack) { 'docker://registry.example.com/my-org/custom-stack:latest' }
+
+            it 'returns a Docker rootfs URI' do
+              expect(builder.stack).to eq('docker://registry.example.com/my-org/custom-stack#latest')
+            end
+          end
         end
 
         describe '#task_environment_variables' do
@@ -388,6 +396,15 @@ module VCAP::CloudController
             it 'contains CNB_REGISTRY_CREDS' do
               group_env = ::Diego::Bbs::Models::EnvironmentVariable.new(name: 'CNB_REGISTRY_CREDS', value: '{"registry":{"username":"password"}}')
               expect(builder.task_environment_variables).to include(group_env)
+            end
+          end
+
+          context 'when the stack is a custom image' do
+            let(:stack) { 'docker://registry.example.com/my-org/custom-stack:latest' }
+
+            it 'uses the final image repository component as CNB_STACK_ID' do
+              stack_id_env = ::Diego::Bbs::Models::EnvironmentVariable.new(name: 'CNB_STACK_ID', value: 'custom-stack')
+              expect(builder.task_environment_variables).to include(stack_id_env)
             end
           end
         end

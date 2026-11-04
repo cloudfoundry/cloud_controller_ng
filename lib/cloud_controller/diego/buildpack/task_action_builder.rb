@@ -1,5 +1,7 @@
 require 'diego/action_builder'
 require 'cloud_controller/diego/task_environment_variable_collector'
+require 'cloud_controller/diego/docker/docker_uri_converter'
+require 'cloud_controller/diego/lifecycle_bundle_stack_resolver'
 require 'credhub/config_helpers'
 
 module VCAP::CloudController
@@ -58,12 +60,12 @@ module VCAP::CloudController
         def image_layers
           return [] unless @config.get(:diego, :enable_declarative_asset_downloads)
 
-          destination = @config.get(:diego, :droplet_destinations)[lifecycle_stack.to_sym]
+          destination = @config.get(:diego, :droplet_destinations)[lifecycle_bundle_stack.to_sym]
           raise InvalidStack.new("no droplet destination defined for requested stack '#{lifecycle_stack}'") unless destination
 
           layers = [
             ::Diego::Bbs::Models::ImageLayer.new(
-              name: "buildpack-#{lifecycle_stack}-lifecycle",
+              name: "buildpack-#{lifecycle_bundle_stack}-lifecycle",
               url: LifecycleBundleUriGenerator.uri(config.get(:diego, :lifecycle_bundles)[lifecycle_bundle_key]),
               destination_path: '/tmp/lifecycle',
               layer_type: ::Diego::Bbs::Models::ImageLayer::Type::SHARED,
@@ -91,6 +93,8 @@ module VCAP::CloudController
         end
 
         def stack
+          return DockerURIConverter.new.convert(lifecycle_stack.delete_prefix('docker://')) if UriUtils.is_custom_stack_uri?(lifecycle_stack)
+
           @stack ||= Stack.find(name: lifecycle_stack)
           raise CloudController::Errors::ApiError.new_from_details('StackNotFound', lifecycle_stack) unless @stack
 
@@ -103,12 +107,12 @@ module VCAP::CloudController
           [::Diego::Bbs::Models::CachedDependency.new(
             from: LifecycleBundleUriGenerator.uri(config.get(:diego, :lifecycle_bundles)[lifecycle_bundle_key]),
             to: '/tmp/lifecycle',
-            cache_key: "#{@prefix}-#{lifecycle_stack}-lifecycle"
+            cache_key: "#{@prefix}-#{lifecycle_bundle_stack}-lifecycle"
           )]
         end
 
         def lifecycle_bundle_key
-          :"#{@prefix}/#{lifecycle_stack}"
+          :"#{@prefix}/#{lifecycle_bundle_stack}"
         end
 
         private
@@ -117,6 +121,10 @@ module VCAP::CloudController
 
         def lifecycle_stack
           lifecycle_data[:stack]
+        end
+
+        def lifecycle_bundle_stack
+          LifecycleBundleStackResolver.resolve(lifecycle_stack)
         end
       end
     end
