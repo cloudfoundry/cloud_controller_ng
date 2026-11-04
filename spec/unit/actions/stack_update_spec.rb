@@ -95,5 +95,27 @@ module VCAP::CloudController
         expect(stack.state_reason).to eq('Existing reason')
       end
     end
+
+    context 'when updating description' do
+      let(:stack) { create(:stack, description: 'Original description') }
+
+      it 'updates description when provided' do
+        message = StackUpdateMessage.new({ description: 'Preview stack' })
+
+        stack_update.update(stack, message)
+        stack.reload
+
+        expect(stack.description).to eq('Preview stack')
+      end
+
+      it 'preserves description when not requested' do
+        message = StackUpdateMessage.new({ state: 'RESTRICTED' })
+
+        stack_update.update(stack, message)
+        stack.reload
+
+        expect(stack.description).to eq('Original description')
+      end
+    end
   end
 end
