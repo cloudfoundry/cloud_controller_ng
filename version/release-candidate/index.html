@@ -32556,7 +32556,7 @@ Running applications remain available.</p>
 <tr>
 <td><strong>description</strong></td>
 <td><em>string</em></td>
-<td>Description of the stack; must no longer than 250 characters</td>
+<td>Description of the stack; must be no longer than 250 characters</td>
 <td><code class="prettyprint">null</code></td>
 </tr>
 <tr>
@@ -33022,7 +33022,7 @@ Running applications remain available.</p>
   <span class="nt">-X</span> PATCH <span class="se">\</span>
   <span class="nt">-H</span> <span class="s2">"Authorization: bearer [token]"</span> <span class="se">\</span>
   <span class="nt">-H</span> <span class="s2">"Content-Type: application/json"</span> <span class="se">\</span>
-  <span class="nt">-d</span> <span class="s1">'{ "metadata": { "labels": { "key": "value" }, "annotations": {"note": "detailed information"}},"state":"ACTIVE", "state_reason": "Optional plain text describing the stack state change" }'</span>
+  <span class="nt">-d</span> <span class="s1">'{ "metadata": { "labels": { "key": "value" }, "annotations": {"note": "detailed information"}},"description": "Example stack description", "state":"ACTIVE", "state_reason": "Optional plain text describing the stack state change" }'</span>
 
 </code></pre></div><div class="highlight"><pre class="highlight plaintext"><code>Example Response
 </code></pre></div><div class="highlight"><pre class="highlight http"><code><span class="k">HTTP</span><span class="o">/</span><span class="m">1.1</span> <span class="m">200</span> <span class="ne">OK</span>
@@ -33064,6 +33064,11 @@ Running applications remain available.</p>
 <th>Description</th>
 </tr>
 </thead><tbody>
+<tr>
+<td><strong>description</strong></td>
+<td><em>string</em></td>
+<td>Description of the stack; must be no longer than 250 characters</td>
+</tr>
 <tr>
 <td><strong>metadata.labels</strong></td>
 <td><a href="#labels"><em>label object</em></a></td>
