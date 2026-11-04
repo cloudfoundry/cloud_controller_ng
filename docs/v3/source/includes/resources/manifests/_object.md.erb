@@ -117,7 +117,7 @@ Name | Type | Description
 **routes** | _array of [route configurations](#space-manifest-route-level-configuration)_  | List declaring HTTP and TCP routes to be mapped to the app.
 **services** | _array of [service configurations](#space-manifest-service-level-configuration)_ | A list of service-instances to bind to the app
 **sidecars** | _array of [sidecar configurations](#space-manifest-sidecar-level-configuration)_ | A list of configurations for individual sidecars
-**stack** | _string_ | The root filesystem to use with the buildpack, for example `cflinuxfs4`. <br>When the `diego_custom_stacks` feature flag is enabled, this can also be a container image URI with the `docker://` scheme. A custom stack requires custom buildpacks or admin buildpacks that are not associated with a stack. Custom stack URIs must not include credentials; use **credentials** instead. Custom stack image layers count toward each process instance's **disk_quota**.
+**stack** | _string_ | The root filesystem to use with the buildpack, for example `cflinuxfs4`. <br>When the `diego_custom_stacks` feature flag is enabled, this can also be a container image URI with the `docker://` scheme (experimental; subject to change). A custom stack requires custom buildpacks or admin buildpacks that are not associated with a stack. Custom stack URIs must not include credentials; use **credentials** instead. Custom stack image layers count toward each process instance's **disk_quota**.
 **metadata.labels** | _[label object](#labels)_ | Labels applied to the app
 **metadata.annotations** | _[annotation object](#annotations)_ | Annotations applied to the app
 **buildpack**  | _string_ | **DEPRECATED in favor of the `buildpacks` field above**
