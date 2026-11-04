@@ -381,13 +381,14 @@ module CloudController::Packager
         packer.send_package_to_blobstore(blobstore_key, uploaded_files_path, cached_files_fingerprints)
 
         expect(logger).to have_received(:info).with('packer.unzip', hash_including(:duration_seconds))
-        expect(logger).to have_received(:info).with('blobstore.cp_r.digest', hash_including(:duration_seconds, :count))
-        expect(logger).to have_received(:info).with('blobstore.cp_r.exists', hash_including(:duration_seconds, :count))
-        expect(logger).to have_received(:info).with('blobstore.cp_r.upload', hash_including(:duration_seconds, :count))
+        expect(logger).to have_received(:info).with('blobstore.cp_r.digest', hash_including(:duration_seconds, :files_scanned))
+        expect(logger).to have_received(:info).with('blobstore.cp_r.exists', hash_including(:duration_seconds, :files_checked))
+        expect(logger).to have_received(:info).with('blobstore.cp_r.upload', hash_including(:duration_seconds, :files_uploaded))
         expect(logger).to have_received(:info).with('packer.resource-cache-upload', hash_including(:duration_seconds))
-        expect(logger).to have_received(:info).with('packer.resource-cache-download', hash_including(:duration_seconds, :count))
+        expect(logger).to have_received(:info).with('packer.resource-cache-download', hash_including(:duration_seconds, :files_downloaded, :files_attempted))
         expect(logger).to have_received(:info).with('packer.repackage', hash_including(:duration_seconds))
         expect(logger).to have_received(:info).with('packer.final-upload', hash_including(:duration_seconds, :blobstore_key))
+        expect(logger).to have_received(:info).with('packer.pack', hash_including(:duration_seconds, :blobstore_key))
       end
     end
   end

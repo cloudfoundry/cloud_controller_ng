@@ -73,7 +73,7 @@ module CloudController
             download_count += 1
           end
         ensure
-          logger.info('packer.resource-cache-download', duration_seconds: Time.now.utc - t, count: download_count, attempted: download_attempts)
+          logger.info('packer.resource-cache-download', duration_seconds: Time.now.utc - t, files_downloaded: download_count, files_attempted: download_attempts)
         end
 
         raise CloudController::Errors::ApiError.new_from_details('ResourceChecksumMismatch') if checksum_mismatch

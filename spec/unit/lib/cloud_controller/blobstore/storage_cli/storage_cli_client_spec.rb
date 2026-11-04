@@ -497,8 +497,49 @@ module CloudController
         end
 
         describe '#run_cli' do
+          let(:logger_double) { instance_double(Steno::Logger, info: nil, error: nil, debug: nil, warn: nil) }
+
           before do
+            allow(Steno).to receive(:logger).and_return(logger_double)
             allow(client).to receive(:additional_flags).and_return([])
+          end
+
+          it 'logs structured finish fields for successful calls' do
+            status = instance_double(Process::Status, success?: true, exitstatus: 0)
+            allow(Open3).to receive(:capture3).and_return(['ok', '', status])
+
+            client.send(:run_cli, 'put', 'src-path', 'dest-key', blob_size: 1024)
+
+            expect(logger_double).to have_received(:info).with('storage_cli.call.finish', hash_including(
+                                                                                            operation: 'put',
+                                                                                            bucket: directory_key,
+                                                                                            resource_type: resource_type,
+                                                                                            source_path: 'src-path',
+                                                                                            destination_key: 'dest-key',
+                                                                                            size: 1024,
+                                                                                            exit_code: 0,
+                                                                                            success: true,
+                                                                                            duration_seconds: a_kind_of(Float)
+                                                                                          ))
+          end
+
+          it 'logs finish fields for failed calls' do
+            status = instance_double(Process::Status, success?: false, exitstatus: 1)
+            allow(Open3).to receive(:capture3).and_return(['', 'error message', status])
+
+            expect do
+              client.send(:run_cli, 'exists', 'arg1')
+            end.to raise_error(RuntimeError, /storage-cli exists failed with exit code 1/)
+
+            expect(logger_double).to have_received(:info).with('storage_cli.call.finish', hash_including(
+                                                                                            operation: 'exists',
+                                                                                            bucket: directory_key,
+                                                                                            resource_type: resource_type,
+                                                                                            key: 'arg1',
+                                                                                            exit_code: 1,
+                                                                                            success: false,
+                                                                                            duration_seconds: a_kind_of(Float)
+                                                                                          ))
           end
 
           it 'returns output and status on success' do
@@ -535,7 +576,7 @@ module CloudController
           end
 
           it 'reports 128+signal when the storage-cli process is terminated by a signal' do
-            metrics_updater = instance_double(VCAP::CloudController::Metrics::PrometheusUpdater)
+            metrics_updater = double('metrics_updater')
             allow(metrics_updater).to receive(:report_storage_cli_metrics)
             signal_client = StorageCliClient.new(
               directory_key: directory_key,
@@ -555,7 +596,7 @@ module CloudController
           end
 
           it 'reports exit_code=-1 when Open3 raises (spawn failure)' do
-            metrics_updater = instance_double(VCAP::CloudController::Metrics::PrometheusUpdater)
+            metrics_updater = double('metrics_updater')
             allow(metrics_updater).to receive(:report_storage_cli_metrics)
             spawning_client = StorageCliClient.new(
               directory_key: directory_key,
@@ -573,7 +614,7 @@ module CloudController
           end
 
           it 'lets Interrupt propagate from Open3.capture3' do
-            metrics_updater = instance_double(VCAP::CloudController::Metrics::PrometheusUpdater)
+            metrics_updater = double('metrics_updater')
             allow(metrics_updater).to receive(:report_storage_cli_metrics)
             spawning_client = StorageCliClient.new(
               directory_key: directory_key,
@@ -589,7 +630,7 @@ module CloudController
           end
 
           context 'metrics' do
-            let(:metrics_updater) { instance_double(VCAP::CloudController::Metrics::PrometheusUpdater) }
+            let(:metrics_updater) { double('metrics_updater') }
             let(:client_with_metrics) do
               StorageCliClient.new(
                 directory_key: directory_key,
@@ -721,7 +762,7 @@ module CloudController
 
             start_time = Time.utc(2026, 10, 16, 12, 0, 0)
 
-            metrics_updater = instance_double(VCAP::CloudController::Metrics::PrometheusUpdater)
+            metrics_updater = double('metrics_updater')
             allow(metrics_updater).to receive(:report_storage_cli_metrics)
             allow(Time).to receive(:now).and_return(start_time, start_time + 0.125, start_time + 0.250)
 
@@ -745,7 +786,7 @@ module CloudController
           end
 
           it 'emits exit_code=-3 metric and logs cp-error when File.open fails (missing source)' do
-            metrics_updater = instance_double(VCAP::CloudController::Metrics::PrometheusUpdater)
+            metrics_updater = double('metrics_updater')
             allow(metrics_updater).to receive(:report_storage_cli_metrics)
 
             client_with_metrics = StorageCliClient.new(
@@ -769,7 +810,7 @@ module CloudController
             source.write('x' * 1025)
             source.flush
 
-            metrics_updater = instance_double(VCAP::CloudController::Metrics::PrometheusUpdater)
+            metrics_updater = double('metrics_updater')
             allow(metrics_updater).to receive(:report_storage_cli_metrics)
 
             client_with_metrics = StorageCliClient.new(
@@ -795,7 +836,7 @@ module CloudController
             source.write('x' * 1025)
             source.flush
 
-            metrics_updater = instance_double(VCAP::CloudController::Metrics::PrometheusUpdater)
+            metrics_updater = double('metrics_updater')
             allow(metrics_updater).to receive(:report_storage_cli_metrics)
 
             client_with_metrics = StorageCliClient.new(
@@ -820,7 +861,7 @@ module CloudController
             source.write('x' * 1025)
             source.flush
 
-            metrics_updater = instance_double(VCAP::CloudController::Metrics::PrometheusUpdater)
+            metrics_updater = double('metrics_updater')
             allow(metrics_updater).to receive(:report_storage_cli_metrics)
 
             client_with_metrics = StorageCliClient.new(
