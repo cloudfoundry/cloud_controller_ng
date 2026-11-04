@@ -1,22 +1,66 @@
 type: object
+description: |-
+  Service offerings represent the services offered by service brokers.
+  A service broker will have one or more service offerings.
+  A service offering will have one or more service plans.
+  Service offerings and service plans are created and updated when a service broker is registered or updated.
 allOf:
   - $ref: './BaseSchema.yaml'
   - properties:
-      service_broker_guid:
+      name:
         type: string
-      service_broker_name:
+        description: Name of the service offering
+      description:
         type: string
+        description: Description of the service offering
+      available:
+        type: boolean
+        description: Whether or not the service offering is available
+      tags:
+        type: array
+        items:
+          type: string
+        description: Descriptive tags for the service offering
+      requires:
+        type: array
+        items:
+          type: string
+        description: A list of permissions that the user would have to give the service, if they provision it; the only permissions currently supported are `syslog_drain`, `route_forwarding` and `volume_mount`
+      shareable:
+        type: boolean
+        description: Whether or not service Instances of this service offering can be shared across organizations and spaces
+      documentation_url:
+        type: [string, "null"]
+        description: Url that points to a documentation page for the service offering, if provided by the service broker as part of the metadata field
+      broker_catalog:
+        $ref: './ServiceOfferingBrokerCatalog.yaml'
+      relationships:
+        type: object
+        description: Relationships for the service offering
+        properties:
+          service_broker:
+            $ref: './RelationshipToOne.yaml'
+            description: The service broker that provides this service offering
       metadata:
         $ref: './Metadata.yaml'
+        description: Labels and annotations applied to the service offering
       links:
         type: object
+        description: Links to related resources
         properties:
           self:
             $ref: './Link.yaml'
-            description: The URL to get this service offering
+            description: The URL of this service offering
           service_plans:
             $ref: './Link.yaml'
-            description: The URL to get the service plans for this offering
+            description: The URL to list the service plans of this service offering
           service_broker:
             $ref: './Link.yaml'
-            description: The URL to get the service broker for this offering
+            description: The URL of the service broker that provides this service offering
+    required:
+    - name
+    - description
+    - available
+    - broker_catalog
+    - relationships
+    - links

@@ -6,7 +6,7 @@ allOf:
         type: string
         enum:
           - managed
-        description: Type of service instance
+        description: Either `managed` or `user-provided`
       name:
         type: string
         description: Name of the service instance
@@ -14,62 +14,65 @@ allOf:
         type: array
         items:
           type: string
-        description: Tags for the service instance
-      syslog_drain_url:
-        type: [string, "null"]
-        format: uri
-        description: URL for syslog drain
-      route_service_url:
-        type: [string, "null"]
-        format: uri
-        description: URL for route service
+        description: Tags are used by apps to identify service instances; they are shown in the app VCAP_SERVICES env
       dashboard_url:
         type: [string, "null"]
         format: uri
-        description: URL for service dashboard
+        description: The URL to the service instance dashboard (or null if there is none); only shown when type is `managed`
       maintenance_info:
-        type: object
-        properties:
-          version:
-            type: string
-            description: Version of maintenance info
-          description:
-            type: [string, "null"]
-            description: Description of maintenance info
+        $ref: './ServiceInstanceMaintenanceInfo.yaml'
+        description: Information about the version of this service instance; only shown when type is `managed`
       upgrade_available:
         type: boolean
-        description: Whether an upgrade is available
+        description: Whether or not an upgrade of this service instance is available on the current Service Plan; details are available in the maintenance_info object; only shown when type is `managed`
+      broker_provided_metadata:
+        $ref: './ServiceInstanceBrokerProvidedMetadata.yaml'
+        description: Metadata provided by the service broker about this service instance; only shown when type is `managed`
       last_operation:
         $ref: './ServiceInstanceLastOperation.yaml'
+        description: The last operation of this service instance
       relationships:
         type: object
         properties:
           space:
             $ref: './RelationshipToOne.yaml'
+            description: The space the service instance is contained in
           service_plan:
             $ref: './RelationshipToOne.yaml'
+            description: The service plan the service instance relates to; only shown when type is `managed`
         description: Relationships for the service instance
       links:
         type: object
         properties:
           self:
             $ref: './Link.yaml'
+            description: Link to this service instance
           space:
             $ref: './Link.yaml'
+            description: Link to the space the service instance is contained in
           service_plan:
             $ref: './Link.yaml'
+            description: Link to the service plan the service instance relates to
           parameters:
             $ref: './Link.yaml'
-          service_credential_bindings:
-            $ref: './Link.yaml'
-          service_route_bindings:
-            $ref: './Link.yaml'
+            description: Link to the parameters the service instance was created or updated with
           shared_spaces:
             $ref: './Link.yaml'
+            description: Link to the spaces this service instance has been shared to
+          service_credential_bindings:
+            $ref: './Link.yaml'
+            description: Link to the service credential bindings for this service instance
+          service_route_bindings:
+            $ref: './Link.yaml'
+            description: Link to the service route bindings for this service instance
+        description: Links to related resources
       metadata:
         $ref: './Metadata.yaml'
+        description: Labels and annotations applied to the service instance
     required:
     - type
     - name
     - relationships
     - links
+description: |-
+  A managed service instance is an instantiation of a [service offering](#service-offerings) registered with CF.

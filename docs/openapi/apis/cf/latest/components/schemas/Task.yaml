@@ -2,36 +2,87 @@ type: object
 allOf:
   - $ref: './BaseSchema.yaml'
   - properties:
+      guid:
+        type: string
+        format: uuid
+        description: Unique identifier for the task
+      created_at:
+        type: string
+        format: date-time
+        description: The time with zone when the object was created
+      updated_at:
+        type: string
+        format: date-time
+        description: The time with zone when the object was last updated
+      sequence_id:
+        type: integer
+        description: User-facing id of the task; this number is unique for every task associated with a given app
       name:
         type: string
+        description: Name of the task
       command:
         type: string
+        description: Command that will be executed; this field may be excluded based on a user's role
+      user:
+        type: [string, "null"]
+        description: The OS user used to run the task in the runtime
       state:
         type: string
+        description: State of the task. Possible states are `PENDING`, `RUNNING`, `SUCCEEDED`, `CANCELING`, and `FAILED`
         enum:
           - PENDING
           - RUNNING
           - SUCCEEDED
-          - FAILED
           - CANCELING
-      sequence_id:
-        type: integer
+          - FAILED
       memory_in_mb:
         type: [integer, "null"]
+        description: Amount of memory to allocate for the task in MB
       disk_in_mb:
         type: [integer, "null"]
-      droplet_guid:
-        type: string
+        description: Amount of disk to allocate for the task in MB
+      log_rate_limit_in_bytes_per_second:
+        type: [integer, "null"]
+        description: Amount of log rate to allocate for the task in bytes
       result:
         type: object
+        description: Results from the task
         properties:
           failure_reason:
             type: [string, "null"]
+            description: Null if the task succeeds, contains the error message if it fails
+      droplet_guid:
+        type: string
+        format: uuid
+        description: The guid of the droplet that will be used to run the command
+      relationships:
+        type: object
+        description: Relationships to other resources
+        properties:
+          app:
+            $ref: './RelationshipToOne.yaml'
+            description: The app the task belongs to
       metadata:
         $ref: './Metadata.yaml'
+        description: |-
+          `labels`: Labels applied to the task
+
+          `annotations`: Annotations applied to the task
       links:
         type: object
+        description: Links to related resources
         properties:
           self:
             $ref: './Link.yaml'
-description: A task is a one-off process that can be run in the Cloud Foundry environment.
+            description: A link to the task itself
+          app:
+            $ref: './Link.yaml'
+            description: A link to the app the task belongs to
+          cancel:
+            $ref: './Link.yaml'
+            description: A link to cancel the task; the link must be followed with a `POST` request
+          droplet:
+            $ref: './Link.yaml'
+            description: A link to the droplet the task is running
+description: |-
+  Tasks are one-off jobs that are intended to perform a task, stop, and be cleaned up, freeing up resources.

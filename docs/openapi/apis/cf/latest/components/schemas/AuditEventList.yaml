@@ -2,7 +2,9 @@ type: object
 properties:
   pagination:
     $ref: './Pagination.yaml'
+    description: Pagination information for the list of audit events
   resources:
     type: array
     items:
       $ref: './AuditEvent.yaml'
+    description: The list of audit events

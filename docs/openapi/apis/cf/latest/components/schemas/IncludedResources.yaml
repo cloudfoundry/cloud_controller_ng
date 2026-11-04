@@ -48,4 +48,19 @@ properties:
     items:
       $ref: './User.yaml'
     description: Array of included user resources
+  route_policies:
+    type: array
+    items:
+      $ref: './RoutePolicy.yaml'
+    description: Array of included route policy resources
+  service_plans:
+    type: array
+    items:
+      $ref: './ServicePlan.yaml'
+    description: Array of included service plan resources
+  service_brokers:
+    type: array
+    items:
+      $ref: './ServiceBroker.yaml'
+    description: Array of included service broker resources
 additionalProperties: false

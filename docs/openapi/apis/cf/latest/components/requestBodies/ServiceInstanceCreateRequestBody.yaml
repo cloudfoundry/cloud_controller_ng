@@ -1,43 +1,31 @@
-description: A request to create a service instance
+description: |-
+  A request to create a service instance.
+
+  Service instances can be of type `managed` or `user-provided`, and the required parameters are different for each type.
 content:
   application/json:
     schema:
       type: object
-      required:
-        - type
-        - name
-        - relationships
       properties:
         type:
           type: string
           enum:
             - managed
             - user-provided
-          description: The type of service instance
+          description: Type of the service instance; `managed` or `user-provided`
         name:
           type: string
-          description: Name of the service instance
-        parameters:
-          type: object
-          description: A JSON object that is passed to the service broker
-        credentials:
-          type: object
-          description: A JSON object that is made available to apps bound to this service instance (user-provided services only)
+          description: Name of the service instance; must be unique within the space (case-sensitive)
         tags:
           type: array
           items:
             type: string
           description: Tags are used by apps to identify service instances; they are shown in the app VCAP_SERVICES env
-        syslog_drain_url:
-          type: string
-          description: URL to which logs for bound applications will be streamed (user-provided services only)
-        route_service_url:
-          type: string
-          description: URL to which requests for bound routes will be forwarded; must use the https protocol (user-provided services only)
+        parameters:
+          type: object
+          description: A JSON object that is passed to the service broker
         relationships:
           type: object
-          required:
-            - space
           properties:
             space:
               $ref: ../schemas/RelationshipToOne.yaml
@@ -48,6 +36,29 @@ content:
           description: Relationships for the service instance
         metadata:
           $ref: ../schemas/Metadata.yaml
+          description: Labels and annotations applied to the service instance
+        credentials:
+          type: object
+          description: A JSON object that is made available to apps bound to this service instance
+        syslog_drain_url:
+          type: string
+          description: URL to which logs for bound applications will be streamed
+        route_service_url:
+          type: string
+          description: URL to which requests for bound routes will be forwarded; must use the `https` protocol
+      required:
+        - type
+        - name
+        - relationships
+      oneOf:
+        - $ref: ../schemas/ManagedServiceInstanceCreate.yaml
+        - $ref: ../schemas/UserProvidedServiceInstanceCreate.yaml
+      discriminator:
+        propertyName: type
+        mapping:
+          managed: ../schemas/ManagedServiceInstanceCreate.yaml
+          user-provided: ../schemas/UserProvidedServiceInstanceCreate.yaml
+      description: The fields accepted when creating a service instance. `parameters` and `relationships.service_plan` apply only to `managed` service instances; `credentials`, `syslog_drain_url` and `route_service_url` apply only to `user-provided` service instances.
     examples:
       managed_service_instance:
         summary: Managed service instance

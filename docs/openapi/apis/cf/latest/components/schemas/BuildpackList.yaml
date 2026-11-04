@@ -2,7 +2,10 @@ type: object
 properties:
   pagination:
     $ref: './Pagination.yaml'
+    description: Pagination information for the list of buildpacks
   resources:
     type: array
+    description: The list of buildpacks
     items:
       $ref: './Buildpack.yaml'
+description: A paginated list of buildpacks

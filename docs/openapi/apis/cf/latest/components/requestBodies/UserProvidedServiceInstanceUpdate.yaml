@@ -1,27 +1,25 @@
-description: User provided service instance to update
+description: Optional parameters for updating a user-provided service instance
+required: true
 content:
   application/json:
     schema:
-      type: object
-      properties:
-        name:
-          type: string
-          description: Name of the service instance
-        tags:
-          type: array
-          items:
-            type: string
-          description: Tags for the service instance
-        credentials:
-          type: object
-          description: Service credentials
-        syslog_drain_url:
-          type: string
-          format: uri
-          description: URL for syslog drain
-        route_service_url:
-          type: string
-          format: uri
-          description: URL for route service
-        metadata:
-          $ref: '../schemas/Metadata.yaml'
+      $ref: '../schemas/UserProvidedServiceInstanceUpdate.yaml'
+    examples:
+      user_provided_service_instance:
+        summary: Update user-provided service instance
+        value:
+          name: my_service_instance
+          credentials:
+            foo: bar
+            baz: qux
+          tags:
+            - foo
+            - bar
+            - baz
+          syslog_drain_url: https://syslog.com/drain
+          route_service_url: https://route.com/service
+          metadata:
+            annotations:
+              foo: bar
+            labels:
+              baz: qux
