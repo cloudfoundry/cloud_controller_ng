@@ -1,5 +1,6 @@
 require 'actions/v3/service_instance_delete'
 require 'jobs/v3/delete_service_instance_job'
+require 'repositories/service_account_event_repository'
 
 module VCAP::CloudController
   class SpaceDelete
@@ -23,6 +24,11 @@ module VCAP::CloudController
         errors << err unless err.nil?
 
         next unless instance_delete_errors.empty? && instance_unshare_errors.empty?
+
+        account_delete_errors = delete_service_accounts(space_model)
+        err = accumulate_space_deletion_error(account_delete_errors, space_model.name)
+        errors << err unless err.nil?
+        next unless account_delete_errors.empty?
 
         Space.db.transaction do
           delete_apps(space_model)
@@ -76,7 +82,36 @@ module VCAP::CloudController
     end
 
     def delete_apps(space_model)
-      AppDelete.new(@user_audit_info).delete(space_model.app_models)
+      AppDelete.new(@user_audit_info).delete(space_model.app_models_dataset.all)
+    end
+
+    def delete_service_accounts(space_model)
+      accounts = ServiceAccountModel.where(space_guid: space_model.guid).order(:guid).all
+      return [] if accounts.empty?
+
+      ServiceAccountModel.db.transaction do
+        accounts.each do |account|
+          account.lock!
+          if PollableJobModel.where(resource_guid: account.guid, resource_type: 'service_account', state: %w[PROCESSING POLLING]).any?
+            raise ServiceAccountProvision::Conflict.new('service account operation is already in progress')
+          end
+
+          account.update(enabled: false, status: 'deleting')
+        end
+      end
+
+      # AppDelete removes service bindings, tasks and process snapshots. Do not
+      # roll this back if later UAA cleanup fails: retries must see real progress.
+      delete_apps(space_model)
+      provisioner = CloudController::DependencyLocator.instance.service_account_provisioner
+      accounts.each_with_object([]) do |account, errors|
+        Repositories::ServiceAccountEventRepository.record(account, 'delete', @user_audit_info, { recursive: true })
+        provisioner.deprovision(account, delete: true)
+      rescue StandardError => e
+        errors << e
+      end
+    rescue StandardError => e
+      [e]
     end
 
     def delete_service_brokers(space_model)

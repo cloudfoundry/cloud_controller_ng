@@ -5,6 +5,15 @@ Rails.application.routes.draw do
   post '/admin/actions/clear_buildpack_cache', to: 'admin_actions#clear_buildpack_cache'
 
   # apps
+  post '/service_accounts', to: 'service_accounts#create'
+  get '/service_accounts', to: 'service_accounts#index'
+  patch '/service_accounts/:guid', to: 'service_accounts#update'
+  delete '/service_accounts/:guid', to: 'service_accounts#destroy'
+  get '/service_accounts/:guid/apps', to: 'service_accounts#apps'
+  get '/service_accounts/:guid', to: 'service_accounts#show'
+  get '/apps/:app_guid/relationships/service_account', to: 'app_service_accounts#show'
+  patch '/apps/:app_guid/relationships/service_account', to: 'app_service_accounts#update'
+
   get '/apps', to: 'apps_v3#index'
   post '/apps', to: 'apps_v3#create'
   get '/apps/:guid', to: 'apps_v3#show'
