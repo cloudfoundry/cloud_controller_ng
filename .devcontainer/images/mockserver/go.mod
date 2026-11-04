@@ -1,10 +1,10 @@
 module mockserver
 
-go 1.25.0
+go 1.26.0
 
 require (
 	code.cloudfoundry.org/bbs v0.0.0-20240321110538-9b9671a851e9
-	github.com/labstack/echo/v4 v4.15.3
+	github.com/labstack/echo/v4 v4.16.1
 	github.com/labstack/gommon v0.5.0
 )
 
@@ -19,7 +19,7 @@ require (
 	github.com/gogo/protobuf v1.3.2 // indirect
 	github.com/google/pprof v0.0.0-20210720184732-4bb14d4b1be1 // indirect
 	github.com/jackc/pgx/v5 v5.9.2 // indirect
-	github.com/mattn/go-colorable v0.1.14 // indirect
+	github.com/mattn/go-colorable v0.1.15 // indirect
 	github.com/mattn/go-isatty v0.0.22 // indirect
 	github.com/onsi/ginkgo/v2 v2.17.1 // indirect
 	github.com/onsi/gomega v1.32.0 // indirect
@@ -27,11 +27,11 @@ require (
 	github.com/tedsuo/ifrit v0.0.0-20230516164442-7862c310ad26 // indirect
 	github.com/valyala/bytebufferpool v1.0.0 // indirect
 	github.com/valyala/fasttemplate v1.2.2 // indirect
-	golang.org/x/crypto v0.52.0 // indirect
-	golang.org/x/net v0.55.0 // indirect
-	golang.org/x/sys v0.45.0 // indirect
-	golang.org/x/text v0.37.0 // indirect
+	golang.org/x/crypto v0.57.0 // indirect
+	golang.org/x/net v0.60.0 // indirect
+	golang.org/x/sys v0.48.0 // indirect
+	golang.org/x/text v0.42.0 // indirect
 	golang.org/x/time v0.15.0 // indirect
-	golang.org/x/tools v0.44.0 // indirect
+	golang.org/x/tools v0.49.0 // indirect
 	google.golang.org/genproto v0.0.0-20230410155749-daa745c078e1 // indirect
 )
