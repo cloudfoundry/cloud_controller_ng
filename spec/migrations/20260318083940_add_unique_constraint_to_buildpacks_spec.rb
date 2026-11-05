@@ -32,7 +32,7 @@ RSpec.describe 'add unique constraint to buildpacks', isolation: :truncation, ty
       db[:buildpack_labels].insert(guid: SecureRandom.uuid, resource_guid: duplicate_guid, key_name: 'team', value: 'b')
 
       # run the migration
-      Sequel::Migrator.run(db, migrations_path, target: current_migration_index, allow_missing_migration_files: true)
+      run_migration
 
       # Verify duplicates are removed, keeping one per (name, stack, lifecycle)
       expect(db[:buildpacks].where(name: 'ruby', stack: 'cflinuxfs3', lifecycle: 'buildpack').count).to eq(1)
@@ -51,14 +51,14 @@ RSpec.describe 'add unique constraint to buildpacks', isolation: :truncation, ty
       expect(db.indexes(:buildpacks)).to include(:buildpacks_name_stack_lifecycle_index)
 
       # Test up migration idempotency
-      expect { Sequel::Migrator.run(db, migrations_path, target: current_migration_index, allow_missing_migration_files: true) }.not_to raise_error
+      test_up_migration_idempotency
 
       # First remove test data that would conflict with the old (name, stack) unique index
       db[:buildpack_annotations].delete
       db[:buildpack_labels].delete
       db[:buildpacks].delete
 
-      expect { Sequel::Migrator.run(db, migrations_path, target: current_migration_index - 1, allow_missing_migration_files: true) }.not_to raise_error
+      expect { revert_migration }.not_to raise_error
 
       # Verify new index is dropped and old index is restored
       expect(db.indexes(:buildpacks)).not_to include(:buildpacks_name_stack_lifecycle_index)
@@ -72,7 +72,7 @@ RSpec.describe 'add unique constraint to buildpacks', isolation: :truncation, ty
       db[:buildpacks].delete
 
       # Test down migration idempotency
-      expect { Sequel::Migrator.run(db, migrations_path, target: current_migration_index - 1, allow_missing_migration_files: true) }.not_to raise_error
+      test_down_migration_idempotency
       expect(db.indexes(:buildpacks)).not_to include(:buildpacks_name_stack_lifecycle_index)
     end
   end

@@ -33,7 +33,7 @@ RSpec.describe 'migration to add an index for user_id on all roles tables', isol
       end
 
       # === UP MIGRATION ===
-      expect { Sequel::Migrator.run(db, migrations_path, target: current_migration_index, allow_missing_migration_files: true) }.not_to raise_error
+      expect { run_migration }.not_to raise_error
 
       # Verify all indexes were created
       tables.each do |table|
@@ -51,7 +51,7 @@ RSpec.describe 'migration to add an index for user_id on all roles tables', isol
       end
 
       # === DOWN MIGRATION ===
-      expect { Sequel::Migrator.run(db, migrations_path, target: current_migration_index - 1, allow_missing_migration_files: true) }.not_to raise_error
+      expect { revert_migration }.not_to raise_error
 
       # Verify all indexes were removed
       tables.each do |table|

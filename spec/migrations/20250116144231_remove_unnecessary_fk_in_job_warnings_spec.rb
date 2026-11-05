@@ -9,7 +9,7 @@ RSpec.describe "migration to remove foreign key constraint on table 'job_warning
   describe 'job_warnings table' do
     it 'removes the fk constraint and column, handles idempotency' do
       # Run migration
-      Sequel::Migrator.run(db, migrations_path, target: current_migration_index, allow_missing_migration_files: true)
+      run_migration
 
       expect(db.foreign_key_list(:job_warnings)).to be_empty
       expect(db[:job_warnings].columns).not_to include(:fk_jobs_id)
