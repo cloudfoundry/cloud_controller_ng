@@ -6,7 +6,7 @@ module VCAP::CloudController
       # rubocop:disable Metrics/BlockLength
       define_schema do
         {
-          external_port: Integer,
+          optional(:external_port) => Integer,
           external_domain: String,
           tls_port: Integer,
           external_protocol: String,

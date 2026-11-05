@@ -1,14 +1,10 @@
 module CloudController
   module Blobstore
     module UrlGeneratorHelpers
-      def http_basic_auth_uri(path)
-        uri = build_http_uri(path)
+      def https_basic_auth_uri(path)
+        uri = build_https_uri(path)
         uri.userinfo = [@blobstore_options[:user], @blobstore_options[:password]]
         uri.to_s
-      end
-
-      def http_no_auth_uri(path)
-        build_http_uri(path).to_s
       end
 
       def https_no_auth_uri(path)
@@ -16,14 +12,6 @@ module CloudController
       end
 
       private
-
-      def build_http_uri(path)
-        URI::HTTP.build(
-          host: @blobstore_options[:blobstore_host],
-          port: @blobstore_options[:blobstore_external_port],
-          path: path
-        )
-      end
 
       def build_https_uri(path)
         URI::HTTPS.build(
