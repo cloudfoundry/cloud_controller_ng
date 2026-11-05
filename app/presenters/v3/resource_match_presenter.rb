@@ -12,7 +12,7 @@ module VCAP::CloudController::Presenters::V3
     private
 
     def v3ify(resource)
-      fingerprints = Oj.load(resource)
+      fingerprints = resource.is_a?(Array) ? resource : Oj.load(resource)
       fingerprints.map do |r|
         {
           checksum: { value: r['sha1'] },

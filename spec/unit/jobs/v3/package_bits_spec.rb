@@ -6,9 +6,14 @@ module VCAP::CloudController
       let(:uploaded_path) { 'tmp/uploaded.zip' }
       let(:package_guid) { SecureRandom.uuid }
       let(:fingerprints) { [:fingerprint] }
+      let(:background_logger) { instance_double(Steno::Logger, info: nil) }
 
       subject(:job) do
         PackageBits.new(package_guid, uploaded_path, fingerprints)
+      end
+
+      before do
+        allow(Steno).to receive(:logger).with('cc.background').and_return(background_logger)
       end
 
       it { is_expected.to be_a_valid_job }
@@ -23,6 +28,25 @@ module VCAP::CloudController
           expect(CloudController::Packager::PackageUploadHandler).to receive(:new).with(package_guid, uploaded_path, fingerprints).and_return(packer)
           expect(packer).to receive(:pack)
           job.perform
+        end
+
+        it 'logs start and completion' do
+          allow_any_instance_of(CloudController::Packager::PackageUploadHandler).to receive(:pack)
+
+          job.perform
+
+          expect(background_logger).to have_received(:info).with('package_upload.job.start',
+                                                                 hash_including(package_guid: package_guid, package_zip_path_present: true, fingerprint_count: 1))
+          expect(background_logger).to have_received(:info).with('package_upload.job.done', hash_including(package_guid: package_guid, duration_ms: be >= 0))
+        end
+
+        it 'logs failure details and re-raises' do
+          allow_any_instance_of(CloudController::Packager::PackageUploadHandler).to receive(:pack).and_raise(StandardError.new('boom'))
+
+          expect { job.perform }.to raise_error(StandardError, 'boom')
+
+          expect(background_logger).to have_received(:info).with('package_upload.job.failed',
+                                                                 hash_including(package_guid: package_guid, error_class: 'StandardError', error: 'boom'))
         end
 
         it 'knows its job name' do
