@@ -111,7 +111,7 @@ GEM
       googleapis-common-protos-types (~> 1.0)
     hashdiff (1.2.1)
     highline (3.0.1)
-    httpclient (2.9.0)
+    httpclient (2.10.0)
       mutex_m
     i18n (1.15.2)
       concurrent-ruby (~> 1.0)
