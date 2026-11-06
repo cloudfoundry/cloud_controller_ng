@@ -510,17 +510,17 @@ module CloudController
 
             client.send(:run_cli, 'put', 'src-path', 'dest-key', blob_size: 1024)
 
-            expect(logger_double).to have_received(:info).with('storage_cli.call.finish', hash_including(
-                                                                                            operation: 'put',
-                                                                                            bucket: directory_key,
-                                                                                            resource_type: resource_type,
-                                                                                            source_path: 'src-path',
-                                                                                            destination_key: 'dest-key',
-                                                                                            size: 1024,
-                                                                                            exit_code: 0,
-                                                                                            success: true,
-                                                                                            duration_seconds: a_kind_of(Float)
-                                                                                          ))
+            expect(logger_double).to have_received(:info).with('storage_cli.call.finish put src=src-path dest=dest-key', hash_including(
+                                                                                                                           'operation' => 'put',
+                                                                                                                           'bucket' => directory_key,
+                                                                                                                           'resource_type' => resource_type,
+                                                                                                                           'source_path' => 'src-path',
+                                                                                                                           'destination_key' => 'dest-key',
+                                                                                                                           'size' => 1024,
+                                                                                                                           'exit_code' => 0,
+                                                                                                                           'success' => true,
+                                                                                                                           'duration_seconds' => a_kind_of(Float)
+                                                                                                                         ))
           end
 
           it 'logs finish fields for failed calls' do
@@ -531,15 +531,40 @@ module CloudController
               client.send(:run_cli, 'exists', 'arg1')
             end.to raise_error(RuntimeError, /storage-cli exists failed with exit code 1/)
 
-            expect(logger_double).to have_received(:info).with('storage_cli.call.finish', hash_including(
-                                                                                            operation: 'exists',
-                                                                                            bucket: directory_key,
-                                                                                            resource_type: resource_type,
-                                                                                            key: 'arg1',
-                                                                                            exit_code: 1,
-                                                                                            success: false,
-                                                                                            duration_seconds: a_kind_of(Float)
-                                                                                          ))
+            expect(logger_double).to have_received(:info).with('storage_cli.call.finish exists key=arg1', hash_including(
+                                                                                                            'operation' => 'exists',
+                                                                                                            'bucket' => directory_key,
+                                                                                                            'resource_type' => resource_type,
+                                                                                                            'key' => 'arg1',
+                                                                                                            'exit_code' => 1,
+                                                                                                            'success' => false,
+                                                                                                            'duration_seconds' => a_kind_of(Float)
+                                                                                                          ))
+          end
+
+          it 'uses basename of key arg in message text with key= label but keeps full structured key' do
+            status = instance_double(Process::Status, success?: true, exitstatus: 0)
+            allow(Open3).to receive(:capture3).and_return(['ok', '', status])
+
+            long_key = 'app_bits_cache/97/d0/97d004b6ef4a8c8f5e3b6a0f4c1d2e3f7a8b9c00112233445566778899aabbcc'
+            client.send(:run_cli, 'exists', long_key)
+
+            expect(logger_double).to have_received(:info).with(
+              'storage_cli.call.finish exists key=97d004b6ef4a8c8f5e3b6a0f4c1d2e3f7a8b9c00112233445566778899aabbcc',
+              hash_including('key' => long_key, 'success' => true)
+            )
+          end
+
+          it 'labels sign args in message text' do
+            status = instance_double(Process::Status, success?: true, exitstatus: 0)
+            allow(Open3).to receive(:capture3).and_return(['ok', '', status])
+
+            client.send(:run_cli, 'sign', 'abc123def456', 'get', '3600s')
+
+            expect(logger_double).to have_received(:info).with(
+              'storage_cli.call.finish sign key=abc123def456 verb=get expires_in=3600s',
+              hash_including('key' => 'abc123def456', 'verb' => 'get', 'expires_in' => '3600s', 'success' => true)
+            )
           end
 
           it 'returns output and status on success' do
@@ -611,6 +636,13 @@ module CloudController
             expect(metrics_updater).to have_received(:report_storage_cli_metrics).with(
               operation: 'get', exit_code: -1, duration_seconds: a_kind_of(Float), blob_size: nil
             )
+            expect(logger_double).to have_received(:error).with('storage_cli.call.error get src=some-key dest=', hash_including(
+                                                                                                                   'operation' => 'get',
+                                                                                                                   'bucket' => directory_key,
+                                                                                                                   'resource_type' => resource_type,
+                                                                                                                   'duration_seconds' => a_kind_of(Float),
+                                                                                                                   'error' => a_string_matching(/Errno::ENOENT/)
+                                                                                                                 ))
           end
 
           it 'lets Interrupt propagate from Open3.capture3' do

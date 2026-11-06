@@ -20,7 +20,7 @@ module VCAP::CloudController
 
     # Non-sensitive identity fields for structured job logging.
     def hash_for_logs
-      { user_guid: user_guid }
+      { user_guid: user_guid, user_email: user_email, user_name: user_name }.compact
     end
   end
 end

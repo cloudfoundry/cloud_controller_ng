@@ -285,11 +285,11 @@ module CloudController
         exit_code = resolve_exit_code(status)
         success = status.success? || (allow_exit_code_three && status.exitstatus == 3)
 
-        logger.info('storage_cli.call.finish',
+        logger.info("storage_cli.call.finish #{command}#{log_message_arg_suffix(command, args)}",
                     log_fields.merge(
-                      duration_seconds: duration,
-                      exit_code: exit_code,
-                      success: success
+                      'duration_seconds' => duration,
+                      'exit_code' => exit_code,
+                      'success' => success
                     ))
 
         unless success
@@ -307,34 +307,34 @@ module CloudController
 
       def operation_log_fields(command, args, blob_size: nil)
         fields = {
-          operation: command,
-          bucket: @directory_key,
-          resource_type: @resource_type
+          'operation' => command,
+          'bucket' => @directory_key,
+          'resource_type' => @resource_type
         }
 
         case command
         when 'put'
-          fields[:source_path] = args[0]
-          fields[:destination_key] = args[1]
+          fields['source_path'] = args[0]
+          fields['destination_key'] = args[1]
         when 'get'
-          fields[:source_key] = args[0]
-          fields[:destination_path] = args[1]
+          fields['source_key'] = args[0]
+          fields['destination_path'] = args[1]
         when 'copy'
-          fields[:source_key] = args[0]
-          fields[:destination_key] = args[1]
+          fields['source_key'] = args[0]
+          fields['destination_key'] = args[1]
         when 'exists', 'delete', 'properties'
-          fields[:key] = args[0]
+          fields['key'] = args[0]
         when 'list'
-          fields[:prefix] = args[0]
+          fields['prefix'] = args[0]
         when 'delete-recursive'
-          fields[:path] = args[0]
+          fields['path'] = args[0]
         when 'sign', 'sign-public', 'sign-internal'
-          fields[:key] = args[0]
-          fields[:verb] = args[1]
-          fields[:expires_in] = args[2]
+          fields['key'] = args[0]
+          fields['verb'] = args[1]
+          fields['expires_in'] = args[2]
         end
 
-        fields[:size] = blob_size if blob_size
+        fields['size'] = blob_size if blob_size
         fields
       end
 
@@ -342,8 +342,44 @@ module CloudController
         Open3.capture3(@cli_path, '-s', @storage_type, '-c', @config_file, *additional_flags, command, *args)
       rescue StandardError => e
         # exit_code=-1 is a sentinel for spawn failures (binary missing, permission denied).
-        safe_emit_metrics(command, -1, Time.now.utc - start_time, 'spawn error')
+        duration = Time.now.utc - start_time
+        logger.error("storage_cli.call.error #{command}#{log_message_arg_suffix(command, args)}",
+                     'operation' => command,
+                     'bucket' => @directory_key,
+                     'resource_type' => @resource_type,
+                     'duration_seconds' => duration,
+                     'error' => e.inspect)
+        safe_emit_metrics(command, -1, duration, 'spawn error')
         raise BlobstoreError.new(e.inspect)
+      end
+
+      def log_message_arg_suffix(command, args)
+        printable_args =
+          case command
+          when 'put', 'copy', 'get'
+            ["src=#{summarize_log_arg(args[0])}", "dest=#{summarize_log_arg(args[1])}"]
+          when 'sign', 'sign-public', 'sign-internal'
+            [
+              "key=#{summarize_log_arg(args[0])}",
+              "verb=#{args[1]}",
+              "expires_in=#{args[2]}"
+            ]
+          when 'exists', 'delete', 'properties'
+            ["key=#{summarize_log_arg(args[0])}"]
+          when 'list'
+            ["prefix=#{summarize_log_arg(args[0])}"]
+          when 'delete-recursive'
+            ["path=#{summarize_log_arg(args[0])}"]
+          else
+            []
+          end
+
+        printable_args = printable_args.compact.map(&:to_s).reject(&:empty?)
+        printable_args.empty? ? '' : " #{printable_args.join(' ')}"
+      end
+
+      def summarize_log_arg(arg)
+        File.basename(arg.to_s)
       end
 
       def resolve_exit_code(status)
