@@ -20,7 +20,7 @@ module CloudController
       # Native storage-cli type names supported by CC
       STORAGE_CLI_TYPES = %w[azurebs alioss s3 gcs dav].freeze
 
-      def initialize(directory_key:, resource_type:, root_dir:, min_size: nil, max_size: nil)
+      def initialize(directory_key:, resource_type:, root_dir:, min_size: nil, max_size: nil, metrics_updater: nil)
         raise 'Missing resource_type' if resource_type.nil?
 
         config_file_path = config_path_for(resource_type)
@@ -40,6 +40,7 @@ module CloudController
         @root_dir = root_dir
         @min_size = min_size || 0
         @max_size = max_size
+        @metrics_updater = metrics_updater
       end
 
       def fetch_config(resource_type)
@@ -102,23 +103,123 @@ module CloudController
       def cp_to_blobstore(source_path, destination_key)
         start     = Time.now.utc
         log_entry = 'cp-skip'
-        size      = -1
+        size      = nil
 
         logger.info('cp-start', destination_key: destination_key, source_path: source_path, bucket: @directory_key)
 
-        File.open(source_path) do |file|
-          size = file.size
-          next unless within_limits?(size)
+        state = new_cp_state
+        begin
+          File.open(source_path) do |file|
+            size = file.size
+            log_entry = perform_put_or_skip(source_path, destination_key, size, start, state)
+          end
+        rescue Interrupt, SignalException
+          log_entry = 'cp-error'
+          emit_signal_metric_if_needed(start, state)
+          raise
+        rescue StandardError
+          log_entry = 'cp-error'
+          safe_emit_metrics('put', -3, Time.now.utc - start, 'cp_to_blobstore') unless run_cli_called?(state)
+          raise
+        ensure
+          safe_log_finish(log_entry, destination_key, start, size)
+        end
+      end
 
-          run_cli('put', source_path, partitioned_key(destination_key))
-          log_entry = 'cp-finish'
+      def perform_put_or_skip(source_path, destination_key, size, start, state)
+        unless within_limits?(size)
+          safe_emit_metrics('put', -4, Time.now.utc - start, 'cp_to_blobstore skip')
+          mark_skip_metric_emitted!(state)
+          return 'cp-skip'
         end
 
-        duration = Time.now.utc - start
+        mark_run_cli_called!(state)
+        run_put_with_fatal_rescue(source_path, destination_key, size, start, state)
+        mark_run_cli_succeeded!(state)
+        'cp-finish'
+      end
+
+      def run_put_with_fatal_rescue(source_path, destination_key, size, start, state)
+        run_cli('put', source_path, partitioned_key(destination_key), blob_size: size)
+      rescue StandardError
+        # run_cli already emitted a metric before re-raising; nothing to do here.
+        raise
+      rescue Exception => e # rubocop:disable Lint/RescueException
+        handle_fatal_put_exception(e, start, state)
+        raise
+      end
+
+      def handle_fatal_put_exception(exception, start, state)
+        # Catches fatal exceptions (NoMemoryError etc.) and signals (Interrupt, SignalException)
+        # that StandardError does not cover.
+        #
+        # For signals: if Interrupt fired after run_cli returned, run_cli already emitted
+        # exit_code=0, so mark succeeded to avoid emitting a duplicate signal metric.
+        # For fatal exceptions: run_cli has not emitted, so emit -7 here.
+        if signal_exception?(exception)
+          mark_run_cli_succeeded!(state)
+        else
+          safe_emit_metrics('put', -7, Time.now.utc - start, 'fatal exception in run_cli')
+        end
+      end
+
+      def emit_signal_metric_if_needed(start, state)
+        return if run_cli_succeeded?(state) || skip_metric_emitted?(state)
+
+        # -5: signal before CLI was invoked; -6: signal mid-execution after CLI was invoked.
+        signal_exit_code = run_cli_called?(state) ? -6 : -5
+        safe_emit_metrics('put', signal_exit_code, Time.now.utc - start, 'signal in cp_to_blobstore')
+      end
+
+      def signal_exception?(exception)
+        exception.is_a?(Interrupt) || exception.is_a?(SignalException)
+      end
+
+      def new_cp_state
+        {
+          run_cli_called: false,
+          run_cli_succeeded: false,
+          skip_metric_emitted: false
+        }
+      end
+
+      def mark_run_cli_called!(state)
+        state[:run_cli_called] = true
+      end
+
+      def mark_run_cli_succeeded!(state)
+        state[:run_cli_succeeded] = true
+      end
+
+      def mark_skip_metric_emitted!(state)
+        state[:skip_metric_emitted] = true
+      end
+
+      def run_cli_called?(state)
+        state[:run_cli_called]
+      end
+
+      def run_cli_succeeded?(state)
+        state[:run_cli_succeeded]
+      end
+
+      def skip_metric_emitted?(state)
+        state[:skip_metric_emitted]
+      end
+
+      def safe_emit_metrics(operation, exit_code, duration, context, blob_size: nil)
+        emit_storage_cli_metrics(operation, exit_code, duration, blob_size: blob_size)
+      rescue StandardError => e
+        logger.warn("emit_storage_cli_metrics failed in #{context}: #{e.inspect}")
+      end
+
+      def safe_log_finish(log_entry, destination_key, start, size)
         logger.info(log_entry,
                     destination_key: destination_key,
-                    duration_seconds: duration,
+                    duration_seconds: Time.now.utc - start,
                     size: size)
+      rescue StandardError => e
+        logger.warn("cp_to_blobstore ensure log failed: #{e.inspect}")
       end
 
       def cp_file_between_keys(source_key, destination_key)
@@ -170,23 +271,126 @@ module CloudController
         flags_string.split
       end
 
-      def run_cli(command, *args, allow_exit_code_three: false)
+      def run_cli(command, *args, allow_exit_code_three: false, blob_size: nil)
+        log_fields = operation_log_fields(command, args, blob_size: blob_size)
+
         logger.debug("running storage-cli: #{@cli_path} -s #{@storage_type} -c #{@config_file} #{additional_flags.join(' ')} #{command} #{args.join(' ')}")
 
-        begin
-          stdout, stderr, status = Open3.capture3(@cli_path, '-s', @storage_type, '-c', @config_file, *additional_flags, command, *args)
-          stderr.split("\n").each do |line|
-            logger.info("[INFO] storage-cli: #{line}")
-          end
-        rescue StandardError => e
-          raise BlobstoreError.new(e.inspect)
+        t = Time.now.utc
+        stdout, stderr, status = capture_cli(command, args, t)
+        duration = Time.now.utc - t
+
+        stderr.split("\n").each { |line| logger.info("[INFO] storage-cli: #{line}") }
+
+        exit_code = resolve_exit_code(status)
+        success = status.success? || (allow_exit_code_three && status.exitstatus == 3)
+
+        logger.info("storage_cli.call.finish #{command}#{log_message_arg_suffix(command, args)}",
+                    log_fields.merge(
+                      'duration_seconds' => duration,
+                      'exit_code' => exit_code,
+                      'success' => success
+                    ))
+
+        unless success
+          safe_emit_metrics(command, exit_code, duration, 'run_cli failure', blob_size: blob_size)
+          raise "storage-cli #{command} failed with exit code #{exit_code.inspect}, output: '#{stdout}', error: '#{stderr}'"
         end
 
-        unless status.success? || (allow_exit_code_three && status.exitstatus == 3)
-          raise "storage-cli #{command} failed with exit code #{status.exitstatus}, output: '#{stdout}', error: '#{stderr}'"
-        end
+        # Remap allowed exit 3 (e.g. key-not-found on exists) to 0 so Prometheus only
+        # records non-zero exit_codes for genuine failures.
+        metric_exit_code = allow_exit_code_three && exit_code == 3 ? 0 : exit_code
+        safe_emit_metrics(command, metric_exit_code, duration, 'run_cli success', blob_size: blob_size)
 
         [stdout, status]
+      end
+
+      def operation_log_fields(command, args, blob_size: nil)
+        fields = {
+          'operation' => command,
+          'bucket' => @directory_key,
+          'resource_type' => @resource_type
+        }
+
+        case command
+        when 'put'
+          fields['source_path'] = args[0]
+          fields['destination_key'] = args[1]
+        when 'get'
+          fields['source_key'] = args[0]
+          fields['destination_path'] = args[1]
+        when 'copy'
+          fields['source_key'] = args[0]
+          fields['destination_key'] = args[1]
+        when 'exists', 'delete', 'properties'
+          fields['key'] = args[0]
+        when 'list'
+          fields['prefix'] = args[0]
+        when 'delete-recursive'
+          fields['path'] = args[0]
+        when 'sign', 'sign-public', 'sign-internal'
+          fields['key'] = args[0]
+          fields['verb'] = args[1]
+          fields['expires_in'] = args[2]
+        end
+
+        fields['size'] = blob_size if blob_size
+        fields
+      end
+
+      def capture_cli(command, args, start_time)
+        Open3.capture3(@cli_path, '-s', @storage_type, '-c', @config_file, *additional_flags, command, *args)
+      rescue StandardError => e
+        # exit_code=-1 is a sentinel for spawn failures (binary missing, permission denied).
+        duration = Time.now.utc - start_time
+        logger.error("storage_cli.call.error #{command}#{log_message_arg_suffix(command, args)}",
+                     'operation' => command,
+                     'bucket' => @directory_key,
+                     'resource_type' => @resource_type,
+                     'duration_seconds' => duration,
+                     'error' => e.inspect)
+        safe_emit_metrics(command, -1, duration, 'spawn error')
+        raise BlobstoreError.new(e.inspect)
+      end
+
+      def log_message_arg_suffix(command, args)
+        printable_args =
+          case command
+          when 'put', 'copy', 'get'
+            ["src=#{summarize_log_arg(args[0])}", "dest=#{summarize_log_arg(args[1])}"]
+          when 'sign', 'sign-public', 'sign-internal'
+            [
+              "key=#{summarize_log_arg(args[0])}",
+              "verb=#{args[1]}",
+              "expires_in=#{args[2]}"
+            ]
+          when 'exists', 'delete', 'properties'
+            ["key=#{summarize_log_arg(args[0])}"]
+          when 'list'
+            ["prefix=#{summarize_log_arg(args[0])}"]
+          when 'delete-recursive'
+            ["path=#{summarize_log_arg(args[0])}"]
+          else
+            []
+          end
+
+        printable_args = printable_args.compact.map(&:to_s).reject(&:empty?)
+        printable_args.empty? ? '' : " #{printable_args.join(' ')}"
+      end
+
+      def summarize_log_arg(arg)
+        File.basename(arg.to_s)
+      end
+
+      def resolve_exit_code(status)
+        if status.exitstatus
+          status.exitstatus
+        elsif status.termsig
+          128 + status.termsig
+        else
+          # exit_code=-2: process exited with neither exitstatus nor termsig (platform anomaly).
+          -2
+        end
       end
 
       def sign_url(key, verb:, expires_in_seconds:, use_internal_url: false)
@@ -227,6 +431,12 @@ module CloudController
 
       def logger
         @logger ||= Steno.logger('cc.blobstore.storage_cli_client')
+      end
+
+      def emit_storage_cli_metrics(operation, exit_code, duration_seconds, blob_size: nil)
+        return if @metrics_updater.nil?
+
+        @metrics_updater.report_storage_cli_metrics(operation:, exit_code:, duration_seconds:, blob_size:)
       end
     end
   end
