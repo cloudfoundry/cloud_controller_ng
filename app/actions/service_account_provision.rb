@@ -79,19 +79,23 @@ module VCAP::CloudController
     private
 
     def matching_registration?(existing, desired)
-      tls_keys = existing.keys.select { |key| key.start_with?('tls-client-auth-', 'tls_client_auth_') }
+      tls_keys = existing.keys.grep(/\Atls[-_]/)
       return false unless tls_keys.sort == desired.keys.grep(/\Atls[-_]/).sort
 
       desired.all? do |key, value|
         actual = existing[key]
         actual = [] if key == 'scope' && !existing.key?(key)
         actual = [] if key == 'scope' && actual == ['uaa.none']
-        if value.is_a?(Array)
+        if string_array?(value)
           actual.is_a?(Array) && actual.all? { |entry| entry.is_a?(String) } && actual.sort == value.sort
         else
           actual == value
         end
       end
+    end
+
+    def string_array?(value)
+      value.is_a?(Array) && value.all? { |entry| entry.is_a?(String) }
     end
 
     def existing_client(client_id)
@@ -109,6 +113,14 @@ module VCAP::CloudController
         'access_token_validity' => 300,
         'tls-client-auth-ca-ref' => @identity_ca_ref,
         'tls_client_auth_san_dns' => account.certificate_dns_san,
+        'tls_client_certificate_bound_access_tokens' => false,
+        'tls-client-auth-claim-mappings' => [
+          { 'field' => 'subject_cn', 'claim' => 'cf_instance_guid' },
+          { 'field' => 'subject_ou', 'pattern' => '^app:(.+)$', 'claim' => 'app_guid' },
+          { 'field' => 'subject_ou', 'pattern' => '^space:(.+)$', 'claim' => 'space_guid' },
+          { 'field' => 'subject_ou', 'pattern' => '^organization:(.+)$', 'claim' => 'org_guid' }
+        ],
+        'tls-client-auth-required-claims' => { 'org_guid' => account.organization.guid },
         'cf_service_account_guid' => account.guid
       }
     end

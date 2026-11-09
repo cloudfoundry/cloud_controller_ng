@@ -15,6 +15,14 @@ module VCAP::CloudController
         'access_token_validity' => 300,
         'tls-client-auth-ca-ref' => 'diego-instance-identity',
         'tls_client_auth_san_dns' => account.certificate_dns_san,
+        'tls_client_certificate_bound_access_tokens' => false,
+        'tls-client-auth-required-claims' => { 'org_guid' => account.organization.guid },
+        'tls-client-auth-claim-mappings' => [
+          { 'field' => 'subject_cn', 'claim' => 'cf_instance_guid' },
+          { 'field' => 'subject_ou', 'pattern' => '^app:(.+)$', 'claim' => 'app_guid' },
+          { 'field' => 'subject_ou', 'pattern' => '^space:(.+)$', 'claim' => 'space_guid' },
+          { 'field' => 'subject_ou', 'pattern' => '^organization:(.+)$', 'claim' => 'org_guid' }
+        ],
         'cf_service_account_guid' => account.guid
       }
     end
@@ -127,7 +135,7 @@ module VCAP::CloudController
       it 'serializes the canonical secretless registration over HTTP' do
         WebMock::API.stub_request(:get, client_url).to_return(status: 404)
         creation = WebMock::API.stub_request(:post, "#{uaa_url}/oauth/clients").
-                   with(body: registration.to_json, headers: { 'Authorization' => 'bearer test-token' }).
+                    with(headers: { 'Authorization' => 'bearer test-token' }) { |request| Oj.load(request.body) == registration }.
                    to_return(status: 201, headers: response_headers, body: registration.to_json)
 
         action.provision(account)

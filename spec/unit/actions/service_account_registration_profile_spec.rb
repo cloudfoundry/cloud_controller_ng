@@ -12,7 +12,7 @@ module VCAP::CloudController
 
       ServiceAccountProvision.new(clients, identity_ca_ref: 'diego-instance-identity').provision(account)
 
-      expect(clients).to have_received(:add).with(:client, hash_including(
+      profile = {
         'tls_client_certificate_bound_access_tokens' => false,
         'tls-client-auth-required-claims' => { 'org_guid' => org.guid },
         'tls-client-auth-claim-mappings' => [
@@ -21,7 +21,8 @@ module VCAP::CloudController
           { 'field' => 'subject_ou', 'pattern' => '^space:(.+)$', 'claim' => 'space_guid' },
           { 'field' => 'subject_ou', 'pattern' => '^organization:(.+)$', 'claim' => 'org_guid' }
         ]
-      ))
+      }
+      expect(clients).to have_received(:add).with(:client, hash_including(profile))
     end
   end
 end
