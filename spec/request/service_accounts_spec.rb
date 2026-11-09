@@ -10,8 +10,8 @@ RSpec.describe 'Service accounts' do
     set_user_with_header_as_role(role: role, org: org, space: space, user: user)
   end
 
-  it 'allows a space manager to reserve an identity without provisioning a client' do
-    post '/v3/service_accounts', body.to_json, headers('space_manager')
+  it 'allows a space developer to reserve an identity without provisioning a client' do
+    post '/v3/service_accounts', body.to_json, headers('space_developer')
 
     expect(last_response.status).to eq(201)
     result = Oj.load(last_response.body)
@@ -34,12 +34,12 @@ RSpec.describe 'Service accounts' do
     before { TestConfig.override(service_account_creation_limit: 1) }
 
     it 'limits a principal across spaces without refunding deleted accounts' do
-      auth = headers('space_manager')
+      auth = headers('space_developer')
       post '/v3/service_accounts', body.to_json, auth
       expect(last_response.status).to eq(201)
       VCAP::CloudController::ServiceAccountModel.first.destroy
       other_space = create(:space, organization: org)
-      other_space.add_manager(user)
+      other_space.add_developer(user)
       other_body = { name: 'other-worker', relationships: { space: { data: { guid: other_space.guid } } } }
 
       post '/v3/service_accounts', other_body.to_json, auth
@@ -50,7 +50,7 @@ RSpec.describe 'Service accounts' do
     end
 
     it 'uses a rolling seven-day window' do
-      auth = headers('space_manager')
+      auth = headers('space_developer')
       Timecop.freeze(Time.utc(2026, 10, 1)) do
         post '/v3/service_accounts', body.to_json, auth
         expect(last_response.status).to eq(201)
@@ -66,7 +66,7 @@ RSpec.describe 'Service accounts' do
     end
 
     it 'does not consume budget on a failed creation' do
-      auth = headers('space_manager')
+      auth = headers('space_developer')
       VCAP::CloudController::ServiceAccountModel.create(name: body[:name], space: space)
       post '/v3/service_accounts', body.to_json, auth
       expect(last_response.status).to eq(409)
@@ -77,17 +77,17 @@ RSpec.describe 'Service accounts' do
     end
 
     it 'does not share budget between principals' do
-      post '/v3/service_accounts', body.to_json, headers('space_manager')
+      post '/v3/service_accounts', body.to_json, headers('space_developer')
       expect(last_response.status).to eq(201)
       other_user = create(:user)
-      auth = set_user_with_header_as_role(role: 'space_manager', org: org, space: space, user: other_user)
+      auth = set_user_with_header_as_role(role: 'space_developer', org: org, space: space, user: other_user)
       post '/v3/service_accounts', body.merge(name: 'second-worker').to_json, auth
       expect(last_response.status).to eq(201)
     end
 
     it 'supports explicit unlimited configuration' do
       TestConfig.override(service_account_creation_limit: -1)
-      auth = headers('space_manager')
+      auth = headers('space_developer')
       %w[first-worker second-worker].each do |name|
         post '/v3/service_accounts', body.merge(name: name).to_json, auth
         expect(last_response.status).to eq(201)
@@ -101,14 +101,14 @@ RSpec.describe 'Service accounts' do
         post '/v3/service_accounts', body.merge(name: name).to_json, auth
         expect(last_response.status).to eq(201)
       end
-      post '/v3/service_accounts', body.to_json, headers('space_manager')
+      post '/v3/service_accounts', body.to_json, headers('space_developer')
       expect(last_response.status).to eq(429)
     end
 
     it 'applies to non-admin automation clients and exempts admin automation' do
       user.update(is_oauth_client: true)
       org.add_user(user)
-      space.add_manager(user)
+      space.add_developer(user)
       coder = CF::UAA::TokenCoder.new(audience_ids: TestConfig.config[:uaa][:resource_id], skey: TestConfig.config[:uaa][:symmetric_secret], pkey: nil)
       token = { client_id: user.guid, scope: %w[cloud_controller.read cloud_controller.write], jti: 'automation', iss: UAAIssuer::ISSUER }
       auth = base_json_headers('HTTP_AUTHORIZATION' => "bearer #{coder.encode(token)}")
@@ -123,10 +123,10 @@ RSpec.describe 'Service accounts' do
     end
   end
 
-  it 'denies a space developer account-creation authority' do
+  it 'allows a space developer account-creation authority' do
     post '/v3/service_accounts', body.to_json, headers('space_developer')
-    expect(last_response.status).to eq(403)
-    expect(VCAP::CloudController::ServiceAccountModel.count).to eq(0)
+    expect(last_response.status).to eq(201)
+    expect(VCAP::CloudController::ServiceAccountModel.count).to eq(1)
   end
 
   it 'rejects invalid names without normalizing them' do
@@ -153,7 +153,7 @@ RSpec.describe 'Service accounts' do
 
   it 'denies creation in a suspended organization' do
     org.update(status: 'suspended')
-    post '/v3/service_accounts', body.to_json, headers('space_manager')
+    post '/v3/service_accounts', body.to_json, headers('space_developer')
     expect(last_response.status).to eq(403)
   end
 
@@ -183,12 +183,12 @@ RSpec.describe 'Service accounts' do
 
   it 'denies creation in a suspended space' do
     space.update(status: VCAP::CloudController::Space::SUSPENDED)
-    post '/v3/service_accounts', body.to_json, headers('space_manager')
+    post '/v3/service_accounts', body.to_json, headers('space_developer')
     expect(last_response.status).to eq(403)
   end
 
   it 'creates and updates description and metadata using normal merge/remove semantics' do
-    auth = headers('space_manager')
+    auth = headers('space_developer')
     post '/v3/service_accounts', body.merge(description: 'Batch payments', metadata: { labels: { team: 'payments' }, annotations: { note: 'original' } }).to_json, auth
     expect(last_response.status).to eq(201)
     result = Oj.load(last_response.body)
@@ -223,10 +223,10 @@ RSpec.describe 'Service accounts' do
     expect(Oj.load(last_response.body)['resources']).to eq([])
   end
 
-  it 'denies developers updates and hides unreadable resources' do
+  it 'allows developer updates and hides unreadable resources' do
     own = VCAP::CloudController::ServiceAccountModel.create(name: 'payments-worker', space: space)
     patch "/v3/service_accounts/#{own.guid}", { description: 'unauthorized' }.to_json, headers('space_developer')
-    expect(last_response.status).to eq(403)
+    expect(last_response.status).to eq(200)
     hidden = VCAP::CloudController::ServiceAccountModel.create(name: 'hidden-worker', space: create(:space))
     patch "/v3/service_accounts/#{hidden.guid}", { description: 'unauthorized' }.to_json, headers('space_manager')
     expect(last_response.status).to eq(404)
@@ -235,7 +235,7 @@ RSpec.describe 'Service accounts' do
   %i[name relationships status client_id certificate_dns_san].each do |key|
     it "rejects mutation of platform-owned #{key}" do
       own = VCAP::CloudController::ServiceAccountModel.create(name: 'payments-worker', space: space)
-      patch "/v3/service_accounts/#{own.guid}", { key => 'injected' }.to_json, headers('space_manager')
+      patch "/v3/service_accounts/#{own.guid}", { key => 'injected' }.to_json, headers('space_developer')
       expect(last_response.status).to eq(422)
     end
   end
@@ -268,7 +268,7 @@ RSpec.describe 'Service accounts' do
       space.add_developer(principal)
       registration = provisioner.send(:registration, account)
       allow(clients).to receive(:get).and_return(registration)
-      auth = headers('space_manager')
+      auth = headers('space_developer')
 
       patch account_path, { enabled: false }.to_json, auth
       expect(last_response.status).to eq(202)
@@ -290,7 +290,7 @@ RSpec.describe 'Service accounts' do
       provisioner.provision(account)
       allow(clients).to receive(:get).and_return(provisioner.send(:registration, account))
       guid = account.guid
-      auth = headers('space_manager')
+      auth = headers('space_developer')
       delete account_path, nil, auth
       expect(last_response.status).to eq(202)
       expect(account.reload.status).to eq('deleting')
@@ -304,22 +304,22 @@ RSpec.describe 'Service accounts' do
 
     it 'rejects deleting an account still assigned to an app' do
       create(:app_model, space: space, service_account: account)
-      delete account_path, nil, headers('space_manager')
+      delete account_path, nil, headers('space_developer')
       expect(last_response.status).to eq(409)
       expect(account.reload.status).to eq('reserved')
       expect(Delayed::Job.count).to eq(0)
     end
 
-    it 'denies developer deletion and rejects non-boolean enabled values' do
-      delete account_path, nil, headers('space_developer')
+    it 'denies auditor deletion and rejects non-boolean enabled values' do
+      delete account_path, nil, headers('space_auditor')
       expect(last_response.status).to eq(403)
-      patch account_path, { enabled: 'false' }.to_json, headers('space_manager')
+      patch account_path, { enabled: 'false' }.to_json, headers('space_developer')
       expect(last_response.status).to eq(422)
     end
 
     it 'refuses to delete an unmanaged colliding client' do
       allow(clients).to receive(:get).and_return('client_id' => account.client_id)
-      delete account_path, nil, headers('space_manager')
+      delete account_path, nil, headers('space_developer')
       expect(last_response.status).to eq(202)
       expect(Delayed::Worker.new.work_off).to eq([0, 1])
       expect(clients).not_to have_received(:delete)
@@ -330,7 +330,7 @@ RSpec.describe 'Service accounts' do
       app = create(:app_model, space: space)
       process = create(:process_model, app: app, state: 'STARTED')
       process.update(service_account_guid: account.guid, service_account_snapshot: true)
-      delete account_path, nil, headers('space_manager')
+      delete account_path, nil, headers('space_developer')
       expect(last_response.status).to eq(409)
       expect(Delayed::Job.count).to eq(0)
     end
@@ -338,7 +338,7 @@ RSpec.describe 'Service accounts' do
     it 'rejects deletion while an active task holds the account snapshot' do
       app = create(:app_model, space: space)
       create(:task_model, app: app, service_account_guid: account.guid, service_account_snapshot: true, state: 'RUNNING')
-      delete account_path, nil, headers('space_manager')
+      delete account_path, nil, headers('space_developer')
       expect(last_response.status).to eq(409)
       expect(Delayed::Job.count).to eq(0)
     end

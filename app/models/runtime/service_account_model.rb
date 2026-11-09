@@ -57,6 +57,17 @@ module VCAP::CloudController
         TaskModel.where(service_account_guid: guid, state: [TaskModel::PENDING_STATE, TaskModel::RUNNING_STATE, TaskModel::CANCELING_STATE]).any?
     end
 
+    def in_use_in_space?(space)
+      app_guids = AppModel.where(space_guid: space.guid).select(:guid)
+      apps_dataset.where(space_guid: space.guid).any? ||
+        ProcessModel.where(app_guid: app_guids, service_account_guid: guid, state: ProcessModel::STARTED).any? ||
+        TaskModel.where(app_guid: app_guids, service_account_guid: guid, state: [TaskModel::PENDING_STATE, TaskModel::RUNNING_STATE, TaskModel::CANCELING_STATE]).any?
+    end
+
+    def entitled_to?(space)
+      organization_id == space.organization_id && entitled_spaces_dataset.where(spaces__guid: space.guid).any?
+    end
+
     def certificate_dns_san
       "#{name}.svc.identity"
     end

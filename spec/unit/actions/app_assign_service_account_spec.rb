@@ -23,7 +23,7 @@ module VCAP::CloudController
 
     it 'rejects an account in another space of the same organization' do
       other = ServiceAccountModel.create(name: 'reporting-reader', space: create(:space, organization: space.organization), status: 'ready')
-      expect { action.assign(app, other) }.to raise_error(AppAssignServiceAccount::Conflict, /owning space/)
+      expect { action.assign(app, other) }.to raise_error(AppAssignServiceAccount::Conflict, /entitled/)
     end
 
     it 'is idempotent but requires explicit unbinding before replacement' do

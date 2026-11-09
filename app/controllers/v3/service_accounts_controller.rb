@@ -13,9 +13,16 @@ class ServiceAccountsController < ApplicationController
     message = ServiceAccountsListMessage.from_params(query_params)
     invalid_param!(message.errors.full_messages) unless message.valid?
     dataset = ServiceAccountModel.dataset
-    dataset = dataset.where(space_guid: permission_queryer.readable_space_guids_query) unless permission_queryer.can_read_globally?
+    unless permission_queryer.can_read_globally?
+      entitled = ServiceAccountModel.db[:service_account_space_entitlements].where(space_guid: permission_queryer.readable_space_guids_query).select(:service_account_guid)
+      managed_orgs = current_user.managed_organizations_dataset.select(:id)
+      dataset = dataset.where(Sequel.|({ guid: entitled }, { organization_id: managed_orgs }))
+    end
     dataset = dataset.where(name: message.names) if message.requested?(:names)
-    dataset = dataset.where(space_guid: message.space_guids) if message.requested?(:space_guids)
+    if message.requested?(:space_guids)
+      dataset = dataset.where(guid: ServiceAccountModel.db[:service_account_space_entitlements].where(space_guid: message.space_guids).select(:service_account_guid))
+    end
+    dataset = dataset.where(organization_id: Organization.where(guid: message.organization_guids).select(:id)) if message.requested?(:organization_guids)
     render_list(dataset, message, Presenters::V3::ServiceAccountPresenter, '/v3/service_accounts')
   end
 
@@ -23,7 +30,10 @@ class ServiceAccountsController < ApplicationController
     account = readable_account
     message = AppsListMessage.from_params(query_params)
     invalid_param!(message.errors.full_messages) unless message.valid?
-    dataset = AppListFetcher.fetch(message, [account.space_guid]).where(service_account_guid: account.guid)
+    spaces = account.entitled_spaces_dataset
+    spaces = spaces.where(guid: permission_queryer.readable_space_guids_query) unless permission_queryer.can_read_globally?
+    spaces = spaces.select_map(:guid)
+    dataset = AppListFetcher.fetch(message, spaces).where(service_account_guid: account.guid)
     render_list(dataset, message, Presenters::V3::AppPresenter, "/v3/service_accounts/#{account.guid}/apps")
   end
 
@@ -39,7 +49,8 @@ class ServiceAccountsController < ApplicationController
 
     space = Space.where(guid: message.space_guid).first
     unprocessable!('Space not found') unless space && permission_queryer.can_read_from_space?(space.id, space.organization_id)
-    authorize_management!(space)
+    unauthorized! unless permission_queryer.can_write_to_active_space?(space.id)
+    require_writable_space!(space)
 
     account = nil
     ServiceAccountModel.db.transaction do
@@ -58,7 +69,7 @@ class ServiceAccountsController < ApplicationController
 
   def update
     account = readable_account
-    authorize_management!(account.space)
+    authorize_account_management!(account)
     message = ServiceAccountUpdateMessage.new(hashed_params[:body])
     unprocessable!(message.errors.full_messages) unless message.valid?
     job = nil
@@ -80,7 +91,7 @@ class ServiceAccountsController < ApplicationController
 
   def destroy
     account = readable_account
-    authorize_management!(account.space)
+    authorize_account_management!(account)
     require_provisioning!
     job = nil
     account.db.transaction do
@@ -95,6 +106,76 @@ class ServiceAccountsController < ApplicationController
   end
 
   private
+
+  def org_manager?(account)
+    permission_queryer.can_write_globally? || account.organization.managers_dataset.where(users__id: current_user.id).any?
+  end
+
+  def developer?(space)
+    space.developers_dataset.where(users__id: current_user.id).any?
+  end
+
+  def authorize_account_management!(account)
+    unauthorized! unless org_manager?(account) || account.entitled_spaces.any? { |space| developer?(space) }
+    require_writable_org!(account.organization)
+  end
+
+  public
+
+  def spaces
+    account = readable_account
+    render status: :ok, json: { data: account.entitled_spaces.map { |space| { guid: space.guid } } }
+  end
+
+  def entitle
+    account = readable_account
+    data = entitlement_guids
+    account.db.transaction do
+      account.lock!
+      require_writable_org!(account.organization)
+      data.each do |guid|
+        space = Space.first(guid: guid)
+        unprocessable!('Space must belong to the account organization') unless space && space.organization_id == account.organization_id
+        unauthorized! unless org_manager?(account) || (developer?(space) && account.entitled_spaces.any? { |source| developer?(source) })
+        require_writable_space!(space)
+        account.add_entitled_space(space) unless account.entitled_spaces_dataset.where(spaces__guid: space.guid).any?
+        Repositories::ServiceAccountEventRepository.record(account, 'entitle', user_audit_info, space_guid: space.guid)
+      end
+    end
+    spaces
+  end
+
+  def unentitle
+    account = readable_account
+    account.db.transaction do
+      account.lock!
+      require_writable_org!(account.organization)
+      space = account.entitled_spaces_dataset.where(spaces__guid: hashed_params[:space_guid]).first
+      resource_not_found!(:space) unless space
+      unauthorized! unless org_manager?(account) || developer?(space)
+      lifecycle_conflict!('cannot revoke the last entitlement; delete the account instead') if !org_manager?(account) && account.entitled_spaces_dataset.one?
+      lifecycle_conflict!('service account is still assigned or in use in this space') if account.in_use_in_space?(space)
+      account.remove_entitled_space(space)
+      Repositories::ServiceAccountEventRepository.record(account, 'unentitle', user_audit_info, space_guid: space.guid)
+    end
+    spaces
+  end
+
+  private
+
+  def entitlement_guids
+    data = hashed_params[:body]['data'] || hashed_params[:body][:data]
+    unprocessable!('Data must be an array of space GUIDs') unless data.is_a?(Array)
+    data.map do |entry|
+      unprocessable!('Data must be an array of space GUIDs') unless entry.is_a?(Hash) && (entry['guid'] || entry[:guid]).is_a?(String)
+      entry['guid'] || entry[:guid]
+    end
+  end
+
+  def readable?(account)
+    permission_queryer.can_read_globally? || org_manager?(account) ||
+      account.entitled_spaces.any? { |space| permission_queryer.can_read_from_space?(space.id, space.organization_id) }
+  end
 
   def require_provisioning!
     lifecycle_conflict!('service account provisioning is not enabled') unless Config.config.get(:service_account_provisioning_enabled) == true
@@ -116,7 +197,7 @@ class ServiceAccountsController < ApplicationController
 
   def readable_account
     account = ServiceAccountModel.first(guid: hashed_params[:guid])
-    resource_not_found!(:service_account) unless account && permission_queryer.can_read_from_space?(account.space.id, account.space.organization_id)
+    resource_not_found!(:service_account) unless account && readable?(account)
     account
   end
 

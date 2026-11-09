@@ -95,7 +95,7 @@ module VCAP::CloudController
       validate_environment_variables
       validate_droplet_is_staged
 
-      errors.add(:service_account, 'must belong to the app owning space') if service_account && service_account.space_guid != space_guid
+      errors.add(:service_account, 'must be entitled to the app space in the same organization') if service_account && !service_account.entitled_to?(space)
 
       validates_includes Lifecycles::TYPES, :lifecycle_type
     end

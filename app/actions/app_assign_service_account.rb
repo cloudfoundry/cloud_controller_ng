@@ -19,7 +19,7 @@ module VCAP::CloudController
 
         if account
           account.lock!
-          raise Conflict.new('account must belong to the app owning space') unless account.space_guid == app.space_guid
+          raise Conflict.new('account must be entitled to the app space in the same organization') unless account.entitled_to?(app.space)
 
           validate_ready!(account, provision)
           raise Conflict.new('another service account is already assigned; unbind first') if app.service_account_guid && app.service_account_guid != account.guid
