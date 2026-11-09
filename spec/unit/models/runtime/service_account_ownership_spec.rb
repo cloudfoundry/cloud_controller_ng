@@ -45,5 +45,10 @@ module VCAP::CloudController
       expect(Space.first(guid: space.guid)).not_to be_nil
       expect(Organization.first(id: space.organization_id)).not_to be_nil
     end
+
+    it 'refuses a cross-org entitlement even when the model association is used directly' do
+      account = ServiceAccountModel.create(name: 'payments-worker', space: space)
+      expect { account.add_entitled_space(create(:space)) }.to raise_error(Sequel::ValidationFailed, /organization/)
+    end
   end
 end
