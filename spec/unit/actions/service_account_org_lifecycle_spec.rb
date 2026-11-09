@@ -54,5 +54,14 @@ module VCAP::CloudController
       expect(ServiceAccountModel.first(guid: account.guid)).to be_nil
       expect(Organization.first(id: org.id)).to be_nil
     end
+
+    it 'does not bypass shared-domain deletion guards when accounts mark an org deleting' do
+      account
+      domain = create(:private_domain, owning_organization: org)
+      domain.add_shared_organization(create(:organization))
+      expect(org_delete.delete([org]).map(&:message).join).to include('shared')
+      expect(Organization.first(id: org.id)).not_to be_nil
+      expect(PrivateDomain.first(guid: domain.guid)).not_to be_nil
+    end
   end
 end
