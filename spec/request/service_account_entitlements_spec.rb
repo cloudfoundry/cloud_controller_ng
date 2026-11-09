@@ -165,5 +165,15 @@ module VCAP::CloudController
       expect(last_response.status).to eq(200)
       expect(account.reload.entitled_spaces).to contain_exactly(target)
     end
+
+    it 'does not use a suspended source space to authorize entitlement expansion' do
+      headers = auth('space_developer')
+      target.add_developer(user)
+      account
+      space.update(status: Space::SUSPENDED)
+      entitle(target, headers)
+      expect(last_response.status).to eq(403)
+      expect(account.reload.entitled_spaces).to contain_exactly(space)
+    end
   end
 end
