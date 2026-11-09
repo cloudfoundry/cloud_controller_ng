@@ -370,7 +370,9 @@ module VCAP::Services::ServiceBrokers::V2
     end
 
     def add_service_account_context(body, binding)
-      account = binding.respond_to?(:app) ? binding.app&.service_account : nil
+      return unless binding.respond_to?(:service_account_guid) && binding.service_account_guid
+
+      account = VCAP::CloudController::ServiceAccountModel.first(guid: binding.service_account_guid)
       return unless account
 
       unless account.enabled && account.status == 'ready' && account.entitled_to?(binding.app.space)

@@ -42,7 +42,7 @@ module VCAP::CloudController
     private
 
     def validate_binding_change!(app, account)
-      return unless app.service_account_guid && app.service_account_guid != account&.guid && app.service_bindings_dataset.any?
+      return unless app.service_account_guid && app.service_account_guid != account&.guid && app.service_bindings_dataset.exclude(service_account_guid: nil).any?
 
       raise Conflict.new('remove service bindings before changing the service account')
     end

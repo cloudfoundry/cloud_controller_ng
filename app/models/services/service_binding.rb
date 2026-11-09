@@ -98,6 +98,7 @@ module VCAP::CloudController
     end
 
     def before_create
+      self.service_account_guid = app.service_account_guid if app
       encode_syslog_drain_url_commas
       super
     end
