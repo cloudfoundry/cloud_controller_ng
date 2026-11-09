@@ -21,6 +21,7 @@ module VCAP::CloudController::Presenters::V3
         created_at: organization_quota.created_at,
         updated_at: organization_quota.updated_at,
         name: organization_quota.name,
+        service_accounts: { total_service_accounts: convert_unlimited_to_nil(organization_quota.total_service_accounts) },
         apps: {
           total_memory_in_mb: convert_unlimited_to_nil(organization_quota.memory_limit),
           per_process_memory_in_mb: convert_unlimited_to_nil(organization_quota.instance_memory_limit),

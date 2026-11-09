@@ -56,6 +56,8 @@ class ServiceAccountsController < ApplicationController
     account = nil
     ServiceAccountModel.db.transaction do
       space.organization.lock!
+      limit = space.organization.quota_definition.total_service_accounts
+      unprocessable!('Organization service account quota exceeded') if limit != -1 && ServiceAccountModel.where(organization_id: space.organization_id).count >= limit
       ServiceAccountCreationBudget.consume(current_user, exempt: permission_queryer.can_write_globally?) do
         if reuse
           lifecycle_conflict!('live account name is already in use') if ServiceAccountModel.where(organization_id: space.organization_id, name: message.name).any?
