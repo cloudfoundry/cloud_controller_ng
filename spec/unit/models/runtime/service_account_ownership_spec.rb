@@ -58,5 +58,13 @@ module VCAP::CloudController
       account.remove_all_entitled_spaces
       expect { process.update(state: ProcessModel::STARTED) }.to raise_error(Sequel::ValidationFailed, /entitled/)
     end
+
+    it 'measures known deletion counts and age buckets without assigning dates to historical reservations' do
+      account = ServiceAccountModel.create(name: 'payments-worker', space: space)
+      account.destroy
+      stats = ServiceAccountModel.reservation_statistics
+      expect(stats).to include(reserved_names: 1, deletions: 1, unknown_deletion_times: 0)
+      expect(stats[:deletion_age_days]).to include('0-7' => 1)
+    end
   end
 end
