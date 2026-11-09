@@ -55,5 +55,24 @@ module VCAP::CloudController
       expect(last_response.status).to eq(201)
       expect(ServiceAccountModel.db[:service_account_name_deletions].first(account_guid: original.guid)).to include(deleted_at: timestamp)
     end
+
+    it 'refuses a previously fetched actor after its last entitlement is revoked' do
+      headers = auth
+      post '/v3/service_accounts', body.to_json, headers
+      account = ServiceAccountModel.first(guid: parsed_response['guid'])
+      account.remove_all_entitled_spaces
+      patch "/v3/service_accounts/#{account.guid}", { description: 'forbidden' }.to_json, headers
+      expect(last_response.status).to eq(404)
+    end
+
+    it 'keeps reuse warnings and the previous account GUID in durable audit evidence' do
+      post '/v3/service_accounts', body.to_json, auth
+      old_guid = parsed_response['guid']
+      ServiceAccountModel.first(guid: old_guid).destroy
+      post '/v3/service_accounts', body.merge(reuse_name: true).to_json, auth('org_manager')
+      expect(last_response.status).to eq(201)
+      expect(last_response.headers['X-Cf-Warnings']).to match(/external|certificate/i)
+      expect(Event.first(type: 'audit.service_account.create', actee: parsed_response['guid']).metadata['previous_account_guid']).to eq(old_guid)
+    end
   end
 end
