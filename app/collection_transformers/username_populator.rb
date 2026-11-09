@@ -8,7 +8,8 @@ module VCAP::CloudController
 
     def transform(users, _opts={})
       users = Array(users)
-      accounts = ServiceAccountModel.where(name: users.select(&:is_oauth_client).map { |user| user.guid.delete_prefix('cf:service-account:') }).all
+      names = users.select(&:is_oauth_client).map { |user| user.guid.delete_prefix('cf:service-account:').split(':').last }
+      accounts = ServiceAccountModel.where(name: names).all
       account_names = accounts.to_h { |account| [account.client_id, account.name] }
       human_users = users.reject { |user| user.is_oauth_client && account_names.key?(user.guid) }
       username_mapping = human_users.empty? ? {} : uaa_client.usernames_for_ids(human_users.collect(&:guid))
