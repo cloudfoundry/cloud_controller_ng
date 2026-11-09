@@ -72,6 +72,14 @@ module VCAP::CloudController
         expect(TaskModel.count).to eq(1)
       end
 
+      it 'refuses a task when the account entitlement disappears before launch' do
+        account = ServiceAccountModel.create(name: 'task-worker', space: space, status: 'ready')
+        app.update(service_account: account)
+        account.remove_all_entitled_spaces
+        expect_any_instance_of(ServiceAccountModel).to receive(:lock!).and_call_original
+        expect { task_create_action.create(app, message, user_audit_info) }.to raise_error(TaskCreate::InvalidTask, /entitled/)
+      end
+
       it 'snapshots the app account on task creation so later unbind cannot change task identity' do
         account = ServiceAccountModel.create(name: 'payments-worker', space: app.space, status: 'ready')
         app.update(service_account: account)
