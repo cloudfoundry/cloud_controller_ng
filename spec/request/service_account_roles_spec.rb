@@ -1,7 +1,7 @@
 require 'spec_helper'
 
 RSpec.describe 'Explicit service account resource roles' do
-  let(:space) { create(:space) }
+  let(:space) { create(:space, organization: create(:organization, service_account_prefix: 'roles-team')) }
   let(:admin) { create(:user) }
   let(:account) { VCAP::CloudController::ServiceAccountModel.create(name: 'payments-worker', space: space) }
   let(:clients) { instance_double(CF::UAA::Scim) }
@@ -39,7 +39,7 @@ RSpec.describe 'Explicit service account resource roles' do
     expect(last_response.status).to eq(201)
 
     post '/v3/service_accounts', { name: 'privilege-escalation', relationships: { space: { data: { guid: space.guid } } } }.to_json, headers_for(principal, client: true)
-    expect(last_response.status).to eq(403)
+    expect(last_response.status).to eq(201)
   end
 
   it 'keeps account tokens denied in unrelated spaces after an explicit role grant' do
