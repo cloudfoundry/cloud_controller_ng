@@ -1,5 +1,24 @@
 # Service accounts (experimental)
 
+## Org-ownership transition
+
+The registry now persists an immutable owning organization and creates an initial
+space-entitlement row atomically with every account. Migration
+`20261109121000` backfills the organization from the existing space and entitles
+that space. UUIDs, names, client IDs, SANs, state and workload references are
+preserved; org prefixes are not generated or allocated by migration.
+
+This is the additive persistence step toward the org-owned RFC. The legacy space
+column, API representation, authorization and space-deletion behavior described
+below remain until their entitlement-aware cutover. Further entitlements are not
+exposed by this step. Do not enable cross-space use with this intermediate version.
+The required organization column means older CAPI writers cannot create accounts
+after migration; coordinate API/worker upgrades or keep account creation disabled
+during the transition. Downgrade removes the new owner/entitlement data while
+retaining the original account records and space relationships.
+
+## Current API compatibility behavior
+
 Service accounts are immutable, space-owned identities shared by apps in that
 space. Each app has zero or one desired account. Names are foundation-unique
 lowercase DNS labels of 3–63 characters and remain reserved after deletion.
