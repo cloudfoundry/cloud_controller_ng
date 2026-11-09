@@ -48,6 +48,9 @@ module VCAP::CloudController
         end
 
         account = ServiceAccountModel.first(guid: @account_guid)
+        if account&.identity_prefix && @config.get(:service_account_runtime_contract_version) != 2
+          raise CloudController::Errors::ApiError.new_from_details('UnprocessableEntity', 'Service account qualified runtime contract version 2 is not enabled')
+        end
         unless account && account.enabled && account.status == 'ready' && account.entitled_to?(@app.space)
           raise CloudController::Errors::ApiError.new_from_details('UnprocessableEntity', 'Service account is not ready for runtime credentials')
         end
