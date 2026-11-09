@@ -38,6 +38,13 @@ module VCAP::CloudController
 
     def around_create
       db.transaction(savepoint: true) do
+        organization.lock!
+        quota = organization.quota_definition
+        limit = quota.total_service_accounts
+        if limit != -1 && self.class.where(organization_id: organization_id).count >= limit
+          errors.add(:organization, 'service account quota exceeded')
+          raise validation_failed_error
+        end
         # Keep this reservation permanently, even when the account is destroyed.
         # The unique constraint, rather than a preflight query, serializes claims.
         db[:service_account_names].insert(name: name, organization_id: organization_id) # rubocop:disable Rails/SkipsModelValidations -- Atomic namespace reservation, not an ActiveRecord model.
