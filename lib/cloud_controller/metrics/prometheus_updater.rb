@@ -75,11 +75,11 @@ module VCAP::CloudController::Metrics
     STORAGE_CLI_OPERATIONS_TOTAL_DOCSTRING =
       'Total storage-cli subprocess invocations by operation and exit_code. ' \
       'exit_code=0: success; exit_code=3: not-found (expected for exists); ' \
-      'exit_code=-1: spawn failure (binary missing or permission denied); ' \
+      'exit_code=-1: spawn failure (binary missing or permission denied) after setup succeeds; ' \
       'exit_code=-2: process exited with neither exitstatus nor termsig (platform anomaly); ' \
-      'exit_code=-3: source file open/read failure before CLI invocation; ' \
+      'exit_code=-3: pre-spawn StandardError (config load, flags, or source file read failure); ' \
       'exit_code=-4: upload skipped locally because blob size is outside configured limits; ' \
-      'exit_code=-5: local non-StandardError before CLI invocation (for example Interrupt or SignalException); ' \
+      'exit_code=-5: Interrupt or SignalException before Open3.capture3 was called; ' \
       'exit_code=-6: signal received after CLI invocation began (Interrupt or SignalException mid-execution); ' \
       'exit_code=-7: fatal non-signal exception escaping run_cli (e.g. NoMemoryError)'.freeze
     STORAGE_CLI_METRICS = [
