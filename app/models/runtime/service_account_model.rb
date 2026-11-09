@@ -79,6 +79,10 @@ module VCAP::CloudController
     end
 
     def before_destroy
+      RoutePolicy.where(source_type: 'svc', source_guid: guid).all.each do |policy|
+        policy.destroy
+        policy.notify_diego
+      end
       db[:service_account_names].where(name: name, organization_id: organization_id).update(deleted_at: Sequel::CURRENT_TIMESTAMP)
       super
     end
