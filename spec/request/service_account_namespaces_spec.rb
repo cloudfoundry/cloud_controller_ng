@@ -74,5 +74,17 @@ module VCAP::CloudController
       expect(last_response.headers['X-Cf-Warnings']).to match(/external|certificate/i)
       expect(Event.first(type: 'audit.service_account.create', actee: parsed_response['guid']).metadata['previous_account_guid']).to eq(old_guid)
     end
+
+    it 'refuses creation if the org starts deleting before its lock is acquired' do
+      headers = auth
+      allow_any_instance_of(Organization).to receive(:lock!).and_wrap_original do |method, *args|
+        result = method.call(*args)
+        method.receiver.update(status: Organization::DELETING)
+        result
+      end
+      post '/v3/service_accounts', body.to_json, headers
+      expect(last_response.status).to eq(422)
+      expect(ServiceAccountModel.count).to eq(0)
+    end
   end
 end
