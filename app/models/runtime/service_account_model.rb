@@ -72,14 +72,14 @@ module VCAP::CloudController
     end
 
     def in_use?
-      apps_dataset.any? ||
+      apps_dataset.any? || ServiceBinding.where(service_account_guid: guid).any? ||
         ProcessModel.where(service_account_guid: guid, state: ProcessModel::STARTED).any? ||
         TaskModel.where(service_account_guid: guid, state: [TaskModel::PENDING_STATE, TaskModel::RUNNING_STATE, TaskModel::CANCELING_STATE]).any?
     end
 
     def in_use_in_space?(space)
       app_guids = AppModel.where(space_guid: space.guid).select(:guid)
-      apps_dataset.where(space_guid: space.guid).any? ||
+      apps_dataset.where(space_guid: space.guid).any? || ServiceBinding.where(app_guid: app_guids, service_account_guid: guid).any? ||
         ProcessModel.where(app_guid: app_guids, service_account_guid: guid, state: ProcessModel::STARTED).any? ||
         TaskModel.where(app_guid: app_guids, service_account_guid: guid, state: [TaskModel::PENDING_STATE, TaskModel::RUNNING_STATE, TaskModel::CANCELING_STATE]).any?
     end
