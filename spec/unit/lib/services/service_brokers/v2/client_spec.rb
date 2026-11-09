@@ -152,6 +152,7 @@ module VCAP::Services::ServiceBrokers::V2
         expect(http_client).to have_received(:put).
           with(path, anything, { user_guid: nil })
       end
+
       context 'when the caller passes the accepts_incomplete flag' do
         let(:path) { "/v2/service_instances/#{instance.guid}?accepts_incomplete=true" }
 
@@ -1409,17 +1410,6 @@ module VCAP::Services::ServiceBrokers::V2
     end
 
     describe '#bind' do
-      it 'hands the ready assigned account issuer and subject to the broker in platform context' do
-        app.space.organization.update(service_account_prefix: 'broker-team')
-        account = VCAP::CloudController::ServiceAccountModel.create(name: 'broker-worker', space: app.space, status: 'ready')
-        app.update(service_account: account)
-
-        client.bind(binding)
-
-        context = hash_including(service_account: { issuer: UAAIssuer::ISSUER, subject: account.client_id })
-        expect(http_client).to have_received(:put).with(anything, hash_including(context: context), anything)
-      end
-
       let(:instance) { create(:managed_service_instance) }
       let(:app) { create(:app_model, space: instance.space) }
       let(:binding) do
@@ -1446,6 +1436,17 @@ module VCAP::Services::ServiceBrokers::V2
 
       before do
         allow(http_client).to receive(:put).and_return(response)
+      end
+
+      it 'hands the ready assigned account issuer and subject to the broker in platform context' do
+        app.space.organization.update(service_account_prefix: 'broker-team')
+        account = VCAP::CloudController::ServiceAccountModel.create(name: 'broker-worker', space: app.space, status: 'ready')
+        app.update(service_account: account)
+
+        client.bind(binding)
+
+        context = hash_including(service_account: { issuer: UAAIssuer::ISSUER, subject: account.client_id })
+        expect(http_client).to have_received(:put).with(anything, hash_including(context: context), anything)
       end
 
       it 'makes a put request with correct path' do

@@ -118,6 +118,8 @@ module VCAP::Services::ServiceBrokers::V2
       body = body.compact
       body[:parameters] = arbitrary_parameters if arbitrary_parameters.present?
 
+      add_service_account_context(body, binding)
+
       begin
         response = @http_client.put(path, body, user_guid:)
       rescue Errors::HttpClientTimeout => e
@@ -365,6 +367,18 @@ module VCAP::Services::ServiceBrokers::V2
         organization_annotations: hashified_public_annotations(service_instance.organization.annotations),
         space_annotations: hashified_public_annotations(service_instance.space.annotations)
       }
+    end
+
+    def add_service_account_context(body, binding)
+      account = binding.respond_to?(:app) ? binding.app&.service_account : nil
+      return unless account
+
+      unless account.enabled && account.status == 'ready' && account.entitled_to?(binding.app.space)
+        raise VCAP::CloudController::ServiceAccountProvision::Conflict.new('service account is not ready for a broker binding')
+      end
+
+      issuer = VCAP::CloudController::UaaTokenDecoder.new(VCAP::CloudController::Config.config.get(:uaa)).send(:uaa_issuer)
+      body[:context][:service_account] = { issuer: issuer, subject: account.client_id }
     end
 
     def async_response?(response)
