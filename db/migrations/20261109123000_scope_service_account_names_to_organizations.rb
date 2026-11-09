@@ -23,6 +23,22 @@ Sequel.migration do
   end
 
   down do
-    raise Sequel::Error.new('Org-local identities cannot be downgraded to the global account namespace')
+    raise Sequel::Error.new('Org-local identities cannot be downgraded to the global account namespace') if from(:service_accounts).any?
+
+    duplicate_names = from(:service_account_names).group(:name).having { count.function.* > 1 }.any?
+    raise Sequel::Error.new('Org-local reservations cannot be collapsed into a global namespace') if duplicate_names
+
+    alter_table :service_accounts do
+      drop_index %i[organization_id name], name: :service_accounts_org_name_unique, concurrently: false
+      drop_column :identity_prefix
+      add_index :name, unique: true, name: :service_accounts_name_unique, concurrently: false
+    end
+    alter_table :service_account_names do
+      drop_index %i[organization_id name], name: :service_account_names_org_name_unique, concurrently: false
+      drop_column :organization_id
+      drop_column :deleted_at
+      add_index :name, unique: true, name: :service_account_names_name_unique, concurrently: false
+    end
+    alter_table(:service_accounts) { add_foreign_key [:name], :service_account_names, key: :name, name: :fk_service_accounts_name }
   end
 end
