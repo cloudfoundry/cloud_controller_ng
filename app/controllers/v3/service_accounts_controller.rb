@@ -63,7 +63,7 @@ class ServiceAccountsController < ApplicationController
         if reuse
           lifecycle_conflict!('live account name is already in use') if ServiceAccountModel.where(organization_id: space.organization_id, name: message.name).any?
           previous_guid = ServiceAccountModel.db[:service_account_name_deletions].
-                          where(organization_guid: space.organization.guid, name: message.name).order(Sequel.desc(:id)).get(:account_guid)
+                          where(organization_guid: space.organization.guid, name: message.name).order(Sequel.desc(:deleted_at)).first&.fetch(:account_guid)
           ServiceAccountModel.db[:service_account_names].where(organization_id: space.organization_id, name: message.name).delete
         end
         account = ServiceAccountModel.create(name: message.name, space: space)
