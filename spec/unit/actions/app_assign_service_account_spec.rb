@@ -3,7 +3,7 @@ require 'actions/app_assign_service_account' if File.exist?('app/actions/app_ass
 
 module VCAP::CloudController
   RSpec.describe 'Same-space service account assignment' do
-    let(:space) { create(:space) }
+    let(:space) { create(:space, organization: create(:organization, service_account_prefix: 'assignment-team')) }
     let(:app) { create(:app_model, space: space) }
     let(:account) { VCAP::CloudController.const_get(:ServiceAccountModel).create(name: 'payments-worker', space: space, status: 'ready') }
     let(:permissions) { instance_double(Permissions, can_write_to_active_space?: true) }

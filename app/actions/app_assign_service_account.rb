@@ -21,6 +21,7 @@ module VCAP::CloudController
 
         if account
           account.lock!
+          raise Conflict.new('organization service account prefix is unset') unless account.organization.service_account_prefix
           raise Conflict.new('account must be entitled to the app space in the same organization') unless account.entitled_to?(app.space)
 
           validate_ready!(account, provision)

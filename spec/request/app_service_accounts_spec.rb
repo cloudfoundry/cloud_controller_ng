@@ -1,7 +1,7 @@
 require 'spec_helper'
 
 RSpec.describe 'App service account relationship' do
-  let(:space) { create(:space) }
+  let(:space) { create(:space, organization: create(:organization, service_account_prefix: 'assignment-team')) }
   let(:user) { create(:user) }
   let(:app_model) { create(:app_model, space: space, desired_state: 'STARTED') }
   let(:account) { VCAP::CloudController::ServiceAccountModel.create(name: 'payments-worker', space: space, status: 'ready') }
