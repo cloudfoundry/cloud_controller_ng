@@ -165,7 +165,7 @@ class ServiceAccountsController < ApplicationController
         space = Space.first(guid: guid)
         unprocessable!('Space must belong to the account organization') unless space && space.organization_id == account.organization_id
         unprocessable!('Space is being deleted') if space.deleting?
-        unauthorized! unless org_manager?(account) || (developer?(space) && account.entitled_spaces.any? { |source| developer?(source) })
+        unauthorized! unless can_entitle?(account, space)
         require_writable_space!(space)
         account.add_entitled_space(space) unless account.entitled_spaces_dataset.where(spaces__guid: space.guid).any?
         Repositories::ServiceAccountEventRepository.record(account, 'entitle', user_audit_info, space_guid: space.guid)
@@ -191,6 +191,10 @@ class ServiceAccountsController < ApplicationController
   end
 
   private
+
+  def can_entitle?(account, space)
+    org_manager?(account) || (developer?(space) && account.entitled_spaces_dataset.all.any? { |source| source.active? && developer?(source) })
+  end
 
   def entitlement_guids
     data = hashed_params[:body]['data'] || hashed_params[:body][:data]
