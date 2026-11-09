@@ -11,6 +11,7 @@ module VCAP::CloudController
 
     def delete(org_dataset)
       org_dataset.each do |org|
+        mark_deleting_for_account_cleanup(org)
         errs = @space_deleter.delete(org.spaces_dataset)
         unless errs.empty?
           error_message = errs.map(&:message).join("\n\n")
@@ -48,6 +49,15 @@ module VCAP::CloudController
     end
 
     private
+
+    def mark_deleting_for_account_cleanup(org)
+      return unless ServiceAccountModel.where(organization_id: org.id).any?
+
+      org.db.transaction do
+        org.lock!
+        org.update(status: Organization::DELETING)
+      end
+    end
 
     def delete_service_accounts(org)
       accounts = ServiceAccountModel.where(organization_id: org.id).order(:guid).all
