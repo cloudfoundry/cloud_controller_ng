@@ -373,7 +373,7 @@ module VCAP::Services::ServiceBrokers::V2
       return unless binding.respond_to?(:service_account_guid) && binding.service_account_guid
 
       account = VCAP::CloudController::ServiceAccountModel.first(guid: binding.service_account_guid)
-      return unless account
+      raise VCAP::CloudController::ServiceAccountProvision::Conflict.new('captured service account not found') unless account
 
       unless account.enabled && account.status == 'ready' && account.entitled_to?(binding.app.space)
         raise VCAP::CloudController::ServiceAccountProvision::Conflict.new('service account is not ready for a broker binding')
