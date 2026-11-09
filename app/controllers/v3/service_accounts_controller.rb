@@ -54,6 +54,7 @@ class ServiceAccountsController < ApplicationController
     unprocessable!('Organization service account prefix is unset') unless space.organization.service_account_prefix
 
     account = nil
+    previous_guid = nil
     ServiceAccountModel.db.transaction do
       space.organization.lock!
       limit = space.organization.quota_definition.total_service_accounts
@@ -61,13 +62,16 @@ class ServiceAccountsController < ApplicationController
       ServiceAccountCreationBudget.consume(current_user, exempt: permission_queryer.can_write_globally?) do
         if reuse
           lifecycle_conflict!('live account name is already in use') if ServiceAccountModel.where(organization_id: space.organization_id, name: message.name).any?
+          previous_guid = ServiceAccountModel.db[:service_account_name_deletions].
+                          where(organization_guid: space.organization.guid, name: message.name).order(Sequel.desc(:id)).get(:account_guid)
           ServiceAccountModel.db[:service_account_names].where(organization_id: space.organization_id, name: message.name).delete
         end
         account = ServiceAccountModel.create(name: message.name, space: space)
         apply_metadata(account, message)
-        Repositories::ServiceAccountEventRepository.record(account, 'create', user_audit_info, reuse_name: reuse)
+        Repositories::ServiceAccountEventRepository.record(account, 'create', user_audit_info, reuse_name: reuse, previous_account_guid: previous_guid)
       end
     end
+    add_warning_headers(['Reusing this identity can inherit external grants and accept still-valid old certificates.']) if reuse
     render status: :created, json: Presenters::V3::ServiceAccountPresenter.new(account)
   rescue Sequel::ValidationFailed => e
     raise CloudController::Errors::V3::ApiError.new_from_details('ServiceAccountNameReserved') if e.message.include?('is already reserved')
