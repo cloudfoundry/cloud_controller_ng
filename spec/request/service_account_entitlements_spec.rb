@@ -109,5 +109,11 @@ module VCAP::CloudController
       expect(last_response.status).to eq(409)
       expect(app.reload.service_account_guid).to be_nil
     end
+
+    it 'refuses adding an entitlement to a deleting account' do
+      account.update(status: 'deleting', enabled: false)
+      entitle(target, auth('org_manager'))
+      expect(last_response.status).to eq(409)
+    end
   end
 end
