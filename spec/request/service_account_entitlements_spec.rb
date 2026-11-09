@@ -143,5 +143,27 @@ module VCAP::CloudController
       expect(last_response.status).to eq(422)
       expect(account.reload.entitled_spaces).to contain_exactly(space)
     end
+
+    it 'authorizes entitlement expansion using current source access under the account lock' do
+      headers = auth('space_developer')
+      target.add_developer(user)
+      account
+      allow_any_instance_of(ServiceAccountModel).to receive(:lock!).and_wrap_original do |method, *args|
+        result = method.call(*args)
+        method.receiver.remove_all_entitled_spaces
+        result
+      end
+      entitle(target, headers)
+      expect(last_response.status).to eq(403)
+    end
+
+    it 'returns success when revoking the callers last readable entitlement while another space remains' do
+      headers = auth('admin')
+      entitle(target, headers)
+      expect(last_response.status).to eq(200)
+      delete "#{path}/#{space.guid}", nil, auth('space_developer')
+      expect(last_response.status).to eq(200)
+      expect(account.reload.entitled_spaces).to contain_exactly(target)
+    end
   end
 end
