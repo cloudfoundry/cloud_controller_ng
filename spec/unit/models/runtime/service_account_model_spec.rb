@@ -59,5 +59,10 @@ module VCAP::CloudController
       expect(model.where(guid: account.guid).first).to be_nil
       expect { reserve('payments-worker', create(:space, organization: space.organization)) }.to raise_error(Sequel::ValidationFailed, /name/)
     end
+
+    it 'keeps unqualified legacy identities foundation-unique across organizations' do
+      reserve('legacy-worker')
+      expect { reserve('legacy-worker', create(:space)) }.to raise_error(Sequel::ValidationFailed, /reserved/)
+    end
   end
 end
