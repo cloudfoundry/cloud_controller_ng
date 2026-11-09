@@ -2,6 +2,18 @@ require 'spec_helper'
 
 module VCAP::CloudController
   RSpec.describe 'Service account route sources' do
+    it 'refuses account rules until qualified routers are explicitly enabled' do
+      org = create(:organization, service_account_prefix: 'route-team')
+      space = create(:space, organization: org)
+      ServiceAccountModel.create(name: 'route-worker', space: space)
+      domain = create(:private_domain, owning_organization: org, enforce_route_policies: true)
+      route = create(:route, space: space, domain: domain)
+      body = { source: 'cf:svc:route-team:route-worker', relationships: { route: { data: { guid: route.guid } } } }
+      post '/v3/route_policies', body.to_json, admin_headers_for(create(:user))
+      expect(last_response.status).to eq(422)
+      expect(parsed_response.dig('errors', 0, 'detail')).to include('router contract')
+    end
+
     it 'rejects granting an unreadable account and filters qualified sources without parser failures' do
       org = create(:organization, service_account_prefix: 'route-team')
       space = create(:space, organization: org)
