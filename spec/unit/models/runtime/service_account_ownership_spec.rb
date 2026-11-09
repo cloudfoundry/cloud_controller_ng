@@ -66,5 +66,12 @@ module VCAP::CloudController
       expect(stats).to include(reserved_names: 1, deletions: 1, unknown_deletion_times: 0)
       expect(stats[:deletion_age_days]).to include('0-7' => 1)
     end
+
+    it 'counts an orphan reservation as unknown even when another org uses the same local name' do
+      other_org = create(:organization, service_account_prefix: 'stats-team')
+      ServiceAccountModel.create(name: 'shared-name', space: create(:space, organization: other_org))
+      ServiceAccountModel.db[:service_account_names].insert(name: 'shared-name', organization_id: space.organization_id)
+      expect(ServiceAccountModel.reservation_statistics[:unknown_deletion_times]).to eq(1)
+    end
   end
 end
