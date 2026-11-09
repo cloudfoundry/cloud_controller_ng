@@ -54,7 +54,9 @@ module VCAP::CloudController
     private
 
     def shared_domain_errors(org)
-      domains = org.owned_private_domains.select(&:shared_with_any_orgs?)
+      return [] unless ServiceAccountModel.where(organization_id: org.id).any?
+
+      domains = org.owned_private_domains_dataset.all.select(&:shared_with_any_orgs?)
       return [] if domains.empty?
 
       details = domains.map { |domain| "Domain '#{domain.name}' is shared with other organizations. Unshare before deleting." }.join("\n")
