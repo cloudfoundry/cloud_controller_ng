@@ -48,6 +48,9 @@ module VCAP::CloudController
       expect(parsed_response['source']).to eq(body[:source])
       policy = RoutePolicy.first(guid: parsed_response['guid'])
       expect(policy.source_guid).to eq(account.guid)
+      get "/v3/route_policies/#{policy.guid}?include=source", nil, headers
+      expect(parsed_response.dig('relationships', 'service_account', 'data', 'guid')).to eq(account.guid)
+      expect(parsed_response.dig('included', 'service_accounts').pluck('guid')).to eq([account.guid])
       account.destroy
       expect(RoutePolicy.first(guid: policy.guid)).to be_nil
     end
