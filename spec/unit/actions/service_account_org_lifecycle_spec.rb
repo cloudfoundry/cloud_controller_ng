@@ -46,6 +46,7 @@ module VCAP::CloudController
 
       expect(org_delete.delete([org]).map(&:message).join).to include('UAA unavailable')
       expect(Organization.first(id: org.id)).not_to be_nil
+      expect(org.reload.status).to eq(Organization::DELETING)
       expect(account.reload.status).to eq('failed')
 
       allow(clients).to receive(:get).and_raise(CF::UAA::NotFound)
