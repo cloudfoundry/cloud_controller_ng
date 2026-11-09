@@ -31,6 +31,7 @@ module VCAP::CloudController
           created_at: iso8601,
           updated_at: iso8601,
           name: params[:name],
+          service_accounts: { total_service_accounts: nil },
           apps: {
             total_memory_in_mb: nil,
             per_process_memory_in_mb: nil,
@@ -114,6 +115,7 @@ module VCAP::CloudController
             created_at: iso8601,
             updated_at: iso8601,
             name: 'org1',
+            service_accounts: { total_service_accounts: nil },
             apps: {
               total_memory_in_mb: 5120,
               per_process_memory_in_mb: 1024,
@@ -344,6 +346,7 @@ module VCAP::CloudController
           created_at: iso8601,
           updated_at: iso8601,
           name: params[:name],
+          service_accounts: { total_service_accounts: nil },
           apps: {
             total_memory_in_mb: 5120,
             per_process_memory_in_mb: 1024,
@@ -622,6 +625,7 @@ def generate_org_quota_single_response(list_of_orgs)
     created_at: iso8601,
     updated_at: iso8601,
     name: organization_quota.name,
+    service_accounts: { total_service_accounts: nil },
     apps: {
       total_memory_in_mb: 20_480,
       per_process_memory_in_mb: nil,
@@ -671,6 +675,7 @@ def generate_default_org_quota_response(global_read)
     created_at: iso8601,
     updated_at: iso8601,
     name: default_quota.name,
+    service_accounts: { total_service_accounts: nil },
     apps: {
       total_memory_in_mb: 10_240,
       per_process_memory_in_mb: nil,

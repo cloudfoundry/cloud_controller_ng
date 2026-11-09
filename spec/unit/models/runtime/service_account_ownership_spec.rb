@@ -70,7 +70,7 @@ module VCAP::CloudController
     it 'counts an orphan reservation as unknown even when another org uses the same local name' do
       other_org = create(:organization, service_account_prefix: 'stats-team')
       ServiceAccountModel.create(name: 'shared-name', space: create(:space, organization: other_org))
-      ServiceAccountModel.db[:service_account_names].insert(name: 'shared-name', organization_id: space.organization_id)
+      ServiceAccountModel.db[:service_account_names].insert(name: 'shared-name', organization_id: space.organization_id) # rubocop:disable Rails/SkipsModelValidations -- Historical orphan fixture.
       expect(ServiceAccountModel.reservation_statistics[:unknown_deletion_times]).to eq(1)
     end
   end

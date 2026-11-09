@@ -61,12 +61,7 @@ class ServiceAccountsController < ApplicationController
       limit = space.organization.quota_definition.total_service_accounts
       unprocessable!('Organization service account quota exceeded') if limit != -1 && ServiceAccountModel.where(organization_id: space.organization_id).count >= limit
       ServiceAccountCreationBudget.consume(current_user, exempt: permission_queryer.can_write_globally?) do
-        if reuse
-          lifecycle_conflict!('live account name is already in use') if ServiceAccountModel.where(organization_id: space.organization_id, name: message.name).any?
-          previous_guid = ServiceAccountModel.db[:service_account_name_deletions].
-                          where(organization_guid: space.organization.guid, name: message.name).order(Sequel.desc(:deleted_at)).first&.fetch(:account_guid)
-          ServiceAccountModel.db[:service_account_names].where(organization_id: space.organization_id, name: message.name).delete
-        end
+        previous_guid = release_reservation_for_reuse(space, message) if reuse
         account = ServiceAccountModel.create(name: message.name, space: space)
         apply_metadata(account, message)
         Repositories::ServiceAccountEventRepository.record(account, 'create', user_audit_info, reuse_name: reuse, previous_account_guid: previous_guid)
@@ -121,6 +116,14 @@ class ServiceAccountsController < ApplicationController
   end
 
   private
+
+  def release_reservation_for_reuse(space, message)
+    lifecycle_conflict!('live account name is already in use') if ServiceAccountModel.where(organization_id: space.organization_id, name: message.name).any?
+    history = ServiceAccountModel.db[:service_account_name_deletions].
+              where(organization_guid: space.organization.guid, name: message.name).order(Sequel.desc(:deleted_at)).first
+    ServiceAccountModel.db[:service_account_names].where(organization_id: space.organization_id, name: message.name).delete
+    history&.fetch(:account_guid)
+  end
 
   def authorize_creation!(space, message)
     reuse = message.reuse_name == true
@@ -225,11 +228,6 @@ class ServiceAccountsController < ApplicationController
     account = ServiceAccountModel.first(guid: hashed_params[:guid])
     resource_not_found!(:service_account) unless account && readable?(account)
     account
-  end
-
-  def authorize_management!(space)
-    unauthorized! unless permission_queryer.can_write_globally? || space.managers_dataset.where(id: current_user.id).any?
-    require_writable_space!(space)
   end
 
   def apply_metadata(account, message)

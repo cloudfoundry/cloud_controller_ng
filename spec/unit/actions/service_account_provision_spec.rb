@@ -135,7 +135,7 @@ module VCAP::CloudController
       it 'serializes the canonical secretless registration over HTTP' do
         WebMock::API.stub_request(:get, client_url).to_return(status: 404)
         creation = WebMock::API.stub_request(:post, "#{uaa_url}/oauth/clients").
-                    with(headers: { 'Authorization' => 'bearer test-token' }) { |request| Oj.load(request.body) == registration }.
+                   with(headers: { 'Authorization' => 'bearer test-token' }) { |request| Oj.load(request.body) == registration }.
                    to_return(status: 201, headers: response_headers, body: registration.to_json)
 
         action.provision(account)
