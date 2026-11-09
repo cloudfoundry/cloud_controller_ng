@@ -84,5 +84,21 @@ module VCAP::CloudController
       expect(last_response.status).to eq(201)
       expect(ServiceAccountModel.first(guid: parsed_response['guid']).entitled_spaces).to contain_exactly(space)
     end
+
+    it 'refuses entitlements for an org with no allocated prefix' do
+      legacy_space = create(:space)
+      legacy = ServiceAccountModel.create(name: 'legacy-worker', space: legacy_space)
+      destination = create(:space, organization: legacy_space.organization)
+      post "/v3/service_accounts/#{legacy.guid}/relationships/spaces", { data: [{ guid: destination.guid }] }.to_json, admin_headers_for(user)
+      expect(last_response.status).to eq(422)
+    end
+
+    it 'does not let a developer in a suspended entitled space manage the account' do
+      headers = auth('space_developer')
+      account
+      space.update(status: Space::SUSPENDED)
+      patch "/v3/service_accounts/#{account.guid}", { description: 'blocked' }.to_json, headers
+      expect(last_response.status).to eq(403)
+    end
   end
 end
