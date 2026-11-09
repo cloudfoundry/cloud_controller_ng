@@ -152,8 +152,6 @@ module VCAP::Services::ServiceBrokers::V2
         expect(http_client).to have_received(:put).
           with(path, anything, { user_guid: nil })
       end
-
-
       context 'when the caller passes the accepts_incomplete flag' do
         let(:path) { "/v2/service_instances/#{instance.guid}?accepts_incomplete=true" }
 
@@ -1418,7 +1416,7 @@ module VCAP::Services::ServiceBrokers::V2
 
         client.bind(binding)
 
-        context = hash_including(service_account: { issuer: VCAP::CloudController::UAAIssuer::ISSUER, subject: account.client_id })
+        context = hash_including(service_account: { issuer: UAAIssuer::ISSUER, subject: account.client_id })
         expect(http_client).to have_received(:put).with(anything, hash_including(context: context), anything)
       end
 
