@@ -4,11 +4,12 @@ module VCAP::CloudController
 
     # identity_ca_ref names an operator-defined UAA trust bundle containing the instance identity CA.
     # CA rotation changes the bundle's contents in UAA; registered clients never change.
-    def initialize(clients, identity_ca_ref:)
+    def initialize(clients, identity_ca_ref:, allowed_resources_ref: nil)
       raise ArgumentError.new('identity_ca_ref must name a UAA trust bundle') if identity_ca_ref.blank?
 
       @clients = clients
       @identity_ca_ref = identity_ca_ref
+      @allowed_resources_ref = allowed_resources_ref
     end
 
     def provision(account)
@@ -105,7 +106,7 @@ module VCAP::CloudController
     end
 
     def registration(account)
-      {
+      profile = {
         'client_id' => account.client_id,
         'authorized_grant_types' => ['client_credentials'],
         'authorities' => %w[cloud_controller.read cloud_controller.write],
@@ -123,6 +124,8 @@ module VCAP::CloudController
         'tls-client-auth-required-claims' => { 'org_guid' => account.organization.guid },
         'cf_service_account_guid' => account.guid
       }
+      profile['tls-client-auth-allowed-resources-ref'] = @allowed_resources_ref if @allowed_resources_ref
+      profile
     end
   end
 end
