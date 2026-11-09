@@ -57,6 +57,7 @@ class ServiceAccountsController < ApplicationController
     previous_guid = nil
     ServiceAccountModel.db.transaction do
       space.organization.lock!
+      unprocessable!('Organization is being deleted') if space.organization.deleting?
       limit = space.organization.quota_definition.total_service_accounts
       unprocessable!('Organization service account quota exceeded') if limit != -1 && ServiceAccountModel.where(organization_id: space.organization_id).count >= limit
       ServiceAccountCreationBudget.consume(current_user, exempt: permission_queryer.can_write_globally?) do
