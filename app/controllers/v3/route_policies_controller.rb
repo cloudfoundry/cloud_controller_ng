@@ -53,6 +53,7 @@ class RoutePoliciesController < ApplicationController
 
     route = find_and_authorize_route(message.route_guid)
     validate_route_domain(route)
+    validate_account_source!(message.source)
 
     route_policy = VCAP::CloudController::RoutePolicyCreate.new(user_audit_info).create(route: route, message: message)
 
@@ -87,6 +88,17 @@ class RoutePoliciesController < ApplicationController
   end
 
   private
+
+  def validate_account_source!(source)
+    match = source.match(RoutePolicy::SERVICE_ACCOUNT_SOURCE_REGEX)
+    return unless match
+
+    account = ServiceAccountModel.first(identity_prefix: match[1], name: match[2])
+    readable = account && (permission_queryer.can_read_globally? ||
+      account.organization.managers_dataset.where(users__id: current_user.id).any? ||
+      account.entitled_spaces.any? { |space| permission_queryer.can_read_from_space?(space.id, space.organization_id) })
+    unprocessable!('Service account not found or not readable') unless readable
+  end
 
   def find_route_policy_with_route_and_space(guid)
     VCAP::CloudController::RoutePolicy.eager_graph(route: :space).where(Sequel[:route_policies][:guid] => guid).all[0]
@@ -142,14 +154,7 @@ class RoutePoliciesController < ApplicationController
     dataset = dataset.where(guid: message.guids) if message.requested?(:guids)
 
     if message.requested?(:sources)
-      conditions = message.sources.map do |src|
-        if src == 'cf:any'
-          Sequel.&(source_type: 'any', source_guid: '')
-        else
-          m = src.match(/\Acf:(app|space|org):([0-9a-f-]+)\z/)
-          Sequel.&(source_type: m[1], source_guid: m[2])
-        end
-      end
+      conditions = message.sources.map { |source| source_condition(source) }
       dataset = dataset.where(Sequel.|(*conditions))
     end
 
@@ -165,5 +170,17 @@ class RoutePoliciesController < ApplicationController
     end
 
     dataset
+  end
+
+  def source_condition(source)
+    return Sequel.&(source_type: 'any', source_guid: '') if source == 'cf:any'
+
+    if (identity = source.match(RoutePolicy::SERVICE_ACCOUNT_SOURCE_REGEX))
+      account = ServiceAccountModel.first(identity_prefix: identity[1], name: identity[2])
+      Sequel.&(source_type: 'svc', source_guid: account&.guid)
+    else
+      match = source.match(/\Acf:(app|space|org):([0-9a-f-]+)\z/)
+      Sequel.&(source_type: match[1], source_guid: match[2])
+    end
   end
 end
