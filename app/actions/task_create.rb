@@ -19,6 +19,9 @@ module VCAP::CloudController
       task = nil
       TaskModel.db.transaction do
         app.lock!
+        account = app.service_account
+        account&.lock!
+        raise InvalidTask.new('service account must be entitled to the app space') if account && !account.entitled_to?(app.space)
 
         template_process = process_from_template(message)
         task = TaskModel.create(
