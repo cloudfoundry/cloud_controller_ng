@@ -2,6 +2,15 @@ require 'spec_helper'
 
 module VCAP::CloudController
   RSpec.describe 'Service account quota concurrency' do
+    it 'checks the current quota rather than an association cached before quota lowering' do
+      org = create(:organization, service_account_prefix: 'race-team')
+      space = create(:space, organization: org)
+      cached_quota = org.quota_definition
+      account = ServiceAccountModel.new(name: 'worker-app', space: space, organization: org)
+      QuotaDefinition.where(id: cached_quota.id).update(total_service_accounts: 0)
+      expect { account.save }.to raise_error(Sequel::ValidationFailed, /quota/)
+    end
+
     it 'serializes direct account creations within an org', isolation: :truncation do
       org = create(:organization, service_account_prefix: 'race-team')
       org.quota_definition.update(total_service_accounts: 1)
