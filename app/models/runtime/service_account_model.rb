@@ -8,7 +8,8 @@ module VCAP::CloudController
                  class: 'VCAP::CloudController::Space',
                  join_table: :service_account_space_entitlements,
                  left_key: :service_account_guid, left_primary_key: :guid,
-                 right_key: :space_guid, right_primary_key: :guid
+                 right_key: :space_guid, right_primary_key: :guid,
+                 before_add: proc { |account, space| account.validate_entitled_space!(space) }
     one_to_many :apps, class: 'VCAP::CloudController::AppModel', key: :service_account_guid, primary_key: :guid
     one_to_many :labels, class: 'VCAP::CloudController::ServiceAccountLabelModel', key: :resource_guid, primary_key: :guid
     one_to_many :annotations, class: 'VCAP::CloudController::ServiceAccountAnnotationModel', key: :resource_guid, primary_key: :guid
@@ -79,6 +80,13 @@ module VCAP::CloudController
 
     def entitled_to?(space)
       organization_id == space.organization_id && entitled_spaces_dataset.where(spaces__guid: space.guid).any?
+    end
+
+    def validate_entitled_space!(space)
+      return if organization_id == space.organization_id
+
+      errors.add(:organization, 'must own every entitled space')
+      raise validation_failed_error
     end
 
     def certificate_dns_san
