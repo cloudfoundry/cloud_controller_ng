@@ -49,15 +49,21 @@ class ServiceAccountsController < ApplicationController
 
     space = Space.where(guid: message.space_guid).first
     unprocessable!('Space not found') unless space && permission_queryer.can_read_from_space?(space.id, space.organization_id)
-    unauthorized! unless permission_queryer.can_write_to_active_space?(space.id)
+    reuse = authorize_creation!(space, message)
     require_writable_space!(space)
+    unprocessable!('Organization service account prefix is unset') unless space.organization.service_account_prefix
 
     account = nil
     ServiceAccountModel.db.transaction do
+      space.organization.lock!
       ServiceAccountCreationBudget.consume(current_user, exempt: permission_queryer.can_write_globally?) do
+        if reuse
+          lifecycle_conflict!('live account name is already in use') if ServiceAccountModel.where(organization_id: space.organization_id, name: message.name).any?
+          ServiceAccountModel.db[:service_account_names].where(organization_id: space.organization_id, name: message.name).delete
+        end
         account = ServiceAccountModel.create(name: message.name, space: space)
         apply_metadata(account, message)
-        Repositories::ServiceAccountEventRepository.record(account, 'create', user_audit_info)
+        Repositories::ServiceAccountEventRepository.record(account, 'create', user_audit_info, reuse_name: reuse)
       end
     end
     render status: :created, json: Presenters::V3::ServiceAccountPresenter.new(account)
@@ -106,6 +112,14 @@ class ServiceAccountsController < ApplicationController
   end
 
   private
+
+  def authorize_creation!(space, message)
+    reuse = message.reuse_name == true
+    manager = permission_queryer.can_write_globally? || space.organization.managers_dataset.where(users__id: current_user.id).any?
+    unauthorized! if reuse && !manager
+    unauthorized! unless permission_queryer.can_write_to_active_space?(space.id) || (reuse && manager)
+    reuse
+  end
 
   def org_manager?(account)
     permission_queryer.can_write_globally? || account.organization.managers_dataset.where(users__id: current_user.id).any?

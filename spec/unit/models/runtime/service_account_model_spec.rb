@@ -32,9 +32,9 @@ module VCAP::CloudController
       end
     end
 
-    it 'enforces foundation-wide uniqueness across owners in the database' do
+    it 'enforces org-local uniqueness across spaces in the database' do
       account = reserve('payments-worker')
-      other_owner = create(:space)
+      other_owner = create(:space, organization: space.organization)
 
       expect { reserve(account.name, other_owner) }.to raise_error(Sequel::ValidationFailed, /name/)
       expect do
@@ -52,12 +52,12 @@ module VCAP::CloudController
       expect(account.reload.name).to eq('payments-worker')
     end
 
-    it 'retains the name after deletion so another owner cannot inherit it' do
+    it 'retains the name after deletion within the owning org' do
       account = reserve('payments-worker')
       account.destroy
 
       expect(model.where(guid: account.guid).first).to be_nil
-      expect { reserve('payments-worker', create(:space)) }.to raise_error(Sequel::ValidationFailed, /name/)
+      expect { reserve('payments-worker', create(:space, organization: space.organization)) }.to raise_error(Sequel::ValidationFailed, /name/)
     end
   end
 end

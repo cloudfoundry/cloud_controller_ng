@@ -2,7 +2,7 @@ require 'spec_helper'
 
 module VCAP::CloudController
   RSpec.describe 'Service account space entitlements' do
-    let(:org) { create(:organization) }
+    let(:org) { create(:organization, service_account_prefix: 'test-team') }
     let(:space) { create(:space, organization: org) }
     let(:target) { create(:space, organization: org) }
     let(:user) { create(:user) }

@@ -14,8 +14,8 @@ module VCAP::CloudController
     it 'derives a qualified subject and SAN and permits the same name in another org' do
       post '/v3/service_accounts', body.to_json, auth
       expect(last_response.status).to eq(201)
-      expect(parsed_response).to include('client_id' => 'cf:service-account:acme-payments:payments-worker',
-                                        'certificate_dns_san' => 'payments-worker.acme-payments.svc.identity')
+      expect(parsed_response['client_id']).to eq('cf:service-account:acme-payments:payments-worker')
+      expect(parsed_response['certificate_dns_san']).to eq('payments-worker.acme-payments.svc.identity')
       other = create(:space, organization: create(:organization, service_account_prefix: 'other-team'))
       post '/v3/service_accounts', body.merge(relationships: { space: { data: { guid: other.guid } } }).to_json, admin_headers_for(user)
       expect(last_response.status).to eq(201)

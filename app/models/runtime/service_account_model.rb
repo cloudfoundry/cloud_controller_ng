@@ -16,6 +16,7 @@ module VCAP::CloudController
 
     def before_validation
       self.organization = space.organization if new? && organization_id.nil? && space
+      self.identity_prefix = organization.service_account_prefix if new? && identity_prefix.nil? && organization
       super
     end
 
@@ -25,16 +26,21 @@ module VCAP::CloudController
       validates_presence :organization
       errors.add(:organization, 'must own the initial space') if new? && space && organization_id != space.organization_id
       errors.add(:organization, 'is immutable') if !new? && column_changed?(:organization_id)
+      validate_identity_immutability
       validates_format NAME_PATTERN, :name
       errors.add(:name, 'is immutable') if !new? && column_changed?(:name)
       errors.add(:space, 'is immutable') if !new? && column_changed?(:space_guid) && space_guid
+    end
+
+    def validate_identity_immutability
+      errors.add(:identity_prefix, 'is immutable') if !new? && column_changed?(:identity_prefix)
     end
 
     def around_create
       db.transaction(savepoint: true) do
         # Keep this reservation permanently, even when the account is destroyed.
         # The unique constraint, rather than a preflight query, serializes claims.
-        db[:service_account_names].insert(name: name) # rubocop:disable Rails/SkipsModelValidations -- Atomic namespace reservation, not an ActiveRecord model.
+        db[:service_account_names].insert(name: name, organization_id: organization_id) # rubocop:disable Rails/SkipsModelValidations -- Atomic namespace reservation, not an ActiveRecord model.
         yield
       end
     rescue Sequel::UniqueConstraintViolation
@@ -48,7 +54,7 @@ module VCAP::CloudController
     end
 
     def client_id
-      "cf:service-account:#{name}"
+      identity_prefix ? "cf:service-account:#{identity_prefix}:#{name}" : "cf:service-account:#{name}"
     end
 
     def in_use?
@@ -69,7 +75,12 @@ module VCAP::CloudController
     end
 
     def certificate_dns_san
-      "#{name}.svc.identity"
+      identity_prefix ? "#{name}.#{identity_prefix}.svc.identity" : "#{name}.svc.identity"
+    end
+
+    def before_destroy
+      db[:service_account_names].where(name: name, organization_id: organization_id).update(deleted_at: Sequel::CURRENT_TIMESTAMP)
+      super
     end
   end
 end

@@ -1,7 +1,7 @@
 require 'spec_helper'
 
 RSpec.describe 'Service accounts' do
-  let(:org) { create(:organization) }
+  let(:org) { create(:organization, service_account_prefix: 'test-team') }
   let(:space) { create(:space, organization: org) }
   let(:user) { create(:user) }
   let(:body) { { name: 'payments-worker', relationships: { space: { data: { guid: space.guid } } } } }
@@ -16,7 +16,7 @@ RSpec.describe 'Service accounts' do
     expect(last_response.status).to eq(201)
     result = Oj.load(last_response.body)
     expect(result).to include('name' => 'payments-worker', 'status' => 'reserved', 'enabled' => true,
-                              'client_id' => 'cf:service-account:payments-worker', 'certificate_dns_san' => 'payments-worker.svc.identity')
+                              'client_id' => 'cf:service-account:test-team:payments-worker', 'certificate_dns_san' => 'payments-worker.test-team.svc.identity')
     expect(result.dig('relationships', 'space', 'data', 'guid')).to eq(space.guid)
     expect(VCAP::CloudController::ServiceAccountModel.where(guid: result['guid']).first.space_guid).to eq(space.guid)
     event = VCAP::CloudController::Event.first(type: 'audit.service_account.create', actee: result['guid'])
