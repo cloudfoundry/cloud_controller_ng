@@ -2,6 +2,21 @@ module VCAP::CloudController
   class ServiceAccountModel < Sequel::Model(:service_accounts)
     NAME_PATTERN = /\A[a-z0-9][a-z0-9-]{1,61}[a-z0-9]\z/
 
+    def self.reservation_statistics(now: Time.now.utc)
+      reservations = db[:service_account_names]
+      history = db[:service_account_name_deletions]
+      ages = { '0-7' => 0, '8-30' => 0, '31-90' => 0, '91+' => 0 }
+      [7, 30, 90].each_with_index do |days, index|
+        younger_than = now - (days * 86_400)
+        older_than = index.zero? ? now : now - ([7, 30][index - 1] * 86_400)
+        ages[ages.keys[index]] = history.where { deleted_at >= younger_than }.where { deleted_at <= older_than }.count
+      end
+      ages['91+'] = history.where { deleted_at < now - (90 * 86_400) }.count
+      { reserved_names: reservations.count, deletions: history.count,
+        unknown_deletion_times: reservations.where(deleted_at: nil).exclude(name: dataset.select(:name)).count,
+        deletion_age_days: ages }
+    end
+
     many_to_one :space, key: :space_guid, primary_key: :guid, without_guid_generation: true
     many_to_one :organization
     many_to_many :entitled_spaces,
