@@ -17,6 +17,9 @@ module VCAP::CloudController
           return [CloudController::Errors::ApiError.new_from_details('OrganizationDeletionFailed', org.name, error_message)]
         end
 
+        account_errors = delete_service_accounts(org)
+        return [CloudController::Errors::ApiError.new_from_details('OrganizationDeletionFailed', org.name, account_errors.map(&:message).join("\n\n"))] unless account_errors.empty?
+
         domains_to_unshare = []
         org.private_domains.each do |private_domain|
           if private_domain.owning_organization == org
@@ -45,6 +48,27 @@ module VCAP::CloudController
     end
 
     private
+
+    def delete_service_accounts(org)
+      accounts = ServiceAccountModel.where(organization_id: org.id).order(:guid).all
+      return [] if accounts.empty?
+
+      provisioner = CloudController::DependencyLocator.instance.service_account_provisioner
+      accounts.each_with_object([]) do |account, errors|
+        account.db.transaction do
+          account.lock!
+          if PollableJobModel.where(resource_guid: account.guid, resource_type: 'service_account', state: %w[PROCESSING POLLING]).any?
+            raise ServiceAccountProvision::Conflict.new('service account operation is already in progress')
+          end
+
+          account.update(enabled: false, status: 'deleting')
+        end
+        Repositories::ServiceAccountEventRepository.record(account, 'delete', @user_audit_info, { recursive: true })
+        provisioner.deprovision(account, delete: true)
+      rescue StandardError => e
+        errors << e
+      end
+    end
 
     def unshare_private_domains(domains_to_unshare, org_model)
       # find all private domains that are shared with this org

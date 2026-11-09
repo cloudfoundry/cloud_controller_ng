@@ -4,7 +4,8 @@ module VCAP::CloudController
       def self.record(resource, operation, actor, metadata={})
         Event.create(
           type: "audit.#{resource.is_a?(AppModel) ? 'app.service_account' : 'service_account'}.#{operation}",
-          space: resource.space,
+          space_guid: resource.space&.guid || '',
+          organization_guid: resource.is_a?(AppModel) ? resource.space.organization.guid : resource.organization.guid,
           actee: resource.guid,
           actee_type: resource.is_a?(AppModel) ? 'app' : 'service_account',
           actee_name: resource.name,

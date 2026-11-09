@@ -98,7 +98,7 @@ module VCAP::CloudController
             errors = org_delete.delete(org_dataset)
             expect(errors.map(&:message).join).to include('UAA unavailable')
             expect(Organization.first(guid: org_1.guid)).not_to be_nil
-            expect(Space.first(guid: space.guid)).not_to be_nil
+            expect(Space.first(guid: space.guid)).to be_nil
             allow(clients).to receive(:get).and_raise(CF::UAA::NotFound)
             expect(org_delete.delete(org_dataset)).to be_empty
             expect(Organization.first(guid: org_1.guid)).to be_nil

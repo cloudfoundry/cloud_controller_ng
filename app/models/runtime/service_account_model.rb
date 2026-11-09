@@ -21,13 +21,13 @@ module VCAP::CloudController
 
     def validate
       super
-      validates_presence :space
+      validates_presence :space if new?
       validates_presence :organization
       errors.add(:organization, 'must own the initial space') if new? && space && organization_id != space.organization_id
       errors.add(:organization, 'is immutable') if !new? && column_changed?(:organization_id)
       validates_format NAME_PATTERN, :name
       errors.add(:name, 'is immutable') if !new? && column_changed?(:name)
-      errors.add(:space, 'is immutable') if !new? && column_changed?(:space_guid)
+      errors.add(:space, 'is immutable') if !new? && column_changed?(:space_guid) && space_guid
     end
 
     def around_create

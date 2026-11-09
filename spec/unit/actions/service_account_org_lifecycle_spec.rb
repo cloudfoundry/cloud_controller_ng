@@ -34,7 +34,7 @@ module VCAP::CloudController
       expect(account.entitled_spaces).to be_empty
       expect(account.space_guid).to be_nil
       expect(User.first(guid: principal.guid)).not_to be_nil
-      expect(org.users_dataset.where(id: principal.id)).to exist
+      expect(org.users_dataset.where(users__id: principal.id).any?).to be(true)
       expect(AppModel.first(guid: app.guid)).to be_nil
       expect(clients).not_to have_received(:delete)
     end

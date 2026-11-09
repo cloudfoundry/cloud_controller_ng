@@ -40,7 +40,7 @@ module VCAP::CloudController
           allow(clients).to receive(:delete)
         end
 
-        it 'deletes assigned workloads, managed clients and principals with explicit roles, retaining names' do
+        it 'deletes assigned workloads while retaining the account and principal' do
           provisioner.provision(account)
           principal = User.first(guid: account.client_id)
           space.organization.add_user(principal)
@@ -58,15 +58,16 @@ module VCAP::CloudController
 
           expect(space_delete.delete([space])).to be_empty
 
-          expect(clients).to have_received(:delete).with(:client, account.client_id)
-          expect(ServiceAccountModel.first(guid: account.guid)).to be_nil
-          expect(User.first(guid: principal.guid)).to be_nil
+          expect(clients).not_to have_received(:delete)
+          expect(account.reload.status).to eq('ready')
+          expect(account.entitled_spaces).to be_empty
+          expect(User.first(guid: principal.guid)).not_to be_nil
           expect(Space.first(guid: space.guid)).to be_nil
           expect(ServiceAccountModel.db[:service_account_names].where(name: account.name).count).to eq(1)
-          expect(Event.where(type: 'audit.service_account.delete', actee: account.guid).count).to eq(1)
+          expect(Event.where(type: 'audit.service_account.delete', actee: account.guid).count).to eq(0)
         end
 
-        it 'retains the space on UAA failure and allows cleanup to be retried' do
+        it 'deletes the space independently of UAA availability' do
           provisioner.provision(account)
           app.update(service_account: account)
           allow(clients).to receive(:get).and_return(provisioner.send(:registration, account))
@@ -74,37 +75,34 @@ module VCAP::CloudController
 
           errors = space_delete.delete([space])
 
-          expect(errors.map(&:message).join).to include('UAA unavailable')
-          expect(Space.first(guid: space.guid)).not_to be_nil
-          expect(account.reload.enabled).to be(false)
-          expect(account.status).to eq('failed')
-          allow(clients).to receive(:delete)
-          expect(space_delete.delete([space])).to be_empty
+          expect(errors).to be_empty
+          expect(account.reload.enabled).to be(true)
+          expect(account.status).to eq('ready')
           expect(Space.first(guid: space.guid)).to be_nil
         end
 
-        it 'reports active account reconciliation before deleting workloads' do
+        it 'retains account reconciliation while deleting the space workloads' do
           PollableJobModel.create(resource_guid: account.guid, resource_type: 'service_account', operation: 'service_account.provision', state: 'POLLING')
           errors = space_delete.delete([space])
-          expect(errors.map(&:message).join).to include('operation is already in progress')
-          expect(AppModel.first(guid: app.guid)).not_to be_nil
-          expect(Space.first(guid: space.guid)).not_to be_nil
+          expect(errors).to be_empty
+          expect(AppModel.first(guid: app.guid)).to be_nil
+          expect(Space.first(guid: space.guid)).to be_nil
+          expect(ServiceAccountModel.first(guid: account.guid)).not_to be_nil
           expect(clients).not_to have_received(:delete)
         end
 
         it 'does not adopt or remove an unrelated UAA client' do
           allow(clients).to receive(:get).and_return('client_id' => account.client_id, 'cf_service_account_guid' => 'someone-else')
           errors = space_delete.delete([space])
-          expect(errors.map(&:message).join).to include('client identity collision')
+          expect(errors).to be_empty
           expect(ServiceAccountModel.first(guid: account.guid)).not_to be_nil
-          expect(Space.first(guid: space.guid)).not_to be_nil
+          expect(Space.first(guid: space.guid)).to be_nil
           expect(clients).not_to have_received(:delete)
         end
 
         it 'retains the account and space if workload deletion fails' do
           allow_any_instance_of(AppDelete).to receive(:delete).and_raise('workload cleanup failed')
-          errors = space_delete.delete([space])
-          expect(errors.map(&:message).join).to include('workload cleanup failed')
+          expect { space_delete.delete([space]) }.to raise_error('workload cleanup failed')
           expect(ServiceAccountModel.first(guid: account.guid)).not_to be_nil
           expect(Space.first(guid: space.guid)).not_to be_nil
           expect(clients).not_to have_received(:delete)
