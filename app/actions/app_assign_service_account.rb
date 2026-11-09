@@ -17,6 +17,8 @@ module VCAP::CloudController
         app.lock!
         raise Unauthorized.new('not authorized to update the app') unless @permissions.can_write_to_active_space?(app.space.id)
 
+        validate_binding_change!(app, account)
+
         if account
           account.lock!
           raise Conflict.new('account must be entitled to the app space in the same organization') unless account.entitled_to?(app.space)
@@ -37,6 +39,12 @@ module VCAP::CloudController
     end
 
     private
+
+    def validate_binding_change!(app, account)
+      return unless app.service_account_guid && app.service_account_guid != account&.guid && app.service_bindings_dataset.any?
+
+      raise Conflict.new('remove service bindings before changing the service account')
+    end
 
     def record_assignment(app, account, previous_guid)
       Repositories::ServiceAccountEventRepository.record(
