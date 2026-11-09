@@ -45,5 +45,15 @@ module VCAP::CloudController
       expect(parsed_response['status']).to eq('reserved')
       expect(Event.first(type: 'audit.service_account.create', actee: parsed_response['guid']).metadata).to include('reuse_name' => true)
     end
+
+    it 'keeps deletion history when a tombstone is explicitly reused' do
+      post '/v3/service_accounts', body.to_json, auth
+      original = ServiceAccountModel.first(guid: parsed_response['guid'])
+      original.destroy
+      timestamp = ServiceAccountModel.db[:service_account_names].first(name: body[:name], organization_id: org.id)[:deleted_at]
+      post '/v3/service_accounts', body.merge(reuse_name: true).to_json, auth('org_manager')
+      expect(last_response.status).to eq(201)
+      expect(ServiceAccountModel.db[:service_account_name_deletions].first(account_guid: original.guid)).to include(deleted_at: timestamp)
+    end
   end
 end
