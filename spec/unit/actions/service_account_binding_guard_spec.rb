@@ -3,6 +3,17 @@ require 'actions/app_assign_service_account'
 
 module VCAP::CloudController
   RSpec.describe 'Service account identity binding guard' do
+    it 'allows removing an assignment when the binding predates account assignment' do
+      space = create(:space, organization: create(:organization, service_account_prefix: 'binding-team'))
+      app = create(:app_model, space: space)
+      create(:service_binding, app: app, service_instance: create(:managed_service_instance, space: space))
+      account = ServiceAccountModel.create(name: 'binding-worker', space: space, status: 'ready')
+      permissions = double(can_write_to_active_space?: true)
+      action = AppAssignServiceAccount.new(permissions)
+      action.assign(app, account)
+      expect { action.assign(app, nil) }.not_to raise_error
+    end
+
     it 'refuses to unassign an account while a broker binding depends on the identity' do
       space = create(:space)
       account = ServiceAccountModel.create(name: 'binding-worker', space: space, status: 'ready')
