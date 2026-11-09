@@ -36,12 +36,14 @@ module VCAP::CloudController
         end
 
         def build_relationships
-          {
+          relationships = {
             route: { data: { guid: route_policy.route.guid } },
             app: { data: route_policy.source_type == 'app' ? { guid: route_policy.source_guid } : nil },
             space: { data: route_policy.source_type == 'space' ? { guid: route_policy.source_guid } : nil },
             organization: { data: route_policy.source_type == 'org' ? { guid: route_policy.source_guid } : nil }
           }
+          relationships[:service_account] = { data: { guid: route_policy.source_guid } } if route_policy.source_type == 'svc'
+          relationships
         end
 
         def build_links
@@ -61,6 +63,8 @@ module VCAP::CloudController
             links[:space] = { href: url_builder.build_url(path: "/v3/spaces/#{route_policy.source_guid}") }
           when 'org'
             links[:organization] = { href: url_builder.build_url(path: "/v3/organizations/#{route_policy.source_guid}") }
+          when 'svc'
+            links[:service_account] = { href: url_builder.build_url(path: "/v3/service_accounts/#{route_policy.source_guid}") }
           end
 
           links

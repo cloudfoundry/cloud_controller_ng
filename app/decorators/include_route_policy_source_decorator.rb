@@ -31,11 +31,21 @@ module VCAP::CloudController
         hash[:included][:apps] = fetch_and_present_apps(app_guids.uniq, permission_queryer)
         hash[:included][:spaces] = fetch_and_present_spaces(space_guids.uniq, permission_queryer)
         hash[:included][:organizations] = fetch_and_present_organizations(org_guids.uniq, permission_queryer)
+        account_guids = route_policies.select { |policy| policy.source_type == 'svc' }.map(&:source_guid)
+        hash[:included][:service_accounts] = fetch_and_present_accounts(account_guids, permission_queryer) unless account_guids.empty?
 
         hash
       end
 
       private
+
+      def fetch_and_present_accounts(guids, permissions)
+        accounts = ServiceAccountModel.where(guid: guids).all.select do |account|
+          permissions.can_read_globally? || account.organization.managers_dataset.where(users__id: SecurityContext.current_user.id).any? ||
+            account.entitled_spaces.any? { |space| permissions.can_read_from_space?(space.id, space.organization_id) }
+        end
+        accounts.map { |account| Presenters::V3::ServiceAccountPresenter.new(account).to_hash }
+      end
 
       def fetch_and_present_apps(guids, permission_queryer)
         return [] if guids.empty?
