@@ -84,6 +84,11 @@ module VCAP::CloudController
         policy.notify_diego
       end
       db[:service_account_names].where(name: name, organization_id: organization_id).update(deleted_at: Sequel::CURRENT_TIMESTAMP)
+      # Durable history is independent of audit-event retention and reservation reuse.
+      # rubocop:disable Rails/SkipsModelValidations -- Sequel dataset history, not an ActiveRecord model.
+      history = { account_guid: guid, organization_guid: organization.guid, name: name, identity_prefix: identity_prefix, deleted_at: Sequel::CURRENT_TIMESTAMP }
+      db[:service_account_name_deletions].insert(history)
+      # rubocop:enable Rails/SkipsModelValidations
       super
     end
   end
