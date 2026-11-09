@@ -13,7 +13,10 @@ module VCAP::CloudController
       end
       ages['91+'] = history.where { deleted_at < now - (90 * 86_400) }.count
       { reserved_names: reservations.count, deletions: history.count,
-        unknown_deletion_times: reservations.where(deleted_at: nil).exclude(name: dataset.select(:name)).count,
+        unknown_deletion_times: reservations.where(deleted_at: nil).where(Sequel.~(dataset.where(
+          Sequel[:service_accounts][:name] => Sequel[:service_account_names][:name],
+          Sequel[:service_accounts][:organization_id] => Sequel[:service_account_names][:organization_id]
+        ).exists)).count,
         deletion_age_days: ages }
     end
 
