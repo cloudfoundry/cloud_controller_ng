@@ -83,6 +83,7 @@ class ServiceAccountsController < ApplicationController
     job = nil
     account.db.transaction do
       account.lock!
+      authorize_account_management!(account)
       apply_metadata(account, message)
       if message.requested?(:enabled)
         require_provisioning!
@@ -104,6 +105,7 @@ class ServiceAccountsController < ApplicationController
     job = nil
     account.db.transaction do
       account.lock!
+      authorize_account_management!(account)
       lifecycle_conflict!('service account is still assigned or in use') if account.in_use?
       reject_active_operation!(account)
       account.update(enabled: false, status: 'deleting')
@@ -132,7 +134,7 @@ class ServiceAccountsController < ApplicationController
   end
 
   def authorize_account_management!(account)
-    unauthorized! unless org_manager?(account) || account.entitled_spaces.any? { |space| developer?(space) && space.active? }
+    unauthorized! unless org_manager?(account) || account.entitled_spaces_dataset.all.any? { |space| developer?(space) && space.active? }
     require_writable_org!(account.organization)
   end
 
