@@ -179,7 +179,7 @@ class ServiceAccountsController < ApplicationController
       account.remove_entitled_space(space)
       Repositories::ServiceAccountEventRepository.record(account, 'unentitle', user_audit_info, space_guid: space.guid)
     end
-    spaces
+    render status: :ok, json: { data: account.entitled_spaces_dataset.all.map { |space| { guid: space.guid } } }
   end
 
   private
