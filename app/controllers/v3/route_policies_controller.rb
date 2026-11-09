@@ -93,6 +93,8 @@ class RoutePoliciesController < ApplicationController
     match = source.match(RoutePolicy::SERVICE_ACCOUNT_SOURCE_REGEX)
     return unless match
 
+    unprocessable!('Service account router contract version 2 is not enabled') unless Config.config.get(:service_account_router_contract_version) == 2
+
     account = ServiceAccountModel.first(identity_prefix: match[1], name: match[2])
     readable = account && (permission_queryer.can_read_globally? ||
       account.organization.managers_dataset.where(users__id: current_user.id).any? ||

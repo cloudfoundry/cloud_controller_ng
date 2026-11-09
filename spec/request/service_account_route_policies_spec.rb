@@ -15,6 +15,7 @@ module VCAP::CloudController
     end
 
     it 'rejects granting an unreadable account and filters qualified sources without parser failures' do
+      TestConfig.override(service_account_router_contract_version: 2)
       org = create(:organization, service_account_prefix: 'route-team')
       space = create(:space, organization: org)
       hidden_space = create(:space, organization: create(:organization, service_account_prefix: 'hidden-team'))
@@ -32,6 +33,7 @@ module VCAP::CloudController
     end
 
     it 'resolves a qualified source to an immutable account reference and removes grants on deletion' do
+      TestConfig.override(service_account_router_contract_version: 2)
       org = create(:organization, service_account_prefix: 'route-team')
       space = create(:space, organization: org)
       account = ServiceAccountModel.create(name: 'route-worker', space: space)
