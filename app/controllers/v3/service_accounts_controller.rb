@@ -149,6 +149,7 @@ class ServiceAccountsController < ApplicationController
     data = entitlement_guids
     account.db.transaction do
       account.lock!
+      lifecycle_conflict!('service account is being deleted') if account.status == 'deleting'
       require_writable_org!(account.organization)
       data.each do |guid|
         space = Space.first(guid: guid)
