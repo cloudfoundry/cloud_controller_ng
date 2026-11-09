@@ -115,5 +115,18 @@ module VCAP::CloudController
       entitle(target, auth('org_manager'))
       expect(last_response.status).to eq(409)
     end
+
+    it 'rechecks management authority after acquiring the account lock' do
+      headers = auth('space_developer')
+      account
+      allow_any_instance_of(ServiceAccountModel).to receive(:lock!).and_wrap_original do |method, *args|
+        result = method.call(*args)
+        method.receiver.remove_all_entitled_spaces
+        result
+      end
+      patch "/v3/service_accounts/#{account.guid}", { description: 'raced update' }.to_json, headers
+      expect(last_response.status).to eq(403)
+      expect(account.reload.description).to eq('')
+    end
   end
 end
