@@ -132,7 +132,7 @@ class ServiceAccountsController < ApplicationController
   end
 
   def authorize_account_management!(account)
-    unauthorized! unless org_manager?(account) || account.entitled_spaces.any? { |space| developer?(space) }
+    unauthorized! unless org_manager?(account) || account.entitled_spaces.any? { |space| developer?(space) && space.active? }
     require_writable_org!(account.organization)
   end
 
@@ -145,6 +145,7 @@ class ServiceAccountsController < ApplicationController
 
   def entitle
     account = readable_account
+    unprocessable!('Organization service account prefix is unset') unless account.organization.service_account_prefix
     data = entitlement_guids
     account.db.transaction do
       account.lock!
