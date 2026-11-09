@@ -128,5 +128,20 @@ module VCAP::CloudController
       expect(last_response.status).to eq(403)
       expect(account.reload.description).to eq('')
     end
+
+    it 'does not let a developer bootstrap authority by ordering a multi-space entitlement request' do
+      headers = auth('space_developer')
+      target.add_developer(user)
+      account.remove_all_entitled_spaces
+      post path, { data: [{ guid: target.guid }, { guid: space.guid }] }.to_json, headers
+      expect(last_response.status).to eq(404)
+    end
+
+    it 'does not entitle a space whose deletion has begun' do
+      target.update(status: Space::DELETING)
+      entitle(target, auth('org_manager'))
+      expect(last_response.status).to eq(422)
+      expect(account.reload.entitled_spaces).to contain_exactly(space)
+    end
   end
 end
