@@ -40,6 +40,7 @@ module VCAP::CloudController
     def around_create
       db.transaction(savepoint: true) do
         organization.lock!
+        reserve_legacy_namespace! unless identity_prefix
         quota = organization.quota_definition
         limit = quota.total_service_accounts
         if limit != -1 && self.class.where(organization_id: organization_id).count >= limit
@@ -54,6 +55,11 @@ module VCAP::CloudController
     rescue Sequel::UniqueConstraintViolation
       errors.add(:name, 'is already reserved')
       raise validation_failed_error
+    end
+
+    def reserve_legacy_namespace!
+      # The pre-prefix namespace remains globally reserved throughout retirement.
+      db[:legacy_service_account_names].insert(name: name) # rubocop:disable Rails/SkipsModelValidations -- Atomic Sequel namespace reservation.
     end
 
     def after_create
