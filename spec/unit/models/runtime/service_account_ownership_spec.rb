@@ -50,5 +50,13 @@ module VCAP::CloudController
       account = ServiceAccountModel.create(name: 'payments-worker', space: space)
       expect { account.add_entitled_space(create(:space)) }.to raise_error(Sequel::ValidationFailed, /organization/)
     end
+
+    it 'refuses starting a process after its desired account entitlement disappears' do
+      account = ServiceAccountModel.create(name: 'payments-worker', space: space, status: 'ready')
+      app = create(:app_model, space: space, service_account: account)
+      process = create(:process_model, app: app, state: ProcessModel::STOPPED)
+      account.remove_all_entitled_spaces
+      expect { process.update(state: ProcessModel::STARTED) }.to raise_error(Sequel::ValidationFailed, /entitled/)
+    end
   end
 end
