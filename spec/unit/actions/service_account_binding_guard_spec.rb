@@ -1,0 +1,17 @@
+require 'spec_helper'
+require 'actions/app_assign_service_account'
+
+module VCAP::CloudController
+  RSpec.describe 'Service account identity binding guard' do
+    it 'refuses to unassign an account while a broker binding depends on the identity' do
+      space = create(:space)
+      account = ServiceAccountModel.create(name: 'binding-worker', space: space, status: 'ready')
+      app = create(:app_model, space: space, service_account: account)
+      create(:service_binding, app: app, service_instance: create(:managed_service_instance, space: space))
+      permissions = double(can_write_to_active_space?: true)
+
+      expect { AppAssignServiceAccount.new(permissions).assign(app, nil) }.to raise_error(AppAssignServiceAccount::Conflict, /bindings/)
+      expect(app.reload.service_account_guid).to eq(account.guid)
+    end
+  end
+end
