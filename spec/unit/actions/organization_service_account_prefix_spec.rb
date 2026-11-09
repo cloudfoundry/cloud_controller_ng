@@ -22,7 +22,7 @@ module VCAP::CloudController
       threads.size.times { gate << true }
 
       expect(threads.map(&:value)).to contain_exactly(:created, "Service account prefix 'shared-prefix' is already reserved.")
-      expect(Organization.count).to eq(1)
+      expect(Organization.where(name: %w[org-0 org-1]).count).to eq(1)
     end
 
     it 'serializes competing allocations on the same initially unset org', isolation: :truncation do

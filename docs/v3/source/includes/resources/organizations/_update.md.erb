@@ -33,6 +33,7 @@ Name | Type | Description
 ---- | ---- | -----------
 **name** | _string_ | Organization name |
 **suspended** | _boolean_ | Whether an organization is suspended or not
+**service_account_prefix** | _string_ or _null_ | Admin only; allocate a prefix when currently unset. Must be an available lowercase RFC 1123 label of 3–63 characters with alphanumeric boundaries. Repeating the current value succeeds; changing or clearing an allocated prefix fails. Org rename does not change it; org deletion does not release it.
 **metadata.labels** | [_label object_](#labels) | Labels applied to the organization
 **metadata.annotations**  | [_annotation object_](#annotations) | Annotations applied to the organization
 
@@ -41,4 +42,4 @@ Name | Type | Description
 Role | Notes
 ---- | -----
 Admin |
-Org Manager | Cannot change the `suspended` field
+Org Manager | Cannot change the `suspended` field or supply `service_account_prefix`

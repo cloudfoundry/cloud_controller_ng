@@ -52,6 +52,7 @@ class OrganizationsV3Controller < ApplicationController
     unprocessable!(message.errors.full_messages) unless message.valid?
 
     unauthorized! if suspended_by_non_admin?(message)
+    unauthorized! if message.requested?(:service_account_prefix) && !permission_queryer.can_write_globally?
 
     org = nil
 
@@ -82,6 +83,7 @@ class OrganizationsV3Controller < ApplicationController
     unprocessable!(message.errors.full_messages) unless message.valid?
 
     unauthorized! if suspended_by_non_admin?(message)
+    unauthorized! if message.requested?(:service_account_prefix) && !permission_queryer.can_write_globally?
 
     org = OrganizationUpdate.new(user_audit_info).update(org, message)
 

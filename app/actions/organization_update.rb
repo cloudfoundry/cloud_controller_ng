@@ -10,6 +10,7 @@ module VCAP::CloudController
     def update(org, message)
       org.db.transaction do
         org.lock!
+        org.service_account_prefix = message.service_account_prefix if message.requested?(:service_account_prefix)
         org.name = message.name if message.requested?(:name)
         LabelsUpdate.update(org, message.labels, OrganizationLabelModel)
         AnnotationsUpdate.update(org, message.annotations, OrganizationAnnotationModel)
@@ -29,6 +30,9 @@ module VCAP::CloudController
     end
 
     def validation_error!(error, message)
+      prefix_errors = error.errors.on(:service_account_prefix)
+      error!("Service account prefix '#{message.service_account_prefix}' is already reserved.") if prefix_errors&.include?(:unique)
+      error!('Service account prefix is immutable once allocated.') if prefix_errors&.include?(:immutable)
       error!("Organization name '#{message.name}' is already taken.") if error.errors.on(:name)&.include?(:unique)
       error!(error.message)
     end

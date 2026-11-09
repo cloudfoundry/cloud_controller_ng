@@ -9,7 +9,7 @@ RSpec.describe 'Organization service account prefixes' do
     post '/v3/organizations', { name: name, service_account_prefix: prefix }.to_json, admin_header
   end
 
-  def allocate_prefix(prefix, auth = admin_header)
+  def allocate_prefix(prefix, auth=admin_header)
     patch "/v3/organizations/#{org.guid}", { service_account_prefix: prefix }.to_json, auth
   end
 
@@ -87,13 +87,15 @@ RSpec.describe 'Organization service account prefixes' do
   it 'retains a prefix reservation after org deletion' do
     allocate_prefix('acme-payments')
     expect(last_response.status).to eq(200)
+    expect(VCAP::CloudController::Organization.db[:service_account_prefixes].where(prefix: 'acme-payments').count).to eq(1)
     delete "/v3/organizations/#{org.guid}", nil, admin_header
     expect(last_response.status).to eq(202)
-    execute_all_jobs(expected_successes: 2, expected_failures: 0)
+    execute_all_jobs(expected_successes: 1, expected_failures: 0)
     expect(VCAP::CloudController::Organization.first(guid: org.guid)).to be_nil
+    expect(VCAP::CloudController::Organization.db[:service_account_prefixes].where(prefix: 'acme-payments').count).to eq(1)
 
     create_org('Replacement Org', 'acme-payments')
-    expect(last_response.status).to eq(422)
+    expect(last_response.status).to eq(422), last_response.body
     expect(parsed_response.dig('errors', 0, 'detail')).to include('already reserved')
   end
 
@@ -135,6 +137,9 @@ RSpec.describe 'Organization service account prefixes' do
 
   it 'does not let self-service org creators allocate a prefix' do
     create(:feature_flag, name: 'user_org_creation', enabled: true)
+    uaa_client = instance_double(VCAP::CloudController::UaaClient)
+    allow(CloudController::DependencyLocator.instance).to receive(:uaa_username_lookup_client).and_return(uaa_client)
+    allow(uaa_client).to receive(:usernames_for_ids).with([user.guid]).and_return({ user.guid => 'creator' })
 
     expect do
       post '/v3/organizations', { name: 'Self Service', service_account_prefix: 'acme-payments' }.to_json, headers_for(user)

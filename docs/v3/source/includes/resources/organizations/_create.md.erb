@@ -38,6 +38,7 @@ Name | Type | Description
 Name | Type | Description
 ---- | ---- | -----------
 **suspended** | _boolean_ | Whether an organization is suspended or not
+**service_account_prefix** | _string_ or _null_ | Admin only; reserve a foundation-unique service-account namespace. Must be a lowercase RFC 1123 label of 3–63 characters, beginning and ending with a letter or digit. Defaults to `null`; no prefix is generated. Once allocated, the prefix cannot be renamed, cleared or reassigned, and remains reserved after org deletion.
 **metadata.labels** | [_label object_](#labels) | Labels applied to the organization
 **metadata.annotations**  | [_annotation object_](#annotations) | Annotations applied to the organization
 
