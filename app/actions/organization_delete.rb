@@ -11,6 +11,9 @@ module VCAP::CloudController
 
     def delete(org_dataset)
       org_dataset.each do |org|
+        shared_errors = shared_domain_errors(org)
+        return shared_errors unless shared_errors.empty?
+
         mark_deleting_for_account_cleanup(org)
         errs = @space_deleter.delete(org.spaces_dataset)
         unless errs.empty?
@@ -49,6 +52,14 @@ module VCAP::CloudController
     end
 
     private
+
+    def shared_domain_errors(org)
+      domains = org.owned_private_domains.select(&:shared_with_any_orgs?)
+      return [] if domains.empty?
+
+      details = domains.map { |domain| "Domain '#{domain.name}' is shared with other organizations. Unshare before deleting." }.join("\n")
+      [CloudController::Errors::ApiError.new_from_details('OrganizationDeletionFailed', org.name, details)]
+    end
 
     def mark_deleting_for_account_cleanup(org)
       return unless ServiceAccountModel.where(organization_id: org.id).any?
