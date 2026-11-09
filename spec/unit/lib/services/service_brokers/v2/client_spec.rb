@@ -1449,6 +1449,12 @@ module VCAP::Services::ServiceBrokers::V2
         expect(http_client).to have_received(:put).with(anything, hash_including(context: context), anything)
       end
 
+      it 'fails closed rather than sending a credential-only bind when its captured account is missing' do
+        binding.update(service_account_guid: SecureRandom.uuid)
+        expect { client.bind(binding) }.to raise_error(VCAP::CloudController::ServiceAccountProvision::Conflict, /not found/)
+        expect(http_client).not_to have_received(:put)
+      end
+
       it 'makes a put request with correct path' do
         client.bind(binding)
 
