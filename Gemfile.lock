@@ -290,7 +290,7 @@ GEM
       rspec-expectations (>= 3.13.0, < 5.0.0)
       rspec-mocks (>= 3.13.0, < 5.0.0)
       rspec-support (>= 3.13.0, < 5.0.0)
-    rspec-support (3.13.7)
+    rspec-support (3.13.8)
     rspec-wait (1.0.2)
       rspec (>= 3.4)
     rspec_api_documentation (6.1.0)
