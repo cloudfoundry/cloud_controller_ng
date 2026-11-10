@@ -113,8 +113,6 @@ BOSH `cc.service_accounts` properties:
 - `provisioning_enabled`, `runtime_enabled`: default false.
 - `runtime_contract_version`: default 0; set 2 only when all BBS/rep/cells preserve
   prefix/name and issue qualified SANs. Qualified launches fail closed otherwise.
-- `router_contract_version`: default 0; set 2 only when all routers enforce
-  qualified account sources. Account rules fail closed on creation otherwise.
 - `token_endpoint`: HTTPS UAA mTLS endpoint, no credentials/query/fragment.
 - Worker-only `management_client_id`, `management_client_secret`, `identity_ca_ref`.
   Inline CA certificates are unsupported. Rotate named bundle contents in UAA.
@@ -140,3 +138,11 @@ Remaining external acceptance: qualified Diego/router rollout, UAA resource-poli
 support, min(300s, remaining certificate lifetime) issuance, management namespace
 confinement, provider audience interoperability and live upgrade/renewal/rotation.
 Operator contract gates are explicit assertions, not automatic cell negotiation.
+
+Ship qualified account-source support in routing-release before releasing the
+CAPI producer changes, and pin/deploy that routing version first. Existing routers
+skip unknown source types and deny when no recognized source matches; existing
+recognized rules retain their OR semantics. No extra router-version setting is
+required. cf-deployment's global `update.serial: false` permits parallel instance
+group updates and does not guarantee router-before-CAPI completion within one
+deployment. Verify the routing-first release/deployment sequence explicitly.
