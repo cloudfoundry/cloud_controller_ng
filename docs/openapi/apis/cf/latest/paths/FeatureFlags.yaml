@@ -86,6 +86,7 @@
             - app_scaling
             - diego_docker
             - diego_cnb
+            - diego_custom_stacks
             - env_var_visibility
             - hide_marketplace_from_unauthenticated_users
             - private_domain_creation
@@ -142,6 +143,7 @@
             - app_scaling
             - diego_docker
             - diego_cnb
+            - diego_custom_stacks
             - env_var_visibility
             - hide_marketplace_from_unauthenticated_users
             - private_domain_creation
