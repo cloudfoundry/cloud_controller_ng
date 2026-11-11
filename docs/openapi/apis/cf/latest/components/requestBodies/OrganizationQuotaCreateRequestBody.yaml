@@ -31,6 +31,7 @@ content:
               type:
                 - integer
                 - 'null'
+              format: int64
               description: Total log rate limit allowed for all the started processes and running tasks in an organization
             per_app_tasks:
               type:

@@ -18,6 +18,7 @@ content:
               description: Maximum memory per process in MB
             log_rate_limit_in_bytes_per_second:
               type: integer
+              format: int64
               description: Log rate limit in bytes per second
             total_instances:
               type: integer
