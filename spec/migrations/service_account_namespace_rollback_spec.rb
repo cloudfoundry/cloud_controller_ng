@@ -21,4 +21,11 @@ RSpec.describe 'Service account namespace rollback', isolation: :truncation do
     expect { Sequel::Migrator.run(db, DBMigrator::SEQUEL_MIGRATIONS, target: 20_261_109_122_999) }.not_to raise_error
     Sequel::Migrator.run(db, DBMigrator::SEQUEL_MIGRATIONS)
   end
+
+  it 'allows reverting empty account assignments and restoring their foreign key' do
+    db = Sequel::Model.db
+    expect { Sequel::Migrator.run(db, DBMigrator::SEQUEL_MIGRATIONS, target: 20_261_005_120_000) }.not_to raise_error
+    Sequel::Migrator.run(db, DBMigrator::SEQUEL_MIGRATIONS)
+    expect(db.foreign_key_list(:apps)).to include(hash_including(columns: [:service_account_guid], table: :service_accounts))
+  end
 end
