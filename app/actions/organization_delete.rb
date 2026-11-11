@@ -76,18 +76,26 @@ module VCAP::CloudController
       accounts = ServiceAccountModel.where(organization_id: org.id).order(:guid).all
       return [] if accounts.empty?
 
-      provisioner = CloudController::DependencyLocator.instance.service_account_provisioner
       accounts.each_with_object([]) do |account, errors|
+        locally_deleted = false
         account.db.transaction do
           account.lock!
           if PollableJobModel.where(resource_guid: account.guid, resource_type: 'service_account', state: %w[PROCESSING POLLING]).any?
             raise ServiceAccountProvision::Conflict.new('service account operation is already in progress')
           end
 
-          account.update(enabled: false, status: 'deleting')
+          if account.status == 'reserved' && !account.in_use?
+            Repositories::ServiceAccountEventRepository.record(account, 'delete', @user_audit_info, { recursive: true })
+            account.destroy
+            locally_deleted = true
+          else
+            account.update(enabled: false, status: 'deleting')
+          end
         end
+        next if locally_deleted
+
         Repositories::ServiceAccountEventRepository.record(account, 'delete', @user_audit_info, { recursive: true })
-        provisioner.deprovision(account, delete: true)
+        CloudController::DependencyLocator.instance.service_account_provisioner.deprovision(account, delete: true)
       rescue StandardError => e
         errors << e
       end
