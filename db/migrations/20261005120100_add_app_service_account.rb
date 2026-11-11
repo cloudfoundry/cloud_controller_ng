@@ -22,11 +22,11 @@ Sequel.migration do
   end
 
   down do
+    alter_table(:apps) { drop_foreign_key [:service_account_guid], name: :fk_apps_service_account_guid }
     VCAP::Migration.with_concurrent_timeout(self) do
       drop_index :apps, :service_account_guid, name: :apps_service_account_guid_index, concurrently: database_type == :postgres
     end
     alter_table :apps do
-      drop_foreign_key [:service_account_guid], name: :fk_apps_service_account_guid
       drop_column :service_account_guid
     end
   end

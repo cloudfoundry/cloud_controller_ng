@@ -28,6 +28,12 @@ Sequel.migration do
     duplicate_names = from(:service_account_names).group(:name).having { count.function.* > 1 }.any?
     raise Sequel::Error.new('Org-local reservations cannot be collapsed into a global namespace') if duplicate_names
 
+    # InnoDB may discard its original FK index when the composite index is added.
+    # Restore a supporting index before removing the composite one on rollback.
+    if database_type == :mysql && indexes(:service_accounts).values.none? { |index| index[:columns] == [:organization_id] }
+      alter_table(:service_accounts) { add_index :organization_id, name: :fk_service_accounts_organization, concurrently: false }
+    end
+
     alter_table :service_accounts do
       drop_index %i[organization_id name], name: :service_accounts_org_name_unique, concurrently: false
       drop_column :identity_prefix
