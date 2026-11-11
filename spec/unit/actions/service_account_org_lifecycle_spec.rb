@@ -22,7 +22,7 @@ module VCAP::CloudController
 
     it 'keeps the enabled account, principal and grants when its last space is deleted' do
       provisioner.provision(account)
-      principal = User.first(guid: account.client_id)
+      principal = create(:user, guid: account.client_id, is_oauth_client: true)
       org.add_user(principal)
       app = create(:app_model, space: space, service_account: account)
 

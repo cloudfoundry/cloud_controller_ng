@@ -42,7 +42,7 @@ module VCAP::CloudController
 
         it 'deletes assigned workloads while retaining the account and principal' do
           provisioner.provision(account)
-          principal = User.first(guid: account.client_id)
+          principal = create(:user, guid: account.client_id, is_oauth_client: true)
           space.organization.add_user(principal)
           space.add_auditor(principal)
           app.update(service_account: account)

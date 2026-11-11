@@ -25,7 +25,7 @@ module VCAP::CloudController
       restored.perform
 
       expect(account.reload.status).to eq('ready')
-      expect(User.first(guid: account.client_id).is_oauth_client).to be(true)
+      expect(User.first(guid: account.client_id)).to be_nil
       expect(restored.resource_guid).to eq(account.guid)
       expect(restored.resource_type).to eq('service_account')
       expect(restored.display_name).to eq('service_account.provision')

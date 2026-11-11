@@ -103,7 +103,7 @@ RSpec.describe 'App service account relationship' do
       expect(account.reload.status).to eq('ready')
       get URI(location).path, nil, headers('space_developer')
       expect(Oj.load(last_response.body)['state']).to eq('COMPLETE')
-      expect(VCAP::CloudController::User.first(guid: account.client_id).spaces).to be_empty
+      expect(VCAP::CloudController::User.first(guid: account.client_id)).to be_nil
     end
 
     it 'reuses the active job for repeated binding and another app sharing the account' do

@@ -27,15 +27,12 @@ module VCAP::CloudController
       }
     end
 
-    it 'creates one canonical client and a roleless OAuth principal before marking ready' do
+    it 'creates one canonical client without creating a CAPI user before marking ready' do
       allow(clients).to receive(:get).with(:client, account.client_id).and_raise(CF::UAA::NotFound)
       expect(clients).to receive(:add).with(:client, registration)
       action.provision(account)
 
-      principal = User.first(guid: account.client_id)
-      expect(principal.is_oauth_client).to be(true)
-      expect(principal.organizations).to be_empty
-      expect(principal.spaces).to be_empty
+      expect(User.first(guid: account.client_id)).to be_nil
       expect(account.reload.status).to eq('ready')
     end
 
@@ -44,7 +41,7 @@ module VCAP::CloudController
       expect(clients).not_to receive(:add)
       action.provision(account)
       action.provision(account)
-      expect(User.where(guid: account.client_id).count).to eq(1)
+      expect(User.where(guid: account.client_id).count).to eq(0)
     end
 
     it 'accepts UAA normalized inert scope during disable reconciliation' do
@@ -85,6 +82,94 @@ module VCAP::CloudController
       expect(clients).not_to receive(:get)
       expect { action.provision(account) }.to raise_error(/principal identity collision/)
       expect(account.reload.status).to eq('failed')
+    end
+
+    it 'leaves independently managed CAPI users and their roles untouched during provisioning' do
+      principal = create(:user, guid: account.client_id, is_oauth_client: true)
+      space = create(:space)
+      space.organization.add_user(principal)
+      space.add_developer(principal)
+      allow(clients).to receive(:get).and_raise(CF::UAA::NotFound)
+      allow(clients).to receive(:add)
+
+      action.provision(account)
+
+      expect(principal.reload.spaces).to include(space)
+      expect(account.reload.status).to eq('ready')
+    end
+
+    it 'does not delete an existing OAuth principal when deleting a never-provisioned account' do
+      principal = create(:user, guid: account.client_id, is_oauth_client: true)
+      space = create(:space)
+      space.organization.add_user(principal)
+      space.add_developer(principal)
+      account.update(enabled: false)
+      allow(clients).to receive(:get).and_raise(CF::UAA::NotFound)
+
+      action.deprovision(account, delete: true)
+
+      expect(ServiceAccountModel.first(guid: account.guid)).to be_nil
+      expect(principal.reload.spaces).to include(space)
+    end
+
+    it 'does not create or modify a CAPI principal when re-enabling a previously provisioned account' do
+      allow(clients).to receive(:get).and_raise(CF::UAA::NotFound)
+      allow(clients).to receive(:add)
+      action.provision(account)
+      principal = create(:user, guid: account.client_id, is_oauth_client: true, active: true)
+      space = create(:space)
+      space.organization.add_user(principal)
+      space.add_developer(principal)
+      account.update(enabled: false)
+      action.deprovision(account)
+      expect(principal.reload.active).to be(true)
+      expect(principal.spaces).to include(space)
+      principal.destroy
+      account.update(enabled: true)
+
+      action.provision(account)
+
+      expect(User.first(guid: account.client_id)).to be_nil
+      expect(account.reload.status).to eq('ready')
+    end
+
+    it 'retains the independently managed CAPI user and its roles on account deletion' do
+      allow(clients).to receive(:get).and_raise(CF::UAA::NotFound)
+      allow(clients).to receive(:add)
+      action.provision(account)
+      principal = create(:user, guid: account.client_id, is_oauth_client: true)
+      space = create(:space)
+      space.organization.add_user(principal)
+      space.add_developer(principal)
+      account.update(enabled: false)
+
+      action.deprovision(account, delete: true)
+
+      expect(User.first(guid: principal.guid).id).to eq(principal.id)
+      expect(principal.reload.spaces).to include(space)
+    end
+
+    it 'preserves explicit roles through failed re-enable and retry' do
+      allow(clients).to receive(:get).and_raise(CF::UAA::NotFound)
+      allow(clients).to receive(:add)
+      action.provision(account)
+      principal = create(:user, guid: account.client_id, is_oauth_client: true)
+      space = create(:space)
+      space.organization.add_user(principal)
+      space.add_developer(principal)
+      account.update(enabled: false)
+      action.deprovision(account)
+      account.update(enabled: true)
+      allow(clients).to receive(:add).and_raise('UAA unavailable')
+
+      expect { action.provision(account) }.to raise_error('UAA unavailable')
+      expect(principal.reload.spaces).to include(space)
+      allow(clients).to receive(:add)
+      action.provision(account)
+
+      expect(User.first(guid: account.client_id).id).to eq(principal.id)
+      expect(principal.reload.spaces).to include(space)
+      expect(account.reload.status).to eq('ready')
     end
 
     it 'does not provision disabled accounts' do
@@ -153,7 +238,7 @@ module VCAP::CloudController
         action.provision(account)
 
         expect(account.reload.status).to eq('ready')
-        expect(User.where(guid: account.client_id).count).to eq(1)
+        expect(User.where(guid: account.client_id).count).to eq(0)
         expect(WebMock::API.a_request(:post, "#{uaa_url}/oauth/clients")).not_to have_been_made
       end
 

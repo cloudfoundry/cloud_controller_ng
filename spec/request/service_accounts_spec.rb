@@ -263,7 +263,7 @@ RSpec.describe 'Service accounts' do
 
     it 'disables new authentication and enables again while retaining explicit principal roles' do
       provisioner.provision(account)
-      principal = VCAP::CloudController::User.first(guid: account.client_id)
+      principal = create(:user, guid: account.client_id, is_oauth_client: true)
       org.add_user(principal)
       space.add_developer(principal)
       registration = provisioner.send(:registration, account)
