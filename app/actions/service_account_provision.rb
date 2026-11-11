@@ -31,7 +31,6 @@ module VCAP::CloudController
               @clients.add(:client, desired)
             end
 
-            User.create(guid: account.client_id, is_oauth_client: true, active: true) unless principal
             account.update(status: 'ready')
           end
         rescue StandardError => e
@@ -53,9 +52,6 @@ module VCAP::CloudController
 
         begin
           account.db.transaction(savepoint: true) do
-            principal = User.first(guid: account.client_id)
-            raise Conflict.new('principal identity collision') if principal && !principal.is_oauth_client
-
             existing = existing_client(account.client_id)
             if existing
               raise Conflict.new('client identity collision') unless matching_registration?(existing, registration(account))
@@ -63,7 +59,6 @@ module VCAP::CloudController
               @clients.delete(:client, account.client_id)
             end
             if delete
-              principal&.destroy
               account.destroy
             else
               account.update(status: 'disabled')

@@ -81,16 +81,25 @@ staging has no account identity. Independent instance credentials remain intact.
 The managed client is secretless, client_credentials-only, bearer policy explicitly
 false for certificate binding, TTL 300, named CA bundle reference, exact SAN and
 required owning-org claim. CN/OU mappings provide instance/app/space/org attribution.
-The principal starts roleless; explicit CAPI roles plus OAuth authorities authorize
-CAPI access. Any registration difference is a collision, not adopted/reconciled.
+Binding does not create a CAPI user. CAPI users and their explicit resource roles
+are independently managed; the existing CAPI authentication flow can lazily create
+a roleless OAuth user on its first API request. OAuth authorities alone do not
+grant resource access. Any registration difference is a collision, not adopted/reconciled.
 
 Disable removes the managed registration asynchronously, stopping new token
 issuance when effective. Existing JWTs, certificate routes and external sessions
 remain valid until their own expiry/revocation. Enable recreates the registration
 and retains resource roles. Delete requires no desired/active/binding references.
 Space deletion removes workloads/entitlement but retains the org account and
-authentication. Org deletion cleans workloads, clients, principals/grants and
-accounts retryably; failed cleanup retains a deleting org. Names/prefixes persist.
+authentication. Org deletion cleans workloads, managed UAA clients and accounts
+retryably; failed cleanup retains a deleting org. Service-account deletion does
+not delete independently managed CAPI users or their roles; ordinary space/org
+deletion still removes roles on the deleted resources. Names/prefixes persist.
+
+This intentionally diverges from RFC Appendix D's automatic roleless-principal
+creation on first bind: service-account provisioning and retirement manage UAA
+clients, not CAPI user lifecycles. Existing users/roles can therefore apply to the
+same client ID after explicit identity reuse; remove those grants independently.
 
 ## Broker and routes
 
