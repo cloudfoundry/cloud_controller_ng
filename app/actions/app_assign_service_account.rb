@@ -63,7 +63,7 @@ module VCAP::CloudController
     end
 
     def provision_account(account)
-      job = PollableJobModel.first(resource_guid: account.guid, operation: 'service_account.provision', state: %w[PROCESSING POLLING])
+      job = PollableJobModel.where(resource_guid: account.guid, operation: 'service_account.provision', state: %w[PROCESSING POLLING]).for_update.first
       return job if job
 
       account.update(status: 'reconciling')
