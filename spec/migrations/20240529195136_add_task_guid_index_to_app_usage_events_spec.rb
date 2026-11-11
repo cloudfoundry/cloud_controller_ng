@@ -1,4 +1,4 @@
-require 'spec_helper'
+require 'migration_spec_helper'
 require 'migrations/helpers/migration_shared_context'
 
 RSpec.describe 'migration to add an index for task_guid on app_usage_events table', isolation: :truncation, type: :migration do

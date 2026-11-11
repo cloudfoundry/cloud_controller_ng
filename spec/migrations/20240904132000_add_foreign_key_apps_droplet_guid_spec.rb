@@ -1,4 +1,4 @@
-require 'spec_helper'
+require 'migration_spec_helper'
 require 'migrations/helpers/migration_shared_context'
 
 RSpec.describe "migration to add foreign key on column 'droplet_guid' in table 'apps'", isolation: :truncation, type: :migration do

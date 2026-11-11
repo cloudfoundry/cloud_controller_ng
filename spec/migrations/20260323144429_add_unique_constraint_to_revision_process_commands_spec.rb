@@ -1,4 +1,4 @@
-require 'spec_helper'
+require 'migration_spec_helper'
 require 'migrations/helpers/migration_shared_context'
 
 RSpec.describe 'add unique constraint to revision_process_commands', isolation: :truncation, type: :migration do

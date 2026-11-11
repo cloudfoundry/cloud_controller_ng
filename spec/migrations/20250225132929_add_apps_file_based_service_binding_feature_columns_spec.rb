@@ -1,4 +1,4 @@
-require 'spec_helper'
+require 'migration_spec_helper'
 require 'migrations/helpers/migration_shared_context'
 
 RSpec.describe 'migration to add file-based service binding feature columns to apps table', isolation: :truncation, type: :migration do
