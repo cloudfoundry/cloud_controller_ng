@@ -55,11 +55,23 @@ module VCAP::CloudController
       space.organization.add_user(writer)
       space.add_developer(writer)
       permission_queryer = Permissions.new(writer)
+      permission_checks = Queue.new
+      continue_assignments = Queue.new
+      allow(permission_queryer).to receive(:can_write_to_active_space?).and_wrap_original do |method, *args|
+        result = method.call(*args)
+        # Both transactions must read before either locks the shared account. On MySQL,
+        # this establishes repeatable-read snapshots that cannot see the other job.
+        permission_checks << true
+        continue_assignments.pop
+        result
+      end
       threads = ids.map do |guid|
         Thread.new do
           AppAssignServiceAccount.new(permission_queryer).assign(AppModel.first(guid: guid), ServiceAccountModel.first(guid: account.guid), provision: true)
         end
       end
+      Timeout.timeout(10) { ids.size.times { permission_checks.pop } }
+      ids.size.times { continue_assignments << true }
       jobs = threads.map(&:value)
       expect(jobs.map(&:guid).uniq.size).to eq(1)
       expect(PollableJobModel.where(resource_guid: account.guid).count).to eq(1)
