@@ -40,7 +40,7 @@ module VCAP::CloudController
     end
 
     it 'cleans up a zero-entitlement account on org deletion, retaining the parent after failure for retry' do
-      account
+      provisioner.provision(account)
       expect(space_delete.delete([space])).to be_empty
       allow(clients).to receive(:get).and_raise('UAA unavailable')
 
@@ -53,6 +53,43 @@ module VCAP::CloudController
       expect(org_delete.delete([org])).to be_empty
       expect(ServiceAccountModel.first(guid: account.guid)).to be_nil
       expect(Organization.first(id: org.id)).to be_nil
+    end
+
+    it 'deletes an unused reservation without provisioning configuration and retains its deletion history' do
+      guid = account.guid
+      org_guid = org.guid
+      locator = CloudController::DependencyLocator.instance
+      expect(locator).not_to receive(:service_account_provisioner)
+
+      expect(org_delete.delete([org])).to be_empty
+
+      expect(ServiceAccountModel.first(guid: guid)).to be_nil
+      expect(Organization.first(id: org.id)).to be_nil
+      expect(ServiceAccountModel.db[:service_account_names].where(name: account.name, organization_id: org.id).first[:deleted_at]).not_to be_nil
+      expect(ServiceAccountModel.db[:service_account_name_deletions].where(account_guid: guid, organization_guid: org_guid)).not_to be_empty
+      expect(Event.where(type: 'audit.service_account.delete', actee: guid)).not_to be_empty
+      expect(clients).not_to have_received(:get)
+    end
+
+    it 'retains a failed account and its org when provisioning configuration is unavailable' do
+      account.update(status: 'failed')
+      allow(CloudController::DependencyLocator.instance).to receive(:service_account_provisioner).and_raise('service account provisioning is not configured')
+
+      expect(org_delete.delete([org]).map(&:message).join).to include('service account provisioning is not configured')
+
+      expect(ServiceAccountModel.first(guid: account.guid)).not_to be_nil
+      expect(org.reload.status).to eq(Organization::DELETING)
+    end
+
+    it 'does not locally delete a reservation with an active lifecycle job' do
+      job = Jobs::Enqueuer.new(queue: Jobs::Queues.generic).enqueue_pollable(Jobs::V3::ServiceAccountProvision.new(account.guid))
+      expect(CloudController::DependencyLocator.instance).not_to receive(:service_account_provisioner)
+
+      expect(org_delete.delete([org]).map(&:message).join).to include('operation is already in progress')
+
+      expect(account.reload.status).to eq('reserved')
+      expect(PollableJobModel.first(guid: job.guid)).not_to be_nil
+      expect(org.reload.status).to eq(Organization::DELETING)
     end
 
     it 'does not bypass shared-domain deletion guards when accounts mark an org deleting' do

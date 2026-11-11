@@ -94,6 +94,7 @@ module VCAP::CloudController
           end
 
           it 'keeps the organization until account cleanup succeeds' do
+            account.update(status: 'ready')
             allow(clients).to receive(:get).and_raise('UAA unavailable')
             errors = org_delete.delete(org_dataset)
             expect(errors.map(&:message).join).to include('UAA unavailable')
