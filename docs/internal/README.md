@@ -24,7 +24,7 @@ Auth mechanisms below:
 
 - **mTLS** — Served on the mTLS internal listener (or the metrics listener for `/internal/v4/metrics`). An `/internal/*` path does not by itself imply mTLS — `ssh_access` is OAuth on the public listener, and `log_access` is mTLS **plus** an in-app OAuth check.
 - **OAuth** — CC validates the UAA token's scope in-app; served on the public listeners.
-- **Staging basic auth** — Enforced in-app by a Sinatra `before '/staging/*'` filter; served on the public listeners. Only works with a **local blobstore** (dev config) — production uses `storage-cli`, where Diego fetches a direct URL and nginx 403s `/staging/*`.
+- **Staging basic auth** — Enforced in-app by a Sinatra `before '/staging/*'` filter; served on the public listeners. Only works with a **local blobstore** (dev/local config) — BOSH deployments use `storage-cli`, where Diego fetches a signed URL directly from the blobstore and never calls these endpoints. In addition, capi-release no longer routes `/staging/*` through nginx in BOSH deployments (the `location /staging/` block was removed), so these endpoints are unreachable in any standard BOSH-deployed CF.
 
 ## Endpoints
 
@@ -46,14 +46,18 @@ Auth mechanisms below:
 
 **Routing:** Public listeners (`cc.public_tls.port` 9024; also `cc.external_port` 9022). The path `/internal/apps/...` does not match the public listener's `/internal/v` forbid rule, so it is proxied to CC and authenticated in-app.
 
+## Local blobstore endpoints (dev only, not routed in BOSH deployments)
+
+These endpoints are only used when CC is configured with `blobstore_type: local` or `local-temp-storage` — i.e. local development setups. In any standard BOSH deployment, `storage-cli` is used and Diego fetches blobs via signed URLs directly from the blobstore, never calling these endpoints. capi-release no longer emits a `location /staging/` nginx routing block, so these paths return 404 from the nginx catch-all in BOSH-deployed CF.
+
 ### GET /v2/buildpacks/:guid/download
 **Description:** Download a buildpack file. Note: this is a `/v2` public-namespace path (served on the public listener), not an `/internal/*` endpoint — its `download` action is exempt from user OAuth and gated by staging basic auth instead.
 
-**Intended Consumer:** Diego staging task (local blobstore; remote blobstores get a direct signed URL and bypass this endpoint)
+**Intended Consumer:** Diego staging task (local blobstore only; remote blobstores get a direct signed URL and bypass this endpoint)
 
 **Auth Mechanism:** Staging basic auth
 
-**Routing:** Public listeners (`cc.public_tls.port` 9024; also `cc.external_port` 9022)
+**Routing:** Public listeners (`cc.public_tls.port` 9024; also `cc.external_port` 9022) via the general `location /v2/` nginx block (when `cc.temporary_enable_v2` is true). Unlike the `/staging/*` endpoints, this path IS nginx-routed in BOSH deployments — but in-app staging basic auth and the `storage-cli` blobstore mean Diego never calls it in production (it gets a signed URL instead).
 
 ### GET /staging/packages/:guid
 **Description:** Download a package if the blobstore is local (see "Staging basic auth" above)
@@ -62,7 +66,7 @@ Auth mechanisms below:
 
 **Auth Mechanism:** Staging basic auth
 
-**Routing:** Public listeners (`cc.public_tls.port` 9024; also `cc.external_port` 9022)
+**Routing:** Public listeners (`cc.public_tls.port` 9024; also `cc.external_port` 9022). **Not routed in BOSH deployments** — capi-release does not emit a `location /staging/` nginx block; requests return 404 from the nginx catch-all.
 
 ### GET /staging/v3/droplets/:guid/download
 **Description:** Download a droplet if the blobstore is local (see "Staging basic auth" above)
@@ -71,7 +75,7 @@ Auth mechanisms below:
 
 **Auth Mechanism:** Staging basic auth
 
-**Routing:** Public listeners (`cc.public_tls.port` 9024; also `cc.external_port` 9022)
+**Routing:** Public listeners (`cc.public_tls.port` 9024; also `cc.external_port` 9022). **Not routed in BOSH deployments** — capi-release does not emit a `location /staging/` nginx block; requests return 404 from the nginx catch-all.
 
 ### GET /staging/v3/buildpack_cache/:stack/:app_guid/download
 **Description:** Download buildpack cache for a given stack and app combination if the blobstore is local (see "Staging basic auth" above)
@@ -80,7 +84,7 @@ Auth mechanisms below:
 
 **Auth Mechanism:** Staging basic auth
 
-**Routing:** Public listeners (`cc.public_tls.port` 9024; also `cc.external_port` 9022)
+**Routing:** Public listeners (`cc.public_tls.port` 9024; also `cc.external_port` 9022). **Not routed in BOSH deployments** — capi-release does not emit a `location /staging/` nginx block; requests return 404 from the nginx catch-all.
 
 ### GET /internal/v4/droplets/:guid/:droplet_checksum/download
 **Description:** Permalink for downloading a droplet.
