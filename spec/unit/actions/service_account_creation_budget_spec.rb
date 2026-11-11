@@ -8,11 +8,16 @@ module VCAP::CloudController
       principal = create(:user)
       spaces = create_list(:space, 2)
       gate = Queue.new
+      snapshots = Queue.new
+      consume_budget = Queue.new
       threads = spaces.each_with_index.map do |space, index|
         Thread.new do
           gate.pop
           ServiceAccountModel.db.transaction do
-            described_class.consume(User.first(guid: principal.guid), exempt: false) do
+            authenticated_principal = User.first(guid: principal.guid)
+            snapshots << true
+            consume_budget.pop
+            described_class.consume(authenticated_principal, exempt: false) do
               ServiceAccountModel.create(name: "worker-#{index}", space: space)
             end
           end
@@ -22,6 +27,8 @@ module VCAP::CloudController
         end
       end
       threads.size.times { gate << true }
+      Timeout.timeout(10) { threads.size.times { snapshots.pop } }
+      threads.size.times { consume_budget << true }
 
       expect(threads.map(&:value)).to contain_exactly(:created, 'ServiceAccountCreationLimitExceeded')
       expect(ServiceAccountModel.count).to eq(1)
