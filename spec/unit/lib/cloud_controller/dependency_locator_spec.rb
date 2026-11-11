@@ -131,11 +131,9 @@ RSpec.describe CloudController::DependencyLocator do
     it 'creates blobstore_url_generator with the internal_service_hostname, port, and blobstores' do
       connection_options = {
         blobstore_host: 'internal.service.hostname',
-        blobstore_external_port: 8181,
         blobstore_tls_port: 8283,
         user: 'username',
-        password: 'password',
-        mtls: true
+        password: 'password'
       }
       expect(CloudController::Blobstore::UrlGenerator).to receive(:new).
         with(hash_including(connection_options),
@@ -159,14 +157,11 @@ RSpec.describe CloudController::DependencyLocator do
       TestConfig.override(**my_config)
     end
 
-    it 'creates droplet_url_generator with the internal_service_hostname, ports, and diego flag' do
+    it 'creates droplet_url_generator with the internal_service_hostname and tls_port' do
       expect(VCAP::CloudController::Diego::DropletUrlGenerator).to receive(:new).with(
         internal_service_hostname: 'internal.service.hostname',
-        external_port: nil,
-        tls_port: 8283,
-        mtls: true
+        tls_port: 8283
       )
-      TestConfig.config.delete(:external_port)
       locator.droplet_url_generator
     end
   end

@@ -3,7 +3,7 @@ require 'cloud_controller/blobstore/client'
 module VCAP::CloudController
   class DownloadDropletsController < RestController::BaseController
     def self.dependencies
-      %i[droplet_blobstore blobstore_url_generator missing_blob_handler blob_sender droplet_url_generator]
+      %i[droplet_blobstore blobstore_url_generator missing_blob_handler blob_sender]
     end
 
     include CloudController::Errors
@@ -12,17 +12,6 @@ module VCAP::CloudController
     allow_unauthenticated_access
 
     attr_reader :blobstore
-
-    get '/internal/v2/droplets/:guid/:droplet_checksum/download', :download_droplet_http
-
-    def download_droplet_http(guid, droplet_checksum)
-      if @droplet_url_generator.mtls
-        url = @droplet_url_generator.perma_droplet_download_url(guid, droplet_checksum)
-        redirect url
-      else
-        download_droplet(guid, droplet_checksum)
-      end
-    end
 
     get '/internal/v4/droplets/:guid/:droplet_checksum/download', :download_droplet_mtls
 
@@ -38,7 +27,6 @@ module VCAP::CloudController
       @blobstore_url_generator = dependencies.fetch(:blobstore_url_generator)
       @missing_blob_handler    = dependencies.fetch(:missing_blob_handler)
       @blob_sender             = dependencies.fetch(:blob_sender)
-      @droplet_url_generator   = dependencies.fetch(:droplet_url_generator)
     end
 
     def check_app_exists(app, guid)

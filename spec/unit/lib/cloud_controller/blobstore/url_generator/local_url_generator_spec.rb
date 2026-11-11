@@ -5,12 +5,10 @@ module CloudController
   module Blobstore
     RSpec.describe LocalUrlGenerator do
       let(:blobstore_host) { 'api.example.com' }
-      let(:external_port) { 9292 }
       let(:tls_port) { 9293 }
       let(:connection_options) do
         {
           blobstore_host: blobstore_host,
-          blobstore_external_port: external_port,
           blobstore_tls_port: tls_port,
           user: username,
           password: password
@@ -36,10 +34,11 @@ module CloudController
       describe 'admin buildpacks' do
         let(:buildpack) { create(:buildpack) }
 
-        it 'gives a local URI to the blobstore host/port' do
+        it 'gives an HTTPS URI to the blobstore host/port' do
           uri = URI.parse(url_generator.admin_buildpack_download_url(buildpack))
+          expect(uri.scheme).to eql 'https'
           expect(uri.host).to eql blobstore_host
-          expect(uri.port).to eql external_port
+          expect(uri.port).to eql tls_port
           expect(uri.user).to eql 'username'
           expect(uri.password).to eql 'password'
           expect(uri.path).to eql "/v2/buildpacks/#{buildpack.guid}/download"
@@ -58,10 +57,11 @@ module CloudController
         let(:app_model) { double(:app_model, guid: Sham.guid) }
         let(:stack) { Sham.name }
 
-        it 'gives a local URI to the blobstore host/port' do
+        it 'gives an HTTPS URI to the blobstore host/port' do
           uri = URI.parse(url_generator.buildpack_cache_download_url(app_model.guid, stack))
+          expect(uri.scheme).to eql 'https'
           expect(uri.host).to eql blobstore_host
-          expect(uri.port).to eql external_port
+          expect(uri.port).to eql tls_port
           expect(uri.user).to eql 'username'
           expect(uri.password).to eql 'password'
           expect(uri.path).to eql "/staging/v3/buildpack_cache/#{stack}/#{app_model.guid}/download"
@@ -79,10 +79,11 @@ module CloudController
       describe 'droplet downloads' do
         let(:droplet) { create(:droplet_model) }
 
-        it 'returns a url to cloud controller' do
+        it 'returns an HTTPS url to cloud controller' do
           uri = URI.parse(url_generator.droplet_download_url(droplet))
+          expect(uri.scheme).to eql 'https'
           expect(uri.host).to eql blobstore_host
-          expect(uri.port).to eql external_port
+          expect(uri.port).to eql tls_port
           expect(uri.user).to eql 'username'
           expect(uri.password).to eql 'password'
           expect(uri.path).to eql "/staging/v3/droplets/#{droplet.guid}/download"
@@ -105,10 +106,11 @@ module CloudController
       describe 'package' do
         let(:package) { create(:package_model) }
 
-        it 'gives a local URI to the blobstore host/port' do
+        it 'gives an HTTPS URI to the blobstore host/port' do
           uri = URI.parse(url_generator.package_download_url(package))
+          expect(uri.scheme).to eql 'https'
           expect(uri.host).to eql blobstore_host
-          expect(uri.port).to eql external_port
+          expect(uri.port).to eql tls_port
           expect(uri.user).to eql 'username'
           expect(uri.password).to eql 'password'
           expect(uri.path).to eql "/staging/packages/#{package.guid}"
