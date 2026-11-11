@@ -22,7 +22,7 @@ module VCAP::CloudController
         if account
           account.lock!
           raise Conflict.new('organization service account prefix is unset') unless account.organization.service_account_prefix
-          raise Conflict.new('account must be entitled to the app space in the same organization') unless account.entitled_to?(app.space)
+          raise Conflict.new('account must be entitled to the app space in the same organization') unless currently_entitled?(account, app.space)
 
           validate_ready!(account, provision)
           raise Conflict.new('another service account is already assigned; unbind first') if app.service_account_guid && app.service_account_guid != account.guid
@@ -40,6 +40,11 @@ module VCAP::CloudController
     end
 
     private
+
+    def currently_entitled?(account, space)
+      account.organization_id == space.organization_id && account.db[:service_account_space_entitlements].
+        where(service_account_guid: account.guid, space_guid: space.guid).for_update.first
+    end
 
     def validate_binding_change!(app, account)
       return unless app.service_account_guid && app.service_account_guid != account&.guid && app.service_bindings_dataset.exclude(service_account_guid: nil).any?
