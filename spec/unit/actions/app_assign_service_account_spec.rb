@@ -47,6 +47,42 @@ module VCAP::CloudController
       expect { action.assign(app, account) }.to raise_error(AppAssignServiceAccount::Conflict, /not ready/)
     end
 
+    it 'rejects assignment when entitlement revocation commits after its permission snapshot', isolation: :truncation do
+      app_guid = app.guid
+      account_guid = account.guid
+      writer = create(:user)
+      space.organization.add_user(writer)
+      space.add_developer(writer)
+      permission_queryer = Permissions.new(writer)
+      permission_checked = Queue.new
+      allow(permission_queryer).to receive(:can_write_to_active_space?).and_wrap_original do |method, *args|
+        result = method.call(*args)
+        permission_checked << true
+        result
+      end
+
+      assignment = nil
+      account.db.transaction do
+        account.lock!
+        assignment = Thread.new do
+          AppAssignServiceAccount.new(permission_queryer).assign(AppModel.first(guid: app_guid), ServiceAccountModel.first(guid: account_guid))
+        rescue AppAssignServiceAccount::Conflict => e
+          e
+        end
+        Timeout.timeout(10) { permission_checked.pop }
+        account.remove_entitled_space(space)
+      end
+
+      result = Timeout.timeout(10) { assignment.value }
+      expect(result).to be_a(AppAssignServiceAccount::Conflict)
+      expect(result.message).to include('entitled')
+      expect(app.reload.service_account).to be_nil
+      expect(account.reload.entitled_spaces).to be_empty
+    ensure
+      assignment&.kill if assignment&.alive?
+      assignment&.join
+    end
+
     it 'serializes concurrent first binds to two apps into a single provisioning job', isolation: :truncation do
       account.update(status: 'reserved')
       other_app = create(:app_model, space: space)
