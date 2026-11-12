@@ -223,6 +223,39 @@ RSpec.describe 'Service accounts' do
     expect(Oj.load(last_response.body)['resources']).to eq([])
   end
 
+  it 'loads presentation associations once per page rather than once per account' do
+    auth = headers('admin')
+    accounts = Array.new(3) do |index|
+      entitled_space = create(:space, :with_service_account_prefix)
+      account = VCAP::CloudController::ServiceAccountModel.create(name: "worker-#{index}", space: entitled_space)
+      VCAP::CloudController::ServiceAccountLabelModel.create(resource_guid: account.guid, key_name: 'team', value: "team-#{index}")
+      VCAP::CloudController::ServiceAccountAnnotationModel.create(resource_guid: account.guid, key_name: 'note', value: "note-#{index}")
+      [account, entitled_space]
+    end
+
+    [1, 3].each do |per_page|
+      %w[organizations spaces service_account_labels service_account_annotations].each do |table|
+        expect do
+          get "/v3/service_accounts?per_page=#{per_page}", nil, auth
+        end.to have_queried_db_times(/SELECT .* FROM .#{table}. /i, 1)
+      end
+
+      expect(last_response.status).to eq(200)
+      resources = Oj.load(last_response.body)['resources']
+      expect(resources.size).to eq(per_page)
+      resources.each do |resource|
+        account, entitled_space = accounts.find { |entry| entry.first.guid == resource['guid'] }
+        expect(resource.dig('relationships', 'organization', 'data', 'guid')).to eq(entitled_space.organization.guid)
+        expect(resource.dig('relationships', 'spaces', 'data')).to eq([{ 'guid' => entitled_space.guid }])
+        index = account.name.delete_prefix('worker-')
+        expect(resource['metadata']).to eq({
+                                            'labels' => { 'team' => "team-#{index}" },
+                                            'annotations' => { 'note' => "note-#{index}" }
+                                          })
+      end
+    end
+  end
+
   it 'allows developer updates and hides unreadable resources' do
     own = VCAP::CloudController::ServiceAccountModel.create(name: 'payments-worker', space: space)
     patch "/v3/service_accounts/#{own.guid}", { description: 'unauthorized' }.to_json, headers('space_developer')
