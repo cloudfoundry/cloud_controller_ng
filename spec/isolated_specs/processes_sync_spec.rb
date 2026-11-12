@@ -32,7 +32,7 @@ module VCAP::CloudController
         end
 
         context 'when a missing LRP belongs to a disabled service account' do
-          let(:config) { TestConfig.config_instance }
+          let(:config) { Config.new({ service_accounts_enabled: true }) }
           let(:bbs_transport) { double(:bbs_transport) }
           let(:bbs_apps_client) { BbsAppsClient.new(bbs_transport, config) }
           let!(:blocked_process) { create(:process_model, :diego_runnable, app: create(:app_model, space: create(:space, :with_service_account_prefix))) }
