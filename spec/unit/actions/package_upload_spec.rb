@@ -5,8 +5,12 @@ module VCAP::CloudController
   RSpec.describe PackageUpload do
     subject(:package_upload) { PackageUpload.new }
 
+    let(:action_logger) { instance_double(Steno::Logger, info: nil) }
+
     before do
       allow(File).to receive(:rename)
+      allow(Steno).to receive(:logger).and_call_original
+      allow(Steno).to receive(:logger).with('cc.action.package_upload').and_return(action_logger)
     end
 
     describe '#upload_async' do
@@ -109,6 +113,14 @@ module VCAP::CloudController
         end
       end
 
+      it 'logs start and enqueue details' do
+        package_upload.upload_async(message:, package:, config:, user_audit_info:)
+
+        expect(action_logger).to have_received(:info).with('package_upload.action.start', hash_including(package_guid: package.guid, app_guid: package.app_guid))
+        expect(action_logger).to have_received(:info).with('package_upload.action.enqueued',
+                                                           hash_including(package_guid: package.guid, app_guid: package.app_guid, queue: 'cc-local-1', record_event: true))
+      end
+
       context 'when the package is invalid' do
         before do
           allow(package).to receive(:save).and_raise(Sequel::ValidationFailed.new('message'))
@@ -118,6 +130,15 @@ module VCAP::CloudController
           expect do
             package_upload.upload_async(message:, package:, config:, user_audit_info:)
           end.to raise_error(PackageUpload::InvalidPackage)
+        end
+
+        it 'logs the failure details' do
+          expect do
+            package_upload.upload_async(message:, package:, config:, user_audit_info:)
+          end.to raise_error(PackageUpload::InvalidPackage)
+
+          expect(action_logger).to have_received(:info).with('package_upload.action.failed',
+                                                             hash_including(package_guid: package.guid, app_guid: package.app_guid, error: 'message'))
         end
       end
     end
