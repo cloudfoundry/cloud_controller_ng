@@ -70,5 +70,26 @@ module VCAP::CloudController
         model.create(name: 'worker-app', space: space, identity_prefix: 'another-team')
       end.to raise_error(Sequel::ValidationFailed, /prefix/)
     end
+
+    describe '.for_client_ids' do
+      it 'selects exact qualified identities without matching other prefix and name combinations' do
+        other_space = create(:space, organization: create(:organization, service_account_prefix: 'another-team'))
+        requested = [reserve('payments-worker'), reserve('reporting-reader', other_space)]
+        reserve('reporting-reader')
+        reserve('payments-worker', other_space)
+
+        expect(model.for_client_ids(requested.map(&:client_id)).all).to match_array(requested)
+      end
+
+      it 'returns no accounts for empty, unrelated or malformed identities' do
+        reserve('payments-worker')
+        invalid_ids = ['payments-worker', 'cf:service-account:payments-worker',
+                       'cf:service-account:registry-team:payments-worker:extra',
+                       "cf:service-account:registry-team:payments-worker\n", 'other-client']
+
+        expect(model.for_client_ids([]).all).to be_empty
+        expect(model.for_client_ids(invalid_ids).all).to be_empty
+      end
+    end
   end
 end

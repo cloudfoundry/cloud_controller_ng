@@ -28,6 +28,20 @@ module VCAP::CloudController
         username_populator.transform(user1)
         expect(user1.username).to eq('Username1')
       end
+
+      it 'delegates qualified account lookup to the model while retaining UAA lookup for other users' do
+        account = ServiceAccountModel.create(name: 'payments-worker', space: create(:space, :with_service_account_prefix))
+        account_user = User.new(guid: account.client_id, is_oauth_client: true)
+        other_client = User.new(guid: 'other-client', is_oauth_client: true)
+        expect(ServiceAccountModel).to receive(:for_client_ids).with([account.client_id, other_client.guid]).and_call_original
+        expect(uaa_client).to receive(:usernames_for_ids).with(%w[1 other-client]).and_return('1' => 'Username1')
+
+        username_populator.transform([account_user, user1, other_client])
+
+        expect(account_user.username).to eq(account.name)
+        expect(user1.username).to eq('Username1')
+        expect(other_client.username).to be_nil
+      end
     end
   end
 end
