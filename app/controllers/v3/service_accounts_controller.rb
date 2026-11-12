@@ -12,7 +12,7 @@ class ServiceAccountsController < ApplicationController
   def index
     message = ServiceAccountsListMessage.from_params(query_params)
     invalid_param!(message.errors.full_messages) unless message.valid?
-    dataset = ServiceAccountModel.dataset
+    dataset = ServiceAccountModel.eager(:organization, :entitled_spaces, :labels, :annotations)
     unless permission_queryer.can_read_globally?
       entitled = ServiceAccountModel.db[:service_account_space_entitlements].where(space_guid: permission_queryer.readable_space_guids_query).select(:service_account_guid)
       managed_orgs = current_user.managed_organizations_dataset.select(:id)
