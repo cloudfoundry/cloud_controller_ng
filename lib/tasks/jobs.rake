@@ -34,6 +34,12 @@ namespace :jobs do
     args.with_defaults(name: queue)
 
     RakeConfig.context = :api
+    VCAP::CloudController::ExecutionContext::API_PUMA_WORKER.set_process_type_env
+
+    require 'prometheus/client/data_stores/direct_file_store'
+    prometheus_dir = File.join(RakeConfig.config.get(:directories, :tmpdir), 'prometheus')
+    FileUtils.mkdir_p(prometheus_dir)
+    Prometheus::Client.config.data_store = Prometheus::Client::DataStores::DirectFileStore.new(dir: prometheus_dir)
 
     CloudController::DelayedWorker.new(queues: [queue],
                                        num_threads: args.num_threads,
