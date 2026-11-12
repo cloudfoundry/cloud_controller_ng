@@ -223,6 +223,56 @@ RSpec.describe 'Service accounts' do
     expect(Oj.load(last_response.body)['resources']).to eq([])
   end
 
+  context 'common list filters' do
+    let!(:earlier_account) { VCAP::CloudController::ServiceAccountModel.create(name: 'earlier-worker', space: space) }
+    let!(:later_account) { VCAP::CloudController::ServiceAccountModel.create(name: 'later-worker', space: space) }
+
+    before do
+      earlier_account.this.update(created_at: Time.utc(2026, 1, 1), updated_at: Time.utc(2026, 1, 1))
+      later_account.this.update(created_at: Time.utc(2026, 1, 3), updated_at: Time.utc(2026, 1, 3))
+    end
+
+    it 'filters by GUID before pagination' do
+      get "/v3/service_accounts?guids=#{later_account.guid}&per_page=1", nil, headers('space_developer')
+
+      expect(last_response.status).to eq(200)
+      result = Oj.load(last_response.body)
+      expect(result['resources'].pluck('guid')).to eq([later_account.guid])
+      expect(result.dig('pagination', 'total_results')).to eq(1)
+    end
+
+    it 'filters creation timestamps' do
+      get '/v3/service_accounts?created_ats[lt]=2026-01-02T00:00:00Z', nil, headers('space_developer')
+
+      expect(last_response.status).to eq(200)
+      expect(Oj.load(last_response.body)['resources'].pluck('guid')).to eq([earlier_account.guid])
+    end
+
+    it 'filters update timestamps independently of creation time' do
+      earlier_account.this.update(updated_at: Time.utc(2026, 1, 4))
+
+      get '/v3/service_accounts?updated_ats[gte]=2026-01-04T00:00:00Z', nil, headers('space_developer')
+
+      expect(last_response.status).to eq(200)
+      expect(Oj.load(last_response.body)['resources'].pluck('guid')).to eq([earlier_account.guid])
+    end
+
+    it 'intersects GUIDs with visibility and account-specific filters' do
+      hidden = VCAP::CloudController::ServiceAccountModel.create(name: 'hidden-worker', space: create(:space, :with_service_account_prefix))
+      query = "guids=#{earlier_account.guid},#{hidden.guid}&organization_guids=#{org.guid}&space_guids=#{space.guid}&names=earlier-worker"
+
+      get "/v3/service_accounts?#{query}", nil, headers('space_developer')
+
+      expect(last_response.status).to eq(200)
+      expect(Oj.load(last_response.body)['resources'].pluck('guid')).to eq([earlier_account.guid])
+
+      get "/v3/service_accounts?guids=#{hidden.guid}", nil, headers('space_developer')
+
+      expect(last_response.status).to eq(200)
+      expect(Oj.load(last_response.body)['resources']).to be_empty
+    end
+  end
+
   it 'loads presentation associations once per page rather than once per account' do
     auth = headers('admin')
     accounts = Array.new(3) do |index|
