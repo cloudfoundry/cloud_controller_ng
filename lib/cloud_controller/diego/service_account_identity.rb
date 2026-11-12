@@ -3,6 +3,8 @@ require 'uri'
 module VCAP::CloudController
   module Diego
     class ServiceAccountIdentity
+      class NotReady < CloudController::Errors::ApiError; end
+
       def initialize(app, config, account_guid: app.service_account_guid)
         @app = app
         @config = config
@@ -49,7 +51,7 @@ module VCAP::CloudController
 
         account = ServiceAccountModel.first(guid: @account_guid)
         unless account && account.enabled && account.status == 'ready' && account.entitled_to?(@app.space)
-          raise CloudController::Errors::ApiError.new_from_details('UnprocessableEntity', 'Service account is not ready for runtime credentials')
+          raise NotReady.new_from_details('UnprocessableEntity', 'Service account is not ready for runtime credentials')
         end
 
         account

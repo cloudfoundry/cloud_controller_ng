@@ -45,11 +45,11 @@ module VCAP::CloudController
             blocked_process.app.update(service_account: account)
             blocked_process.update(service_account_guid: account.guid, service_account_snapshot: true)
             account.update(enabled: false)
-            allow(bbs_transport).to receive(:desired_lrp_scheduling_infos).and_return(
-              ::Diego::Bbs::Models::DesiredLRPSchedulingInfosResponse.new
+            allow(bbs_transport).to receive_messages(
+              desired_lrp_scheduling_infos: ::Diego::Bbs::Models::DesiredLRPSchedulingInfosResponse.new,
+              desire_lrp: ::Diego::Bbs::Models::DesiredLRPResponse.new,
+              upsert_domain: ::Diego::Bbs::Models::UpsertDomainResponse.new
             )
-            allow(bbs_transport).to receive(:desire_lrp).and_return(::Diego::Bbs::Models::DesiredLRPResponse.new)
-            allow(bbs_transport).to receive(:upsert_domain).and_return(::Diego::Bbs::Models::UpsertDomainResponse.new)
             allow(bbs_apps_client).to receive(:desire_app).and_call_original
             allow(bbs_apps_client).to receive(:bump_freshness).and_call_original
             allow(AppRecipeBuilder).to receive(:new) do |config:, process:|
