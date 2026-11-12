@@ -4,6 +4,7 @@ require 'messages/service_account_update_message'
 require 'messages/service_accounts_list_message'
 require 'messages/apps_list_message'
 require 'fetchers/app_list_fetcher'
+require 'fetchers/base_list_fetcher'
 require 'presenters/v3/app_presenter'
 require 'repositories/service_account_event_repository'
 require 'actions/service_account_creation_budget'
@@ -23,6 +24,7 @@ class ServiceAccountsController < ApplicationController
       dataset = dataset.where(guid: ServiceAccountModel.db[:service_account_space_entitlements].where(space_guid: message.space_guids).select(:service_account_guid))
     end
     dataset = dataset.where(organization_id: Organization.where(guid: message.organization_guids).select(:id)) if message.requested?(:organization_guids)
+    dataset = BaseListFetcher.filter(message, dataset, ServiceAccountModel)
     render_list(dataset, message, Presenters::V3::ServiceAccountPresenter, '/v3/service_accounts')
   end
 
