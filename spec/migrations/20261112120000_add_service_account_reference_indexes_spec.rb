@@ -39,4 +39,29 @@ RSpec.describe 'service account reference indexes', isolation: :truncation, type
     end
     expect { migration.apply(db, :down) }.not_to raise_error
   end
+
+  it 'repairs invalid PostgreSQL indexes while preserving valid indexes on subsequent retries' do
+    skip 'PostgreSQL concurrent index validity' unless db.database_type == :postgres
+
+    names = %w[service_bindings_service_account_guid_index processes_service_account_guid_state_index tasks_service_account_guid_state_index]
+    Sequel::Migrator.run(db, migrations_path, target: current_migration_index, allow_missing_migration_files: true)
+    load File.join(migrations_path, migration_filename)
+    migration = Sequel::Migration.descendants.last
+    names.each do |name|
+      db.run("UPDATE pg_index SET indisvalid = false WHERE indexrelid = '#{name}'::regclass")
+    end
+
+    migration.apply(db, :up)
+
+    names.each do |name|
+      expect(db.fetch("SELECT indisvalid FROM pg_index WHERE indexrelid = '#{name}'::regclass").get(:indisvalid)).to be(true)
+    end
+    expect(db).not_to receive(:add_index)
+    expect(db).not_to receive(:drop_index)
+    migration.apply(db, :up)
+  ensure
+    names&.each do |name|
+      db.run("UPDATE pg_index SET indisvalid = true WHERE indexrelid = '#{name}'::regclass")
+    end
+  end
 end
