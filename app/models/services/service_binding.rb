@@ -98,7 +98,7 @@ module VCAP::CloudController
     end
 
     def before_create
-      if app
+      if app && service_instance.is_a?(ManagedServiceInstance)
         app.lock!
         account = app.service_account
         account&.lock!
