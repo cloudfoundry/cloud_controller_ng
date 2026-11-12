@@ -2,6 +2,17 @@ module VCAP::CloudController
   class ServiceAccountModel < Sequel::Model(:service_accounts)
     NAME_PATTERN = /\A[a-z0-9][a-z0-9-]{1,61}[a-z0-9]\z/
 
+    def self.for_client_ids(client_ids)
+      identities = client_ids.filter_map do |client_id|
+        namespace, type, prefix, name, extra = client_id.split(':', -1)
+        next unless namespace == 'cf' && type == 'service-account' && extra.nil?
+        next unless NAME_PATTERN.match?(prefix.to_s) && NAME_PATTERN.match?(name.to_s)
+
+        { identity_prefix: prefix, name: name }
+      end
+      identities.empty? ? where(false) : where(Sequel.|(*identities))
+    end
+
     # Creation input for the initial entitlement; never persisted as ownership.
     attr_accessor :space
 
