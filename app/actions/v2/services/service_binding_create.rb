@@ -24,6 +24,15 @@ module VCAP::CloudController
     end
 
     def create(app, service_instance, message, volume_mount_services_enabled, accepts_incomplete)
+      ServiceBinding.db.transaction(savepoint: true) do
+        app.lock! if service_instance.is_a?(ManagedServiceInstance)
+        create_binding(app, service_instance, message, volume_mount_services_enabled, accepts_incomplete)
+      end
+    end
+
+    private
+
+    def create_binding(app, service_instance, message, volume_mount_services_enabled, accepts_incomplete)
       raise ServiceInstanceNotBindable unless service_instance.bindable?
       raise VolumeMountServiceDisabled if service_instance.volume_service? && !volume_mount_services_enabled
       raise SpaceMismatch unless bindable_in_space?(service_instance, app.space)
@@ -39,6 +48,8 @@ module VCAP::CloudController
         name: message.name
       )
       raise InvalidServiceBinding.new(binding.errors.full_messages.join(' ')) unless binding.valid?
+
+      binding.capture_service_account_identity!
 
       client = VCAP::Services::ServiceClientProvider.provide(instance: service_instance)
 
@@ -67,8 +78,6 @@ module VCAP::CloudController
 
       binding
     end
-
-    private
 
     def request_binding_from_broker(client, service_binding, parameters, accepts_incomplete)
       client.bind(service_binding, arbitrary_parameters: parameters, accepts_incomplete: accepts_incomplete)

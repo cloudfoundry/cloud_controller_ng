@@ -98,18 +98,24 @@ module VCAP::CloudController
     end
 
     def before_create
+      capture_service_account_identity! unless @service_account_identity_captured
+      encode_syslog_drain_url_commas
+      super
+    end
+
+    def capture_service_account_identity!
       if app && service_instance.is_a?(ManagedServiceInstance)
         app.lock!
         account = app.service_account
         account&.lock!
-        if account && !account.entitled_to?(app.space)
+        if account && !(account.organization_id == app.space.organization_id &&
+            account.db[:service_account_space_entitlements].where(service_account_guid: account.guid, space_guid: app.space_guid).for_update.first)
           errors.add(:service_account, 'must be entitled to the app space')
           raise validation_failed_error
         end
         self.service_account_guid = account&.guid
       end
-      encode_syslog_drain_url_commas
-      super
+      @service_account_identity_captured = true
     end
 
     def encode_syslog_drain_url_commas
