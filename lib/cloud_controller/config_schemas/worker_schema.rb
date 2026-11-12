@@ -35,8 +35,7 @@ module VCAP::CloudController
             identity_ca_ref: String,
             optional(:allowed_resources_ref) => String
           },
-          optional(:service_account_runtime_enabled) => bool,
-          optional(:service_account_runtime_contract_version) => Integer,
+          optional(:service_accounts_enabled) => bool,
           optional(:service_account_token_endpoint) => String,
 
           logging: {

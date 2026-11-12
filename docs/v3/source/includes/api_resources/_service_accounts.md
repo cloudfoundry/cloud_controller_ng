@@ -118,9 +118,9 @@ certificate-only route access.
 
 BOSH `cc.service_accounts` properties:
 
-- `provisioning_enabled`, `runtime_enabled`: default false.
-- `runtime_contract_version`: default 0; set 2 only when all BBS/rep/cells preserve
-  prefix/name and issue qualified SANs. Qualified launches fail closed otherwise.
+- `enabled`: default false; renders `service_accounts_enabled` for API, worker,
+  clock and deployment updater. Enable only after compatible UAA/BBS/Diego and
+  routing components are deployed. There is no numeric contract-version setting.
 - `token_endpoint`: HTTPS UAA mTLS endpoint, no credentials/query/fragment.
 - Worker-only `management_client_id`, `management_client_secret`, `identity_ca_ref`.
   Inline CA certificates are unsupported. Rotate named bundle contents in UAA.

@@ -212,7 +212,7 @@ class ServiceAccountsController < ApplicationController
   end
 
   def require_provisioning!
-    lifecycle_conflict!('service account provisioning is not enabled') unless Config.config.get(:service_account_provisioning_enabled) == true
+    lifecycle_conflict!('service accounts are not enabled') unless Config.config.get(:service_accounts_enabled) == true
   end
 
   def reject_active_operation!(account)

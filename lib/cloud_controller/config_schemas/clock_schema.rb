@@ -6,8 +6,7 @@ module VCAP::CloudController
       # rubocop:disable Metrics/BlockLength
       define_schema do
         {
-          optional(:service_account_runtime_enabled) => bool,
-          optional(:service_account_runtime_contract_version) => Integer,
+          optional(:service_accounts_enabled) => bool,
           optional(:service_account_token_endpoint) => String,
           external_port: Integer,
           external_domain: String,
