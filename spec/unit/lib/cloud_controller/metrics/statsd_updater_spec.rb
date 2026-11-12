@@ -378,6 +378,16 @@ module VCAP::CloudController::Metrics
             StatsdUpdater::RedisStore.new(redis_socket)
           end
         end
+
+        context 'when valkey is unreachable' do
+          before do
+            allow(redis).to receive(:set).and_raise(Redis::CannotConnectError)
+          end
+
+          it 'does not raise' do
+            expect { StatsdUpdater::RedisStore.new(redis_socket) }.not_to raise_error
+          end
+        end
       end
 
       it 'increments the gauge in Redis' do
@@ -388,6 +398,40 @@ module VCAP::CloudController::Metrics
       it 'decrements the gauge in Redis' do
         allow(redis).to receive(:decr).with('metrics:cc.requests.outstanding.gauge').and_return(-1)
         expect(redis_store.decrement_request_outstanding_gauge).to eq(-1)
+      end
+
+      context 'when valkey is unreachable' do
+        before do
+          allow(redis).to receive(:incr).and_raise(Redis::CannotConnectError.new('connect(2) for valkey.sock'))
+          allow(redis).to receive(:decr).and_raise(Redis::TimeoutError)
+        end
+
+        it 'does not raise when incrementing, returning nil' do
+          expect(redis_store.increment_request_outstanding_gauge).to be_nil
+        end
+
+        it 'does not raise when decrementing, returning nil' do
+          expect(redis_store.decrement_request_outstanding_gauge).to be_nil
+        end
+
+        it 'logs the connection error' do
+          logger = instance_double(Steno::Logger, warn: nil)
+          allow(Steno).to receive(:logger).and_return(logger)
+
+          redis_store.increment_request_outstanding_gauge
+
+          expect(logger).to have_received(:warn).with(/Redis::CannotConnectError/)
+        end
+      end
+
+      context 'when Redis raises a non-connection error' do
+        before do
+          allow(redis).to receive(:decr).and_raise(Redis::CommandError)
+        end
+
+        it 'propagates the error' do
+          expect { redis_store.decrement_request_outstanding_gauge }.to raise_error(Redis::CommandError)
+        end
       end
     end
   end
