@@ -3,7 +3,7 @@ require 'actions/service_account_provision' if File.exist?('app/actions/service_
 
 module VCAP::CloudController
   RSpec.describe 'Service account provisioning' do
-    let(:account) { ServiceAccountModel.create(name: 'payments-worker', space: create(:space)) }
+    let(:account) { ServiceAccountModel.create(name: 'payments-worker', space: create(:space, :with_service_account_prefix)) }
     let(:clients) { instance_double(CF::UAA::Scim) }
     let(:action) { VCAP::CloudController.const_get(:ServiceAccountProvision).new(clients, identity_ca_ref: 'diego-instance-identity') }
     let(:registration) do

@@ -4,7 +4,7 @@ require 'actions/app_assign_service_account'
 module VCAP::CloudController
   RSpec.describe 'Service account identity binding guard' do
     it 'rejects binding snapshots whose account entitlement was revoked before persistence' do
-      space = create(:space)
+      space = create(:space, :with_service_account_prefix)
       account = ServiceAccountModel.create(name: 'binding-worker', space: space, status: 'ready')
       app = create(:app_model, space: space, service_account: account)
       account.remove_all_entitled_spaces
@@ -14,7 +14,7 @@ module VCAP::CloudController
     end
 
     it 'counts identity-bearing bindings as account lifecycle references' do
-      space = create(:space)
+      space = create(:space, :with_service_account_prefix)
       account = ServiceAccountModel.create(name: 'binding-worker', space: space, status: 'ready')
       app = create(:app_model, space: space, service_account: account)
       create(:service_binding, app: app, service_instance: create(:managed_service_instance, space: space))
@@ -35,7 +35,7 @@ module VCAP::CloudController
     end
 
     it 'refuses to unassign an account while a broker binding depends on the identity' do
-      space = create(:space)
+      space = create(:space, :with_service_account_prefix)
       account = ServiceAccountModel.create(name: 'binding-worker', space: space, status: 'ready')
       app = create(:app_model, space: space, service_account: account)
       create(:service_binding, app: app, service_instance: create(:managed_service_instance, space: space))

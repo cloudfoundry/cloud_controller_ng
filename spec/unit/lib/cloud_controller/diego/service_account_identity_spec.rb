@@ -3,12 +3,13 @@ require 'cloud_controller/diego/service_account_identity' if File.exist?('lib/cl
 
 module VCAP::CloudController::Diego
   RSpec.describe 'Service account runtime identity' do
-    let(:app) { create(:app_model) }
+    let(:app) { create(:app_model, space: create(:space, :with_service_account_prefix)) }
     let(:account) { VCAP::CloudController::ServiceAccountModel.create(name: 'payments-worker', space: app.space, status: 'ready') }
     let(:identity) { VCAP::CloudController::Diego.const_get(:ServiceAccountIdentity).new(app, TestConfig.config_instance) }
 
     before do
-      TestConfig.override(service_account_runtime_enabled: true, service_account_token_endpoint: 'https://uaa.example.test/oauth/token/mtls')
+      TestConfig.override(service_account_runtime_enabled: true, service_account_runtime_contract_version: 2,
+                          service_account_token_endpoint: 'https://uaa.example.test/oauth/token/mtls')
       app.update(service_account: account)
     end
 

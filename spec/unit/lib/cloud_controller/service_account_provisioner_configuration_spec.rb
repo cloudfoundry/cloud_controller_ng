@@ -5,7 +5,7 @@ module VCAP::CloudController
   RSpec.describe 'Configured service account provisioner', job_context: :worker do
     let(:locator) { CloudController::DependencyLocator.instance }
     let(:settings) { { client_id: 'account-manager', client_secret: 'manager-secret', identity_ca_ref: 'diego-instance-identity' } }
-    let(:account) { ServiceAccountModel.create(name: 'payments-worker', space: create(:space)) }
+    let(:account) { ServiceAccountModel.create(name: 'payments-worker', space: create(:space, :with_service_account_prefix)) }
     let(:uaa_url) { 'https://uaa.service.cf.internal' }
     let(:headers) { { 'content-type' => 'application/json' } }
     let(:worker_config) { Config.read_file('config/cloud_controller.yml').merge(service_account_provisioning: settings) }

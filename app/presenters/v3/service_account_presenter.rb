@@ -20,8 +20,7 @@ module VCAP::CloudController
             enabled: @resource.enabled,
             status: @resource.status,
             relationships: { organization: { data: { guid: @resource.organization.guid } },
-                             spaces: { data: @resource.entitled_spaces.map { |space| { guid: space.guid } } },
-                             space: { data: @resource.space_guid ? { guid: @resource.space_guid } : nil } },
+                             spaces: { data: @resource.entitled_spaces.map { |space| { guid: space.guid } } } },
             links: { self: { href: url_builder.build_url(path: "/v3/service_accounts/#{@resource.guid}") } }
           }
         end

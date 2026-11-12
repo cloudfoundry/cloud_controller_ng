@@ -358,11 +358,12 @@ module VCAP::CloudController
 
           context 'with a launched service account' do
             let(:config) do
-              Config.new({ service_account_runtime_enabled: true,
+              Config.new({ service_account_runtime_enabled: true, service_account_runtime_contract_version: 2,
                            diego: { use_privileged_containers_for_running: false, lifecycle_bundles: { 'potato-stack' => 'some-uri' }, pid_limit: 100 } })
             end
 
             it 'keeps the launch identity in rebuilt LRPs after desired unbind' do
+              space.organization.update(service_account_prefix: 'recipe-team')
               account = ServiceAccountModel.create(name: 'payments-worker', space: space, status: 'ready')
               process.update(service_account_guid: account.guid, service_account_snapshot: true)
               app_model.update(service_account: nil)

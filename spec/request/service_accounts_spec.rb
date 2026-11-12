@@ -17,8 +17,8 @@ RSpec.describe 'Service accounts' do
     result = Oj.load(last_response.body)
     expect(result).to include('name' => 'payments-worker', 'status' => 'reserved', 'enabled' => true,
                               'client_id' => 'cf:service-account:test-team:payments-worker', 'certificate_dns_san' => 'payments-worker.test-team.svc.identity')
-    expect(result.dig('relationships', 'space', 'data', 'guid')).to eq(space.guid)
-    expect(VCAP::CloudController::ServiceAccountModel.where(guid: result['guid']).first.space_guid).to eq(space.guid)
+    expect(result.dig('relationships', 'organization', 'data', 'guid')).to eq(org.guid)
+    expect(result.dig('relationships', 'spaces', 'data')).to eq([{ 'guid' => space.guid }])
     event = VCAP::CloudController::Event.first(type: 'audit.service_account.create', actee: result['guid'])
     expect(event).not_to be_nil
     expect(event.actor).to eq(user.guid)
@@ -157,7 +157,7 @@ RSpec.describe 'Service accounts' do
     expect(last_response.status).to eq(403)
   end
 
-  it 'allows an owning-space member to read the account' do
+  it 'allows an entitled-space member to read the account' do
     account = VCAP::CloudController::ServiceAccountModel.create(name: 'payments-worker', space: space)
     get "/v3/service_accounts/#{account.guid}", nil, headers('space_developer')
 
@@ -203,7 +203,7 @@ RSpec.describe 'Service accounts' do
 
   it 'lists only readable accounts with pagination and space/name filters' do
     own = VCAP::CloudController::ServiceAccountModel.create(name: 'payments-worker', space: space)
-    VCAP::CloudController::ServiceAccountModel.create(name: 'hidden-worker', space: create(:space))
+    VCAP::CloudController::ServiceAccountModel.create(name: 'hidden-worker', space: create(:space, :with_service_account_prefix))
     get '/v3/service_accounts?per_page=1&names=payments-worker', nil, headers('space_developer')
     expect(last_response.status).to eq(200)
     result = Oj.load(last_response.body)
@@ -227,7 +227,7 @@ RSpec.describe 'Service accounts' do
     own = VCAP::CloudController::ServiceAccountModel.create(name: 'payments-worker', space: space)
     patch "/v3/service_accounts/#{own.guid}", { description: 'unauthorized' }.to_json, headers('space_developer')
     expect(last_response.status).to eq(200)
-    hidden = VCAP::CloudController::ServiceAccountModel.create(name: 'hidden-worker', space: create(:space))
+    hidden = VCAP::CloudController::ServiceAccountModel.create(name: 'hidden-worker', space: create(:space, :with_service_account_prefix))
     patch "/v3/service_accounts/#{hidden.guid}", { description: 'unauthorized' }.to_json, headers('space_manager')
     expect(last_response.status).to eq(404)
   end

@@ -565,6 +565,8 @@ module VCAP::CloudController
           end
 
           it 'propagates a ready service account as typed task certificate properties' do
+            app.space.organization.update(service_account_prefix: 'task-recipe-team')
+            config.config_hash[:service_account_runtime_contract_version] = 2
             config.config_hash[:service_account_runtime_enabled] = true
             account = ServiceAccountModel.create(name: 'payments-worker', space: app.space, status: 'ready')
             app.update(service_account: account)

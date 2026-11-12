@@ -6,7 +6,7 @@ module VCAP::CloudController
     it 'serializes concurrent creations by the same principal across spaces', isolation: :truncation do
       TestConfig.override(service_account_creation_limit: 1)
       principal = create(:user)
-      spaces = create_list(:space, 2)
+      spaces = create_list(:space, 2, :with_service_account_prefix)
       gate = Queue.new
       snapshots = Queue.new
       consume_budget = Queue.new

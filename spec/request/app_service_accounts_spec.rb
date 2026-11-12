@@ -146,7 +146,7 @@ RSpec.describe 'App service account relationship' do
     end
 
     it 'does not queue a cross-space account even for an administrator' do
-      other = VCAP::CloudController::ServiceAccountModel.create(name: 'other-worker', space: create(:space))
+      other = VCAP::CloudController::ServiceAccountModel.create(name: 'other-worker', space: create(:space, :with_service_account_prefix))
       patch path, { data: { guid: other.guid } }.to_json, headers('admin')
       expect(last_response.status).to eq(409)
       expect(Delayed::Job.count).to eq(0)

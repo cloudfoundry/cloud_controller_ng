@@ -74,7 +74,10 @@ module VCAP::CloudController
 
       describe 'recursive deletion' do
         context 'service accounts' do
-          let!(:account) { ServiceAccountModel.create(name: 'org-worker', space: space) }
+          let!(:account) do
+            space.organization.update(service_account_prefix: 'org-delete-team')
+            ServiceAccountModel.create(name: 'org-worker', space: space)
+          end
           let(:clients) { instance_double(CF::UAA::Scim) }
           let(:provisioner) { ServiceAccountProvision.new(clients, identity_ca_ref: 'diego-instance-identity') }
 

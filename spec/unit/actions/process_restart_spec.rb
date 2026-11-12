@@ -50,6 +50,7 @@ module VCAP::CloudController
 
       context 'when the process is STARTED' do
         it 'does not grant a newly bound account to a pre-feature launch before restart' do
+          app.space.organization.update(service_account_prefix: 'process-team')
           account = ServiceAccountModel.create(name: 'payments-worker', space: app.space, status: 'ready')
           app.update(service_account: account)
           process.this.update(service_account_snapshot: false, service_account_guid: nil)
@@ -57,6 +58,7 @@ module VCAP::CloudController
         end
 
         it 'captures account identity only at restart and preserves it after delayed assignment changes' do
+          app.space.organization.update(service_account_prefix: 'process-team')
           account = ServiceAccountModel.create(name: 'payments-worker', space: app.space, status: 'ready')
           app.update(service_account: account)
           ProcessRestart.restart(process: process, config: config, stop_in_runtime: true)

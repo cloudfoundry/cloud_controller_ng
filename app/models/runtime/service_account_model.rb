@@ -2,25 +2,9 @@ module VCAP::CloudController
   class ServiceAccountModel < Sequel::Model(:service_accounts)
     NAME_PATTERN = /\A[a-z0-9][a-z0-9-]{1,61}[a-z0-9]\z/
 
-    def self.reservation_statistics(now: Time.now.utc)
-      reservations = db[:service_account_names]
-      history = db[:service_account_name_deletions]
-      ages = { '0-7' => 0, '8-30' => 0, '31-90' => 0, '91+' => 0 }
-      [7, 30, 90].each_with_index do |days, index|
-        younger_than = now - (days * 86_400)
-        older_than = index.zero? ? now : now - ([7, 30][index - 1] * 86_400)
-        ages[ages.keys[index]] = history.where { deleted_at >= younger_than }.where { deleted_at <= older_than }.count
-      end
-      ages['91+'] = history.where { deleted_at < now - (90 * 86_400) }.count
-      { reserved_names: reservations.count, deletions: history.count,
-        unknown_deletion_times: reservations.where(deleted_at: nil).where(Sequel.~(dataset.where(
-          Sequel[:service_accounts][:name] => Sequel[:service_account_names][:name],
-          Sequel[:service_accounts][:organization_id] => Sequel[:service_account_names][:organization_id]
-        ).exists)).count,
-        deletion_age_days: ages }
-    end
+    # Creation input for the initial entitlement; never persisted as ownership.
+    attr_accessor :space
 
-    many_to_one :space, key: :space_guid, primary_key: :guid, without_guid_generation: true
     many_to_one :organization
     many_to_many :entitled_spaces,
                  class: 'VCAP::CloudController::Space',
@@ -43,22 +27,29 @@ module VCAP::CloudController
       super
       validates_presence :space if new?
       validates_presence :organization
+      validate_identity_prefix
       errors.add(:organization, 'must own the initial space') if new? && space && organization_id != space.organization_id
       errors.add(:organization, 'is immutable') if !new? && column_changed?(:organization_id)
       validate_identity_immutability
       validates_format NAME_PATTERN, :name
       errors.add(:name, 'is immutable') if !new? && column_changed?(:name)
-      errors.add(:space, 'is immutable') if !new? && column_changed?(:space_guid) && space_guid
     end
 
     def validate_identity_immutability
       errors.add(:identity_prefix, 'is immutable') if !new? && column_changed?(:identity_prefix)
     end
 
+    def validate_identity_prefix
+      validates_presence :identity_prefix
+      return unless organization
+
+      errors.add(:organization, 'service account prefix is unset') unless organization.service_account_prefix
+      errors.add(:identity_prefix, 'must match the owning organization prefix') if new? && identity_prefix != organization.service_account_prefix
+    end
+
     def around_create
       db.transaction(savepoint: true) do
         organization.lock!
-        reserve_legacy_namespace! unless identity_prefix
         quota = organization.quota_definition
         limit = quota.total_service_accounts
         if limit != -1 && self.class.where(organization_id: organization_id).count >= limit
@@ -75,18 +66,13 @@ module VCAP::CloudController
       raise validation_failed_error
     end
 
-    def reserve_legacy_namespace!
-      # The pre-prefix namespace remains globally reserved throughout retirement.
-      db[:legacy_service_account_names].insert(name: name) # rubocop:disable Rails/SkipsModelValidations -- Atomic Sequel namespace reservation.
-    end
-
     def after_create
       super
       add_entitled_space(space)
     end
 
     def client_id
-      identity_prefix ? "cf:service-account:#{identity_prefix}:#{name}" : "cf:service-account:#{name}"
+      "cf:service-account:#{identity_prefix}:#{name}"
     end
 
     def in_use?
@@ -114,7 +100,7 @@ module VCAP::CloudController
     end
 
     def certificate_dns_san
-      identity_prefix ? "#{name}.#{identity_prefix}.svc.identity" : "#{name}.svc.identity"
+      "#{name}.#{identity_prefix}.svc.identity"
     end
 
     def before_destroy

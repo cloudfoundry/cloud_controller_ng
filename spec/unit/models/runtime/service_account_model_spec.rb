@@ -2,20 +2,21 @@ require 'spec_helper'
 
 module VCAP::CloudController
   RSpec.describe 'Service account registry' do
-    let(:space) { create(:space) }
+    let(:space) { create(:space, organization: create(:organization, service_account_prefix: 'registry-team')) }
     let(:model) { VCAP::CloudController.const_get(:ServiceAccountModel) }
 
     def reserve(name, owner=space)
       model.create(name: name, space: owner)
     end
 
-    it 'reserves a space-owned identity without provisioning authentication' do
+    it 'reserves an org-owned qualified identity without provisioning authentication' do
       account = reserve('payments-worker')
 
       expect(account.guid).not_to be_empty
-      expect(account.space).to eq(space)
-      expect(account.client_id).to eq('cf:service-account:payments-worker')
-      expect(account.certificate_dns_san).to eq('payments-worker.svc.identity')
+      expect(account.organization).to eq(space.organization)
+      expect(account.entitled_spaces).to contain_exactly(space)
+      expect(account.client_id).to eq('cf:service-account:registry-team:payments-worker')
+      expect(account.certificate_dns_san).to eq('payments-worker.registry-team.svc.identity')
       expect(account.enabled).to be(true)
       expect(account.status).to eq('reserved')
     end
@@ -40,7 +41,7 @@ module VCAP::CloudController
       expect do
         model.db.transaction(savepoint: true) do
           # Deliberately bypass model validation to exercise the database constraint.
-          model.dataset.insert(account.values.except(:id, :guid).merge(guid: SecureRandom.uuid, space_guid: other_owner.guid)) # rubocop:disable Rails/SkipsModelValidations
+          model.dataset.insert(account.values.except(:id, :guid).merge(guid: SecureRandom.uuid)) # rubocop:disable Rails/SkipsModelValidations
         end
       end.to raise_error(Sequel::UniqueConstraintViolation)
     end
@@ -60,9 +61,14 @@ module VCAP::CloudController
       expect { reserve('payments-worker', create(:space, organization: space.organization)) }.to raise_error(Sequel::ValidationFailed, /name/)
     end
 
-    it 'keeps unqualified legacy identities foundation-unique across organizations' do
-      reserve('legacy-worker')
-      expect { reserve('legacy-worker', create(:space)) }.to raise_error(Sequel::ValidationFailed, /reserved/)
+    it 'rejects accounts without an allocated organization prefix' do
+      expect { reserve('worker-app', create(:space)) }.to raise_error(Sequel::ValidationFailed, /prefix/)
+    end
+
+    it 'rejects a prefix that does not belong to the owning organization' do
+      expect do
+        model.create(name: 'worker-app', space: space, identity_prefix: 'another-team')
+      end.to raise_error(Sequel::ValidationFailed, /prefix/)
     end
   end
 end

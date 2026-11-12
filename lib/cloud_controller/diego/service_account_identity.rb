@@ -12,7 +12,7 @@ module VCAP::CloudController
       def certificate_properties
         account = ready_account
         attributes = { organizational_unit: ["organization:#{@app.organization_guid}", "space:#{@app.space_guid}", "app:#{@app.guid}"] }
-        attributes[:service_account] = ::Diego::Bbs::Models::ServiceAccount.new(name: account.name, prefix: account.identity_prefix.to_s) if account
+        attributes[:service_account] = ::Diego::Bbs::Models::ServiceAccount.new(name: account.name, prefix: account.identity_prefix) if account
         ::Diego::Bbs::Models::CertificateProperties.new(attributes)
       end
 
@@ -48,7 +48,7 @@ module VCAP::CloudController
         end
 
         account = ServiceAccountModel.first(guid: @account_guid)
-        if account&.identity_prefix && @config.get(:service_account_runtime_contract_version) != 2
+        if @config.get(:service_account_runtime_contract_version) != 2
           raise CloudController::Errors::ApiError.new_from_details('UnprocessableEntity', 'Service account qualified runtime contract version 2 is not enabled')
         end
         unless account && account.enabled && account.status == 'ready' && account.entitled_to?(@app.space)

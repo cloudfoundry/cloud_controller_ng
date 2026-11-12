@@ -43,7 +43,9 @@ module VCAP::CloudController::Diego
       end
 
       it 'inherits the ready platform account discovery and overrides injected values' do
-        TestConfig.override(service_account_runtime_enabled: true, service_account_token_endpoint: 'https://uaa.example.test/oauth/token/mtls')
+        app.space.organization.update(service_account_prefix: 'task-environment-team')
+        TestConfig.override(service_account_runtime_enabled: true, service_account_runtime_contract_version: 2,
+                            service_account_token_endpoint: 'https://uaa.example.test/oauth/token/mtls')
         account = VCAP::CloudController::ServiceAccountModel.create(name: 'payments-worker', space: app.space, status: 'ready')
         app.update(service_account: account)
         task.update(service_account_guid: account.guid, service_account_snapshot: true)

@@ -2,7 +2,7 @@ require 'spec_helper'
 
 module VCAP::CloudController
   RSpec.describe 'Entitled service account app assignments' do
-    let(:space) { create(:space) }
+    let(:space) { create(:space, organization: create(:organization, service_account_prefix: 'assignment-team')) }
     let(:app) { create(:app_model, space: space) }
     let(:account) { ServiceAccountModel.create(name: 'payments-worker', space: space) }
 
@@ -36,11 +36,6 @@ module VCAP::CloudController
         app.update(space: create(:space, organization: space.organization))
       end.to raise_error(Sequel::ValidationFailed, /entitled to the app space in the same organization/)
       expect(app.reload.space).to eq(space)
-    end
-
-    it 'does not permit changing the legacy initial space' do
-      expect { account.update(space: create(:space)) }.to raise_error(Sequel::ValidationFailed, /immutable/)
-      expect(account.reload.space).to eq(space)
     end
 
     it 'prevents deleting a referenced account' do

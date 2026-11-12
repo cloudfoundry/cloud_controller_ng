@@ -3,7 +3,7 @@ require 'actions/organization_delete'
 
 module VCAP::CloudController
   RSpec.describe 'Org-owned service account lifecycle' do
-    let(:space) { create(:space) }
+    let(:space) { create(:space, organization: create(:organization, service_account_prefix: 'lifecycle-team')) }
     let(:org) { space.organization }
     let(:account) { ServiceAccountModel.create(name: 'shared-worker', space: space) }
     let(:actor) { UserAuditInfo.new(user_guid: create(:user).guid, user_email: 'manager@example.com') }
@@ -32,7 +32,6 @@ module VCAP::CloudController
       expect(account.enabled).to be(true)
       expect(account.status).to eq('ready')
       expect(account.entitled_spaces).to be_empty
-      expect(account.space_guid).to be_nil
       expect(User.first(guid: principal.guid)).not_to be_nil
       expect(org.users_dataset.where(users__id: principal.id).any?).to be(true)
       expect(AppModel.first(guid: app.guid)).to be_nil

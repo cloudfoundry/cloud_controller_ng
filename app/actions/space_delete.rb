@@ -27,7 +27,6 @@ module VCAP::CloudController
 
         Space.db.transaction do
           delete_apps(space_model)
-          ServiceAccountModel.where(space_guid: space_model.guid).update(space_guid: nil)
           space_model.destroy
           Repositories::SpaceEventRepository.new.record_space_delete_request(space_model, @user_audit_info, true)
         end

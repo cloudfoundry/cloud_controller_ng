@@ -2,14 +2,14 @@ require 'spec_helper'
 require 'actions/app_assign_service_account' if File.exist?('app/actions/app_assign_service_account.rb')
 
 module VCAP::CloudController
-  RSpec.describe 'Same-space service account assignment' do
+  RSpec.describe 'Entitled-space service account assignment' do
     let(:space) { create(:space, organization: create(:organization, service_account_prefix: 'assignment-team')) }
     let(:app) { create(:app_model, space: space) }
     let(:account) { VCAP::CloudController.const_get(:ServiceAccountModel).create(name: 'payments-worker', space: space, status: 'ready') }
     let(:permissions) { instance_double(Permissions, can_write_to_active_space?: true) }
     let(:action) { VCAP::CloudController.const_get(:AppAssignServiceAccount).new(permissions) }
 
-    it 'allows an app writer to use an account in the owning space without a use grant' do
+    it 'allows an app writer to use an account in an entitled space' do
       action.assign(app, account)
       expect(app.reload.service_account).to eq(account)
       expect(app.desired_state).to eq('STOPPED')

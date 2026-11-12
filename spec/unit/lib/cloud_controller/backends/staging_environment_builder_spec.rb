@@ -61,6 +61,7 @@ module VCAP::CloudController
       end
 
       it 'never exposes account discovery in staging even when supplied by a staging request' do
+        app.space.organization.update(service_account_prefix: 'staging-team')
         account = ServiceAccountModel.create(name: 'payments-worker', space: app.space, status: 'ready')
         app.update(service_account: account)
         result = builder.build(app, space, lifecycle, memory_limit, staging_disk_in_mb, { 'VCAP_SERVICE_ACCOUNT' => 'injected' })

@@ -40,8 +40,7 @@ Creation uses the target space to choose the org and grant the initial entitleme
 
 Optional fields: `description`, `metadata`, `reuse_name`. Identity/state and owning
 org are platform controlled. Account representations expose `organization` and
-`spaces` relationships. The nullable legacy `space` relationship is retained for
-transitional clients; use `organization`/`spaces` for new clients.
+`spaces` relationships.
 
 | Method | Path | Behavior |
 | --- | --- | --- |
@@ -128,20 +127,10 @@ BOSH `cc.service_accounts` properties:
 - Worker-only optional `allowed_resources_ref`: requires UAA named-resource-policy
   support (#4125). Leave unset until supported; CAPI does not copy audience lists.
 
-Existing POC accounts backfill org/initial entitlement without changing UUID,
-name, client ID or SAN. Immutable `identity_prefix` snapshots distinguish new
-qualified accounts from legacy accounts; allocating an org prefix does not rewrite
-old clients. Global legacy reservations protect old unqualified subjects. Retire
-legacy identities deliberately, removing external grants and allowing certificate
-expiry. Existing client registrations need deliberate profile migration/retirement;
-strict ownership checking does not overwrite old registration profiles.
-
-Coordinate writers during schema migration: old writers cannot supply required org
-ownership. Downgrade refuses populated org-local identities or duplicate org-local
-reservations rather than losing isolation. Retain backups and pinned releases.
-`ServiceAccountModel.reservation_statistics` provides counts, age buckets and unknown
-historical dates for redacted operational collection; compare timestamped samples
-for growth. No automatic reservation release is implemented.
+Accounts use only prefix-qualified identities and org ownership. The schema does
+not include migration paths for earlier unpublished proposal models. Deletion
+timestamps are retained for future operational queries; no statistics collection
+or automatic reservation release is implemented.
 
 Remaining external acceptance: qualified Diego/router rollout, UAA resource-policy
 support, min(300s, remaining certificate lifetime) issuance, management namespace
