@@ -94,6 +94,31 @@ module VCAP::CloudController
       expect(old_worker_process.reload.command).to eq('new_worker_command')
     end
 
+    it 'restarts account-bound workers using deployment-updater identity configuration' do
+      app.space.organization.update(service_account_prefix: 'updater-team')
+      account = ServiceAccountModel.create(name: 'worker-app', space: app.space, status: 'ready')
+      app.update(service_account: account)
+      settings = TestConfig.config.merge(
+        service_accounts_enabled: true,
+        service_account_token_endpoint: 'https://uaa.example.test/oauth/mtls/token'
+      )
+      updater_config = Config.new(settings, context: :deployment_updater)
+      allow(Config).to receive(:config).and_return(updater_config)
+      allow(ProcessRestart).to receive(:restart).and_call_original
+      runner = double(stop: nil)
+      allow_any_instance_of(Runners).to receive(:runner_for_process).and_return(runner)
+      expect(runner).to receive(:start).twice do
+        identity = Diego::ServiceAccountIdentity.new(app, updater_config)
+        expect(identity.certificate_properties.service_account.prefix).to eq('updater-team')
+        expect(identity.environment.fetch('VCAP_SERVICE_ACCOUNT')[:token_endpoint]).to eq('https://uaa.example.test/oauth/mtls/token')
+      end
+
+      finalize_action.call
+
+      expect(deployment.reload.state).to eq(DeploymentModel::DEPLOYED_STATE)
+      expect(old_worker_process.reload.runtime_service_account_guid).to eq(account.guid)
+    end
+
     it 'puts the deployment into its finished DEPLOYED_STATE' do
       subject.call
       deployment.reload

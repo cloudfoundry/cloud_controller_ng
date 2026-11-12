@@ -36,7 +36,7 @@ module VCAP::CloudController
         let(:provisioner) { ServiceAccountProvision.new(clients, identity_ca_ref: 'diego-instance-identity') }
 
         before do
-          TestConfig.override(service_account_provisioning_enabled: true)
+          TestConfig.override(service_accounts_enabled: true)
           CloudController::DependencyLocator.instance.register(:service_account_provisioner, provisioner)
           allow(clients).to receive(:get).and_raise(CF::UAA::NotFound)
           allow(clients).to receive(:add)

@@ -10,20 +10,20 @@ module VCAP::CloudController::Diego
       account = VCAP::CloudController::ServiceAccountModel.create(name: 'worker-app', space: source, status: 'ready')
       account.add_entitled_space(target)
       app = create(:app_model, space: target, service_account: account)
-      TestConfig.override(service_account_runtime_enabled: true, service_account_runtime_contract_version: 2)
+      TestConfig.override(service_accounts_enabled: true)
 
       properties = ServiceAccountIdentity.new(app, TestConfig.config_instance).certificate_properties
       expect(properties.service_account.to_h).to include(name: 'worker-app', prefix: 'payments-team')
     end
 
-    it 'fails closed for qualified identity until the operator enables contract version 2' do
+    it 'fails closed until service accounts are enabled' do
       org = create(:organization, service_account_prefix: 'payments-team')
       space = create(:space, organization: org)
       account = VCAP::CloudController::ServiceAccountModel.create(name: 'worker-app', space: space, status: 'ready')
       app = create(:app_model, space: space, service_account: account)
-      TestConfig.override(service_account_runtime_enabled: true)
+      TestConfig.override(service_accounts_enabled: false)
       expect { ServiceAccountIdentity.new(app, TestConfig.config_instance).certificate_properties }.
-        to raise_error(CloudController::Errors::ApiError, /qualified.*contract/)
+        to raise_error(CloudController::Errors::ApiError, /not enabled/)
     end
   end
 end

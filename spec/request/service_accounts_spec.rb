@@ -288,7 +288,7 @@ RSpec.describe 'Service accounts' do
     let(:account_path) { "/v3/service_accounts/#{account.guid}" }
 
     before do
-      TestConfig.override(service_account_provisioning_enabled: true)
+      TestConfig.override(service_accounts_enabled: true)
       CloudController::DependencyLocator.instance.register(:service_account_provisioner, provisioner)
       allow(clients).to receive(:get).and_raise(CF::UAA::NotFound)
       allow(clients).to receive(:add)

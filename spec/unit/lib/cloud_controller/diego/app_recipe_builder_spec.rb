@@ -358,7 +358,7 @@ module VCAP::CloudController
 
           context 'with a launched service account' do
             let(:config) do
-              Config.new({ service_account_runtime_enabled: true, service_account_runtime_contract_version: 2,
+              Config.new({ service_accounts_enabled: true,
                            diego: { use_privileged_containers_for_running: false, lifecycle_bundles: { 'potato-stack' => 'some-uri' }, pid_limit: 100 } })
             end
 

@@ -8,7 +8,7 @@ module VCAP::CloudController::Diego
     let(:identity) { VCAP::CloudController::Diego.const_get(:ServiceAccountIdentity).new(app, TestConfig.config_instance) }
 
     before do
-      TestConfig.override(service_account_runtime_enabled: true, service_account_runtime_contract_version: 2,
+      TestConfig.override(service_accounts_enabled: true,
                           service_account_token_endpoint: 'https://uaa.example.test/oauth/token/mtls')
       app.update(service_account: account)
     end
@@ -41,7 +41,7 @@ module VCAP::CloudController::Diego
       account.update(enabled: false)
       expect { identity.certificate_properties }.to raise_error(CloudController::Errors::ApiError, /not ready/)
       account.update(enabled: true)
-      TestConfig.config[:service_account_runtime_enabled] = false
+      TestConfig.config[:service_accounts_enabled] = false
       expect { identity.certificate_properties }.to raise_error(CloudController::Errors::ApiError, /runtime is not enabled/)
     end
 

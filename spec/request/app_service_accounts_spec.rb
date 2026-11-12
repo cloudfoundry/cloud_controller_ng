@@ -75,7 +75,7 @@ RSpec.describe 'App service account relationship' do
     let(:clients) { instance_double(CF::UAA::Scim) }
 
     before do
-      TestConfig.override(service_account_provisioning_enabled: true)
+      TestConfig.override(service_accounts_enabled: true)
       CloudController::DependencyLocator.instance.register(
         :service_account_provisioner,
         VCAP::CloudController::ServiceAccountProvision.new(clients, identity_ca_ref: 'diego-instance-identity')
