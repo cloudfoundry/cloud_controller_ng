@@ -182,6 +182,7 @@ class ServiceAccountsController < ApplicationController
       space = account.entitled_spaces_dataset.where(spaces__guid: hashed_params[:space_guid]).first
       resource_not_found!(:space) unless space
       unauthorized! unless org_manager?(account) || developer?(space)
+      require_writable_space!(space)
       lifecycle_conflict!('cannot revoke the last entitlement; delete the account instead') if !org_manager?(account) && account.entitled_spaces_dataset.one?
       lifecycle_conflict!('service account is still assigned or in use in this space') if account.in_use_in_space?(space)
       account.remove_entitled_space(space)
