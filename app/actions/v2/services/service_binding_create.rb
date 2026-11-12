@@ -24,10 +24,22 @@ module VCAP::CloudController
     end
 
     def create(app, service_instance, message, volume_mount_services_enabled, accepts_incomplete)
-      ServiceBinding.db.transaction(savepoint: true) do
+      broker_error = nil
+      binding = ServiceBinding.db.transaction(savepoint: true) do
         app.lock! if service_instance.is_a?(ManagedServiceInstance)
         create_binding(app, service_instance, message, volume_mount_services_enabled, accepts_incomplete)
+      rescue VCAP::Services::ServiceBrokers::V2::Errors::HttpClientTimeout,
+             VCAP::Services::ServiceBrokers::V2::Errors::ServiceBrokerBadResponse,
+             VCAP::Services::ServiceBrokers::V2::Errors::ServiceBrokerInvalidVolumeMounts,
+             VCAP::Services::ServiceBrokers::V2::Errors::ServiceBrokerInvalidSyslogDrainUrl,
+             VCAP::Services::ServiceBrokers::V2::Errors::ServiceBrokerResponseMalformed => e
+        # The broker client enqueues orphan mitigation before raising. Preserve
+        # those jobs; no binding has been persisted for these broker failures.
+        broker_error = e
       end
+      raise broker_error if broker_error
+
+      binding
     end
 
     private

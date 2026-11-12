@@ -248,10 +248,11 @@ RSpec.describe 'Service accounts' do
         expect(resource.dig('relationships', 'organization', 'data', 'guid')).to eq(entitled_space.organization.guid)
         expect(resource.dig('relationships', 'spaces', 'data')).to eq([{ 'guid' => entitled_space.guid }])
         index = account.name.delete_prefix('worker-')
-        expect(resource['metadata']).to eq({
-                                            'labels' => { 'team' => "team-#{index}" },
-                                            'annotations' => { 'note' => "note-#{index}" }
-                                          })
+        expected_metadata = {
+          'labels' => { 'team' => "team-#{index}" },
+          'annotations' => { 'note' => "note-#{index}" }
+        }
+        expect(resource['metadata']).to eq(expected_metadata)
       end
     end
   end
