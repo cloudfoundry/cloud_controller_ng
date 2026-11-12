@@ -87,26 +87,36 @@ module CloudController
                     files_scanned: ctrs[:digest_count],
                     duration_seconds: ctrs[:digest_duration],
                     completed: completed)
-        ec = ctrs[:exists_count]
-        ea = ctrs[:upload_attempts]
-        ee = ctrs[:exists_errors]
-        logger.info('blobstore.cp_r.exists',
-                    files_checked: ec,
-                    duration_seconds: ctrs[:exists_duration],
-                    avg_duration_seconds: ec > 0 ? ctrs[:exists_duration] / ec : 0,
-                    cache_hits: ec - ea - ee,
-                    cache_misses: ea,
-                    cache_hit_rate: (ec - ee) > 0 ? (ec - ea - ee).to_f / (ec - ee) : 0,
-                    process_spawns: ec,
-                    error_count: ee,
-                    completed: completed)
+        log_exists_phase(ctrs, completed)
+        ua = ctrs[:upload_attempts]
         logger.info('blobstore.cp_r.upload',
-                    files_to_upload: ea,
+                    files_to_upload: ua,
                     files_uploaded: ctrs[:upload_count],
-                    files_failed: ea - ctrs[:upload_count],
+                    files_failed: ua - ctrs[:upload_count],
                     duration_seconds: ctrs[:upload_duration],
                     completed: completed)
       end
+
+      def log_exists_phase(ctrs, completed)
+        checks   = ctrs[:exists_count]
+        attempts = ctrs[:upload_attempts]
+        errors   = ctrs[:exists_errors]
+        hits     = checks - attempts - errors
+        resolved = checks - errors # checks that did not error
+
+        logger.info('blobstore.cp_r.exists',
+                    files_checked: checks,
+                    duration_seconds: ctrs[:exists_duration],
+                    avg_duration_seconds: safe_div(ctrs[:exists_duration], checks),
+                    cache_hits: hits,
+                    cache_misses: attempts,
+                    cache_hit_rate: safe_div(hits, resolved),
+                    process_spawns: checks,
+                    error_count: errors,
+                    completed: completed)
+      end
+
+      def safe_div(num, denom) = denom.positive? ? num.to_f / denom : 0
 
       def partitioned_key(key)
         key             = key.to_s.downcase
