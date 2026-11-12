@@ -149,6 +149,32 @@ module VCAP::CloudController
       expect(account.reload.entitled_spaces).to contain_exactly(target)
     end
 
+    [Space::SUSPENDED, Space::DELETING].each do |state|
+      it "prevents a developer from revoking an entitlement in a #{state} space" do
+        headers = auth('space_developer')
+        account.add_entitled_space(target)
+        space.update(status: state)
+
+        delete "#{path}/#{space.guid}", nil, headers
+
+        expect(last_response.status).to eq(state == Space::DELETING ? 422 : 403)
+        expect(account.reload.entitled_spaces).to contain_exactly(space, target)
+      end
+
+      %w[org_manager admin].each do |role|
+        it "allows an #{role} to revoke an unused entitlement in a #{state} space" do
+          headers = auth(role)
+          account.add_entitled_space(target)
+          space.update(status: state)
+
+          delete "#{path}/#{space.guid}", nil, headers
+
+          expect(last_response.status).to eq(200)
+          expect(account.reload.entitled_spaces).to contain_exactly(target)
+        end
+      end
+    end
+
     it 'does not use a suspended source space to authorize entitlement expansion' do
       headers = auth('space_developer')
       target.add_developer(user)
