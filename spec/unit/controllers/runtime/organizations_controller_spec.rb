@@ -1389,6 +1389,66 @@ module VCAP::CloudController
       end
 
       context 'with recursive=true' do
+        context 'with service accounts' do
+          let(:org) { create(:organization, service_account_prefix: 'v2-delete-team') }
+          let(:space) { create(:space, organization: org) }
+          let!(:account) { ServiceAccountModel.create(name: 'worker-app', space: space) }
+          let(:clients) { instance_double(CF::UAA::Scim) }
+          let(:provisioner) { ServiceAccountProvision.new(clients, identity_ca_ref: 'diego-instance-identity') }
+
+          before do
+            allow(clients).to receive(:get).and_raise(CF::UAA::NotFound)
+            allow(clients).to receive(:add)
+            allow(clients).to receive(:delete)
+            CloudController::DependencyLocator.instance.register(:service_account_provisioner, provisioner)
+          end
+
+          it 'cleans an unused reservation without resolving UAA provisioning' do
+            expect(CloudController::DependencyLocator.instance).not_to receive(:service_account_provisioner)
+
+            delete "/v2/organizations/#{org.guid}?recursive=true"
+
+            expect(last_response).to have_status_code(204)
+            expect(ServiceAccountModel.first(guid: account.guid)).to be_nil
+            expect(Organization.first(guid: org.guid)).to be_nil
+            expect(ServiceAccountModel.db[:service_account_name_deletions].where(account_guid: account.guid)).not_to be_empty
+          end
+
+          it 'removes the managed client before deleting the account and organization' do
+            provisioner.provision(account)
+            allow(clients).to receive(:get).and_return(provisioner.send(:registration, account))
+
+            delete "/v2/organizations/#{org.guid}?recursive=true"
+
+            expect(last_response).to have_status_code(204)
+            expect(clients).to have_received(:delete).with(:client, account.client_id)
+            expect(ServiceAccountModel.first(guid: account.guid)).to be_nil
+            expect(Organization.first(guid: org.guid)).to be_nil
+            event = Event.first(type: 'audit.service_account.delete', actee: account.guid)
+            expect(event.actor).to eq(SecurityContext.current_user.guid)
+          end
+
+          it 'retains a deleting organization after UAA failure and permits cleanup retry' do
+            provisioner.provision(account)
+            allow(clients).to receive(:get).and_raise('UAA unavailable')
+
+            delete "/v2/organizations/#{org.guid}?recursive=true"
+
+            expect(last_response.status).to be >= 400
+            expect(org.reload.status).to eq(Organization::DELETING)
+            expect(Space.first(guid: space.guid)).to be_nil
+            expect(account.reload.status).to eq('failed')
+            allow(clients).to receive(:get).and_return(provisioner.send(:registration, account))
+
+            delete "/v2/organizations/#{org.guid}?recursive=true"
+
+            expect(last_response).to have_status_code(204)
+            expect(clients).to have_received(:delete).with(:client, account.client_id)
+            expect(ServiceAccountModel.first(guid: account.guid)).to be_nil
+            expect(Organization.first(guid: org.guid)).to be_nil
+          end
+        end
+
         it 'deletes the org and all of its spaces' do
           space_1 = create(:space, organization: org)
           space_2 = create(:space, organization: org)

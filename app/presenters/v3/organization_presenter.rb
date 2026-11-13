@@ -18,6 +18,7 @@ module VCAP::CloudController::Presenters::V3
         created_at: organization.created_at,
         updated_at: organization.updated_at,
         name: organization.name,
+        service_account_prefix: organization.service_account_prefix,
         suspended: organization.suspended?,
         relationships: {
           quota: {

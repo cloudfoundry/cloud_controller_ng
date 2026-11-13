@@ -1,0 +1,188 @@
+require 'spec_helper'
+
+module VCAP::CloudController
+  RSpec.describe 'Service account space entitlements' do
+    let(:org) { create(:organization, service_account_prefix: 'test-team') }
+    let(:space) { create(:space, organization: org) }
+    let(:target) { create(:space, organization: org) }
+    let(:user) { create(:user) }
+    let(:account) { ServiceAccountModel.create(name: 'shared-worker', space: space, status: 'ready') }
+    let(:path) { "/v3/service_accounts/#{account.guid}/relationships/spaces" }
+
+    def auth(role)
+      set_user_with_header_as_role(role: role, org: org, space: space, user: user)
+    end
+
+    def entitle(destination, headers)
+      post path, { data: [{ guid: destination.guid }] }.to_json, headers
+    end
+
+    it 'allows a developer of both spaces to entitle and bind a second space' do
+      headers = auth('space_developer')
+      target.add_developer(user)
+      entitle(target, headers)
+      expect(last_response.status).to eq(200)
+      expect(account.reload.entitled_spaces).to contain_exactly(space, target)
+      app = create(:app_model, space: target)
+      patch "/v3/apps/#{app.guid}/relationships/service_account", { data: { guid: account.guid } }.to_json, headers
+      expect(last_response.status).to eq(200)
+      expect(app.reload.service_account_guid).to eq(account.guid)
+    end
+
+    it 'requires development access to both an entitled source and destination space' do
+      headers = auth('space_developer')
+      entitle(target, headers)
+      expect(last_response.status).to eq(403)
+      expect(account.reload.entitled_spaces).to contain_exactly(space)
+    end
+
+    it 'rejects cross-org entitlements even for admins' do
+      entitle(create(:space), auth('admin'))
+      expect(last_response.status).to eq(422)
+      expect(account.reload.entitled_spaces).to contain_exactly(space)
+    end
+
+    it 'shows org managers zero-entitlement accounts and filters by organization' do
+      headers = auth('org_manager')
+      account.remove_all_entitled_spaces
+      get "/v3/service_accounts/#{account.guid}", nil, headers
+      expect(last_response.status).to eq(200)
+      expect(parsed_response.dig('relationships', 'organization', 'data', 'guid')).to eq(org.guid)
+      get "/v3/service_accounts?organization_guids=#{org.guid}", nil, headers
+      expect(last_response.status).to eq(200)
+      expect(parsed_response['resources'].pluck('guid')).to eq([account.guid])
+    end
+
+    it 'blocks revocation while desired or active workload references use the account' do
+      headers = auth('org_manager')
+      entitle(target, headers)
+      expect(last_response.status).to eq(200)
+      app = create(:app_model, space: target, service_account: account)
+      delete "#{path}/#{target.guid}", nil, headers
+      expect(last_response.status).to eq(409)
+      app.update(service_account: nil)
+      process = create(:process_model, app: app, state: ProcessModel::STARTED, service_account_guid: account.guid, service_account_snapshot: true)
+      process.update(service_account_guid: account.guid, service_account_snapshot: true)
+      delete "#{path}/#{target.guid}", nil, headers
+      expect(last_response.status).to eq(409)
+      process.destroy
+      delete "#{path}/#{target.guid}", nil, headers
+      expect(last_response.status).to eq(200)
+    end
+
+    it 'does not let a developer revoke the last entitlement but permits org managers' do
+      delete "#{path}/#{space.guid}", nil, auth('space_developer')
+      expect(last_response.status).to eq(409)
+      delete "#{path}/#{space.guid}", nil, auth('org_manager')
+      expect(last_response.status).to eq(200)
+      expect(account.reload.entitled_spaces).to be_empty
+    end
+
+    it 'allows a developer to create an account with an initial entitlement' do
+      body = { name: 'new-worker', relationships: { space: { data: { guid: space.guid } } } }
+      post '/v3/service_accounts', body.to_json, auth('space_developer')
+      expect(last_response.status).to eq(201)
+      expect(ServiceAccountModel.first(guid: parsed_response['guid']).entitled_spaces).to contain_exactly(space)
+    end
+
+    it 'does not let a developer in a suspended entitled space manage the account' do
+      headers = auth('space_developer')
+      account
+      space.update(status: Space::SUSPENDED)
+      patch "/v3/service_accounts/#{account.guid}", { description: 'blocked' }.to_json, headers
+      expect(last_response.status).to eq(403)
+    end
+
+    it 'refuses adding an entitlement to a deleting account' do
+      account.update(status: 'deleting', enabled: false)
+      entitle(target, auth('org_manager'))
+      expect(last_response.status).to eq(409)
+    end
+
+    it 'rechecks management authority after acquiring the account lock' do
+      headers = auth('space_developer')
+      account
+      allow_any_instance_of(ServiceAccountModel).to receive(:lock!).and_wrap_original do |method, *args|
+        result = method.call(*args)
+        method.receiver.remove_all_entitled_spaces
+        result
+      end
+      patch "/v3/service_accounts/#{account.guid}", { description: 'raced update' }.to_json, headers
+      expect(last_response.status).to eq(403)
+      expect(account.reload.description).to eq('')
+    end
+
+    it 'does not let a developer bootstrap authority by ordering a multi-space entitlement request' do
+      headers = auth('space_developer')
+      target.add_developer(user)
+      account.remove_all_entitled_spaces
+      post path, { data: [{ guid: target.guid }, { guid: space.guid }] }.to_json, headers
+      expect(last_response.status).to eq(404)
+    end
+
+    it 'does not entitle a space whose deletion has begun' do
+      target.update(status: Space::DELETING)
+      entitle(target, auth('org_manager'))
+      expect(last_response.status).to eq(422)
+      expect(account.reload.entitled_spaces).to contain_exactly(space)
+    end
+
+    it 'authorizes entitlement expansion using current source access under the account lock' do
+      headers = auth('space_developer')
+      target.add_developer(user)
+      account
+      allow_any_instance_of(ServiceAccountModel).to receive(:lock!).and_wrap_original do |method, *args|
+        result = method.call(*args)
+        method.receiver.remove_all_entitled_spaces
+        result
+      end
+      entitle(target, headers)
+      expect(last_response.status).to eq(403)
+    end
+
+    it 'returns success when revoking the callers last readable entitlement while another space remains' do
+      headers = auth('admin')
+      entitle(target, headers)
+      expect(last_response.status).to eq(200)
+      delete "#{path}/#{space.guid}", nil, auth('space_developer')
+      expect(last_response.status).to eq(200)
+      expect(account.reload.entitled_spaces).to contain_exactly(target)
+    end
+
+    [Space::SUSPENDED, Space::DELETING].each do |state|
+      it "prevents a developer from revoking an entitlement in a #{state} space" do
+        headers = auth('space_developer')
+        account.add_entitled_space(target)
+        space.update(status: state)
+
+        delete "#{path}/#{space.guid}", nil, headers
+
+        expect(last_response.status).to eq(state == Space::DELETING ? 422 : 403)
+        expect(account.reload.entitled_spaces).to contain_exactly(space, target)
+      end
+
+      %w[org_manager admin].each do |role|
+        it "allows an #{role} to revoke an unused entitlement in a #{state} space" do
+          headers = auth(role)
+          account.add_entitled_space(target)
+          space.update(status: state)
+
+          delete "#{path}/#{space.guid}", nil, headers
+
+          expect(last_response.status).to eq(200)
+          expect(account.reload.entitled_spaces).to contain_exactly(target)
+        end
+      end
+    end
+
+    it 'does not use a suspended source space to authorize entitlement expansion' do
+      headers = auth('space_developer')
+      target.add_developer(user)
+      account
+      space.update(status: Space::SUSPENDED)
+      entitle(target, headers)
+      expect(last_response.status).to eq(403)
+      expect(account.reload.entitled_spaces).to contain_exactly(space)
+    end
+  end
+end

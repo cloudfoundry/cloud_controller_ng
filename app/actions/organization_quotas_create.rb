@@ -16,6 +16,7 @@ module VCAP::CloudController
       QuotaDefinition.db.transaction do
         org_quota = VCAP::CloudController::QuotaDefinition.create(
           name: message.name,
+          total_service_accounts: message.total_service_accounts || QuotaDefinition::UNLIMITED,
 
           # Apps
           memory_limit: message.total_memory_in_mb || QuotaDefinition::DEFAULT_MEMORY_LIMIT,

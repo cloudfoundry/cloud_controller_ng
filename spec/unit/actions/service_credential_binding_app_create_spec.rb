@@ -178,7 +178,7 @@ module VCAP::CloudController
               # We mock that a second binding is created after the first one acquires a lock and expect an `UnprocessableCreate` error.
               allow(app).to receive(:lock!).and_wrap_original do |m, *args, &block|
                 m.call(*args, &block)
-                create(:service_binding, service_instance:, app:)
+                create(:service_binding, service_instance: service_instance, app: app.class.find(guid: app.guid))
               end
 
               expect do

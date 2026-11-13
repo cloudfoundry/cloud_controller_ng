@@ -26,6 +26,7 @@ module VCAP::CloudController
     def source_format_valid
       return unless source.is_a?(String)
       return if RoutePolicy::SOURCE_REGEX.match?(source)
+      return if RoutePolicy::SERVICE_ACCOUNT_SOURCE_REGEX.match?(source)
 
       errors.add(:source, "must be in format 'cf:app:<uuid>', 'cf:space:<uuid>', 'cf:org:<uuid>', or 'cf:any'")
     end

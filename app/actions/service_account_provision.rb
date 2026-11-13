@@ -1,0 +1,126 @@
+module VCAP::CloudController
+  class ServiceAccountProvision
+    class Conflict < StandardError; end
+
+    # identity_ca_ref names an operator-defined UAA trust bundle containing the instance identity CA.
+    # CA rotation changes the bundle's contents in UAA; registered clients never change.
+    def initialize(clients, identity_ca_ref:, allowed_resources_ref: nil)
+      raise ArgumentError.new('identity_ca_ref must name a UAA trust bundle') if identity_ca_ref.blank?
+
+      @clients = clients
+      @identity_ca_ref = identity_ca_ref
+      @allowed_resources_ref = allowed_resources_ref
+    end
+
+    def provision(account)
+      failure = nil
+      account.db.transaction(savepoint: true) do
+        account.lock!
+        raise Conflict.new('service account is disabled') unless account.enabled
+
+        begin
+          account.db.transaction(savepoint: true) do
+            principal = User.first(guid: account.client_id)
+            raise Conflict.new('principal identity collision') if principal && !principal.is_oauth_client
+
+            desired = registration(account)
+            existing = existing_client(account.client_id)
+            if existing
+              raise Conflict.new('client identity collision') unless matching_registration?(existing, desired)
+            else
+              @clients.add(:client, desired)
+            end
+
+            account.update(status: 'ready')
+          end
+        rescue StandardError => e
+          failure = e
+          account.reload.update(status: 'failed')
+        end
+      end
+      raise failure if failure
+
+      account
+    end
+
+    def deprovision(account, delete: false)
+      failure = nil
+      account.db.transaction(savepoint: true) do
+        account.lock!
+        raise Conflict.new('service account was enabled again') if account.enabled
+        raise Conflict.new('service account is still assigned or in use') if delete && account.in_use?
+
+        begin
+          account.db.transaction(savepoint: true) do
+            existing = existing_client(account.client_id)
+            if existing
+              raise Conflict.new('client identity collision') unless matching_registration?(existing, registration(account))
+
+              @clients.delete(:client, account.client_id)
+            end
+            if delete
+              account.destroy
+            else
+              account.update(status: 'disabled')
+            end
+          end
+        rescue StandardError => e
+          failure = e
+          account.reload.update(status: 'failed')
+        end
+      end
+      raise failure if failure
+    end
+
+    private
+
+    def matching_registration?(existing, desired)
+      tls_keys = existing.keys.grep(/\Atls[-_]/)
+      return false unless tls_keys.sort == desired.keys.grep(/\Atls[-_]/).sort
+
+      desired.all? do |key, value|
+        actual = existing[key]
+        actual = [] if key == 'scope' && !existing.key?(key)
+        actual = [] if key == 'scope' && actual == ['uaa.none']
+        if string_array?(value)
+          actual.is_a?(Array) && actual.all? { |entry| entry.is_a?(String) } && actual.sort == value.sort
+        else
+          actual == value
+        end
+      end
+    end
+
+    def string_array?(value)
+      value.is_a?(Array) && value.all? { |entry| entry.is_a?(String) }
+    end
+
+    def existing_client(client_id)
+      @clients.get(:client, client_id)
+    rescue CF::UAA::NotFound
+      nil
+    end
+
+    def registration(account)
+      profile = {
+        'client_id' => account.client_id,
+        'authorized_grant_types' => ['client_credentials'],
+        'authorities' => %w[cloud_controller.read cloud_controller.write],
+        'scope' => [],
+        'access_token_validity' => 300,
+        'tls-client-auth-ca-ref' => @identity_ca_ref,
+        'tls_client_auth_san_dns' => account.certificate_dns_san,
+        'tls_client_certificate_bound_access_tokens' => false,
+        'tls-client-auth-claim-mappings' => [
+          { 'field' => 'subject_cn', 'claim' => 'cf_instance_guid' },
+          { 'field' => 'subject_ou', 'pattern' => '^app:(.+)$', 'claim' => 'app_guid' },
+          { 'field' => 'subject_ou', 'pattern' => '^space:(.+)$', 'claim' => 'space_guid' },
+          { 'field' => 'subject_ou', 'pattern' => '^organization:(.+)$', 'claim' => 'org_guid' }
+        ],
+        'tls-client-auth-required-claims' => { 'org_guid' => account.organization.guid },
+        'cf_service_account_guid' => account.guid
+      }
+      profile['tls-client-auth-allowed-resources-ref'] = @allowed_resources_ref if @allowed_resources_ref
+      profile
+    end
+  end
+end

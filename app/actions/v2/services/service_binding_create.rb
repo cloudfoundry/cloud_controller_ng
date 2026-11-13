@@ -24,6 +24,27 @@ module VCAP::CloudController
     end
 
     def create(app, service_instance, message, volume_mount_services_enabled, accepts_incomplete)
+      broker_error = nil
+      binding = ServiceBinding.db.transaction(savepoint: true) do
+        app.lock! if service_instance.is_a?(ManagedServiceInstance)
+        create_binding(app, service_instance, message, volume_mount_services_enabled, accepts_incomplete)
+      rescue VCAP::Services::ServiceBrokers::V2::Errors::HttpClientTimeout,
+             VCAP::Services::ServiceBrokers::V2::Errors::ServiceBrokerBadResponse,
+             VCAP::Services::ServiceBrokers::V2::Errors::ServiceBrokerInvalidVolumeMounts,
+             VCAP::Services::ServiceBrokers::V2::Errors::ServiceBrokerInvalidSyslogDrainUrl,
+             VCAP::Services::ServiceBrokers::V2::Errors::ServiceBrokerResponseMalformed => e
+        # The broker client enqueues orphan mitigation before raising. Preserve
+        # those jobs; no binding has been persisted for these broker failures.
+        broker_error = e
+      end
+      raise broker_error if broker_error
+
+      binding
+    end
+
+    private
+
+    def create_binding(app, service_instance, message, volume_mount_services_enabled, accepts_incomplete)
       raise ServiceInstanceNotBindable unless service_instance.bindable?
       raise VolumeMountServiceDisabled if service_instance.volume_service? && !volume_mount_services_enabled
       raise SpaceMismatch unless bindable_in_space?(service_instance, app.space)
@@ -39,6 +60,8 @@ module VCAP::CloudController
         name: message.name
       )
       raise InvalidServiceBinding.new(binding.errors.full_messages.join(' ')) unless binding.valid?
+
+      binding.capture_service_account_identity!
 
       client = VCAP::Services::ServiceClientProvider.provide(instance: service_instance)
 
@@ -67,8 +90,6 @@ module VCAP::CloudController
 
       binding
     end
-
-    private
 
     def request_binding_from_broker(client, service_binding, parameters, accepts_incomplete)
       client.bind(service_binding, arbitrary_parameters: parameters, accepts_incomplete: accepts_incomplete)

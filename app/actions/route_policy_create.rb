@@ -13,6 +13,7 @@ module VCAP::CloudController
       validate_scope!(route.domain, message.source)
 
       route_policy = RoutePolicy.db.transaction do
+        lock_account_source!(message.source)
         # Lock the parent route row to serialize concurrent creates.
         # SELECT ... FOR UPDATE on an empty policies table acquires no row locks,
         # so two concurrent transactions can both read [] and both pass cf:any
@@ -44,6 +45,17 @@ module VCAP::CloudController
     end
 
     private
+
+    def lock_account_source!(source)
+      match = source.match(RoutePolicy::SERVICE_ACCOUNT_SOURCE_REGEX)
+      return unless match
+
+      account = ServiceAccountModel.first(identity_prefix: match[1], name: match[2])
+      raise Error.new('Service account not found') unless account
+
+      account.lock!
+      raise Error.new('Service account is being deleted') if account.status == 'deleting'
+    end
 
     def validate_scope!(domain, source)
       return unless domain.route_policies_scope == 'space'

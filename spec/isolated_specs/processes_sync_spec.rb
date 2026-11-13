@@ -31,6 +31,48 @@ module VCAP::CloudController
           expect(bbs_apps_client).to have_received(:bump_freshness).once
         end
 
+        context 'when a missing LRP belongs to a disabled service account' do
+          let(:config) { Config.new({ service_accounts_enabled: true }) }
+          let(:bbs_transport) { double(:bbs_transport) }
+          let(:bbs_apps_client) { BbsAppsClient.new(bbs_transport, config) }
+          let!(:blocked_process) { create(:process_model, :diego_runnable, app: create(:app_model, space: create(:space, :with_service_account_prefix))) }
+          let!(:healthy_process) { create(:process_model, :diego_runnable) }
+
+          before do
+            TestConfig.override(service_accounts_enabled: true, service_account_token_endpoint: 'https://uaa.example.test/oauth/mtls/token')
+            CloudController::DependencyLocator.instance.register(:bbs_apps_client, bbs_apps_client)
+            account = ServiceAccountModel.create(name: 'blocked-worker', space: blocked_process.space, status: 'ready')
+            blocked_process.app.update(service_account: account)
+            blocked_process.update(service_account_guid: account.guid, service_account_snapshot: true)
+            account.update(enabled: false)
+            allow(bbs_transport).to receive_messages(
+              desired_lrp_scheduling_infos: ::Diego::Bbs::Models::DesiredLRPSchedulingInfosResponse.new,
+              desire_lrp: ::Diego::Bbs::Models::DesiredLRPResponse.new,
+              upsert_domain: ::Diego::Bbs::Models::UpsertDomainResponse.new
+            )
+            allow(bbs_apps_client).to receive(:desire_app).and_call_original
+            allow(bbs_apps_client).to receive(:bump_freshness).and_call_original
+            allow(AppRecipeBuilder).to receive(:new) do |config:, process:|
+              recipe = double(:identity_recipe)
+              allow(recipe).to receive(:build_app_lrp) do
+                properties = ServiceAccountIdentity.new(process.app, config, account_guid: process.runtime_service_account_guid).certificate_properties
+                ::Diego::Bbs::Models::DesiredLRP.new(process_guid: ProcessGuid.from_process(process), certificate_properties: properties)
+              end
+              recipe
+            end
+          end
+
+          it 'refuses its new credentials while reconciling healthy apps and refreshing the shared domain', isolation: :truncation do
+            subject.sync
+
+            expect(bbs_transport).to have_received(:desire_lrp).once.with(
+              have_attributes(process_guid: ProcessGuid.from_process(healthy_process))
+            )
+            expect(bbs_transport).to have_received(:upsert_domain).with(domain: APP_LRP_DOMAIN, ttl: APP_LRP_DOMAIN_TTL)
+            expect(statsd_updater).to have_received(:update_synced_invalid_lrps).with(1)
+          end
+        end
+
         context 'when bbs and CC are in sync' do
           let(:scheduling_infos) { [good_lrp_scheduling_info] }
           let(:good_lrp_scheduling_info) do

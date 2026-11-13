@@ -42,6 +42,87 @@ module VCAP::CloudController
         allow(client).to receive(:bind).and_return({ async: false, binding: binding_params, operation: nil })
       end
 
+      context 'with a service account' do
+        let(:app) { create(:app_model, space: create(:space, :with_service_account_prefix)) }
+        let(:account) { ServiceAccountModel.create(name: 'broker-worker', space: app.space, status: 'ready') }
+
+        before { app.update(service_account: account) }
+
+        it 'captures the account before the broker request and persists the same identity' do
+          expect(client).to receive(:bind) do |binding, **|
+            expect(binding.service_account_guid).to eq(account.guid)
+            expect(binding).to be_new
+            expect(ServiceBinding.db.in_transaction?).to be(true)
+            { async: false, binding: {}, operation: nil }
+          end
+
+          binding = service_binding_create.create(app, service_instance, message, volume_mount_services_enabled, accepts_incomplete)
+
+          expect(binding.reload.service_account_guid).to eq(account.guid)
+        end
+
+        it 'rejects a revoked entitlement before contacting the broker' do
+          account.remove_all_entitled_spaces
+
+          expect do
+            service_binding_create.create(app, service_instance, message, volume_mount_services_enabled, accepts_incomplete)
+          end.to raise_error(Sequel::ValidationFailed, /entitled/)
+          expect(client).not_to have_received(:bind)
+          expect(ServiceBinding.count).to eq(0)
+        end
+
+        it 'serializes concurrent unassignment until the identity-bearing binding is persisted', isolation: :truncation do
+          app_guid = app.guid
+          broker_called = Queue.new
+          finish_broker = Queue.new
+          writer_started = Queue.new
+          allow(client).to receive(:bind) do |binding, **|
+            broker_called << binding.service_account_guid
+            finish_broker.pop
+            { async: false, binding: {}, operation: nil }
+          end
+          instance = service_instance
+          binding_message = message
+          creator = Thread.new do
+            service_binding_create.create(AppModel.first(guid: app_guid), instance, binding_message, true, false)
+          end
+          expect(Timeout.timeout(10) { broker_called.pop }).to eq(account.guid)
+          writer = Thread.new do
+            writer_started << true
+            AppAssignServiceAccount.new(double(can_write_to_active_space?: true)).assign(AppModel.first(guid: app_guid), nil)
+          rescue AppAssignServiceAccount::Conflict => e
+            e
+          end
+          Timeout.timeout(10) { writer_started.pop }
+          finish_broker << true
+
+          binding = Timeout.timeout(10) { creator.value }
+          expect(Timeout.timeout(10) { writer.value }).to be_a(AppAssignServiceAccount::Conflict)
+          expect(binding.reload.service_account_guid).to eq(account.guid)
+          expect(app.reload.service_account_guid).to eq(account.guid)
+        ensure
+          finish_broker << true if finish_broker
+          [creator, writer].compact.each do |thread|
+            thread.kill if thread.alive?
+            thread.join
+          end
+        end
+
+        it 'does not recapture a later assignment after the broker has received the original identity' do
+          original_guid = account.guid
+          expect(client).to receive(:bind) do |binding, **|
+            expect(binding.service_account_guid).to eq(original_guid)
+            # A stale caller object must not replace the identity captured under lock.
+            binding.app.service_account = nil
+            { async: false, binding: {}, operation: nil }
+          end
+
+          binding = service_binding_create.create(app, service_instance, message, volume_mount_services_enabled, accepts_incomplete)
+
+          expect(binding.reload.service_account_guid).to eq(original_guid)
+        end
+      end
+
       context 'when the service broker does not include any additional binding parameters' do
         it 'creates a plain old Service Binding' do
           service_binding = service_binding_create.create(app, service_instance, message, volume_mount_services_enabled, accepts_incomplete)
