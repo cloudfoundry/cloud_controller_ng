@@ -90,7 +90,7 @@ module VCAP::CloudController
     end
 
     describe '.enabled?' do
-      let(:key) { :user_org_creation }
+      let(:key) { :diego_custom_stacks }
       let(:default_value) { FeatureFlag::DEFAULT_FLAGS[key] }
 
       context 'when the feature flag is overridden' do

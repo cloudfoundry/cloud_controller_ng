@@ -2,7 +2,7 @@ require 'spec_helper'
 
 module VCAP::CloudController
   RSpec.describe AppModel do
-    let(:app_model) { AppModel.create(space: space, name: 'some-name') }
+    let(:app_model) { AppModel.create(space: space, name: 'some-name', lifecycle_type: 'buildpack') }
     let(:space) { create(:space) }
 
     describe '#oldest_web_process' do
@@ -286,37 +286,6 @@ module VCAP::CloudController
           expect do
             create(:app_model, lifecycle_type: type)
           end.not_to raise_error
-        end
-      end
-    end
-
-    describe '#lifecycle_type' do
-      before do
-        # Remove lifecycle type to test fallback mechanism based on associated lifecycle data
-        app_model.update(lifecycle_type: '')
-      end
-
-      context 'when there is buildpack_lifecycle_data associated to the app' do
-        before { create(:buildpack_lifecycle_data_model, app: app_model) }
-
-        it 'returns the string "buildpack"' do
-          app_model.reload
-          expect(app_model.lifecycle_type).to eq('buildpack')
-        end
-      end
-
-      context 'when there is cnb_lifecycle_data associated to the app' do
-        before { create(:cnb_lifecycle_data_model, app: app_model) }
-
-        it 'returns the string "cnb"' do
-          app_model.reload
-          expect(app_model.lifecycle_type).to eq('cnb')
-        end
-      end
-
-      context 'when there is no lifecycle data associated to the app' do
-        it 'returns the string "docker"' do
-          expect(app_model.lifecycle_type).to eq('docker')
         end
       end
     end
@@ -646,7 +615,7 @@ module VCAP::CloudController
       context 'when not saving any encrypted fields, with db keys' do
         it 'still updates the encryption-key value' do
           TestConfig.override(database_encryption: { current_key_label: nil, keys: {} })
-          app = AppModel.create(name: 'jimmy')
+          app = AppModel.create(name: 'jimmy', lifecycle_type: 'buildpack')
           expect(app.encryption_key_label).to be_nil
 
           app.environment_variables = { building: 'house' }
@@ -660,10 +629,10 @@ module VCAP::CloudController
           app.reload
           expect(app.encryption_key_label).to eq('k2')
 
-          app2 = AppModel.create(name: 'bob', environment_variables: { building: 'mansion' })
+          app2 = AppModel.create(name: 'bob', lifecycle_type: 'buildpack', environment_variables: { building: 'mansion' })
           expect(app2.encryption_key_label).to eq('k2')
 
-          app3 = AppModel.create(name: 'randombuilder')
+          app3 = AppModel.create(name: 'randombuilder', lifecycle_type: 'buildpack')
           expect(app3.encryption_key_label).to eq('k2')
         end
       end

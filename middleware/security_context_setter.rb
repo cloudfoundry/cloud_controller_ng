@@ -22,14 +22,14 @@ module CloudFoundry
         security_context_configurer = @security_context_configurer
 
         if request_path && request_path.match(UPLOADS_PATH_REGEX)
-          upload_start_time = Rack::Request.new(env).params['upload_start_time'].to_i
+          upload_start_time = upload_start_time_from_nginx(env)
           if upload_start_time
             relaxed_token_decoder = VCAP::CloudController::UaaTokenDecoder.new(VCAP::CloudController::Config.config.get(:uaa), alternate_reference_time: upload_start_time)
             security_context_configurer = VCAP::CloudController::Security::SecurityContextConfigurer.new(relaxed_token_decoder)
           end
         end
 
-        security_context_configurer.configure(header_token)
+        security_context_configurer.configure_token_only(header_token)
 
         if VCAP::CloudController::SecurityContext.valid_token?
           env['cf.user_guid'] = id_from_token
@@ -51,10 +51,20 @@ module CloudFoundry
         [status, headers, body]
       rescue VCAP::CloudController::UaaUnavailable => e
         logger.error("Failed communicating with UAA: #{e.message}")
-        [502, { 'Content-Type:' => 'application/json' }, [error_message(env, 'UaaUnavailable')]]
+        [502, { 'Content-Type' => 'application/json' }, [error_message(env, 'UaaUnavailable')]]
       end
 
       private
+
+      def upload_start_time_from_nginx(env)
+        raw_value = Rack::Request.new(env).POST['upload_start_time']
+        return false if raw_value.blank?
+
+        upload_start_time = raw_value.to_i
+        return false unless upload_start_time.positive?
+
+        [upload_start_time, Time.now.to_i].min
+      end
 
       def id_from_token
         VCAP::CloudController::SecurityContext.token['user_id'] || VCAP::CloudController::SecurityContext.token['client_id']

@@ -30,6 +30,11 @@ module VCAP
             lifecycle_data
           end
 
+          # CNB credentials travel via CNB_REGISTRY_CREDS, never in the buildpack URL.
+          def url_credentials_for_staging(_staging_details)
+            nil
+          end
+
           def type
             VCAP::CloudController::Lifecycles::CNB
           end

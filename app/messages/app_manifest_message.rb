@@ -43,6 +43,7 @@ module VCAP::CloudController
       sidecars
       stack
       timeout
+      credentials
       cnb_credentials
       features
     ]
@@ -74,7 +75,9 @@ module VCAP::CloudController
     validate :validate_buildpack_and_buildpacks_combination!
     validate :validate_docker_enabled!
     validate :validate_cnb_enabled!
+    validate :validate_custom_stacks_enabled!
     validate :validate_docker_buildpacks_combination!
+    validate :validate_credentials_combination!
     validate :validate_service_bindings_message!, if: ->(record) { record.requested?(:services) }
     validate :validate_env_update_message!,       if: ->(record) { record.requested?(:env) }
     validate :validate_manifest_singular_buildpack_message!, if: ->(record) { record.requested?(:buildpack) }
@@ -126,6 +129,7 @@ module VCAP::CloudController
     def audit_hash
       result = original_yaml.dup
       result['env'] = Presenters::Censorship::PRIVATE_DATA_HIDDEN if result.key?('env')
+      result['credentials'] = Presenters::Censorship::PRIVATE_DATA_HIDDEN if result.key?('credentials')
       result['cnb-credentials'] = Presenters::Censorship::PRIVATE_DATA_HIDDEN if result.key?('cnb-credentials')
       obfuscate_buildpack_urls(result)
       redact_service_parameters(result)
@@ -133,19 +137,14 @@ module VCAP::CloudController
     end
 
     def app_lifecycle_hash
-      lifecycle_type = if requested?(:lifecycle) && @lifecycle == 'cnb'
-                         Lifecycles::CNB
-                       elsif requested?(:lifecycle) && @lifecycle == 'buildpack'
-                         Lifecycles::BUILDPACK
-                       elsif requested?(:docker)
-                         Lifecycles::DOCKER
-                       end
+      lifecycle_type = requested_lifecycle_type
 
       data = {
         buildpacks: requested_buildpacks,
-        stack: @stack,
-        credentials: @cnb_credentials
+        stack: @stack
       }.compact
+
+      data[:credentials] = @credentials || @cnb_credentials if requested?(:credentials) || requested?(:cnb_credentials)
 
       if lifecycle_type == Lifecycles::DOCKER
         lifecycle = {
@@ -490,10 +489,29 @@ module VCAP::CloudController
       errors.add(:base, e.message)
     end
 
+    def validate_custom_stacks_enabled!
+      FeatureFlag.raise_unless_enabled!(:diego_custom_stacks) if requested?(:stack) && UriUtils.is_custom_stack_uri?(@stack)
+    rescue CloudController::Errors::ApiError => e
+      errors.add(:base, e.message)
+    end
+
     def validate_docker_buildpacks_combination!
       return unless requested?(:docker) && (requested?(:buildpack) || requested?(:buildpacks))
 
       errors.add(:base, 'Cannot specify both buildpack(s) and docker keys')
+    end
+
+    def validate_credentials_combination!
+      return unless requested?(:credentials) && requested?(:cnb_credentials)
+
+      errors.add(:base, 'Cannot specify both credentials and cnb-credentials keys')
+    end
+
+    def requested_lifecycle_type
+      return Lifecycles::CNB if requested?(:lifecycle) && @lifecycle == 'cnb'
+      return Lifecycles::BUILDPACK if requested?(:lifecycle) && @lifecycle == 'buildpack'
+
+      Lifecycles::DOCKER if requested?(:docker)
     end
 
     def validate_features!

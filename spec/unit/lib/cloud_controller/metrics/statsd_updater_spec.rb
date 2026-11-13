@@ -346,13 +346,13 @@ module VCAP::CloudController::Metrics
 
     describe StatsdUpdater::RedisStore do
       let(:redis_socket) { 'redis.sock' }
-      let(:connection_pool_size) { 5 }
-      let(:redis_store) { StatsdUpdater::RedisStore.new(redis_socket, connection_pool_size) }
+      let(:redis_store) { StatsdUpdater::RedisStore.new(redis_socket) }
       let(:redis) { instance_double(Redis) }
       let(:config) { double(:config) }
 
       before do
         allow(VCAP::CloudController::Config).to receive(:config).and_return(config)
+        allow(config).to receive(:get).with(:puma, :max_threads).and_return(5)
         allow(ConnectionPool::Wrapper).to receive(:new).and_return(redis)
         allow(redis).to receive(:set)
       end
@@ -360,33 +360,22 @@ module VCAP::CloudController::Metrics
       describe 'initialization' do
         it 'clears cc.requests.outstanding.gauge' do
           expect(redis).to receive(:set).with('metrics:cc.requests.outstanding.gauge', 0)
-          StatsdUpdater::RedisStore.new(redis_socket, connection_pool_size)
+          StatsdUpdater::RedisStore.new(redis_socket)
         end
 
-        it 'configures a Redis connection pool with specified size' do
-          expect(ConnectionPool::Wrapper).to receive(:new).with(size: connection_pool_size).and_call_original
-          StatsdUpdater::RedisStore.new(redis_socket, connection_pool_size)
+        it 'configures a Redis connection pool sized to the puma max threads' do
+          expect(ConnectionPool::Wrapper).to receive(:new).with(size: 5).and_call_original
+          StatsdUpdater::RedisStore.new(redis_socket)
         end
 
-        context 'when the connection pool size is not provided' do
+        context 'when puma max threads is not set' do
           before do
             allow(config).to receive(:get).with(:puma, :max_threads).and_return(nil)
           end
 
           it 'uses a default connection pool size of 1' do
             expect(ConnectionPool::Wrapper).to receive(:new).with(size: 1).and_call_original
-            StatsdUpdater::RedisStore.new(redis_socket, nil)
-          end
-
-          context 'when puma max threads is set' do
-            before do
-              allow(config).to receive(:get).with(:puma, :max_threads).and_return(10)
-            end
-
-            it 'uses puma max threads' do
-              expect(ConnectionPool::Wrapper).to receive(:new).with(size: 10).and_call_original
-              StatsdUpdater::RedisStore.new(redis_socket, nil)
-            end
+            StatsdUpdater::RedisStore.new(redis_socket)
           end
         end
       end

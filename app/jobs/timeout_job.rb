@@ -25,6 +25,10 @@ module VCAP::CloudController
 
       attr_reader :timeout
 
+      def hash_for_logs
+        super.merge(timeout: timeout).compact
+      end
+
       def job
         @handler
       end

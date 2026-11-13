@@ -4528,7 +4528,7 @@ RSpec.describe 'V3 service instances' do
 
     READ_AND_WRITE = { code: 200, response_object: { manage: true, read: true } }.freeze
     READ_ONLY = { code: 200, response_object: { manage: false, read: true } }.freeze
-    NO_PERMISSIONS = { code: 200, response_object: { manage: false, read: false } }.freeze
+    NO_PERMISSIONS = { code: 404 }.freeze
 
     let(:api_call) { ->(user_headers) { get "/v3/service_instances/#{guid}/permissions", nil, user_headers } }
 

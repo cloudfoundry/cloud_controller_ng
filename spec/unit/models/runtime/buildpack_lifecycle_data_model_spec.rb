@@ -11,6 +11,50 @@ module VCAP::CloudController
       let(:attr_salt) { :encrypted_buildpack_url_salt }
     end
 
+    it_behaves_like 'a model with an encrypted attribute' do
+      let(:value_to_encrypt) { '{"git.example.com":{"username":"u","password":"p"}}' }
+      let(:encrypted_attr) { :credentials_json }
+      let(:storage_column) { :encrypted_credentials_json }
+      let(:attr_salt) { :encrypted_credentials_json_salt }
+    end
+
+    describe '#credentials' do
+      it 'round-trips a credentials hash via Oj' do
+        creds = { 'git.example.com' => { 'username' => 'u', 'password' => 'p' } }
+        lifecycle_data.credentials = creds
+        lifecycle_data.save
+        expect(lifecycle_data.reload.credentials).to eq(creds)
+      end
+
+      it 'returns nil when not set' do
+        lifecycle_data.save
+        expect(lifecycle_data.reload.credentials).to be_nil
+      end
+
+      it 'stores ciphertext, not plaintext' do
+        lifecycle_data.credentials = { 'git.example.com' => { 'username' => 'u', 'password' => 'secret' } }
+        lifecycle_data.save
+        raw = BuildpackLifecycleDataModel.db[:buildpack_lifecycle_data].where(guid: lifecycle_data.guid).first
+        expect(raw[:encrypted_credentials_json]).not_to include('secret')
+        expect(raw[:encrypted_credentials_json_salt]).not_to be_nil
+      end
+    end
+
+    describe '#to_hash credentials handling' do
+      context 'when credentials are set' do
+        it 'redacts credentials to ***' do
+          lifecycle_data.credentials = { 'git.example.com' => { 'username' => 'u', 'password' => 'p' } }
+          expect(lifecycle_data.to_hash[:credentials]).to eq('***')
+        end
+      end
+
+      context 'when credentials are nil' do
+        it 'omits credentials from to_hash' do
+          expect(lifecycle_data.to_hash.keys).not_to include(:credentials)
+        end
+      end
+    end
+
     describe 'buildpack_lifecycle_buildpacks association' do
       it 'orders by id via the default_order_by_id extension' do
         lifecycle_data.save

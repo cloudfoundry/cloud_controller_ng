@@ -28,7 +28,7 @@ module VCAP::CloudController
                Config.config.get(:default_app_lifecycle)
              end
 
-      TYPE_TO_LIFECYCLE_CLASS_MAP[type].new(message)
+      TYPE_TO_LIFECYCLE_CLASS_MAP[type].new(message, app)
     end
     private_class_method :provide
   end

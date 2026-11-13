@@ -71,7 +71,17 @@ module VCAP::CloudController
         local_opts[:priority] = final_priority if final_priority > 0
         local_opts[:run_at] = run_at if run_at
 
-        Delayed::Job.enqueue(logging_context_job, @opts.merge(local_opts))
+        delayed_job = Delayed::Job.enqueue(logging_context_job, @opts.merge(local_opts))
+        begin
+          Steno.logger('cc.background').info('enqueued background job',
+                                             job_guid: @opts['guid'],
+                                             queue: @opts[:queue],
+                                             **logging_context_job.hash_for_logs)
+        rescue StandardError => e
+          # Logging must never break enqueue (the job is already committed); degrade to a warning.
+          Steno.logger('cc.background').warn('failed to log enqueued background job', error: e.message)
+        end
+        delayed_job
       end
 
       def load_delayed_job_plugins

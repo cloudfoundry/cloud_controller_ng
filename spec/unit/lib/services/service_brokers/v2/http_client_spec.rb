@@ -505,6 +505,26 @@ module VCAP::Services::ServiceBrokers::V2
             to have_been_made
         end
 
+        context 'when the request body carries arbitrary parameters' do
+          let(:message) do
+            {
+              service_id: 'svc',
+              parameters: { systempassword: 's3cr3t-value' }
+            }
+          end
+
+          it 'redacts the parameters block from the logged request body' do
+            make_request
+            expect(fake_logger).to have_received(:debug).with(/"parameters" => "\[PRIVATE DATA HIDDEN\]"/)
+            expect(fake_logger).not_to have_received(:debug).with(/s3cr3t-value/)
+          end
+
+          it 'leaves non-sensitive keys in the logged request body' do
+            make_request
+            expect(fake_logger).to have_received(:debug).with(/"service_id" => "svc"/)
+          end
+        end
+
         it 'logs the Content-Type Header' do
           make_request
           expect(fake_logger).to have_received(:debug).with(match(%r{"Content-Type" => "application/json"}))

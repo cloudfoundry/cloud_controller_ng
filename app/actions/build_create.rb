@@ -54,6 +54,7 @@ module VCAP::CloudController
         state: BuildModel::STAGING_STATE,
         package_guid: package.guid,
         app: package.app,
+        lifecycle_type: lifecycle.type,
         staging_memory_in_mb: staging_details.staging_memory_in_mb,
         staging_disk_in_mb: staging_details.staging_disk_in_mb,
         staging_log_rate_limit: staging_details.staging_log_rate_limit_bytes_per_second,
@@ -183,6 +184,7 @@ module VCAP::CloudController
 
     def validate_stack_state!(lifecycle, app)
       return [] if lifecycle.type == Lifecycles::DOCKER
+      return [] if UriUtils.is_custom_stack_uri?(lifecycle.staging_stack)
 
       stack = Stack.find(name: lifecycle.staging_stack)
       return [] unless stack

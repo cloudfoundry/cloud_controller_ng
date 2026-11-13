@@ -83,6 +83,82 @@ module VCAP::CloudController
         end
       end
 
+      %w[credentials cnb-credentials].each do |key|
+        context "when the manifest specifies #{key}" do
+          before do
+            default_manifest['applications'][0][key] = { 'registry.example.com' => { 'username' => 'user', 'password' => 'sekret' } }
+          end
+
+          it "redacts the #{key} value in the diff" do
+            credentials_diff = subject.find { |d| d['path'] == "/applications/0/#{key}" }
+
+            expect(credentials_diff).not_to be_nil
+            expect(credentials_diff['value']).to eq(Presenters::Censorship::PRIVATE_DATA_HIDDEN)
+            expect(subject.to_s).not_to include('sekret')
+          end
+        end
+      end
+
+      context 'when the existing app already has stored credentials and the manifest submits new ones' do
+        before do
+          app1_model.lifecycle_data.credentials = { 'registry.example.com' => { 'username' => 'stored', 'password' => 'stored-secret' } }
+          app1_model.lifecycle_data.save
+          default_manifest['applications'][0]['credentials'] = { 'registry.example.com' => { 'username' => 'user', 'password' => 'new-secret' } }
+        end
+
+        it 'does not leak either the stored or submitted secret' do
+          expect(subject.to_s).not_to include('stored-secret')
+          expect(subject.to_s).not_to include('new-secret')
+        end
+
+        it 'redacts both sides of any credentials diff entry' do
+          subject.select { |d| d['path'] == '/applications/0/credentials' }.each do |d|
+            expect(d['value']).to eq(Presenters::Censorship::PRIVATE_DATA_HIDDEN) if d.key?('value')
+            expect(d['was']).to eq(Presenters::Censorship::PRIVATE_DATA_HIDDEN) if d.key?('was')
+          end
+        end
+      end
+
+      context 'when the existing app has credentials embedded in a buildpack URL' do
+        before do
+          app1_model.lifecycle_data.update(buildpacks: ['https://user:sekret@git.example.com/greendale/community-buildpack'], stack: process1.stack.name)
+          default_manifest['applications'][0]['buildpacks'] = ['https://git.example.com/greendale/spanish-101-buildpack']
+        end
+
+        it 'does not leak the embedded credentials in the diff' do
+          expect(subject.to_s).not_to include('sekret')
+        end
+      end
+
+      context 'when the submitted manifest has credentials embedded in a buildpack URL' do
+        before do
+          app1_model.lifecycle_data.update(buildpacks: ['https://git.example.com/greendale/community-buildpack'], stack: process1.stack.name)
+          default_manifest['applications'][0]['buildpacks'] = ['https://user:sekret@git.example.com/greendale/community-buildpack']
+        end
+
+        it 'obfuscates the embedded credentials in the submitted buildpack URL' do
+          expect(subject.to_s).not_to include('sekret')
+          add_diff = subject.find { |d| d['path'].start_with?('/applications/0/buildpacks') && d.key?('value') }
+          expect(add_diff).not_to be_nil
+          expect(add_diff['value']).to eq('https://***:***@git.example.com/greendale/community-buildpack')
+        end
+      end
+
+      context 'when the submitted manifest has credentials in the singular buildpack URL' do
+        before do
+          app1_model.lifecycle_data.update(buildpacks: ['https://git.example.com/greendale/community-buildpack'], stack: process1.stack.name)
+          default_manifest['applications'][0].delete('buildpacks')
+          default_manifest['applications'][0]['buildpack'] = 'https://user:sekret@git.example.com/greendale/community-buildpack'
+        end
+
+        it 'obfuscates the embedded credentials in the submitted singular buildpack URL' do
+          expect(subject.to_s).not_to include('sekret')
+          bp_diff = subject.find { |d| d['path'] == '/applications/0/buildpack' && d.key?('value') }
+          expect(bp_diff).not_to be_nil
+          expect(bp_diff['value']).to eq('https://***:***@git.example.com/greendale/community-buildpack')
+        end
+      end
+
       context 'processes' do
         context 'when processes are updated' do
           before do

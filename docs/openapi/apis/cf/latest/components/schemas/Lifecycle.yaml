@@ -15,9 +15,11 @@ properties:
         description: List of the names of buildpacks, URLs from which they may be downloaded, or null to auto-detect a suitable buildpack during staging (applicable for buildpack and cnb lifecycles)
       stack:
         type: [string, "null"]
-        description: The root filesystem to use with the buildpack, for example cflinuxfs4 (applicable for buildpack lifecycle)
+        description: >
+          The root filesystem to use with buildpack or cnb lifecycles, for example cflinuxfs4.
+          With the diego_custom_stacks feature flag enabled, this can be a docker:// container image URI (experimental).
       credentials:
-        type: object
+        type: [object, string, "null"]
         additionalProperties:
           type: object
           properties:
@@ -27,6 +29,6 @@ properties:
               type: [string, "null"]
             token:
               type: string
-        description: Credentials used to download the configured buildpacks (applicable for cnb lifecycle)
+        description: Credentials used to download custom buildpacks or pull custom stacks, keyed by host (applicable for buildpack and cnb lifecycles)
 description: >
   The lifecycle type defines how the application droplet is created and run. The following lifecycle types are supported: - buildpack: Traditional buildpacks for Cloud Foundry applications. - cnb: Cloud Native Buildpacks that are OCI-compliant. - docker: Run pre-built Docker images.

@@ -266,6 +266,38 @@ module VCAP::CloudController
         end
       end
 
+      %w[buildpack cnb].each do |lifecycle_type|
+        context "with #{lifecycle_type} build-only custom stack credentials" do
+          let(:app) { create(:app_model, lifecycle_type.to_sym, space:) }
+          let(:lifecycle) { LifecycleProvider.provide(package, staging_message) }
+          let(:runtime_stack) { 'docker://registry.example.com/team/cflinuxfs4:runtime' }
+          let(:build_credentials) { { 'registry.example.com' => { 'username' => 'build-user', 'password' => 'build-pass' } } }
+          let(:request_lifecycle) { { type: lifecycle_type, data: lifecycle_data } }
+          let(:lifecycle_data) do
+            {
+              stack: 'docker://registry.example.com/team/cflinuxfs4:staging',
+              buildpacks: [buildpack_git_url],
+              credentials: build_credentials
+            }
+          end
+
+          before do
+            create(:feature_flag, name: 'diego_custom_stacks', enabled: true)
+            app.lifecycle_data.update(stack: runtime_stack, credentials: nil)
+          end
+
+          it 'uses the build credentials for staging without changing app credentials or stack' do
+            action.create_and_stage(package:, lifecycle:)
+
+            expect(stager).to have_received(:stage) do |staging_details|
+              expect(staging_details.lifecycle.staging_stack).to eq(lifecycle_data[:stack])
+              expect(staging_details.lifecycle.credentials_for_staging.deep_stringify_keys).to eq(build_credentials)
+            end
+            expect(app.reload.lifecycle_data).to have_attributes(stack: runtime_stack, credentials: nil)
+          end
+        end
+      end
+
       describe 'creating a stage request' do
         it 'initiates a staging request' do
           build = action.create_and_stage(package:, lifecycle:)

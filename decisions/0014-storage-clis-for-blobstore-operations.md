@@ -27,7 +27,8 @@ Cloud Controller previously used the fog gem family to interface with blobstores
 
 The migration described in this ADR is complete. As a result:
 
-- The `blobstore_provider` field accepts both native storage-cli type names AND the legacy WebDAV alias (`webdav` → `dav`)
+- The `blobstore_provider` field accepts native storage-cli type names (azurebs, s3, gcs, alioss, dav)
+- The legacy native WebDAV provider (`blobstore_type: webdav`) has been removed — use `blobstore_type: storage-cli` with `provider: dav` instead
 - **Legacy fog provider names** (AzureRM, AWS, Google, aliyun) are **no longer supported** — use native storage-cli type names (azurebs, s3, gcs, alioss)
 - ✅ Enabled the removal of all fog related gems — fog-aws, fog-core, fog-azure-rm, fog-google, and fog-aliyun have all been removed
 

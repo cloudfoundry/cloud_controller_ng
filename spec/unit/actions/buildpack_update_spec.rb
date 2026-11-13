@@ -39,6 +39,26 @@ module VCAP::CloudController
 
           expect(buildpack1.reload.position).to eq(1)
         end
+
+        context 'when the in-memory position is stale because of a concurrent reorder' do
+          let!(:buildpack4) { create(:buildpack, position: 4) }
+
+          it 'recomputes the shift from the committed state and keeps positions contiguous' do
+            # buildpack2 was loaded (position 2) before the lock. Simulate a concurrent request
+            # that reorders the list in the meantime: buildpack2 drifts from 2 -> 3 in the DB,
+            # but the in-memory object still thinks it is at 2.
+            buildpack4.move_to(1)
+            expect(buildpack2.position).to eq(2) # stale in-memory value
+            expect(Buildpack.first(guid: buildpack2.guid).position).to eq(3) # committed DB truth
+
+            message = BuildpackUpdateMessage.new(position: 1)
+            BuildpackUpdate.new(user_audit_info).update(buildpack2, message)
+
+            positions = Buildpack.order(:position).all.map(&:position)
+            expect(positions).to eq([1, 2, 3, 4]), "expected contiguous positions, got #{positions.inspect}"
+            expect(buildpack2.reload.position).to eq(1)
+          end
+        end
       end
 
       context 'when enabled is changed' do

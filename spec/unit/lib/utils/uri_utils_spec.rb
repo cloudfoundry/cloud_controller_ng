@@ -104,6 +104,42 @@ RSpec.describe UriUtils do
     end
   end
 
+  describe '.is_custom_stack_uri?' do
+    it 'accepts valid Docker image references and identifies their registry' do
+      expect(UriUtils.is_custom_stack_uri?('docker://registry.example.com/my-org/my-stack:latest')).to be(true)
+      expect(UriUtils.is_custom_stack_uri?('docker://ubuntu:22.04')).to be(true)
+      expect(UriUtils.custom_stack_registry_host('docker://ubuntu:22.04')).to eq('docker.io')
+    end
+
+    it 'rejects non-Docker and invalid Docker references' do
+      expect(UriUtils.is_custom_stack_uri?('cflinuxfs4')).to be(false)
+      expect(UriUtils.is_custom_stack_uri?('https://example.com/stack')).to be(false)
+      expect(UriUtils.is_custom_stack_uri?('docker://')).to be(false)
+      expect(UriUtils.is_custom_stack_uri?('docker://registry.example.com/team/')).to be(false)
+    end
+  end
+
+  describe '.custom_stack_buildpack_identifier' do
+    it 'returns the final repository component without its tag' do
+      expect(UriUtils.custom_stack_buildpack_identifier('docker://registry.example.com/team/cflinuxfs4:1.268.0')).to eq('cflinuxfs4')
+    end
+
+    it 'returns the final repository component without its digest' do
+      digest = 'e118d023acaee5cf13471ead39f68416ad6172ff0899f3257ce1481cd2b28a6a'
+
+      expect(UriUtils.custom_stack_buildpack_identifier("docker://registry.example.com/team/alpine-stack@sha256:#{digest}")).to eq('alpine-stack')
+    end
+
+    it 'supports Docker Hub shorthand references' do
+      expect(UriUtils.custom_stack_buildpack_identifier('docker://ubuntu:22.04')).to eq('ubuntu')
+    end
+
+    it 'returns nil for invalid or non-Docker references' do
+      expect(UriUtils.custom_stack_buildpack_identifier('docker://registry.example.com/')).to be_nil
+      expect(UriUtils.custom_stack_buildpack_identifier('cflinuxfs4')).to be_nil
+    end
+  end
+
   describe '.is_uri_path?' do
     it 'is false if the object is not a string' do
       expect(UriUtils.is_uri_path?(1)).to be false
@@ -172,6 +208,54 @@ RSpec.describe UriUtils do
       expect { UriUtils.parse_docker_uri('publish/buildpack:') }.to raise_error(UriUtils::InvalidDockerURI)
       expect { UriUtils.parse_docker_uri('publish/buildpack:?@sha256:e118d023acaee5cf13471ead39f68416ad6172ff0899f3257ce1481cd2b28a6a') }.to raise_error(UriUtils::InvalidDockerURI)
       expect { UriUtils.parse_docker_uri('publish/buildpack@sha256:e118d0') }.to raise_error(UriUtils::InvalidDockerURI)
+    end
+
+    it 'rejects empty repository path components' do
+      %w[registry.example.com/team/ registry.example.com//stack registry.example.com/team//stack].each do |image|
+        expect { UriUtils.parse_docker_uri(image) }.to raise_error(UriUtils::InvalidDockerURI, /Invalid image name/)
+      end
+    end
+  end
+
+  describe '.url_has_userinfo?' do
+    it 'returns true for an https URL with user:pass@' do
+      expect(UriUtils.url_has_userinfo?('https://user:pass@git.example.com/acme/buildpack.git')).to be true
+    end
+
+    it 'returns true for an http URL with user only' do
+      expect(UriUtils.url_has_userinfo?('http://user@example.com/buildpack.git')).to be true
+    end
+
+    it 'returns false for a clean https URL' do
+      expect(UriUtils.url_has_userinfo?('https://git.example.com/acme/buildpack.git')).to be false
+    end
+
+    it 'returns false for an admin buildpack name' do
+      expect(UriUtils.url_has_userinfo?('ruby_buildpack')).to be false
+    end
+
+    it 'returns false for nil' do
+      expect(UriUtils.url_has_userinfo?(nil)).to be false
+    end
+
+    it 'returns false for a git+ssh URL (no userinfo field)' do
+      expect(UriUtils.url_has_userinfo?('git@git.example.com:acme/buildpack.git')).to be false
+    end
+
+    it 'returns true for an https URL with an empty username but a password (token-style auth)' do
+      expect(UriUtils.url_has_userinfo?('https://:token@registry.example.com/buildpack')).to be true
+    end
+
+    it 'returns true for an https URL with an IPv6 host and credentials' do
+      expect(UriUtils.url_has_userinfo?('https://user:pass@[::1]:8080/buildpack')).to be true
+    end
+
+    it 'returns false for an https URL with an IPv6 host and no credentials' do
+      expect(UriUtils.url_has_userinfo?('https://[::1]:8080/buildpack')).to be false
+    end
+
+    it 'returns false for a malformed URL that cannot be parsed' do
+      expect(UriUtils.url_has_userinfo?('https://exa mple.com/buildpack')).to be false
     end
   end
 end

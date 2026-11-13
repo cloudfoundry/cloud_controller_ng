@@ -3,7 +3,7 @@ require_relative 'lifecycle_shared'
 
 module VCAP::CloudController
   RSpec.describe BuildpackLifecycle do
-    let(:app) { AppModel.create(name: 'some-app', space: create(:space)) }
+    let(:app) { AppModel.create(name: 'some-app', space: create(:space), lifecycle_type: 'buildpack') }
     let!(:package) { create(:package_model, type: PackageModel::BITS_TYPE, app: app) }
     let(:staging_message) { BuildCreateMessage.new(lifecycle: { data: request_data, type: 'buildpack' }) }
     let(:request_data) { {} }
@@ -119,9 +119,24 @@ module VCAP::CloudController
       it 'provides staging environment variables' do
         staging_message.buildpack_data.stack = 'cool-stack'
 
-        expect(buildpack_lifecycle.staging_environment_variables).to eq({
-                                                                          'CF_STACK' => 'cool-stack'
-                                                                        })
+        expect(buildpack_lifecycle.staging_environment_variables).to eq({ 'CF_STACK' => 'cool-stack' })
+      end
+
+      context 'with a custom stack' do
+        let(:request_data) do
+          {
+            buildpacks: ['https://github.com/cloudfoundry/nodejs-buildpack'],
+            stack: 'docker://registry.example.com/team/cflinuxfs4:1.268.0'
+          }
+        end
+
+        before do
+          create(:feature_flag, name: 'diego_custom_stacks', enabled: true)
+        end
+
+        it 'uses the final image repository component as CF_STACK' do
+          expect(buildpack_lifecycle.staging_environment_variables).to eq({ 'CF_STACK' => 'cflinuxfs4' })
+        end
       end
     end
 
@@ -156,8 +171,33 @@ module VCAP::CloudController
       end
     end
 
+    describe '#credentials_for_staging' do
+      let(:app) { AppModel.create(name: 'some-app', space: create(:space), lifecycle_type: 'buildpack') }
+      let!(:package) { create(:package_model, type: PackageModel::BITS_TYPE, app: app) }
+
+      context 'when the app has stored credentials and the staging message has none' do
+        let(:request_data) { {} }
+
+        before do
+          app.buildpack_lifecycle_data = BuildpackLifecycleDataModel.create(
+            app: app,
+            buildpacks: ['https://git.example.com/greendale/community-buildpack'],
+            stack: Stack.default.name,
+            credentials: { 'git.example.com' => { 'username' => 'user', 'password' => 'sekret' } }
+          )
+          app.save
+          app.reload
+        end
+
+        it 'reads the stored credentials from the app lifecycle data' do
+          expect(buildpack_lifecycle.credentials_for_staging).to eq({ 'git.example.com' => { 'username' => 'user', 'password' => 'sekret' } })
+        end
+      end
+    end
+
     describe '#buildpack_infos' do
-      let(:stubbed_data) { { stack: Stack.default.name, buildpack_infos: [instance_double(BuildpackInfo)] } }
+      let(:buildpack_info_double) { instance_double(BuildpackInfo, buildpack_url: nil) }
+      let(:stubbed_data) { { stack: Stack.default.name, buildpack_infos: [buildpack_info_double] } }
       let(:request_data) do
         {
           buildpacks: %w[cool-buildpack rad-buildpack]
@@ -177,7 +217,7 @@ module VCAP::CloudController
 
     describe 'validation' do
       let(:validator) { instance_double(BuildpackLifecycleDataValidator) }
-      let(:stubbed_fetcher_data) { { stack: 'foo', buildpack_infos: 'bar' } }
+      let(:stubbed_fetcher_data) { { stack: 'foo', buildpack_infos: [] } }
 
       before do
         allow(validator).to receive(:valid?)
@@ -190,7 +230,14 @@ module VCAP::CloudController
       it 'constructs the validator correctly' do
         buildpack_lifecycle.valid?
 
-        expect(BuildpackLifecycleDataValidator).to have_received(:new).with(buildpack_infos: 'bar', stack: 'foo')
+        expect(BuildpackLifecycleDataValidator).to have_received(:new).with(
+          buildpack_infos: [],
+          stack: 'foo',
+          stack_name: Stack.default.name,
+          lifecycle_type: Lifecycles::BUILDPACK,
+          credentials: nil,
+          credentials_from_message: false
+        )
       end
 
       it 'delegates #valid? to a BuildpackLifecycleDataValidator' do

@@ -64,6 +64,14 @@ RSpec.describe VCAP::CloudController::StackCreateMessage do
     end
 
     describe 'description' do
+      context 'when it is not provided' do
+        let(:params) { valid_params }
+
+        it 'is valid' do
+          expect(subject).to be_valid
+        end
+      end
+
       context 'when it is just long enough' do
         let(:params) { valid_params.merge({ description: 'A' * MAX_DESCRIPTION_LENGTH }) }
 

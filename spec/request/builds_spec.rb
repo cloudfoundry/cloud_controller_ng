@@ -135,7 +135,8 @@ RSpec.describe 'Builds' do
           code: 201
         }
         h['space_supporter'] = {
-          code: 201
+          code: 403,
+          errors: CF_NOT_AUTHORIZED
         }
         h
       end
@@ -167,6 +168,32 @@ RSpec.describe 'Builds' do
 
         it_behaves_like 'permissions for single object endpoint', ALL_PERMISSIONS
       end
+    end
+
+    context 'permissions for a plain restage without custom staging input' do
+      let(:create_request) do
+        {
+          package: {
+            guid: package.guid
+          }
+        }
+      end
+
+      let(:api_call) { ->(user_headers) { post '/v3/builds', create_request.to_json, user_headers } }
+      let(:org) { space.organization }
+      let(:user) { create(:user) }
+
+      let(:expected_codes_and_responses) do
+        h = Hash.new(
+          { code: 422 }.freeze
+        )
+        h['admin'] = { code: 201 }
+        h['space_developer'] = { code: 201 }
+        h['space_supporter'] = { code: 201 }
+        h
+      end
+
+      it_behaves_like 'permissions for single object endpoint', ALL_PERMISSIONS
     end
 
     context 'telemetry' do

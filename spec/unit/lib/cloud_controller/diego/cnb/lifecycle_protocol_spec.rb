@@ -77,6 +77,32 @@ module VCAP
               end
             end
 
+            context 'when a custom buildpack is requested and credentials are present' do
+              let(:buildpack) { 'docker://registry.example.com/greendale/community-buildpack' }
+              let(:staging_details) do
+                Diego::StagingDetails.new.tap do |details|
+                  details.staging_guid          = droplet.guid
+                  details.package               = package
+                  details.environment_variables = { 'nightshade_fruit' => 'potato' }
+                  details.staging_memory_in_mb  = 42
+                  details.staging_disk_in_mb    = 51
+                  details.lifecycle             = instance_double(CNBLifecycle, staging_stack: 'potato-stack', buildpack_infos: buildpack_infos,
+                                                                                credentials: '{"registry.example.com":{"username":"user","password":"sekret"}}',
+                                                                                credentials_for_staging: { 'registry.example.com' => { 'username' => 'user',
+                                                                                                                                       'password' => 'sekret' } })
+                end
+              end
+
+              it 'does NOT inject credentials into the buildpack URL (CNB uses CNB_REGISTRY_CREDS)' do
+                lifecycle_data = lifecycle_protocol.lifecycle_data(staging_details)
+
+                bp = lifecycle_data[:buildpacks][0]
+                expect(bp[:url]).to eq('docker://registry.example.com/greendale/community-buildpack')
+                expect(bp[:url]).not_to include('sekret')
+                expect(bp[:url]).not_to include('user:')
+              end
+            end
+
             context 'when buildpack_infos is empty' do
               let(:buildpack_infos) { [] }
 

@@ -29,6 +29,20 @@ module VCAP::CloudController
           expect(job.job_name_in_configuration).to equal(:package_bits)
         end
       end
+
+      describe 'pollable job metadata' do
+        it 'exposes the package guid as resource_guid' do
+          expect(job.resource_guid).to eq(package_guid)
+        end
+
+        it 'has a display_name' do
+          expect(job.display_name).to eq('package.upload')
+        end
+
+        it 'has a resource_type' do
+          expect(job.resource_type).to eq('package')
+        end
+      end
     end
   end
 end

@@ -10,6 +10,7 @@ module VCAP::CloudController
     let(:lifecycle_request_data) { { buildpacks: ['http://acme.com'] } }
 
     it_behaves_like 'a app lifecycle'
+    it_behaves_like 'custom-stack lifecycle updates', 'cnb', 'docker://registry.example.com/team/buildpack:latest'
 
     describe '#create_lifecycle_data_model' do
       let!(:app) { create(:app_model) }
@@ -122,6 +123,48 @@ module VCAP::CloudController
           it 'valid' do
             expect(lifecycle.valid?).to be(true)
           end
+        end
+      end
+    end
+
+    describe '#update_lifecycle_data_model credentials handling' do
+      let(:app) { create(:app_model, :cnb) }
+
+      context 'when credentials are requested' do
+        let(:creds) { { 'registry.io' => { 'username' => 'u', 'password' => 'p' } } }
+        let(:message) { AppUpdateMessage.new({ lifecycle: { type: 'cnb', data: { credentials: creds } } }) }
+
+        it 'updates the credentials on the lifecycle data' do
+          lifecycle.update_lifecycle_data_model(app)
+          expect(app.cnb_lifecycle_data.reload.credentials).to eq(creds)
+        end
+      end
+
+      context 'when credentials are set to null (clear)' do
+        let(:message) { AppUpdateMessage.new({ lifecycle: { type: 'cnb', data: { credentials: nil } } }) }
+
+        before do
+          app.cnb_lifecycle_data.credentials = { 'registry.io' => { 'username' => 'u' } }
+          app.cnb_lifecycle_data.save
+        end
+
+        it 'clears the credentials' do
+          lifecycle.update_lifecycle_data_model(app)
+          expect(app.cnb_lifecycle_data.reload.credentials).to be_nil
+        end
+      end
+
+      context 'when credentials are absent from the request (not requested)' do
+        let(:message) { AppUpdateMessage.new({ lifecycle: { type: 'cnb', data: { buildpacks: ['docker://nodejs:latest'] } } }) }
+
+        before do
+          app.cnb_lifecycle_data.credentials = { 'registry.io' => { 'username' => 'stored' } }
+          app.cnb_lifecycle_data.save
+        end
+
+        it 'leaves stored credentials untouched' do
+          lifecycle.update_lifecycle_data_model(app)
+          expect(app.cnb_lifecycle_data.reload.credentials).to eq({ 'registry.io' => { 'username' => 'stored' } })
         end
       end
     end

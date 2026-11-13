@@ -37,16 +37,66 @@ module VCAP::CloudController
         end
 
         it 'fetches the routes owned by readable spaces' do
-          dataset = RouteFetcher.fetch(message, readable_space_guids_dataset: Space.where(id: [space1.id]).select(:guid))
+          dataset = RouteFetcher.fetch(
+            message,
+            readable_space_ids_dataset: Space.where(id: [space1.id]).select(:id),
+            readable_space_guids_dataset: Space.where(id: [space1.id]).select(:guid)
+          )
           expect(dataset.all).to contain_exactly(route1, route2)
         end
 
-        it 'fetches the instances shared to readable spaces' do
+        it 'fetches routes shared into readable spaces' do
           space3 = create(:space)
           shared_route = create(:route, space: space3)
           shared_route.add_shared_space(space2)
-          dataset = RouteFetcher.fetch(message, readable_space_guids_dataset: Space.where(id: [space2.id]).select(:guid))
+          dataset = RouteFetcher.fetch(
+            message,
+            readable_space_ids_dataset: Space.where(id: [space2.id]).select(:id),
+            readable_space_guids_dataset: Space.where(id: [space2.id]).select(:guid)
+          )
           expect(dataset.all).to contain_exactly(route3, shared_route)
+        end
+
+        it 'fetches the routes owned by readable spaces using space ids dataset' do
+          dataset = RouteFetcher.fetch(
+            message,
+            readable_space_ids_dataset: Space.where(id: [space1.id]).select(:id),
+            readable_space_guids_dataset: Space.where(id: []).select(:guid)
+          )
+          expect(dataset.all).to contain_exactly(route1, route2)
+        end
+
+        it 'fetches the routes owned by readable spaces using only space guids dataset' do
+          dataset = RouteFetcher.fetch(
+            message,
+            readable_space_guids_dataset: Space.where(id: [space1.id]).select(:guid)
+          )
+          expect(dataset.all).to contain_exactly(route1, route2)
+        end
+
+        it 'fetches routes shared to readable spaces using only space ids dataset' do
+          space3 = create(:space)
+          shared_route = create(:route, space: space3)
+          shared_route.add_shared_space(space2)
+
+          dataset = RouteFetcher.fetch(
+            message,
+            readable_space_ids_dataset: Space.where(id: [space2.id]).select(:id)
+          )
+
+          expect(dataset.all).to contain_exactly(route3, shared_route)
+        end
+
+        it 'does not duplicate routes visible through both owned and shared access paths' do
+          route1.add_shared_space(space2)
+
+          dataset = RouteFetcher.fetch(
+            message,
+            readable_space_ids_dataset: Space.where(id: [space1.id, space2.id]).select(:id),
+            readable_space_guids_dataset: Space.where(id: [space1.id, space2.id]).select(:guid)
+          )
+
+          expect(dataset.all).to contain_exactly(route1, route2, route3)
         end
       end
 
@@ -54,7 +104,12 @@ module VCAP::CloudController
         let(:routes_filter) { {} }
 
         it 'eager loads the specified resources for the routes' do
-          results = RouteFetcher.fetch(message, readable_space_guids_dataset: Space.where(guid: [space1.guid]).select(:guid), eager_loaded_associations: %i[labels domain]).all
+          results = RouteFetcher.fetch(
+            message,
+            readable_space_ids_dataset: Space.where(guid: [space1.guid]).select(:id),
+            readable_space_guids_dataset: Space.where(guid: [space1.guid]).select(:guid),
+            eager_loaded_associations: %i[labels domain]
+          ).all
 
           expect(results.first.associations.key?(:labels)).to be true
           expect(results.first.associations.key?(:domain)).to be true
@@ -121,6 +176,16 @@ module VCAP::CloudController
               shared_route = create(:route, space: space4)
               shared_route.add_shared_space(space2)
               expect(results.map(&:guid)).to contain_exactly(shared_route.guid, route3.guid)
+            end
+          end
+
+          context 'when a route matches through both owned and shared space paths' do
+            let(:routes_filter) { { space_guids: [space1.guid, space2.guid] } }
+
+            it 'returns the route only once' do
+              route1.add_shared_space(space2)
+
+              expect(results.map(&:guid)).to contain_exactly(route1.guid, route2.guid, route3.guid)
             end
           end
 

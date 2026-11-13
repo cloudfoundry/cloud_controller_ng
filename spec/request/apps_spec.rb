@@ -997,11 +997,8 @@ RSpec.describe 'Apps' do
 
       it 'filters by lifecycle_type' do
         create(:app_model, name: 'name1')
-        docker_app_model = create(:app_model, name: 'name2')
+        create(:app_model, :docker, name: 'name2')
         create(:app_model, name: 'name3')
-
-        docker_app_model.buildpack_lifecycle_data = nil
-        docker_app_model.save
 
         get '/v3/apps?lifecycle_type=buildpack', nil, admin_header
 

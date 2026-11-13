@@ -70,6 +70,18 @@ module VCAP::CloudController
       def resource_guid
         handler.respond_to?(:resource_guid) ? handler.resource_guid : nil
       end
+
+      # Secret-free identifying fields for logging a created job.
+      # Deliberately excludes any user-supplied payload (arbitrary_parameters,
+      # audit_hash). Merges any hash_for_logs the wrapped handler exposes.
+      def hash_for_logs
+        {
+          job_class: wrapped_handler.class.name,
+          display_name: display_name,
+          resource_type: resource_type,
+          resource_guid: resource_guid
+        }.merge(handler.respond_to?(:hash_for_logs) ? handler.hash_for_logs : {}).compact
+      end
     end
   end
 end

@@ -137,7 +137,7 @@ module VCAP::CloudController
           },
 
           staging: {
-            auth: {
+            optional(:auth) => {
               user: String,
               password: String
             },
@@ -221,16 +221,14 @@ module VCAP::CloudController
             resource_directory_key: String,
             optional(:blobstore_type) => String,
             optional(:local_blobstore_path) => String,
-            optional(:connection_config) => Hash,
-            optional(:webdav_config) => Hash
+            optional(:connection_config) => Hash
           },
 
           buildpacks: {
             buildpack_directory_key: String,
             optional(:blobstore_type) => String,
             optional(:local_blobstore_path) => String,
-            optional(:connection_config) => Hash,
-            optional(:webdav_config) => Hash
+            optional(:connection_config) => Hash
           },
 
           packages: {
@@ -239,8 +237,7 @@ module VCAP::CloudController
             app_package_directory_key: String,
             optional(:blobstore_type) => String,
             optional(:local_blobstore_path) => String,
-            optional(:connection_config) => Hash,
-            optional(:webdav_config) => Hash
+            optional(:connection_config) => Hash
           },
 
           droplets: {
@@ -248,8 +245,7 @@ module VCAP::CloudController
             max_staged_droplets_stored: Integer,
             optional(:blobstore_type) => String,
             optional(:local_blobstore_path) => String,
-            optional(:connection_config) => Hash,
-            optional(:webdav_config) => Hash
+            optional(:connection_config) => Hash
           },
 
           db_encryption_key: enum(String, NilClass),
@@ -393,6 +389,12 @@ module VCAP::CloudController
             per_process_admin_limit: Integer,
             global_admin_limit: Integer,
             reset_interval_in_minutes: Integer
+          },
+
+          optional(:concurrency_rate_limiter) => {
+            enabled: bool,
+            optional(:blocking_limit) => Integer,
+            optional(:logging_limit) => Integer
           },
 
           optional(:temporary_enable_v2) => bool,

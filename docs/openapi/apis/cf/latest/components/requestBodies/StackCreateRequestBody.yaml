@@ -13,7 +13,7 @@ content:
           type: [string, "null"]
           maxLength: 250
           default: null
-          description: Description of the stack; must no longer than 250 characters
+          description: Description of the stack; must be no longer than 250 characters
         state:
           type: string
           enum:

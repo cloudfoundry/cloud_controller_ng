@@ -11,7 +11,7 @@ module VCAP::CloudController
         class << self
           # :labels and :annotations come from MetadataPresentationHelpers
           def associated_resources
-            super + [{ app: %i[buildpack_lifecycle_data cnb_lifecycle_data] }]
+            super + [:app]
           end
         end
 

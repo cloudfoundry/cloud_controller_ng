@@ -7,7 +7,6 @@ module VCAP::CloudController
     let(:periodic_updater) { instance_double(VCAP::CloudController::Metrics::PeriodicUpdater) }
     let(:request_metrics) { instance_double(VCAP::CloudController::Metrics::RequestMetrics) }
     let(:routing_api_client) { instance_double(VCAP::CloudController::RoutingApi::Client, router_group_guid: '') }
-    let(:puma_server_double) { instance_double(Puma::Server, add_tcp_listener: nil, add_unix_listener: nil, run: nil) }
 
     let(:argv) { [] }
 
@@ -34,7 +33,7 @@ module VCAP::CloudController
       allow(VCAP::CloudController::Metrics::RequestMetrics).to receive(:new).and_return(request_metrics)
       allow(periodic_updater).to receive(:setup_updates)
       allow(VCAP::PidFile).to receive(:new) { double(:pidfile, unlink_at_exit: nil) }
-      allow(Puma::Server).to receive(:new).and_return(puma_server_double)
+      allow_any_instance_of(VCAP::CloudController::ApiMetricsWebserver).to receive(:start)
     end
 
     after do

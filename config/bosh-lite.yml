@@ -122,48 +122,28 @@ quota_definitions:
 default_quota_definition: default
 
 resource_pool:
-  blobstore_type: webdav
-  webdav_config:
-    blobstore_timeout: 5
-    public_endpoint: http://blobstore.bosh-lite.com
-    private_endpoint: https://blobstore.service.cf.internal:4443
-    username: blobstore-username
-    password: blobstore-password
+  blobstore_type: local
+  local_blobstore_path: /var/vcap/store/cloud_controller_ng/resource_pool
   minimum_size: 65536
   maximum_size: 536870912
   resource_directory_key: bosh-lite.com-cc-resources
 
 packages:
-  blobstore_type: webdav
-  webdav_config:
-    blobstore_timeout: 5
-    public_endpoint: http://blobstore.bosh-lite.com
-    private_endpoint: https://blobstore.service.cf.internal:4443
-    username: blobstore-username
-    password: blobstore-password
+  blobstore_type: local
+  local_blobstore_path: /var/vcap/store/cloud_controller_ng/packages
   app_package_directory_key: bosh-lite.com-cc-packages
   max_valid_packages_stored: 5
   max_package_size: 1073741824
 
 droplets:
-  blobstore_type: webdav
-  webdav_config:
-    blobstore_timeout: 5
-    public_endpoint: http://blobstore.bosh-lite.com
-    private_endpoint: https://blobstore.service.cf.internal:4443
-    username: blobstore-username
-    password: blobstore-password
+  blobstore_type: local
+  local_blobstore_path: /var/vcap/store/cloud_controller_ng/droplets
   droplet_directory_key: bosh-lite.com-cc-droplets
   max_staged_droplets_stored: 5
 
 buildpacks:
-  blobstore_type: webdav
-  webdav_config:
-    blobstore_timeout: 5
-    public_endpoint: http://blobstore.bosh-lite.com
-    private_endpoint: https://blobstore.service.cf.internal:4443
-    username: blobstore-username
-    password: blobstore-password
+  blobstore_type: local
+  local_blobstore_path: /var/vcap/store/cloud_controller_ng/buildpacks
   buildpack_directory_key: bosh-lite.com-cc-buildpacks
 
 db_encryption_key: db-encryption-key

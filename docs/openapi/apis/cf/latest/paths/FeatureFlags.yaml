@@ -85,6 +85,7 @@
             - app_scaling
             - diego_docker
             - diego_cnb
+            - diego_custom_stacks
             - env_var_visibility
             - hash_based_routing
             - hide_marketplace_from_unauthenticated_users
@@ -145,6 +146,7 @@
             - app_scaling
             - diego_docker
             - diego_cnb
+            - diego_custom_stacks
             - env_var_visibility
             - hash_based_routing
             - hide_marketplace_from_unauthenticated_users

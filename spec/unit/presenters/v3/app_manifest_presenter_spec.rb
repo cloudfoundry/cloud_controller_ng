@@ -201,11 +201,57 @@ module VCAP::CloudController::Presenters::V3
             )
           end
 
-          it 'presents the buildpacks in the order originally specified (not alphabetical)' do
+          it 'presents the buildpacks in the order originally specified (not alphabetical), obfuscating credentials in URLs' do
             result = AppManifestPresenter.new(app, service_bindings, app.route_mappings).to_hash
             application = result[:applications].first
             expect(application[:stack]).to eq(app.lifecycle_data.stack)
-            expect(application[:buildpacks]).to eq(['limabean', 'git://user:pass@github.com/repo'])
+            expect(application[:buildpacks]).to eq(['limabean', 'git://***:***@github.com/repo'])
+          end
+        end
+
+        context 'when the app is a buildpack app with data.credentials' do
+          before do
+            create(:buildpack, name: 'limabean')
+            app.lifecycle_data.update(buildpacks: ['limabean'], stack: 'the-happiest-stack')
+            app.lifecycle_data.credentials = { 'git.example.com' => { 'username' => 'user', 'password' => 'sekret' } }
+            app.lifecycle_data.save
+          end
+
+          it 'presents the credentials key with a redacted value' do
+            result = AppManifestPresenter.new(app, service_bindings, app.route_mappings).to_hash
+            application = result[:applications].first
+            expect(application[:credentials]).to eq('***')
+            expect(result.to_s).not_to include('sekret')
+          end
+        end
+
+        context 'when the app is a buildpack app without data.credentials' do
+          before do
+            create(:buildpack, name: 'limabean')
+            app.lifecycle_data.update(buildpacks: ['limabean'], stack: 'the-happiest-stack')
+          end
+
+          it 'omits the credentials key' do
+            result = AppManifestPresenter.new(app, service_bindings, app.route_mappings).to_hash
+            application = result[:applications].first
+            expect(application).not_to have_key(:credentials)
+          end
+        end
+
+        context 'when the app is a cnb app with data.credentials' do
+          let(:app) { create(:app_model, :cnb, environment_variables:) }
+
+          before do
+            app.lifecycle_data.update(buildpacks: ['docker://example.org/bp:latest'])
+            app.lifecycle_data.credentials = { 'example.org' => { 'token' => 'sekret' } }
+            app.lifecycle_data.save
+          end
+
+          it 'presents the credentials key with a redacted value' do
+            result = AppManifestPresenter.new(app, service_bindings, app.route_mappings).to_hash
+            application = result[:applications].first
+            expect(application[:credentials]).to eq('***')
+            expect(result.to_s).not_to include('sekret')
           end
         end
 

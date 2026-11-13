@@ -1,6 +1,6 @@
 require 'cloud_controller/diego/lifecycles/buildpack_info'
 require 'cloud_controller/diego/lifecycles/lifecycle_base'
-require 'cloud_controller/diego/lifecycles/buildpack_lifecycle_data_validator'
+require 'cloud_controller/diego/lifecycles/cnb_lifecycle_data_validator'
 require 'fetchers/buildpack_lifecycle_fetcher'
 
 module VCAP::CloudController
@@ -14,7 +14,7 @@ module VCAP::CloudController
         buildpacks: Array(buildpacks_to_use),
         stack: staging_stack,
         build: build,
-        credentials: credentials_to_use
+        credentials: credentials_for_staging
       )
     end
 
@@ -23,17 +23,17 @@ module VCAP::CloudController
     end
 
     def credentials
-      Oj.dump(credentials_to_use)
+      Oj.dump(credentials_for_staging)
     end
 
     private
 
-    def app_stack
-      @package.app.cnb_lifecycle_data.try(:stack)
+    def validator_class
+      CNBLifecycleDataValidator
     end
 
-    def credentials_to_use
-      @staging_message.buildpack_data.credentials || @package.app.lifecycle_data.credentials
+    def app_stack
+      @package.app.cnb_lifecycle_data.try(:stack)
     end
   end
 end

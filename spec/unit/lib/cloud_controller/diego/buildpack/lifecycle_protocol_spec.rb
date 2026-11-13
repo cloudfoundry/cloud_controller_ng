@@ -29,7 +29,8 @@ module VCAP
               Diego::StagingDetails.new.tap do |details|
                 details.staging_guid = droplet.guid
                 details.package      = package
-                details.lifecycle    = instance_double(BuildpackLifecycle, staging_stack: 'potato-stack', buildpack_infos: buildpack_infos)
+                details.lifecycle    = instance_double(BuildpackLifecycle, staging_stack: 'potato-stack', buildpack_infos: buildpack_infos,
+                                                                           credentials_for_staging: nil)
               end
             end
             let(:buildpack_infos) { [BuildpackInfo.new('http://some-buildpack.url', nil)] }
@@ -50,6 +51,7 @@ module VCAP
             let(:package) { create(:package_model, app:) }
             let(:droplet) { create(:droplet_model, package:, app:) }
             let(:buildpack) { nil }
+            let(:stack) { 'potato-stack' }
             let(:buildpack_infos) { [BuildpackInfo.new(buildpack, VCAP::CloudController::Buildpack.find(name: buildpack))] }
 
             let(:staging_details) do
@@ -59,7 +61,8 @@ module VCAP
                 details.environment_variables = { 'nightshade_fruit' => 'potato' }
                 details.staging_memory_in_mb  = 42
                 details.staging_disk_in_mb    = 51
-                details.lifecycle             = instance_double(BuildpackLifecycle, staging_stack: 'potato-stack', buildpack_infos: buildpack_infos)
+                details.lifecycle             = instance_double(BuildpackLifecycle, staging_stack: stack, buildpack_infos: buildpack_infos,
+                                                                                    credentials_for_staging: nil)
               end
             end
 
@@ -100,6 +103,42 @@ module VCAP
               end
             end
 
+            context 'when a custom buildpack is requested and credentials are provided' do
+              let(:buildpack) { 'https://tanagra.example.com/kamin/resht-buildpack' }
+              let(:staging_details) do
+                Diego::StagingDetails.new.tap do |details|
+                  details.staging_guid          = droplet.guid
+                  details.package               = package
+                  details.environment_variables = { 'nightshade_fruit' => 'potato' }
+                  details.staging_memory_in_mb  = 42
+                  details.staging_disk_in_mb    = 51
+                  details.lifecycle             = instance_double(BuildpackLifecycle, staging_stack: 'potato-stack', buildpack_infos: buildpack_infos,
+                                                                                      credentials_for_staging: { 'tanagra.example.com' => { 'username' => 'kamin',
+                                                                                                                                            'password' => 'kaylah' } })
+                end
+              end
+
+              it 'injects the credentials into the custom buildpack URL' do
+                lifecycle_data = lifecycle_protocol.lifecycle_data(staging_details)
+
+                bp = lifecycle_data[:buildpacks][0]
+                expect(bp[:url]).to eq('https://kamin:kaylah@tanagra.example.com/kamin/resht-buildpack')
+              end
+            end
+
+            context 'when using a custom stack' do
+              let(:stack) { 'docker://registry.example.com/my-org/custom-stack:latest' }
+              let(:buildpack) { 'http://custom-buildpack.example.com' }
+
+              it 'uses a safe cache key while retaining buildpack-artifact caching' do
+                lifecycle_protocol.lifecycle_data(staging_details)
+
+                cache_key = Digest::SHA256.hexdigest(stack)
+                expect(blobstore_url_generator).to have_received(:buildpack_cache_download_url).with(app.guid, cache_key)
+                expect(blobstore_url_generator).to have_received(:buildpack_cache_upload_url).with(app.guid, cache_key)
+              end
+            end
+
             context 'when the generated message has invalid data' do
               let(:buildpack_infos) { [] }
 
@@ -135,7 +174,8 @@ module VCAP
             let(:droplet) { create(:droplet_model) }
             let(:staging_details) do
               StagingDetails.new.tap do |details|
-                details.lifecycle    = instance_double(BuildpackLifecycle, staging_stack: 'potato-stack', buildpack_infos: 'some buildpack info')
+                details.lifecycle    = instance_double(BuildpackLifecycle, staging_stack: 'potato-stack', buildpack_infos: 'some buildpack info',
+                                                                           credentials_for_staging: nil)
                 details.package      = package
                 details.staging_guid = droplet.guid
               end

@@ -2,6 +2,7 @@ require 'credhub/config_helpers'
 require 'diego/action_builder'
 require 'cloud_controller/diego/staging_action_builder'
 require 'digest/xxhash'
+require 'utils/uri_utils'
 
 module VCAP::CloudController
   module Diego
@@ -15,9 +16,10 @@ module VCAP::CloudController
           env = [
             ::Diego::Bbs::Models::EnvironmentVariable.new(name: 'CNB_USER_ID', value: '2000'),
             ::Diego::Bbs::Models::EnvironmentVariable.new(name: 'CNB_GROUP_ID', value: '2000'),
-            ::Diego::Bbs::Models::EnvironmentVariable.new(name: 'CNB_STACK_ID', value: lifecycle_stack),
             ::Diego::Bbs::Models::EnvironmentVariable.new(name: 'LANG', value: STAGING_DEFAULT_LANG)
           ]
+          cnb_stack_id = UriUtils.custom_stack_buildpack_identifier(lifecycle_stack) || lifecycle_stack
+          env.push(::Diego::Bbs::Models::EnvironmentVariable.new(name: 'CNB_STACK_ID', value: cnb_stack_id)) if cnb_stack_id
           env.push(::Diego::Bbs::Models::EnvironmentVariable.new(name: 'CNB_REGISTRY_CREDS', value: lifecycle_data[:credentials])) if lifecycle_data[:credentials]
           env
         end

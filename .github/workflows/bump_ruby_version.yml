@@ -1,0 +1,76 @@
+name: Bump Ruby Version
+
+on:
+  workflow_dispatch:
+  schedule:
+    - cron: '17 5 * * *' # Runs daily at 05:17 UTC
+
+jobs:
+  bump-ruby-version:
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+      pull-requests: write
+    steps:
+      - uses: hmarr/debug-action@v3
+      - name: Checkout ccng
+        uses: actions/checkout@v7
+        with:
+          path: cloud_controller_ng
+
+      - name: Fetch capi-release .ruby-version
+        uses: actions/checkout@v7
+        with:
+          repository: cloudfoundry/capi-release
+          ref: develop
+          path: capi-release
+          sparse-checkout: .ruby-version
+          sparse-checkout-cone-mode: false
+
+      - name: Compare versions
+        id: compare
+        run: |
+          upstream="$(tr -d '[:space:]' < capi-release/.ruby-version)"
+          current="$(tr -d '[:space:]' < cloud_controller_ng/.ruby-version)"
+          echo "Upstream (capi-release): $upstream"
+          echo "Current  (ccng):         $current"
+          if [ "$upstream" = "$current" ]; then
+            echo "Ruby version already in sync."
+            echo "changes=false" >> $GITHUB_ENV
+          else
+            echo "Ruby version drift detected."
+            echo "changes=true" >> $GITHUB_ENV
+            echo "version=$upstream" >> $GITHUB_ENV
+          fi
+
+      - name: Update .ruby-version
+        if: env.changes == 'true'
+        run: |
+          printf '%s\n' "${{ env.version }}" > cloud_controller_ng/.ruby-version
+
+      - name: Commit changes
+        if: env.changes == 'true'
+        run: |
+          pushd cloud_controller_ng > /dev/null
+            git config user.name "ari-wg-gitbot"
+            git config user.email "app-runtime-interfaces@cloudfoundry.org"
+            git add .ruby-version
+            git commit -m "Bump Ruby version to ${{ env.version }}"
+          popd > /dev/null
+
+      - name: Create or Update Pull Request
+        if: env.changes == 'true'
+        uses: peter-evans/create-pull-request@v8
+        with:
+          path: cloud_controller_ng
+          branch: ruby-version-bump-${{ github.ref_name }}
+          title: "Automated Bump of Ruby Version to ${{ env.version }}"
+          body: |
+            This PR syncs `.ruby-version` with
+            [capi-release](https://github.com/cloudfoundry/capi-release/blob/develop/.ruby-version).
+
+            Upstream Ruby version: `${{ env.version }}`
+          labels: "bump_ruby_version, needs_review"
+          commit-message: "Bump Ruby version to ${{ env.version }}"
+          committer: "ari-wg-gitbot <app-runtime-interfaces@cloudfoundry.org>"
+          author: "ari-wg-gitbot <app-runtime-interfaces@cloudfoundry.org>"

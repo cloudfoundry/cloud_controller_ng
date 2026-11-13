@@ -1,6 +1,6 @@
 source 'https://rubygems.org'
 
-gem 'autoprefixer-rails', '~> 10.4.7'
+gem 'autoprefixer-rails', '~> 10.6.1'
 gem 'json', '>= 2.3.0'
 gem 'middleman', '~> 4.6'
 gem 'middleman-autoprefixer', '~> 3.0', '>= 3.0.0'

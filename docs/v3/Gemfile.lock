@@ -16,7 +16,7 @@ GEM
       uri (>= 0.13.1)
     addressable (2.9.0)
       public_suffix (>= 2.0.2, < 8.0)
-    autoprefixer-rails (10.4.21.0)
+    autoprefixer-rails (10.6.1.0)
       execjs (~> 2)
     base64 (0.3.0)
     bigdecimal (4.1.2)
@@ -52,7 +52,7 @@ GEM
     http_parser.rb (0.8.1)
     i18n (1.14.8)
       concurrent-ruby (~> 1.0)
-    json (2.21.2)
+    json (3.1.0)
     kramdown (2.5.2)
       rexml (>= 3.4.4)
     libv8-node (24.12.0.1-arm64-darwin)
@@ -109,7 +109,7 @@ GEM
     middleman-syntax (3.6.2)
       middleman-core (>= 3.2)
       rouge (>= 3.2, < 5)
-    mini_racer (0.22.1)
+    mini_racer (0.22.2)
       libv8-node (~> 24.12.0.1)
     minitest (6.0.6)
       drb (~> 2.0)
@@ -169,7 +169,7 @@ PLATFORMS
   x86_64-linux
 
 DEPENDENCIES
-  autoprefixer-rails (~> 10.4.7)
+  autoprefixer-rails (~> 10.6.1)
   json (>= 2.3.0)
   middleman (~> 4.6)
   middleman-autoprefixer (~> 3.0, >= 3.0.0)

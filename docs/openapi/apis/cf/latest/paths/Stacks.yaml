@@ -217,6 +217,10 @@
         application/json:
           schema:
             properties:
+              description:
+                type: string
+                description: Description of the stack; must be no longer than 250 characters
+                maxLength: 250
               metadata:
                 $ref: ../components/schemas/Metadata.yaml
                 description: Labels and annotations applied to the stack
@@ -240,6 +244,7 @@
                     key: value
                   annotations:
                     note: detailed information
+                description: Example stack description
                 state: ACTIVE
                 state_reason: Optional plain text describing the stack state change
     responses:

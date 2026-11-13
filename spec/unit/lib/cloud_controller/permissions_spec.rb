@@ -534,6 +534,16 @@ module VCAP::CloudController
       end
     end
 
+    describe '#space_ids_with_readable_routes_query' do
+      it 'returns subquery from membership using ROLES_FOR_ROUTE_READING' do
+        membership = instance_double(Membership)
+        subquery = instance_double(Sequel::Dataset)
+        expect(Membership).to receive(:new).with(user).and_return(membership)
+        expect(membership).to receive(:authorized_space_ids_subquery).with(Permissions::ROLES_FOR_ROUTE_READING).and_return(subquery)
+        expect(permissions.space_ids_with_readable_routes_query).to be(subquery)
+      end
+    end
+
     describe '#can_read_route_policy_from_space?' do
       context 'user has no membership' do
         context 'and user is an admin' do
