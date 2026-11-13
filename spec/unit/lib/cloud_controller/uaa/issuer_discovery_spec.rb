@@ -31,11 +31,22 @@ module VCAP::CloudController
       request = stub_request(:get, discovery_url).to_return(body: { issuer: 'https://uaa.example.test/oauth/token' }.to_json)
       discovery = locator.uaa_issuer_discovery
       gate = Queue.new
-      threads = Array.new(4) { Thread.new { gate.pop; discovery.issuer } }
+      threads = Array.new(4) do
+        Thread.new do
+          gate.pop
+          discovery.issuer
+        end
+      end
       threads.size.times { gate << true }
 
       expect(threads.map(&:value)).to eq(Array.new(4, 'https://uaa.example.test/oauth/token'))
       expect(request).to have_been_requested.once
+    end
+
+    it 'treats Ruby object markers as ordinary JSON data' do
+      stub_request(:get, discovery_url).to_return(body: '{"^o":"Object","issuer":"https://uaa.example.test/oauth/token"}')
+
+      expect(locator.uaa_issuer_discovery.issuer).to eq('https://uaa.example.test/oauth/token')
     end
 
     it 'fails closed instead of using an expired issuer when refresh fails' do

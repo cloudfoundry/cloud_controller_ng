@@ -19,7 +19,7 @@ module VCAP::CloudController
         response = client.get('.well-known/openid-configuration')
         raise "Could not retrieve issuer information from UAA: #{response.status}" unless response.status == 200
 
-        value = Oj.load(response.body).fetch('issuer')
+        value = Oj.strict_load(response.body).fetch('issuer')
         raise 'UAA issuer discovery returned an empty issuer' unless value.is_a?(String) && value.present?
 
         @issuer = value
