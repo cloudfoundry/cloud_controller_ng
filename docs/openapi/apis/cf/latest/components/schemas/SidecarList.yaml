@@ -2,7 +2,11 @@ type: object
 properties:
   pagination:
     $ref: './Pagination.yaml'
+    description: Pagination information for the list of sidecars
   resources:
     type: array
     items:
       $ref: './Sidecar.yaml'
+    description: The list of sidecars
+description: |-
+  A paginated list of sidecars.

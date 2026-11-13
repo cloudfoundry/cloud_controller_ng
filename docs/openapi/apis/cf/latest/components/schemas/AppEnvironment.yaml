@@ -2,23 +2,25 @@ type: object
 properties:
   staging_env_json:
     type: object
-    description: Environment variables used during staging
+    description: Environment variables from the staging environment variable group, provided to the app during staging
     additionalProperties: true
   running_env_json:
     type: object
-    description: Environment variables used during runtime
+    description: Environment variables from the running environment variable group, provided to the app at runtime
     additionalProperties: true
   environment_variables:
     type: object
-    description: User-defined environment variables
+    description: Environment variables that are associated with the given app
     additionalProperties:
       type: [string, "null"]
   system_env_json:
     type: object
-    description: System environment variables including VCAP_SERVICES
+    description: System-provided environment variables, including `VCAP_SERVICES`; redacted for Space Supporters
     additionalProperties: true
   application_env_json:
     type: object
-    description: Application environment variables including VCAP_APPLICATION
+    description: Application-provided environment variables, including `VCAP_APPLICATION`
     additionalProperties: true
-description: 'Environment variables that will be provided to an app at runtime'
+description: |-
+  The environment variables that will be provided to an app at runtime.
+  It will include environment variables for Environment Variable Groups and Service Bindings.

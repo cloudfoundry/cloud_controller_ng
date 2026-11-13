@@ -1,86 +1,114 @@
 type: object
 allOf:
   - $ref: './BaseSchema.yaml'
-properties:
-  state:
-    type: object
-    properties:
-      current:
-        type: string
-        description: Current state of the app that this event pertains to, if applicable
-      previous:
-        type: [string, "null"]
-        description: Previous state of the app that this event pertains to, if applicable
-  app:
-    type: object
-    properties:
+  - properties:
       guid:
         type: string
-        description: Unique identifier of the app that this event pertains to, if applicable
-      name:
-        type: [string, "null"]
-        description: Name of the app that this event pertains to, if applicable
-  process:
-    type: object
-    properties:
-      guid:
+        format: uuid
+        description: Unique identifier for the event
+      created_at:
         type: string
-        description: Unique identifier of the process that this event pertains to, if applicable
-      type:
+        format: date-time
+        description: The time with zone when the event occurred
+      updated_at:
         type: string
-        description: Type of the process that this event pertains to, if applicable
-  space:
-    type: object
-    properties:
-      guid:
-        type: string
-        description: Unique identifier of the space that this event pertains to, if applicable
-      name:
-        type: [string, "null"]
-        description: Name of the space that this event pertains to, if applicable
-  organization:
-    type: object
-    properties:
-      guid:
-        type: string
-        description: Unique identifier of the org that this event pertains to, if applicable
-  buildpack:
-    type: object
-    properties:
-      guid:
-        type: string
-        description: Unique identifier of the buildpack that this event pertains to, if applicable
-      name:
-        type: [string, "null"]
-        description: Name of the buildpack that this event pertains to, if applicable
-  task:
-    type: object
-    properties:
-      guid:
-        type: string
-        description: Unique identifier of the task that this event pertains to, if applicable
-      name:
-        type: [string, "null"]
-        description: Name of the task that this event pertains to, if applicable
-  memory_in_mb_per_instance:
-    type: object
-    properties:
-      current:
-        type: integer
-        description: Current memory in MB of the app that this event pertains to, if applicable
-      previous:
-        type: [integer, "null"]
-        description: Previous memory in MB of the app that this event pertains to, if applicable
-  instance_count:
-    type: object
-    properties:
-      current:
-        type: integer
-        description: Current instance count of the app that this event pertains to, if applicable
-      previous:
-        type: [integer, "null"]
-        description: Previous instance count of the app that this event pertains to, if applicable
-description: >-
+        format: date-time
+        description: Identical to `created_at` (events are created, never updated)
+      state:
+        type: object
+        description: The state of the app that this event pertains to
+        properties:
+          current:
+            type: [string, "null"]
+            description: Current state of the app that this event pertains to, if applicable
+          previous:
+            type: [string, "null"]
+            description: Previous state of the app that this event pertains to, if applicable
+      app:
+        type: object
+        description: The app that this event pertains to
+        properties:
+          guid:
+            type: [string, "null"]
+            description: Unique identifier of the app that this event pertains to, if applicable
+          name:
+            type: [string, "null"]
+            description: Name of the app that this event pertains to, if applicable
+      process:
+        type: object
+        description: The process that this event pertains to
+        properties:
+          guid:
+            type: [string, "null"]
+            description: Unique identifier of the process that this event pertains to, if applicable
+          type:
+            type: [string, "null"]
+            description: Type of the process that this event pertains to, if applicable
+      space:
+        type: object
+        description: The space that this event pertains to
+        properties:
+          guid:
+            type: [string, "null"]
+            description: Unique identifier of the space that this event pertains to, if applicable
+          name:
+            type: [string, "null"]
+            description: Name of the space that this event pertains to, if applicable
+      organization:
+        type: object
+        description: The organization that this event pertains to
+        properties:
+          guid:
+            type: [string, "null"]
+            description: Unique identifier of the org that this event pertains to, if applicable
+      buildpack:
+        type: object
+        description: The buildpack that this event pertains to
+        properties:
+          guid:
+            type: [string, "null"]
+            description: Unique identifier of the buildpack that this event pertains to, if applicable
+          name:
+            type: [string, "null"]
+            description: Name of the buildpack that this event pertains to, if applicable
+      task:
+        type: object
+        description: The task that this event pertains to
+        properties:
+          guid:
+            type: [string, "null"]
+            description: Unique identifier of the task that this event pertains to, if applicable
+          name:
+            type: [string, "null"]
+            description: Name of the task that this event pertains to, if applicable
+      memory_in_mb_per_instance:
+        type: object
+        description: The memory per instance of the app that this event pertains to
+        properties:
+          current:
+            type: [integer, "null"]
+            description: Current memory in MB of the app that this event pertains to, if applicable
+          previous:
+            type: [integer, "null"]
+            description: Previous memory in MB of the app that this event pertains to, if applicable
+      instance_count:
+        type: object
+        description: The instance count of the app that this event pertains to
+        properties:
+          current:
+            type: [integer, "null"]
+            description: Current instance count of the app that this event pertains to, if applicable
+          previous:
+            type: [integer, "null"]
+            description: Previous instance count of the app that this event pertains to, if applicable
+      links:
+        type: object
+        description: Links to related resources
+        properties:
+          self:
+            $ref: './Link.yaml'
+            description: The URL to get this app usage event
+description: |-
   App usage events are a record of changes in the usage of apps and tasks. Examples include starting an application, scaling an application (from, say, one to three instances), and stopping an application.
 
   Usage events are typically used by billing and chargeback applications.

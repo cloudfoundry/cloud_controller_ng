@@ -2,17 +2,10 @@ type: object
 properties:
   resources:
     type: array
+    description: List of resources to check for in the resource cache
     items:
-      type: object
-      properties:
-        checksum:
-          type: object
-          properties:
-            value:
-              type: string
-        size_in_bytes:
-          type: integer
-        path:
-          type: string
-        mode:
-          type: string
+      $ref: './ResourceMatchObject.yaml'
+required:
+  - resources
+description: |-
+  This endpoint matches given resource SHA-1/file size pairs against the Cloud Controller cache and reports the subset that describes already cached files. This is usually used to avoid uploading duplicate files when pushing an app which has only been partially changed. The `path` and `mode` fields are not used when matching.

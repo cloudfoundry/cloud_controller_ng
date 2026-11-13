@@ -1,0 +1,43 @@
+type: object
+properties:
+  name:
+    type: string
+    description: Name of the service instance
+  tags:
+    type: array
+    items:
+      type: string
+    description: Tags are used by apps to identify service instances; they are shown in the app VCAP_SERVICES env
+  parameters:
+    type: object
+    description: A JSON object that is passed to the service broker
+  relationships:
+    type: object
+    properties:
+      service_plan:
+        $ref: './RelationshipToOne.yaml'
+        description: The service plan from which to create the service instance
+    description: Relationships for the service instance
+  maintenance_info:
+    type: object
+    required:
+      - version
+    properties:
+      version:
+        type: string
+        description: A semantic version value that must match the `version` in the `maintenance_info` for the service instance plan in the updated broker catalog
+    description: If provided, must have the `version` field; `version` must be a semantic version value and it must match the `version` in the `maintenance_info` for the service instance plan in the updated broker catalog. Any other value for `version` will cause a `MaintenanceInfoConflict` error
+  metadata:
+    $ref: './Metadata.yaml'
+    description: Labels and annotations applied to the service_instance
+description: |-
+  Optional parameters for updating a managed service instance.
+
+  Some updates can be performed entirely within the Cloud Controller in which case the response is synchronous. Some updates require communication with the service broker, in which case the response will be asynchronous. The response will be asynchronous if any of these parameters are specified:
+
+  * `parameters`
+  * `service_plan`
+  * `maintenance_info`
+  * `name` - when the service offering has `allow_context_updates` feature enabled
+
+  Otherwise the response will be synchronous.

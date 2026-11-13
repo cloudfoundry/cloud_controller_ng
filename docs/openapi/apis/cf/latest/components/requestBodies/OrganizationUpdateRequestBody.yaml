@@ -4,6 +4,7 @@ content:
   application/json:
     schema:
       type: object
+      description: Request schema for updating an organization
       properties:
         name:
           type: string
@@ -13,7 +14,7 @@ content:
           description: Whether an organization is suspended or not
         metadata:
           $ref: ../schemas/Metadata.yaml
-      description: Request schema for updating an organization
+          description: Labels and annotations applied to the organization
     examples:
       default:
         summary: default

@@ -7,7 +7,10 @@ content:
       properties:
         name:
           type: string
-          description: The name of the buildpack
+          description: Name of the buildpack
+        stack:
+          type: [string, 'null']
+          description: The name of the stack that the buildpack will use
         position:
           type: integer
           description: The order in which the buildpacks are checked during buildpack auto-detection
@@ -17,11 +20,12 @@ content:
         locked:
           type: boolean
           description: Whether or not the buildpack is locked to prevent updating the bits
-        stack:
-          type: string
-          description: The name of the stack that the buildpack will use
         metadata:
           $ref: ../schemas/Metadata.yaml
+          description: |-
+            `labels`: Labels applied to the buildpack
+
+            `annotations`: Annotations applied to the buildpack
       description: Request schema for updating a buildpack
     examples:
       default:

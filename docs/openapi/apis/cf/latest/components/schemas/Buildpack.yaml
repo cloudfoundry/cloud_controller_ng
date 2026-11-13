@@ -2,12 +2,24 @@ type: object
 allOf:
   - $ref: './BaseSchema.yaml'
   - properties:
+      guid:
+        type: string
+        format: uuid
+        description: Unique identifier for the buildpack
+      created_at:
+        type: string
+        format: date-time
+        description: The time with zone when the object was created
+      updated_at:
+        type: string
+        format: date-time
+        description: The time with zone when the object was last updated
       name:
         type: string
         description: The name of the buildpack; to be used by app buildpack field (only alphanumeric characters)
       state:
         type: string
-        description: The state of the buildpack
+        description: 'The state of the buildpack; valid states are: `AWAITING_UPLOAD`, `READY`'
         enum:
           - AWAITING_UPLOAD
           - READY
@@ -17,6 +29,12 @@ allOf:
       lifecycle:
         type: string
         description: The version of buildpacks the buildpack uses. `buildpack` indicates [Classic Buildpacks](https://docs.cloudfoundry.org/buildpacks/classic.html). `cnb` indicates [Cloud Native Buildpacks](https://docs.cloudfoundry.org/buildpacks/cnb/)
+        enum:
+          - buildpack
+          - cnb
+      filename:
+        type: [string, 'null']
+        description: The filename of the buildpack
       position:
         type: integer
         description: The order in which the buildpacks are checked during buildpack auto-detection
@@ -26,18 +44,23 @@ allOf:
       locked:
         type: boolean
         description: Whether or not the buildpack is locked to prevent updating the bits
-      filename:
-        type: [string, 'null']
-        description: The filename of the buildpack
       metadata:
         $ref: './Metadata.yaml'
+        description: |-
+          `labels`: Labels applied to the app
+
+          `annotations`: Annotations added to the app
       links:
         type: object
+        description: Links to related resources
         properties:
           self:
             $ref: './Link.yaml'
-            description: The URL of the buildpack
+            description: The URL to get this buildpack
           upload:
             $ref: './Link.yaml'
-            description: The URL to upload the buildpack
-description: A buildpack represents a set of scripts used to prepare an application for launch.
+            description: The URL to upload the bits for this buildpack
+description: |-
+  Buildpacks are used during a [build](#builds) to download external dependencies and transform a [package](#packages) into an executable [droplet](#droplets). In this way, buildpacks are a pluggable extension to Cloud Foundry that enable CF to run different languages and frameworks.
+
+  Buildpacks will automatically detect if they support an application. Buildpacks can also be explicitly specified on [apps](#apps) and [builds](#builds).
