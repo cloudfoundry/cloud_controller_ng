@@ -4,12 +4,19 @@ require 'presenters/v3/domain_presenter'
 module VCAP::CloudController::Presenters::V3
   RSpec.describe DomainPresenter do
     let(:visible_org_guids) { [] }
-    let(:visible_org_ids_query) { VCAP::CloudController::Organization.where(guid: visible_org_guids).select(:id) }
     let(:all_orgs_visible) { false }
+
+    describe '.associated_resources' do
+      it 'includes the associations the presenter reads so the list fetcher can eager load them' do
+        expect(DomainPresenter.associated_resources).to contain_exactly(
+          :owning_organization, :shared_organizations, :labels, :annotations
+        )
+      end
+    end
 
     describe '#to_hash' do
       subject do
-        DomainPresenter.new(domain, visible_org_ids_query:, all_orgs_visible:).to_hash
+        DomainPresenter.new(domain, visible_org_guids:, all_orgs_visible:).to_hash
       end
 
       context 'when the domain is public (shared)' do
