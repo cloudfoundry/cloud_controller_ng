@@ -13,6 +13,7 @@ Sequel.migration do
       String :service_account_guid, **account_guid_options, size: 255, null: false
       String :space_guid, **space_guid_options, size: 255, null: false
       primary_key %i[service_account_guid space_guid], name: :service_account_space_entitlements_pkey
+      index %i[space_guid service_account_guid], name: :service_account_entitlements_space_account_index, concurrently: false
       foreign_key [:service_account_guid], :service_accounts, key: :guid, name: :fk_sa_entitlements_account, on_delete: :cascade
       foreign_key [:space_guid], :spaces, key: :guid, name: :fk_sa_entitlements_space, on_delete: :cascade
     end
