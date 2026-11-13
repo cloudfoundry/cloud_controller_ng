@@ -33,7 +33,7 @@ RSpec.describe 'route bindings unique index', isolation: :truncation, type: :mig
       expect(db[:route_bindings].where(service_instance_id: service_instance_2.id, route_id: route_2.id).count).to eq(3)
 
       # === UP MIGRATION ===
-      expect { Sequel::Migrator.run(db, migrations_path, target: current_migration_index, allow_missing_migration_files: true) }.not_to raise_error
+      expect { run_migration }.not_to raise_error
 
       # Verify duplicates are removed after migration
       expect(db[:route_bindings].where(service_instance_id: service_instance_1.id, route_id: route_1.id).count).to eq(1)
@@ -45,16 +45,16 @@ RSpec.describe 'route bindings unique index', isolation: :truncation, type: :mig
       expect(db.indexes(:route_bindings)).to include(:route_bindings_route_id_service_instance_id_index)
 
       # Test up migration idempotency
-      expect { Sequel::Migrator.run(db, migrations_path, target: current_migration_index, allow_missing_migration_files: true) }.not_to raise_error
+      test_up_migration_idempotency
       expect(db.indexes(:route_bindings)).to include(:route_bindings_route_id_service_instance_id_index)
 
       # === DOWN MIGRATION ===
-      expect { Sequel::Migrator.run(db, migrations_path, target: current_migration_index - 1, allow_missing_migration_files: true) }.not_to raise_error
+      expect { revert_migration }.not_to raise_error
       expect(db.indexes(:route_bindings)).not_to include(:route_bindings_route_id_service_instance_id_index)
       expect(db.indexes(:route_bindings)).to include(:route_id) if db.database_type == :mysql
 
       # Test down migration idempotency
-      expect { Sequel::Migrator.run(db, migrations_path, target: current_migration_index - 1, allow_missing_migration_files: true) }.not_to raise_error
+      test_down_migration_idempotency
       expect(db.indexes(:route_bindings)).not_to include(:route_bindings_route_id_service_instance_id_index)
     end
   end

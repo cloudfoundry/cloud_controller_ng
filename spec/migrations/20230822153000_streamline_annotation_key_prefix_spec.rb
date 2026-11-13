@@ -18,7 +18,7 @@ RSpec.describe 'migration to streamline changes to annotation_key_prefix', isola
       anno2 = db[:isolation_segment_annotations].first(key: 'mykey')
       anno3 = db[:isolation_segment_annotations].first(key: 'yourkey')
 
-      expect { Sequel::Migrator.run(db, migrations_path, target: current_migration_index, allow_missing_migration_files: true) }.not_to raise_error
+      expect { run_migration }.not_to raise_error
 
       # Check legacy prefix was converted
       anno1_after_mig = db[:isolation_segment_annotations].first(guid: 'anno-1-guid')
@@ -36,6 +36,12 @@ RSpec.describe 'migration to streamline changes to annotation_key_prefix', isola
       anno3_after_mig = db[:isolation_segment_annotations].first(guid: 'anno-3-guid')
       expect(anno2.values).to eq(anno2_after_mig.values)
       expect(anno3.values).to eq(anno3_after_mig.values)
+
+      # Up migration idempotency
+      test_up_migration_idempotency
+      anno1_after_idempotency = db[:isolation_segment_annotations].first(guid: 'anno-1-guid')
+      expect(anno1_after_idempotency[:key_prefix]).to eq 'mylegacyprefix'
+      expect(anno1_after_idempotency[:key]).to eq 'mykey'
     end
   end
 end

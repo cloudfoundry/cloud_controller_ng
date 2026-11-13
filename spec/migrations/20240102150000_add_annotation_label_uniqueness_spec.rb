@@ -66,7 +66,7 @@ RSpec.describe 'migration to add unique constraint to annotation and labels', is
       annotation.create(resource_guid: i5.guid, key_prefix: 'unique_prefix', key_name: key_f, value: 'v1')
 
       # Run migration once
-      expect { Sequel::Migrator.run(db, migrations_path, target: current_migration_index, allow_missing_migration_files: true) }.not_to raise_error
+      expect { run_migration }.not_to raise_error
 
       # Verify truncation behavior
       expect(trunc_a1.reload.key_name).to eq(truncated_key_name)
@@ -104,6 +104,18 @@ RSpec.describe 'migration to add unique constraint to annotation and labels', is
       expect(uniq_a2.reload).to be_a(annotation)
       expect(uniq_b1.reload).to be_a(annotation)
       expect(uniq_b2.reload).to be_a(annotation)
+
+      # Up migration idempotency - uniqueness constraint still enforced
+      test_up_migration_idempotency
+      expect { annotation.create(resource_guid: i4.guid, key_name: key_f, value: 'v6') }.to raise_error(Sequel::UniqueConstraintViolation)
+
+      # Down migration - uniqueness constraint removed, duplicates allowed again
+      expect { revert_migration }.not_to raise_error
+      expect { annotation.create(resource_guid: i4.guid, key_name: key_f, value: 'v7') }.not_to raise_error
+
+      # Down migration idempotency - constraint still absent
+      test_down_migration_idempotency
+      expect { annotation.create(resource_guid: i4.guid, key_name: key_f, value: 'v8') }.not_to raise_error
     end
   end
 
@@ -156,7 +168,7 @@ RSpec.describe 'migration to add unique constraint to annotation and labels', is
       label.create(resource_guid: i4.guid, key_prefix: 'unique_prefix', key_name: key_d, value: 'v1')
 
       # Run migration once
-      expect { Sequel::Migrator.run(db, migrations_path, target: current_migration_index, allow_missing_migration_files: true) }.not_to raise_error
+      expect { run_migration }.not_to raise_error
 
       # Verify duplicate removal (keeps smallest id)
       expect(label.where(resource_guid: i1.guid, key_name: key_a).count).to eq(2)
@@ -190,6 +202,18 @@ RSpec.describe 'migration to add unique constraint to annotation and labels', is
       expect(uniq_a2.reload).to be_a(label)
       expect(uniq_b1.reload).to be_a(label)
       expect(uniq_b2.reload).to be_a(label)
+
+      # Up migration idempotency - uniqueness constraint still enforced
+      test_up_migration_idempotency
+      expect { label.create(resource_guid: i3.guid, key_name: key_d, value: 'v6') }.to raise_error(Sequel::UniqueConstraintViolation)
+
+      # Down migration - uniqueness constraint removed, duplicates allowed again
+      expect { revert_migration }.not_to raise_error
+      expect { label.create(resource_guid: i3.guid, key_name: key_d, value: 'v7') }.not_to raise_error
+
+      # Down migration idempotency - constraint still absent
+      test_down_migration_idempotency
+      expect { label.create(resource_guid: i3.guid, key_name: key_d, value: 'v8') }.not_to raise_error
     end
   end
 end
