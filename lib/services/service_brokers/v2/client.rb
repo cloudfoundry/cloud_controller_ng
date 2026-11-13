@@ -379,7 +379,7 @@ module VCAP::Services::ServiceBrokers::V2
         raise VCAP::CloudController::ServiceAccountProvision::Conflict.new('service account is not ready for a broker binding')
       end
 
-      issuer = VCAP::CloudController::UaaTokenDecoder.new(VCAP::CloudController::Config.config.get(:uaa)).send(:uaa_issuer)
+      issuer = CloudController::DependencyLocator.instance.uaa_issuer_discovery.issuer
       body[:context][:service_account] = { issuer: issuer, subject: account.client_id }
     end
 

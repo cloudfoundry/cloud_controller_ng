@@ -27,6 +27,7 @@ require 'cloud_controller/metrics/prometheus_updater'
 require 'statsd/instrument'
 require 'cloud_controller/execution_context'
 require 'cloud_controller/uaa/service_account_client'
+require 'cloud_controller/uaa/issuer_discovery'
 require 'actions/service_account_provision'
 
 module CloudController
@@ -325,6 +326,10 @@ module CloudController
       )
       register(:service_account_provisioner,
                ServiceAccountProvision.new(clients, identity_ca_ref: settings[:identity_ca_ref], allowed_resources_ref: settings[:allowed_resources_ref]))
+    end
+
+    def uaa_issuer_discovery
+      @dependencies[:uaa_issuer_discovery] ||= IssuerDiscovery.new(config.get(:uaa))
     end
 
     def uaa_shadow_user_creation_client
