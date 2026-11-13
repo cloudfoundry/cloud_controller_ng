@@ -38,6 +38,41 @@ RSpec.describe 'Domains Request' do
       end
     end
 
+    describe 'number of queries does not scale with the number of domains' do
+      let(:owning_org) { create(:organization) }
+      let(:shared_org) { create(:organization) }
+
+      def create_private_domain_with_metadata(index)
+        domain = create(:private_domain, name: "domain#{index}.example.com", owning_organization: owning_org)
+        shared_org.add_private_domain(domain)
+        create(:domain_label_model, resource_guid: domain.guid, key_name: 'key', value: 'value')
+        create(:domain_annotation_model, resource_guid: domain.guid, key_name: 'key', value: 'value')
+        domain
+      end
+
+      let(:owning_org_query) { /SELECT \* FROM "organizations" WHERE/ }
+      let(:shared_org_query) { /FROM "organizations" INNER JOIN "organizations_private_domains"/ }
+      let(:labels_query) { /SELECT \* FROM "domain_labels" WHERE/ }
+      let(:annotations_query) { /SELECT \* FROM "domain_annotations" WHERE/ }
+
+      it 'issues a constant number of per-association queries regardless of page size' do
+        create_private_domain_with_metadata(1)
+
+        expect { get '/v3/domains', nil, admin_header }.to have_queried_db_times(owning_org_query, 1)
+        expect { get '/v3/domains', nil, admin_header }.to have_queried_db_times(shared_org_query, 1)
+        expect { get '/v3/domains', nil, admin_header }.to have_queried_db_times(labels_query, 1)
+        expect { get '/v3/domains', nil, admin_header }.to have_queried_db_times(annotations_query, 1)
+
+        create_private_domain_with_metadata(2)
+        create_private_domain_with_metadata(3)
+
+        expect { get '/v3/domains', nil, admin_header }.to have_queried_db_times(owning_org_query, 1)
+        expect { get '/v3/domains', nil, admin_header }.to have_queried_db_times(shared_org_query, 1)
+        expect { get '/v3/domains', nil, admin_header }.to have_queried_db_times(labels_query, 1)
+        expect { get '/v3/domains', nil, admin_header }.to have_queried_db_times(annotations_query, 1)
+      end
+    end
+
     describe 'when the user is not logged in' do
       it 'returns 401 for Unauthenticated requests' do
         get '/v3/domains'

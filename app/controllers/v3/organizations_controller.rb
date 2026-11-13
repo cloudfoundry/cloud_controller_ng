@@ -150,7 +150,7 @@ class OrganizationsV3Controller < ApplicationController
     invalid_param!(message.errors.full_messages) unless message.valid?
 
     readable_org_ids = Organization.where(id: org.id).where(id: permission_queryer.readable_org_ids_for_domains_query).select(:id)
-    domains = DomainFetcher.fetch(message, readable_org_ids)
+    domains = DomainFetcher.fetch(message, readable_org_ids, eager_loaded_associations: Presenters::V3::DomainPresenter.associated_resources)
 
     render status: :ok, json: Presenters::V3::PaginatedListPresenter.new(
       presenter: Presenters::V3::DomainPresenter,
@@ -273,7 +273,7 @@ class OrganizationsV3Controller < ApplicationController
     if permission_queryer.can_read_globally?
       { all_orgs_visible: true }
     else
-      { visible_org_ids_query: permission_queryer.readable_org_ids_query }
+      { visible_org_guids: permission_queryer.readable_org_guids }
     end
   end
 end

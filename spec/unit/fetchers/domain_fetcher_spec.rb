@@ -69,6 +69,30 @@ module VCAP::CloudController
         Domain.dataset.destroy
       end
 
+      describe 'eager loading associated resources' do
+        let!(:org1) { create(:organization, guid: 'org1') }
+        let!(:private_domain) { create(:private_domain, guid: 'private_domain', owning_organization: org1) }
+        let(:message) { DomainsListMessage.from_params({}) }
+
+        it 'eager loads the specified associations for the domains' do
+          results = DomainFetcher.fetch(
+            message, [org1.id],
+            eager_loaded_associations: %i[owning_organization labels]
+          ).all
+
+          expect(results.first.associations.key?(:owning_organization)).to be(true)
+          expect(results.first.associations.key?(:labels)).to be(true)
+          expect(results.first.associations.key?(:annotations)).to be(false)
+        end
+
+        it 'eager loads nothing by default' do
+          results = DomainFetcher.fetch(message, [org1.id]).all
+
+          expect(results.first.associations.key?(:owning_organization)).to be(false)
+          expect(results.first.associations.key?(:labels)).to be(false)
+        end
+      end
+
       context 'when fetching a single domain by guid' do
         let(:message) do
           DomainShowMessage.new({ guid: domain_guid_filter })
