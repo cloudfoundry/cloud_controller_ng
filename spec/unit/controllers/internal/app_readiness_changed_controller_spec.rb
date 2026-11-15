@@ -24,7 +24,7 @@ module VCAP::CloudController
             post url, 'this is not json'
 
             expect(last_response.status).to eq(400)
-            expect(last_response.body).to match(/MessageParseError/)
+            expect(last_response.body).to include('MessageParseError')
           end
         end
       end
@@ -74,7 +74,7 @@ module VCAP::CloudController
           post url, Oj.dump(readiness_changed_request)
 
           expect(last_response.status).to eq(404)
-          expect(last_response.body).to match(/ProcessNotFound/)
+          expect(last_response.body).to include('ProcessNotFound')
         end
       end
     end

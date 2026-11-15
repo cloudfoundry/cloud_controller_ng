@@ -278,7 +278,7 @@ module VCAP::CloudController
                 errors = space_delete.delete(Space.where(guid: space.guid))
 
                 expect(errors.map(&:name)).to include('SpaceDeletionFailed', 'SpaceDeletionFailed')
-                expect(errors.map(&:message).join).to match(/service instance fake-name is in progress/)
+                expect(errors.map(&:message).join).to include('service instance fake-name is in progress')
                 expect(errors.map(&:message).join).to match(/associated service instances: #{broker_to_be_deleted.name}/)
               end
             end

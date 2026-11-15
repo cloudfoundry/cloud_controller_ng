@@ -120,7 +120,7 @@ RSpec.describe VCAP::CloudController::DbConnection::PostgresOptionsFactory do
         end
 
         it 'does not SET keepalive params via connect_sqls' do
-          expect(postgres_options[:connect_sqls]).not_to include(match(/SET keepalives/))
+          expect(postgres_options[:connect_sqls]).not_to include(include('SET keepalives'))
         end
       end
 
@@ -148,7 +148,7 @@ RSpec.describe VCAP::CloudController::DbConnection::PostgresOptionsFactory do
 
         it 'does not mix up the two kinds: SQL params not in options hash, libpq params not SET via SQL' do
           expect(postgres_options[:statement_timeout]).to be_nil
-          expect(postgres_options[:connect_sqls]).not_to include(match(/SET keepalives/))
+          expect(postgres_options[:connect_sqls]).not_to include(include('SET keepalives'))
         end
       end
     end

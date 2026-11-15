@@ -51,8 +51,8 @@ RSpec.describe Membrane::Schemas::Record do
         errors = e.to_s
       end
 
-      expect(errors).to match(/foo => Missing key/)
-      expect(errors).to match(/bar/)
+      expect(errors).to include('foo => Missing key')
+      expect(errors).to include('bar')
     end
 
     it 'ignores extra keys that are not in the schema' do

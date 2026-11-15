@@ -48,8 +48,8 @@ module VCAP::CloudController
         post '/v2/security_groups', '{"name":"one\ntwo"}'
 
         expect(last_response.status).to eq(400)
-        expect(decoded_response['description']).to match(/security group is invalid/)
-        expect(decoded_response['error_code']).to match(/SecurityGroupInvalid/)
+        expect(decoded_response['description']).to include('security group is invalid')
+        expect(decoded_response['error_code']).to include('SecurityGroupInvalid')
       end
 
       it 'returns SecurityGroupNameTaken errors on unique name errors' do
@@ -57,8 +57,8 @@ module VCAP::CloudController
         post '/v2/security_groups', '{"name":"foo"}'
 
         expect(last_response.status).to eq(400)
-        expect(decoded_response['description']).to match(/name is taken/)
-        expect(decoded_response['error_code']).to match(/SecurityGroupNameTaken/)
+        expect(decoded_response['description']).to include('name is taken')
+        expect(decoded_response['error_code']).to include('SecurityGroupNameTaken')
       end
 
       context 'when the max length for security groups is exceeded' do
@@ -84,7 +84,7 @@ module VCAP::CloudController
 
           expect(last_response.status).to eq(400)
           expect(decoded_response['description']).to match(/must not exceed #{SecurityGroup::MAX_RULES_CHAR_LENGTH} characters/)
-          expect(decoded_response['error_code']).to match(/SecurityGroupInvalid/)
+          expect(decoded_response['error_code']).to include('SecurityGroupInvalid')
         end
       end
     end

@@ -81,7 +81,7 @@ RSpec.describe Steno::Logger do
 
     it 'creates a record with logger.rb being removed from the callstack' do
       expect(Steno::Record).to receive(:new).and_wrap_original do |original_method, source, log_level, message, loc, data|
-        expect(loc[0]).not_to match(/logger\.rb/)
+        expect(loc[0]).not_to include('logger.rb')
         original_method.call(source, log_level, message, loc, data)
       end
 

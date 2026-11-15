@@ -253,7 +253,7 @@ module VCAP::CloudController
         it 'is invalid because stored buildpack URL already has userinfo' do
           lc = AppBuildpackLifecycle.new(message, app)
           expect(lc.valid?).to be false
-          expect(lc.errors.full_messages.join).to match(/credentials/)
+          expect(lc.errors.full_messages.join).to include('credentials')
         end
       end
 

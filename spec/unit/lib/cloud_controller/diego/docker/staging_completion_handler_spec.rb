@@ -82,7 +82,7 @@ module VCAP::CloudController
                 it 'gracefully sets process_types to an empty hash, but mark the build as failed' do
                   handler.staging_complete(payload)
                   expect(build.reload.state).to eq(BuildModel::FAILED_STATE)
-                  expect(build.error_id).to match(/StagingError/)
+                  expect(build.error_id).to include('StagingError')
                 end
 
                 it 'logs an error for the CF user' do
@@ -285,7 +285,7 @@ module VCAP::CloudController
                 end.to raise_error(CloudController::Errors::ApiError)
 
                 expect(build.reload.state).to eq(BuildModel::FAILED_STATE)
-                expect(build.error_id).to match(/StagingError/)
+                expect(build.error_id).to include('StagingError')
               end
 
               it 'logs an error for the CF user' do

@@ -87,7 +87,7 @@ RSpec.describe 'Sinatra::VCAP', type: :v2_controller do
     it 'returns a 404' do
       expect(last_response.status).to eq(404)
       expect(decoded_response['code']).to eq(10_000)
-      expect(decoded_response['description']).to match(/Unknown request/)
+      expect(decoded_response['description']).to include('Unknown request')
     end
 
     include_examples 'http header content type'

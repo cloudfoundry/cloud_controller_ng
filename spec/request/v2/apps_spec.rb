@@ -1779,7 +1779,7 @@ RSpec.describe 'Apps' do
           # The response includes process 'state' (STARTED/STOPPED) which is different from stack 'state'
           # We verify stack state is not exposed by checking it's not in the stack-related fields
           expect(parsed_response['entity']['stack_guid']).to be_present
-          expect(parsed_response.to_s).not_to match(/DEPRECATED/)
+          expect(parsed_response.to_s).not_to include('DEPRECATED')
         end
       end
 

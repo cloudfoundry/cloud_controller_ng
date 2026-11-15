@@ -130,7 +130,27 @@ Migration/TooManyMigrationRuns:
 #### ENABLED SECTION
 Capybara/FindAllFirst:
   Enabled: true
+Capybara/AbsoluteXPathInElementScope:
+  Enabled: true
+Capybara/AlwaysTrueCountQuery:
+  Enabled: true
 Capybara/AssertStyle:
+  Enabled: true
+Capybara/ChainedFind:
+  Enabled: true
+Capybara/IgnoredQueryOption:
+  Enabled: true
+Capybara/ModalMethodWithoutBlock:
+  Enabled: true
+Capybara/NativeAttribute:
+  Enabled: true
+Capybara/UnorderedWindowAccess:
+  Enabled: true
+Capybara/VisibilityOption:
+  Enabled: true
+Capybara/RSpec/CurrentUrlExpectation:
+  Enabled: true
+Capybara/RSpec/FindElementValueEq:
   Enabled: true
 Capybara/RSpec/MatchStyle:
   Enabled: true
@@ -192,6 +212,8 @@ Lint/AmbiguousOperatorPrecedence:
   Enabled: true
 Lint/AmbiguousRange:
   Enabled: true
+Lint/ArgumentMismatch:
+  Enabled: true
 Lint/ArrayLiteralInRegexp:
   Enabled: true
 Lint/ConstantDefinitionInBlock:
@@ -202,7 +224,11 @@ Lint/ConstantReassignment:
   Enabled: true
 Lint/CopDirectiveSyntax:
   Enabled: true
+Lint/DataDefineOverride:
+  Enabled: true
 Lint/DeprecatedConstants:
+  Enabled: true
+Lint/DeprecatedReference:
   Enabled: true
 Lint/DuplicateBranch:
   Enabled: true
@@ -232,9 +258,13 @@ Lint/LambdaWithoutLiteralBlock:
   Enabled: true
 Lint/LiteralAssignmentInCondition:
   Enabled: true
+Lint/MisplacedMagicComment:
+  Enabled: true
 Lint/MissingSuper:
   Enabled: true
 Lint/MixedCaseRange:
+  Enabled: true
+Lint/NameTypo:
   Enabled: true
 Lint/NoReturnInBeginEndBlocks:
   Enabled: true
@@ -260,6 +290,8 @@ Lint/RequireRelativeSelfPath:
   Enabled: true
 Lint/SharedMutableDefault:
   Enabled: true
+Lint/SuperArgumentMismatch:
+  Enabled: true
 Lint/SuppressedException:
   Enabled: true
 Lint/SuppressedExceptionInNumberConversion:
@@ -277,6 +309,8 @@ Lint/UnexpectedBlockArity:
 Lint/UnifiedInteger:
   Enabled: true
 Lint/UnmodifiedReduceAccumulator:
+  Enabled: true
+Lint/UnreachablePatternBranch:
   Enabled: true
 Lint/UnusedMethodArgument:
   Enabled: true
@@ -468,6 +502,8 @@ RSpec/DescribeClass:
   Enabled: true
 RSpec/DescribedClass:
   Enabled: true
+RSpec/DiscardedMatcher:
+  Enabled: true
 RSpec/DuplicatedMetadata:
   Enabled: true
 RSpec/EmptyExampleGroup:
@@ -503,6 +539,8 @@ RSpec/LeakyLocalVariable:
 RSpec/LetSetup:
   Enabled: true
 RSpec/MatchArray:
+  Enabled: true
+RSpec/MatchWithSimpleRegex:
   Enabled: true
 RSpec/MessageChain:
   Enabled: true
@@ -570,13 +608,19 @@ RSpec/VoidExpect:
   Enabled: true
 RSpecRails/AvoidSetupHook:
   Enabled: true
+RSpecRails/FileFixture:
+  Enabled: true
 RSpecRails/HaveHttpStatus:
+  Enabled: true
+RSpecRails/HttpStatusNameConsistency:
   Enabled: true
 RSpecRails/InferredSpecType:
   Enabled: true
 RSpecRails/MinitestAssertions:
   Enabled: true
 RSpecRails/NegationBeValid:
+  Enabled: true
+RSpecRails/ReceivePerformLater:
   Enabled: true
 RSpecRails/TravelAround:
   Enabled: true
@@ -738,6 +782,8 @@ Style/RedundantInterpolationUnfreeze:
   Enabled: true
 Style/RedundantLineContinuation:
   Enabled: true
+Style/RedundantMinMaxBy:
+  Enabled: true
 Style/RedundantRegexpArgument:
   Enabled: true
 Style/RedundantRegexpConstructor:
@@ -753,6 +799,8 @@ Style/ReverseFind:
 Style/SafeNavigation:
   Enabled: true
 Style/SafeNavigationChainLength:
+  Enabled: true
+Style/SelectByRange:
   Enabled: true
 Style/SelectByRegexp:
   Enabled: true
@@ -772,7 +820,11 @@ Style/SuperWithArgsParentheses:
   Enabled: true
 Style/SwapValues:
   Enabled: true
+Style/TallyMethod:
+  Enabled: true
 Style/TernaryParentheses:
+  Enabled: true
+Style/TimeNow:
   Enabled: true
 Style/YAMLFileRead:
   Enabled: true

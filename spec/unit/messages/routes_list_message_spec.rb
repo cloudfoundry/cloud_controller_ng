@@ -104,7 +104,7 @@ module VCAP::CloudController
         message = RoutesListMessage.from_params 'include' => 'domain,domain'
         expect(message).not_to be_valid
         expect(message.errors[:base].length).to eq 1
-        expect(message.errors[:base][0]).to match(/Duplicate included resource: 'domain'/)
+        expect(message.errors[:base][0]).to include("Duplicate included resource: 'domain'")
       end
 
       context 'when app guids param is provided' do

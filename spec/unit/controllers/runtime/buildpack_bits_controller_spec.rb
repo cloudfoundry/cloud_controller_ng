@@ -177,7 +177,7 @@ module VCAP::CloudController
           expect(last_response.status).to be 400
           json = Oj.load(last_response.body)
           expect(json['code']).to eq(290_002)
-          expect(json['description']).to match(/a filename must be specified/)
+          expect(json['description']).to include('a filename must be specified')
         end
 
         it 'requires a file to be uploaded' do
@@ -186,7 +186,7 @@ module VCAP::CloudController
           expect(last_response.status).to eq(400)
           json = Oj.load(last_response.body)
           expect(json['code']).to eq(290_002)
-          expect(json['description']).to match(/a file must be provided/)
+          expect(json['description']).to include('a file must be provided')
         end
 
         it 'does not allow non-zip files' do
@@ -197,7 +197,7 @@ module VCAP::CloudController
           expect(last_response.status).to be 400
           json = Oj.load(last_response.body)
           expect(json['code']).to eq(290_002)
-          expect(json['description']).to match(/only zip files allowed/)
+          expect(json['description']).to include('only zip files allowed')
         end
 
         it 'removes the old buildpack binary when a new one is uploaded' do
@@ -318,7 +318,7 @@ module VCAP::CloudController
           allow_any_instance_of(CloudController::Blobstore::LocalBlob).to receive(:public_download_url).and_return('http://blobstore.example.com/cc-buildpacks/download')
           get "/v2/buildpacks/#{test_buildpack.guid}/download"
           expect(last_response.status).to eq(302)
-          expect(last_response.headers['Location']).to match(/cc-buildpacks/)
+          expect(last_response.headers['Location']).to include('cc-buildpacks')
         end
 
         it 'returns 404 for missing bits' do

@@ -749,7 +749,7 @@ RSpec.describe 'V3 service plans' do
         delete "/v3/service_plans/#{service_plan.guid}", {}, admin_headers
 
         expect(last_response).to have_status_code(422)
-        expect(parsed_response['errors'][0]['detail']).to match(/Please delete the service_instances associations for your service_plans/)
+        expect(parsed_response['errors'][0]['detail']).to include('Please delete the service_instances associations for your service_plans')
       end
     end
 

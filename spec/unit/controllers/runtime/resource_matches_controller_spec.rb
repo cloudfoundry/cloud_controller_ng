@@ -48,7 +48,7 @@ module VCAP::CloudController
             put '/v2/resource_match', 'invalid json'
 
             expect(last_response.status).to eq(400)
-            expect(last_response.body).to match(/MessageParseError/)
+            expect(last_response.body).to include('MessageParseError')
           end
         end
 
@@ -59,7 +59,7 @@ module VCAP::CloudController
             put '/v2/resource_match', 'null'
 
             expect(last_response.status).to eq(422)
-            expect(last_response.body).to match(/UnprocessableEntity/)
+            expect(last_response.body).to include('UnprocessableEntity')
             expect(last_response.body).to match(/must be an array./)
           end
         end
@@ -84,8 +84,8 @@ module VCAP::CloudController
         put '/v2/resource_match', '[]'
 
         expect(last_response.status).to eq(403)
-        expect(decoded_response['error_code']).to match(/FeatureDisabled/)
-        expect(decoded_response['description']).to match(/Feature Disabled/)
+        expect(decoded_response['error_code']).to include('FeatureDisabled')
+        expect(decoded_response['description']).to include('Feature Disabled')
       end
     end
 

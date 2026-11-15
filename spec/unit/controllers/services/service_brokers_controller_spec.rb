@@ -641,7 +641,7 @@ module VCAP::CloudController
 
           expect(last_response.status).to eq(400)
           expect(decoded_response.fetch('code')).to eq(270_010)
-          expect(decoded_response.fetch('description')).to match(/Can not remove brokers that have associated service instances/)
+          expect(decoded_response.fetch('description')).to include('Can not remove brokers that have associated service instances')
 
           get '/v2/service_brokers'
           expect(decoded_response).to include('total_results' => 1)
@@ -762,7 +762,7 @@ module VCAP::CloudController
 
               expect(last_response).to have_status_code(400)
               expect(decoded_response.fetch('code')).to eq(270_011)
-              expect(decoded_response.fetch('description')).to match(/is not a valid URL/)
+              expect(decoded_response.fetch('description')).to include('is not a valid URL')
             end
           end
 
@@ -776,7 +776,7 @@ module VCAP::CloudController
 
               expect(last_response.status).to eq(400)
               expect(decoded_response.fetch('code')).to eq(270_002)
-              expect(decoded_response.fetch('description')).to match(/The service broker name is taken/)
+              expect(decoded_response.fetch('description')).to include('The service broker name is taken')
             end
           end
         end
@@ -830,7 +830,7 @@ module VCAP::CloudController
             put("/v2/service_brokers/#{broker.guid}", body)
             warnings = last_response.headers['X-Cf-Warnings'].split(',').map { |w| CGI.unescape(w) }
             expect(warnings.length).to eq(1)
-            expect(warnings[0]).to match(/Service plans are missing from the broker/)
+            expect(warnings[0]).to include('Service plans are missing from the broker')
           end
         end
 

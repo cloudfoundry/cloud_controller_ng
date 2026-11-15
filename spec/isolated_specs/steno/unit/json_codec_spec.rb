@@ -17,12 +17,12 @@ RSpec.describe Steno::Codec::Json do
 
     it 'escapes newlines' do
       rec = make_record(message: "newline\ntest")
-      expect(codec.encode_record(rec)).to match(/newline\\ntest/)
+      expect(codec.encode_record(rec)).to include('newline\ntest')
     end
 
     it 'escapes carriage returns' do
       rec = make_record(message: "newline\rtest")
-      expect(codec.encode_record(rec)).to match(/newline\\rtest/)
+      expect(codec.encode_record(rec)).to include('newline\rtest')
     end
 
     it 'allows messages with valid encodings to pass through untouched' do
@@ -34,7 +34,7 @@ RSpec.describe Steno::Codec::Json do
     it 'treats messages with invalid encodings as binary data' do
       msg = "HI\u2026".force_encoding('US-ASCII')
       rec = make_record(message: msg)
-      expect(codec.encode_record(rec)).to match(/HI\\\\xe2\\\\x80\\\\xa6/)
+      expect(codec.encode_record(rec)).to include('HI\\\\xe2\\\\x80\\\\xa6')
     end
 
     it 'does not use readable dates by default' do

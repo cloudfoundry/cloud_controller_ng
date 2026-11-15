@@ -975,7 +975,7 @@ module VCAP::CloudController
         sg = create(:security_group, name: 'sec')
         expect do
           create(:security_group, name: sg.name)
-        end.to raise_error(Sequel::ValidationFailed) { |error| expect(error.message).to match(/unique/) }
+        end.to raise_error(Sequel::ValidationFailed) { |error| expect(error.message).to include('unique') }
       end
 
       it 'raises the original error on other unique constraint violations' do

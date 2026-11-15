@@ -22,7 +22,7 @@ RSpec.describe 'Auth' do
       get '/v2/organizations', nil, headers_for(user, expired: true)
 
       expect(last_response.status).to eq 401
-      expect(last_response.body).to match(/InvalidAuthToken/)
+      expect(last_response.body).to include('InvalidAuthToken')
     end
   end
 

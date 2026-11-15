@@ -87,7 +87,7 @@ module VCAP::Services::SSO::UAA
 
         expect(logger).to receive(:info) do |arg|
           expect(arg).to match(/POST UAA transaction: #{tx_url}/)
-          expect(arg).not_to match(/client_secret/)
+          expect(arg).not_to include('client_secret')
         end
 
         client_manager = UaaClientManager.new
