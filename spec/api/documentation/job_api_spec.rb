@@ -55,7 +55,7 @@ RSpec.resource 'Jobs', type: %i[api legacy_api] do
         expect(parsed_response['entity']['error_details']).to include('error_code')
 
         expect(parsed_response['entity']['error_details']['code']).to eq(1001)
-        expect(parsed_response['entity']['error_details']['description']).to match(/arbitrary string/)
+        expect(parsed_response['entity']['error_details']['description']).to include('arbitrary string')
         expect(parsed_response['entity']['error_details']['error_code']).to eq('CF-MessageParseError')
       end
     end

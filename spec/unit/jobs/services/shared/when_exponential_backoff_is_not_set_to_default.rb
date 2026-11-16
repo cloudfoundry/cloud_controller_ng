@@ -50,7 +50,7 @@ RSpec.shared_examples 'when exponential backoff is not set to default' do
         run_job(job)
 
         expect(last_operation.state).to eq('failed')
-        expect(last_operation.description).to match(/Service Broker failed/)
+        expect(last_operation.description).to include('Service Broker failed')
       end
     end
   end

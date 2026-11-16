@@ -69,7 +69,7 @@ module VCAP::CloudController
           err = build.compound_error([StandardError.new('one broke'), StandardError.new('two broke')])
 
           expect(err.underlying_errors.map(&:name)).to eq(%w[UnprocessableEntity UnprocessableEntity])
-          expect(err.underlying_errors.map(&:message)).to include(match(/one broke/), match(/two broke/))
+          expect(err.underlying_errors.map(&:message)).to include(include('one broke'), include('two broke'))
         end
 
         it 'prefers durable errors over the raised fallback when both are present' do

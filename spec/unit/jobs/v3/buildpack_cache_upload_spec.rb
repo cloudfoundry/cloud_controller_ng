@@ -123,7 +123,7 @@ module VCAP::CloudController
             end
 
             it 'records the failure' do
-              expect(Delayed::Job.last.last_error).to match(/Something Terrible Happened/)
+              expect(Delayed::Job.last.last_error).to include('Something Terrible Happened')
             end
 
             context 'retrying' do
@@ -152,7 +152,7 @@ module VCAP::CloudController
             end
 
             it 'receives an error' do
-              expect(Delayed::Job.last.last_error).to match(/No such file or directory/)
+              expect(Delayed::Job.last.last_error).to include('No such file or directory')
             end
 
             it 'does not retry' do

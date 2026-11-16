@@ -67,7 +67,7 @@ module VCAP::CloudController
               parsed_response = Oj.load(last_response.body)
               expect(parsed_response).to include(
                 'error_code' => 'CF-ServiceInstanceWithInaccessiblePlanNotUpdateable',
-                'description' => match(/Cannot update parameters of a service instance that belongs to inaccessible plan/)
+                'description' => include('Cannot update parameters of a service instance that belongs to inaccessible plan')
               )
             end
           end
@@ -111,7 +111,7 @@ module VCAP::CloudController
               parsed_response = Oj.load(last_response.body)
               expect(parsed_response).to include(
                 'error_code' => 'CF-NotAuthorized',
-                'description' => match(/You are not authorized to perform the requested action/)
+                'description' => include('You are not authorized to perform the requested action')
               )
             end
           end

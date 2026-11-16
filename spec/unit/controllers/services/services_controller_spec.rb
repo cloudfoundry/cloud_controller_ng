@@ -347,7 +347,7 @@ module VCAP::CloudController
           delete "/v2/services/#{service.guid}", '{}', admin_headers
 
           expect(last_response).to have_status_code 400
-          expect(last_response.body).to match(/AssociationNotEmpty/)
+          expect(last_response.body).to include('AssociationNotEmpty')
         end
       end
 

@@ -230,7 +230,7 @@ RSpec.describe AppPackager do
 
       it 'successfully removes and re-adds them' do
         app_packager.fix_subdir_permissions(@tmpdir, "#{@tmpdir}/application_contents")
-        expect(`zipinfo #{input_zip}`).to match %r{special_character_names/&&hello::\?\?/}
+        expect(`zipinfo #{input_zip}`).to include('special_character_names/&&hello::??/')
       end
     end
 

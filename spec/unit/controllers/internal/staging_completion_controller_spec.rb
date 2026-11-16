@@ -91,7 +91,7 @@ module VCAP::CloudController
 
         post url, Oj.dump(staging_response)
         expect(last_response.status).to eq(524)
-        expect(last_response.body).to match(/JobTimeout/)
+        expect(last_response.body).to include('JobTimeout')
       end
 
       context 'when receiving the callback directly from BBS' do
@@ -203,7 +203,7 @@ module VCAP::CloudController
 
           post url, Oj.dump(staging_response)
           expect(last_response.status).to eq(524)
-          expect(last_response.body).to match(/JobTimeout/)
+          expect(last_response.body).to include('JobTimeout')
         end
 
         it 'propagates other errors from staging_response' do
@@ -242,7 +242,7 @@ module VCAP::CloudController
         it 'returns 404' do
           post url, Oj.dump(staging_response)
           expect(last_response.status).to eq(404)
-          expect(last_response.body).to match(/Build not found/)
+          expect(last_response.body).to include('Build not found')
         end
       end
 
@@ -261,7 +261,7 @@ module VCAP::CloudController
             post url, 'this is not json'
 
             expect(last_response.status).to eq(400)
-            expect(last_response.body).to match(/MessageParseError/)
+            expect(last_response.body).to include('MessageParseError')
           end
         end
       end

@@ -60,8 +60,8 @@ module VCAP::CloudController
 
           it 'returns FeatureDisabled and does not upload' do
             expect(last_response.status).to eq(403)
-            expect(decoded_response['error_code']).to match(/FeatureDisabled/)
-            expect(decoded_response['description']).to match(/app_bits_upload/)
+            expect(decoded_response['error_code']).to include('FeatureDisabled')
+            expect(decoded_response['description']).to include('app_bits_upload')
 
             expect(process.package_hash).to be_nil
           end
@@ -181,7 +181,7 @@ module VCAP::CloudController
               make_request
 
               expect(last_response.status).to eq(400)
-              expect(decoded_response['error_code']).to match(/AppBitsUploadInvalid/)
+              expect(decoded_response['error_code']).to include('AppBitsUploadInvalid')
             end
           end
 
@@ -409,8 +409,8 @@ module VCAP::CloudController
           make_request
 
           expect(last_response.status).to eq(422)
-          expect(decoded_response['error_code']).to match(/UnprocessableEntity/)
-          expect(decoded_response['description']).to match(/cannot upload bits to a docker app/)
+          expect(decoded_response['error_code']).to include('UnprocessableEntity')
+          expect(decoded_response['description']).to include('cannot upload bits to a docker app')
         end
       end
     end
@@ -447,8 +447,8 @@ module VCAP::CloudController
 
           expect(last_response.status).to eq(400)
 
-          expect(decoded_response['error_code']).to match(/AppBitsCopyInvalid/)
-          expect(decoded_response['description']).to match(/missing source_app_guid/)
+          expect(decoded_response['error_code']).to include('AppBitsCopyInvalid')
+          expect(decoded_response['description']).to include('missing source_app_guid')
         end
       end
 

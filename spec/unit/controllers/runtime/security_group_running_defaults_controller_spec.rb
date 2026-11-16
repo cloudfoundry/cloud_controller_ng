@@ -47,8 +47,8 @@ module VCAP::CloudController
       it 'returns a 400 when the security group does not exist' do
         put '/v2/config/running_security_groups/bogus', {}
         expect(last_response.status).to eq(400)
-        expect(decoded_response['description']).to match(/security group could not be found/)
-        expect(decoded_response['error_code']).to match(/SecurityGroupRunningDefaultInvalid/)
+        expect(decoded_response['description']).to include('security group could not be found')
+        expect(decoded_response['error_code']).to include('SecurityGroupRunningDefaultInvalid')
       end
     end
 
@@ -75,8 +75,8 @@ module VCAP::CloudController
       it 'returns a 400 when the security group does not exist' do
         delete '/v2/config/running_security_groups/bogus'
         expect(last_response.status).to eq(400)
-        expect(decoded_response['description']).to match(/security group could not be found/)
-        expect(decoded_response['error_code']).to match(/SecurityGroupRunningDefaultInvalid/)
+        expect(decoded_response['description']).to include('security group could not be found')
+        expect(decoded_response['error_code']).to include('SecurityGroupRunningDefaultInvalid')
       end
     end
   end

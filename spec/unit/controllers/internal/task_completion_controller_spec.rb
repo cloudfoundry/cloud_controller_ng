@@ -55,7 +55,7 @@ module VCAP::CloudController
           post url, Oj.dump(task_response)
 
           expect(last_response.status).to eq(404)
-          expect(last_response.body).to match(/NotFound/)
+          expect(last_response.body).to include('NotFound')
         end
       end
 
@@ -67,7 +67,7 @@ module VCAP::CloudController
             post url, Oj.dump(task_response)
 
             expect(last_response.status).to eq(400)
-            expect(last_response.body).to match(/InvalidRequest/)
+            expect(last_response.body).to include('InvalidRequest')
           end
         end
 
@@ -78,7 +78,7 @@ module VCAP::CloudController
             post url, Oj.dump(task_response)
 
             expect(last_response.status).to eq(400)
-            expect(last_response.body).to match(/InvalidRequest/)
+            expect(last_response.body).to include('InvalidRequest')
           end
         end
       end
@@ -89,7 +89,7 @@ module VCAP::CloudController
             post url, 'this is not json'
 
             expect(last_response.status).to eq(400)
-            expect(last_response.body).to match(/MessageParseError/)
+            expect(last_response.body).to include('MessageParseError')
           end
         end
 
@@ -101,7 +101,7 @@ module VCAP::CloudController
             post url, Oj.dump(task_response)
 
             expect(last_response.status).to eq(400)
-            expect(last_response.body).to match(/InvalidRequest/)
+            expect(last_response.body).to include('InvalidRequest')
           end
         end
       end

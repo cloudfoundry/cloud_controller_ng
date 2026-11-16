@@ -35,8 +35,8 @@ RSpec.describe Membrane::Schemas::List do
       errors = e.to_s
     end
 
-    expect(errors).to match(/index 2/)
-    expect(errors).to match(/index 4/)
+    expect(errors).to include('index 2')
+    expect(errors).to include('index 4')
   end
 
   it 'returns nil if all items validate' do

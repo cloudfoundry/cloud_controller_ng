@@ -612,8 +612,8 @@ RSpec.describe DeploymentsController, type: :controller do
 
             expect(response).to have_http_status(:ok)
             expect(parsed_body['pagination']['next']['href']).to start_with("#{link_prefix}/v3/deployments")
-            expect(parsed_body['pagination']['next']['href']).to match(/per_page=1/)
-            expect(parsed_body['pagination']['next']['href']).to match(/page=2/)
+            expect(parsed_body['pagination']['next']['href']).to include('per_page=1')
+            expect(parsed_body['pagination']['next']['href']).to include('page=2')
           end
         end
 
@@ -676,7 +676,7 @@ RSpec.describe DeploymentsController, type: :controller do
         post :cancel, params: { guid: deployment.guid }
 
         expect(response).to have_http_status(:unprocessable_content)
-        expect(response.body).to match(/awry/)
+        expect(response.body).to include('awry')
       end
     end
 

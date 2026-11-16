@@ -84,7 +84,7 @@ module VCAP::CloudController
           end
 
           it 'receives an error' do
-            expect(Delayed::Job.last.last_error).to match(/File not found/)
+            expect(Delayed::Job.last.last_error).to include('File not found')
           end
 
           it 'does not retry' do

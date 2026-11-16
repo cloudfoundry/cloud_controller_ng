@@ -24,7 +24,7 @@ RSpec.describe Steno::LoggerIO do
 
     it 'removes logger_io.rb from the callstack' do
       expect(Steno::Record).to receive(:new).and_wrap_original do |original_method, source, log_level, message, loc, data|
-        expect(loc[0]).not_to match(/logger_io\.rb/)
+        expect(loc[0]).not_to include('logger_io.rb')
         original_method.call(source, log_level, message, loc, data)
       end
 

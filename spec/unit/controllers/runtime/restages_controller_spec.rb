@@ -119,7 +119,7 @@ module VCAP::CloudController
             expect(last_response.status).to eq(404)
             parsed_response = Oj.load(last_response.body)
             expect(parsed_response['code']).to eq(100_004)
-            expect(parsed_response['description']).to match(/The app could not be found:/)
+            expect(parsed_response['description']).to include('The app could not be found:')
           end
         end
 

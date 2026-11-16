@@ -11,7 +11,7 @@ module VCAP::CloudController
 
           get '/v2/config/environment_variable_groups/flibble'
           expect(last_response.status).to eq(404)
-          expect(decoded_response['error_code']).to match(/CF-NotFound/)
+          expect(decoded_response['error_code']).to include('CF-NotFound')
         end
       end
 
@@ -66,7 +66,7 @@ module VCAP::CloudController
           set_current_user_as_admin
           put '/v2/config/environment_variable_groups/flibble', '{}'
           expect(last_response.status).to eq(404)
-          expect(decoded_response['error_code']).to match(/CF-NotFound/)
+          expect(decoded_response['error_code']).to include('CF-NotFound')
         end
       end
 
@@ -100,7 +100,7 @@ module VCAP::CloudController
                 put '/v2/config/environment_variable_groups/staging', 'jam sandwich'
                 expect(last_response.status).to eq(400)
                 expect(decoded_response['error_code']).to eq('CF-MessageParseError')
-                expect(decoded_response['description']).to match(/Request invalid due to parse error/)
+                expect(decoded_response['description']).to include('Request invalid due to parse error')
               end
 
               it 'does not update the group' do
@@ -149,7 +149,7 @@ module VCAP::CloudController
                 put '/v2/config/environment_variable_groups/running', req_body
                 expect(last_response.status).to eq(400)
                 expect(decoded_response['error_code']).to eq('CF-MessageParseError')
-                expect(decoded_response['description']).to match(/Request invalid due to parse error/)
+                expect(decoded_response['description']).to include('Request invalid due to parse error')
               end
 
               it 'does not update the group' do
@@ -171,7 +171,7 @@ module VCAP::CloudController
                 put '/v2/config/environment_variable_groups/running', req_body
                 expect(last_response.status).to eq(400), last_response.body
                 expect(decoded_response['error_code']).to eq('CF-EnvironmentVariableGroupInvalid')
-                expect(decoded_response['description']).to match(/VCAP_/)
+                expect(decoded_response['description']).to include('VCAP_')
               end
 
               it 'does not update the group' do

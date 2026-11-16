@@ -48,8 +48,8 @@ module VCAP::CloudController
             post '/v2/private_domains', request_body
 
             expect(last_response.status).to eq(403)
-            expect(decoded_response['error_code']).to match(/FeatureDisabled/)
-            expect(decoded_response['description']).to match(/private_domain_creation/)
+            expect(decoded_response['error_code']).to include('FeatureDisabled')
+            expect(decoded_response['description']).to include('private_domain_creation')
           end
         end
       end

@@ -625,7 +625,7 @@ module VCAP::CloudController
             end
 
             it 'raises informative error' do
-              expect(Delayed::Job.first.last_error).to match(/Invalid response from client/)
+              expect(Delayed::Job.first.last_error).to include('Invalid response from client')
             end
 
             it 'does not enqueue another fetch job in addition to the failed one' do

@@ -731,7 +731,7 @@ module VCAP::CloudController
               get "/v2/service_instances/#{service_instance_guid}"
               expect(last_response).to have_status_code 200
               expect(decoded_response['entity']['last_operation']['state']).to eq 'failed'
-              expect(decoded_response['entity']['last_operation']['description']).to match(/Service Broker failed to provision within the required time/)
+              expect(decoded_response['entity']['last_operation']['description']).to include('Service Broker failed to provision within the required time')
             end
           end
 
@@ -774,7 +774,7 @@ module VCAP::CloudController
               get "/v2/service_instances/#{service_instance_guid}"
               expect(last_response).to have_status_code 200
               expect(decoded_response['entity']['last_operation']['state']).to eq 'failed'
-              expect(decoded_response['entity']['last_operation']['description']).to match(/Service Broker failed to provision within the required time/)
+              expect(decoded_response['entity']['last_operation']['description']).to include('Service Broker failed to provision within the required time')
             end
           end
         end
@@ -2113,7 +2113,7 @@ module VCAP::CloudController
                 put "/v2/service_instances/#{service_instance.guid}", body
 
                 expect(last_response.status).to eq(400)
-                expect(last_response.body).to match(/The service does not support changing plans/)
+                expect(last_response.body).to include('The service does not support changing plans')
               end
 
               it 'does not update the service plan in the database' do
@@ -2142,7 +2142,7 @@ module VCAP::CloudController
 
               it 'returns a useful error to the user' do
                 put "/v2/service_instances/#{service_instance.guid}", body
-                expect(last_response.body).to match(/The service does not support changing plans/)
+                expect(last_response.body).to include('The service does not support changing plans')
               end
             end
           end
@@ -2169,7 +2169,7 @@ module VCAP::CloudController
 
               it 'returns a useful error to the user' do
                 put "/v2/service_instances/#{service_instance.guid}", body
-                expect(last_response.body).to match(/cannot switch to non-bindable plan when service bindings exist/)
+                expect(last_response.body).to include('cannot switch to non-bindable plan when service bindings exist')
               end
             end
 
@@ -2291,7 +2291,7 @@ module VCAP::CloudController
             put "/v2/service_instances/#{instance.guid}", move_req
 
             expect(last_response.status).to eq(400)
-            expect(decoded_response['description']).to match(/Cannot update space for service instance/)
+            expect(decoded_response['description']).to include('Cannot update space for service instance')
           end
 
           it 'succeeds when the space_guid does not change' do
@@ -2577,7 +2577,7 @@ module VCAP::CloudController
               stub_request(:patch, "#{service_broker_url}?accepts_incomplete=true").to_return do |_|
                 put "/v2/service_instances/#{service_instance.guid}?accepts_incomplete=true", body
                 expect(last_response).to have_status_code 409
-                expect(last_response.body).to match(/AsyncServiceInstanceOperationInProgress/)
+                expect(last_response.body).to include('AsyncServiceInstanceOperationInProgress')
 
                 { status: 202, body: {}.to_json }
               end.times(1).then.to_return do |_|
@@ -2606,7 +2606,7 @@ module VCAP::CloudController
 
             it 'returns a useful error to the user' do
               put "/v2/service_instances/#{service_instance.guid}?accepts_incomplete=true", body
-              expect(last_response.body).to match(/The service does not support changing plans/)
+              expect(last_response.body).to include('The service does not support changing plans')
             end
           end
 
@@ -2681,7 +2681,7 @@ module VCAP::CloudController
             put "/v2/service_instances/#{instance.guid}?accepts_incomplete=true", move_req
 
             expect(last_response.status).to eq(400)
-            expect(decoded_response['description']).to match(/Cannot update space for service instance/)
+            expect(decoded_response['description']).to include('Cannot update space for service instance')
           end
 
           it 'succeeds when the space_guid does not change' do
@@ -2742,7 +2742,7 @@ module VCAP::CloudController
         it 'returns an error' do
           put "/v2/service_instances/#{service_instance.guid}?accepts_incomplete=true", '{}'
           expect(last_response.status).to eq(400)
-          expect(last_response.body).to match(/paid service plans are not allowed/)
+          expect(last_response.body).to include('paid service plans are not allowed')
         end
       end
 
@@ -3246,7 +3246,7 @@ module VCAP::CloudController
               stub_deprovision(service_instance, accepts_incomplete: true) do |_req|
                 delete "/v2/service_instances/#{service_instance.guid}?accepts_incomplete=true"
                 expect(last_response).to have_status_code 409
-                expect(last_response.body).to match(/AsyncServiceInstanceOperationInProgress/)
+                expect(last_response.body).to include('AsyncServiceInstanceOperationInProgress')
 
                 { status: 202, body: {}.to_json }
               end.times(1).then.to_return do |_|
@@ -4190,7 +4190,7 @@ module VCAP::CloudController
           it 'passes through the error message' do
             make_request
             expect(last_response).to have_status_code 502
-            expect(decoded_response['description']).to match(/ERROR MESSAGE HERE/)
+            expect(decoded_response['description']).to include('ERROR MESSAGE HERE')
             expect(service_instance.refresh.last_operation).to be_nil
           end
 

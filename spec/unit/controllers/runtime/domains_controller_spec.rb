@@ -229,7 +229,7 @@ module VCAP::CloudController
             domains[guid] = link
           end
 
-          expect(domains[private_domain.guid]).to match(/private_domains/)
+          expect(domains[private_domain.guid]).to include('private_domains')
         end
       end
 
@@ -250,7 +250,7 @@ module VCAP::CloudController
             domains[guid] = link
           end
 
-          expect(domains[private_domain.guid]).to match(/private_domains/)
+          expect(domains[private_domain.guid]).to include('private_domains')
         end
       end
 
@@ -299,8 +299,8 @@ module VCAP::CloudController
             post '/v2/domains', request_body
 
             expect(last_response.status).to eq(403)
-            expect(decoded_response['error_code']).to match(/FeatureDisabled/)
-            expect(decoded_response['description']).to match(/private_domain_creation/)
+            expect(decoded_response['error_code']).to include('FeatureDisabled')
+            expect(decoded_response['description']).to include('private_domain_creation')
           end
         end
       end

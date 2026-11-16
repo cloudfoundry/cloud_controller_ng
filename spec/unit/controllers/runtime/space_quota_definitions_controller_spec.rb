@@ -158,8 +158,8 @@ module VCAP::CloudController
         post '/v2/space_quota_definitions', Oj.dump(sqd_json)
 
         expect(last_response.status).to eq(400)
-        expect(decoded_response['description']).to match(/Space Quota Definition is invalid/)
-        expect(decoded_response['error_code']).to match(/SpaceQuotaDefinitionInvalid/)
+        expect(decoded_response['description']).to include('Space Quota Definition is invalid')
+        expect(decoded_response['error_code']).to include('SpaceQuotaDefinitionInvalid')
       end
 
       it 'returns SpaceQuotaDefinitionNameTaken errors on unique name errors' do
@@ -168,8 +168,8 @@ module VCAP::CloudController
         post '/v2/space_quota_definitions', Oj.dump(sqd_json)
 
         expect(last_response.status).to eq(400)
-        expect(decoded_response['description']).to match(/name is taken/)
-        expect(decoded_response['error_code']).to match(/SpaceQuotaDefinitionNameTaken/)
+        expect(decoded_response['description']).to include('name is taken')
+        expect(decoded_response['error_code']).to include('SpaceQuotaDefinitionNameTaken')
       end
     end
 

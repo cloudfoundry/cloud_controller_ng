@@ -128,7 +128,7 @@ module VCAP::CloudController
           set_current_user(user, scopes: ['bogus.scope'])
           post '/v2/test_models', Oj.dump({ required_attr: true, unique_value: 'foobar' })
           expect(decoded_response['code']).to eq(10_007)
-          expect(decoded_response['description']).to match(/lacks the necessary scopes/)
+          expect(decoded_response['description']).to include('lacks the necessary scopes')
         end
       end
 
@@ -139,7 +139,7 @@ module VCAP::CloudController
         end.not_to(change(TestModel, :count))
 
         expect(decoded_response['code']).to eq(10_003)
-        expect(decoded_response['description']).to match(/not authorized/)
+        expect(decoded_response['description']).to include('not authorized')
       end
 
       it 'returns the right values on a successful create' do
@@ -199,7 +199,7 @@ module VCAP::CloudController
           get "/v2/test_models/#{model.guid}"
 
           expect(decoded_response['code']).to eq(10_003)
-          expect(decoded_response['description']).to match(/not authorized/)
+          expect(decoded_response['description']).to include('not authorized')
         end
 
         it 'returns the serialized object if access is validated' do
@@ -248,7 +248,7 @@ module VCAP::CloudController
 
         expect(model.reload.unique_value).not_to eq('something')
         expect(decoded_response['code']).to eq(10_003)
-        expect(decoded_response['description']).to match(/not authorized/)
+        expect(decoded_response['description']).to include('not authorized')
       end
 
       it 'prevents other processes from updating the same row until the transaction finishes' do
@@ -356,7 +356,7 @@ module VCAP::CloudController
               delete "/v2/test_models/#{model.guid}?#{query_params}"
               expect(last_response.status).to eq(400)
               expect(decoded_response['code']).to eq(10_006)
-              expect(decoded_response['description']).to match(/associations/)
+              expect(decoded_response['description']).to include('associations')
             end
           end
         end
@@ -540,21 +540,21 @@ module VCAP::CloudController
           get '/v2/test_models/99999'
           expect(last_response.status).to eq(404)
           expect(decoded_response['code']).to eq 999_999_999
-          expect(decoded_response['description']).to match(/Test Model Not Found/)
+          expect(decoded_response['description']).to include('Test Model Not Found')
         end
 
         it 'returns not found for updates' do
           put '/v2/test_models/99999', '{}'
           expect(last_response.status).to eq(404)
           expect(decoded_response['code']).to eq 999_999_999
-          expect(decoded_response['description']).to match(/Test Model Not Found/)
+          expect(decoded_response['description']).to include('Test Model Not Found')
         end
 
         it 'returns not found for deletes' do
           delete '/v2/test_models/99999'
           expect(last_response.status).to eq(404)
           expect(decoded_response['code']).to eq 999_999_999
-          expect(decoded_response['description']).to match(/Test Model Not Found/)
+          expect(decoded_response['description']).to include('Test Model Not Found')
         end
       end
 
@@ -572,7 +572,7 @@ module VCAP::CloudController
           post '/v2/test_models', '{}'
           expect(last_response.status).to eq(400)
           expect(decoded_response['code']).to eq 1001
-          expect(decoded_response['description']).to match(/invalid/)
+          expect(decoded_response['description']).to include('invalid')
           expect(last_response.location).to be_nil
         end
 
@@ -581,7 +581,7 @@ module VCAP::CloudController
           post '/v2/test_models', Oj.dump({ required_attr: true, unique_value: 'unique' })
           expect(last_response.status).to eq(400)
           expect(decoded_response['code']).to eq 999_999_998
-          expect(decoded_response['description']).to match(/Validation Error/)
+          expect(decoded_response['description']).to include('Validation Error')
         end
 
         it 'returns 400 error when validation fails on update' do
@@ -590,7 +590,7 @@ module VCAP::CloudController
           put "/v2/test_models/#{test_model.guid}", Oj.dump({ unique_value: 'unique' })
           expect(last_response.status).to eq(400)
           expect(decoded_response['code']).to eq 999_999_998
-          expect(decoded_response['description']).to match(/Validation Error/)
+          expect(decoded_response['description']).to include('Validation Error')
         end
       end
     end

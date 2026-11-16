@@ -64,26 +64,26 @@ RSpec.describe 'Sequel::DefaultOrderById' do
   describe 'incompatible_with_order?' do
     it 'skips for GROUP BY' do
       sql = capture_sql { model_class.dataset.select_group(:status).select_append(Sequel.function(:max, :id).as(:id)).all }
-      expect(sql).not_to match(/ORDER BY/)
+      expect(sql).not_to include('ORDER BY')
     end
 
     it 'skips for compound queries (UNION)' do
       ds1 = model_class.dataset.where(name: 'a')
       ds2 = model_class.dataset.where(name: 'b')
       sql = capture_sql { ds1.union(ds2, all: true, from_self: false).all }
-      expect(sql).not_to match(/ORDER BY/)
+      expect(sql).not_to include('ORDER BY')
     end
 
     it 'skips for DISTINCT ON' do
       skip if db.database_type != :postgres
 
       sql = capture_sql { model_class.dataset.distinct(:guid).all }
-      expect(sql).not_to match(/ORDER BY/)
+      expect(sql).not_to include('ORDER BY')
     end
 
     it 'skips for from_self (subquery)' do
       sql = capture_sql { model_class.dataset.where(name: 'a').from_self.all }
-      expect(sql).not_to match(/ORDER BY/)
+      expect(sql).not_to include('ORDER BY')
     end
 
     it 'does not skip for table alias' do
@@ -95,7 +95,7 @@ RSpec.describe 'Sequel::DefaultOrderById' do
   describe 'not_a_data_query?' do
     it 'skips for schema introspection (columns!)' do
       sql = capture_sql { model_class.dataset.columns! }
-      expect(sql).not_to match(/ORDER BY/)
+      expect(sql).not_to include('ORDER BY')
     end
   end
 
@@ -105,7 +105,7 @@ RSpec.describe 'Sequel::DefaultOrderById' do
         set_primary_key :guid
       end
       sql = capture_sql { guid_pk_model.dataset.all }
-      expect(sql).not_to match(/ORDER BY/)
+      expect(sql).not_to include('ORDER BY')
     end
   end
 
@@ -149,7 +149,7 @@ RSpec.describe 'Sequel::DefaultOrderById' do
     context 'without id in select list' do
       it 'skips ordering' do
         sql = capture_sql { model_class.dataset.select(:guid, :name).all }
-        expect(sql).not_to match(/ORDER BY/)
+        expect(sql).not_to include('ORDER BY')
       end
     end
   end

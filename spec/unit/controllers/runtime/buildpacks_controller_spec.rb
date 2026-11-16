@@ -49,7 +49,7 @@ module VCAP::CloudController
 
       it 'does not include order-by in the next_url' do
         get '/v2/buildpacks?results-per-page=1'
-        expect(parsed_response['next_url']).not_to match(/order-by=position/)
+        expect(parsed_response['next_url']).not_to include('order-by=position')
       end
     end
 

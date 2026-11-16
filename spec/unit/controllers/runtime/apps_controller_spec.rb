@@ -466,8 +466,8 @@ module VCAP::CloudController
             post '/v2/apps', Oj.dump(request)
 
             expect(last_response.status).to eq(422)
-            expect(last_response.body).to match(/UnprocessableEntity/)
-            expect(last_response.body).to match(/oops/)
+            expect(last_response.body).to include('UnprocessableEntity')
+            expect(last_response.body).to include('oops')
           end
         end
       end
@@ -718,8 +718,8 @@ module VCAP::CloudController
           it 'fails with the proper error code and message' do
             put "/v2/apps/#{process.app.guid}", '{ "memory": 2 }'
             expect(last_response.status).to eq(403)
-            expect(decoded_response['error_code']).to match(/FeatureDisabled/)
-            expect(decoded_response['description']).to match(/app_scaling/)
+            expect(decoded_response['error_code']).to include('FeatureDisabled')
+            expect(decoded_response['description']).to include('app_scaling')
           end
         end
       end
@@ -1087,8 +1087,8 @@ module VCAP::CloudController
             put "/v2/apps/#{process.app.guid}", Oj.dump({ docker_credentials: { username: 'username', password: 'foo' } })
 
             expect(last_response.status).to eq(422)
-            expect(last_response.body).to match(/UnprocessableEntity/)
-            expect(last_response.body).to match(/oops/)
+            expect(last_response.body).to include('UnprocessableEntity')
+            expect(last_response.body).to include('oops')
           end
         end
       end
@@ -2010,7 +2010,7 @@ module VCAP::CloudController
           put "/v2/apps/#{stopped_process.app.guid}", Oj.dump(state: 'STARTED')
 
           expect(last_response.status).to eq(400)
-          expect(last_response.body).to match(/Docker support has not been enabled/)
+          expect(last_response.body).to include('Docker support has not been enabled')
           expect(decoded_response['code']).to eq(320_003)
         end
 
@@ -2208,7 +2208,7 @@ module VCAP::CloudController
         put "/v2/apps/#{process.app.guid}", Oj.dump(instances: -1)
 
         expect(last_response.status).to eq(400)
-        expect(last_response.body).to match(/instances less than 0/)
+        expect(last_response.body).to include('instances less than 0')
         expect(decoded_response['code']).to eq(100_001)
       end
 
@@ -2216,7 +2216,7 @@ module VCAP::CloudController
         put "/v2/apps/#{process.app.guid}", Oj.dump(state: 'mississippi')
 
         expect(last_response.status).to eq(400)
-        expect(last_response.body).to match(/Invalid app state provided/)
+        expect(last_response.body).to include('Invalid app state provided')
         expect(decoded_response['code']).to eq(100_001)
       end
 

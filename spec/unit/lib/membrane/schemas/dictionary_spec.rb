@@ -52,8 +52,8 @@ RSpec.describe Membrane::Schemas::Dictionary do
         errors = e.to_s
       end
 
-      expect(errors).to match(/foo/)
-      expect(errors).to match(/bar/)
+      expect(errors).to include('foo')
+      expect(errors).to include('bar')
     end
   end
 end

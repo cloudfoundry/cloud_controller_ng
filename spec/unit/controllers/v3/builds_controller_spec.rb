@@ -142,8 +142,8 @@ RSpec.describe BuildsController, type: :controller do
             get(:index, params:)
 
             expect(parsed_body['pagination']['next']['href']).to start_with("#{link_prefix}/v3/builds")
-            expect(parsed_body['pagination']['next']['href']).to match(/per_page=1/)
-            expect(parsed_body['pagination']['next']['href']).to match(/page=2/)
+            expect(parsed_body['pagination']['next']['href']).to include('per_page=1')
+            expect(parsed_body['pagination']['next']['href']).to include('page=2')
             expect(parsed_body['pagination']['next']['href']).to match(/states=#{VCAP::CloudController::BuildModel::STAGED_STATE}/)
           end
         end

@@ -1588,7 +1588,7 @@ module VCAP::CloudController
 
           put "/v2/routes/#{route.guid}/apps/#{process.app.guid}", nil
           expect(last_response.status).to eq(400)
-          expect(decoded_response['description']).to match(/The requested app relation is invalid: the app and route must belong to the same space/)
+          expect(decoded_response['description']).to include('The requested app relation is invalid: the app and route must belong to the same space')
 
           expect(route.reload.apps).to be_empty
         end

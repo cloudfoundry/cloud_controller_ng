@@ -115,7 +115,7 @@ module VCAP::CloudController
         it 'processes BlobstoreError using translate_validation_exception' do
           get '/test_blobstore_error'
           expect(decoded_response['code']).to eq(150_007)
-          expect(decoded_response['description']).to match(/three retries/)
+          expect(decoded_response['description']).to include('three retries')
         end
 
         it 'returns InvalidRequest when Sequel HookFailed error occurs' do
@@ -189,7 +189,7 @@ module VCAP::CloudController
             it 'returns an invalid token error to the user' do
               get '/test_endpoint'
               expect(last_response.status).to eq 401
-              expect(last_response.body).to match(/InvalidAuthToken/)
+              expect(last_response.body).to include('InvalidAuthToken')
             end
           end
         end

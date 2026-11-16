@@ -175,7 +175,7 @@ module VCAP::CloudController
                                                        })
 
           expect(last_response.status).to eq(403)
-          expect(decoded_response['error_code']).to match(/CF-NotAuthorized/)
+          expect(decoded_response['error_code']).to include('CF-NotAuthorized')
         end
       end
 
@@ -276,7 +276,7 @@ module VCAP::CloudController
           delete "/v2/organizations/#{org.guid}/default_isolation_segment"
 
           expect(last_response.status).to eq(403)
-          expect(decoded_response['error_code']).to match(/CF-NotAuthorized/)
+          expect(decoded_response['error_code']).to include('CF-NotAuthorized')
         end
       end
 
@@ -374,7 +374,7 @@ module VCAP::CloudController
             post '/v2/organizations', Oj.dump({ name: 'my-org-name' })
 
             expect(last_response.status).to eq(403)
-            expect(decoded_response['error_code']).to match(/CF-NotAuthorized/)
+            expect(decoded_response['error_code']).to include('CF-NotAuthorized')
           end
         end
 

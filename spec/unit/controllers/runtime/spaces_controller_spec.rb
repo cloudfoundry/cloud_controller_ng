@@ -1594,7 +1594,7 @@ module VCAP::CloudController
             post '/v2/spaces', request_body
 
             expect(last_response).to have_status_code(400)
-            expect(last_response).to match(/name is taken/)
+            expect(decoded_response['description']).to include('name is taken')
           end
         end
       end

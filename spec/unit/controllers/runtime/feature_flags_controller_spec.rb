@@ -41,8 +41,8 @@ module VCAP::CloudController
             put '/v2/config/feature_flags/bogus', {}
 
             expect(last_response.status).to eq(404)
-            expect(decoded_response['description']).to match(/feature flag could not be found/)
-            expect(decoded_response['error_code']).to match(/FeatureFlagNotFound/)
+            expect(decoded_response['description']).to include('feature flag could not be found')
+            expect(decoded_response['error_code']).to include('FeatureFlagNotFound')
           end
         end
 
@@ -51,8 +51,8 @@ module VCAP::CloudController
             put '/v2/config/feature_flags/user_org_creation', Oj.dump({ enabled: nil })
 
             expect(last_response.status).to eq(400)
-            expect(decoded_response['description']).to match(/feature flag is invalid/)
-            expect(decoded_response['error_code']).to match(/FeatureFlagInvalid/)
+            expect(decoded_response['description']).to include('feature flag is invalid')
+            expect(decoded_response['error_code']).to include('FeatureFlagInvalid')
           end
         end
       end
@@ -63,8 +63,8 @@ module VCAP::CloudController
           put '/v2/config/feature_flags/user_org_creation', Oj.dump({ enabled: true })
 
           expect(last_response.status).to eq(403)
-          expect(decoded_response['description']).to match(/not authorized/)
-          expect(decoded_response['error_code']).to match(/NotAuthorized/)
+          expect(decoded_response['description']).to include('not authorized')
+          expect(decoded_response['error_code']).to include('NotAuthorized')
         end
       end
     end
@@ -193,8 +193,8 @@ module VCAP::CloudController
           get '/v2/config/feature_flags/bogus-flag'
 
           expect(last_response.status).to eq(404)
-          expect(decoded_response['description']).to match(/feature flag could not be found/)
-          expect(decoded_response['error_code']).to match(/FeatureFlagNotFound/)
+          expect(decoded_response['description']).to include('feature flag could not be found')
+          expect(decoded_response['error_code']).to include('FeatureFlagNotFound')
         end
       end
     end

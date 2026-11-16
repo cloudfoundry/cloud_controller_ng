@@ -320,7 +320,7 @@ RSpec.describe 'V3 service plan visibility' do
       it 'cannot be updated' do
         api_call.call(admin_headers)
         expect(last_response).to have_status_code(422)
-        expect(parsed_response['errors'][0]['detail']).to match(/cannot update plans with visibility type 'space'/)
+        expect(parsed_response['errors'][0]['detail']).to include("cannot update plans with visibility type 'space'")
       end
     end
 
@@ -345,7 +345,7 @@ RSpec.describe 'V3 service plan visibility' do
           api_call.call(admin_headers)
 
           expect(last_response).to have_status_code(400)
-          expect(parsed_response['errors'][0]['detail']).to match(/must be one of 'public', 'admin', 'organization'/)
+          expect(parsed_response['errors'][0]['detail']).to include("must be one of 'public', 'admin', 'organization'")
         end
       end
 
@@ -506,7 +506,7 @@ RSpec.describe 'V3 service plan visibility' do
         post api_url, body, admin_headers
 
         expect(last_response).to have_status_code(422)
-        expect(parsed_response['errors'][0]['detail']).to match(/cannot update plans with visibility type 'space'/)
+        expect(parsed_response['errors'][0]['detail']).to include("cannot update plans with visibility type 'space'")
       end
     end
 

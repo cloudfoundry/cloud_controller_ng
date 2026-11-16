@@ -753,7 +753,7 @@ module VCAP::CloudController
             it 'passes through the error message' do
               make_request
               expect(last_response).to have_status_code 502
-              expect(decoded_response['description']).to match(/ERROR MESSAGE HERE/)
+              expect(decoded_response['description']).to include('ERROR MESSAGE HERE')
               expect(service_instance.refresh.last_operation).to be_nil
             end
 

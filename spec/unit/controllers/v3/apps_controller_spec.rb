@@ -70,9 +70,9 @@ RSpec.describe AppsV3Controller, type: :controller do
         expect(response.status).to eq(200), response.body
         response_names = parsed_body['resources'].pluck('name')
         expect(response_names).to match_array(%w[abel beale])
-        expect(parsed_body['pagination']['next']['href']).to match(/order_by=%2Bname/)
-        expect(parsed_body['pagination']['next']['href']).to match(/per_page=2/)
-        expect(parsed_body['pagination']['next']['href']).to match(/page=2/)
+        expect(parsed_body['pagination']['next']['href']).to include('order_by=%2Bname')
+        expect(parsed_body['pagination']['next']['href']).to include('per_page=2')
+        expect(parsed_body['pagination']['next']['href']).to include('page=2')
       end
 
       it 'sorts and paginates the apps by name using the default direction only' do
@@ -81,9 +81,9 @@ RSpec.describe AppsV3Controller, type: :controller do
         expect(response.status).to eq(200), response.body
         response_names = parsed_body['resources'].pluck('name')
         expect(response_names).to match_array(%w[quartz rocky])
-        expect(parsed_body['pagination']['next']['href']).to match(/order_by=-name/)
-        expect(parsed_body['pagination']['next']['href']).to match(/per_page=2/)
-        expect(parsed_body['pagination']['next']['href']).to match(/page=2/)
+        expect(parsed_body['pagination']['next']['href']).to include('order_by=-name')
+        expect(parsed_body['pagination']['next']['href']).to include('per_page=2')
+        expect(parsed_body['pagination']['next']['href']).to include('page=2')
       end
 
       it 'can get the first page descending' do
@@ -91,9 +91,9 @@ RSpec.describe AppsV3Controller, type: :controller do
         expect(response.status).to eq(200), response.body
         response_names = parsed_body['resources'].pluck('name')
         expect(response_names).to match_array(%w[rocky quartz])
-        expect(parsed_body['pagination']['next']['href']).to match(/order_by=-name/)
-        expect(parsed_body['pagination']['next']['href']).to match(/per_page=2/)
-        expect(parsed_body['pagination']['next']['href']).to match(/page=2/)
+        expect(parsed_body['pagination']['next']['href']).to include('order_by=-name')
+        expect(parsed_body['pagination']['next']['href']).to include('per_page=2')
+        expect(parsed_body['pagination']['next']['href']).to include('page=2')
         expect(parsed_body['pagination']['previous']).to be_nil
       end
 
@@ -102,9 +102,9 @@ RSpec.describe AppsV3Controller, type: :controller do
         expect(response.status).to eq(200), response.body
         response_names = parsed_body['resources'].pluck('name')
         expect(response_names).to match_array(%w[rocky quartz])
-        expect(parsed_body['pagination']['next']['href']).to match(/order_by=-name/)
-        expect(parsed_body['pagination']['next']['href']).to match(/per_page=2/)
-        expect(parsed_body['pagination']['next']['href']).to match(/page=2/)
+        expect(parsed_body['pagination']['next']['href']).to include('order_by=-name')
+        expect(parsed_body['pagination']['next']['href']).to include('per_page=2')
+        expect(parsed_body['pagination']['next']['href']).to include('page=2')
         expect(parsed_body['pagination']['previous']).to be_nil
       end
 
@@ -113,12 +113,12 @@ RSpec.describe AppsV3Controller, type: :controller do
         expect(response.status).to eq(200), response.body
         response_names = parsed_body['resources'].pluck('name')
         expect(response_names).to match_array(%w[clem beale])
-        expect(parsed_body['pagination']['next']['href']).to match(/order_by=-name/)
-        expect(parsed_body['pagination']['next']['href']).to match(/per_page=2/)
-        expect(parsed_body['pagination']['next']['href']).to match(/page=3/)
-        expect(parsed_body['pagination']['previous']['href']).to match(/order_by=-name/)
-        expect(parsed_body['pagination']['previous']['href']).to match(/per_page=2/)
-        expect(parsed_body['pagination']['previous']['href']).to match(/page=1/)
+        expect(parsed_body['pagination']['next']['href']).to include('order_by=-name')
+        expect(parsed_body['pagination']['next']['href']).to include('per_page=2')
+        expect(parsed_body['pagination']['next']['href']).to include('page=3')
+        expect(parsed_body['pagination']['previous']['href']).to include('order_by=-name')
+        expect(parsed_body['pagination']['previous']['href']).to include('per_page=2')
+        expect(parsed_body['pagination']['previous']['href']).to include('page=1')
       end
 
       it 'can get the final page' do
@@ -127,9 +127,9 @@ RSpec.describe AppsV3Controller, type: :controller do
         response_names = parsed_body['resources'].pluck('name')
         expect(response_names).to match_array(%w[abel])
         expect(parsed_body['pagination']['next']).to be_nil
-        expect(parsed_body['pagination']['previous']['href']).to match(/order_by=-name/)
-        expect(parsed_body['pagination']['previous']['href']).to match(/per_page=2/)
-        expect(parsed_body['pagination']['previous']['href']).to match(/page=2/)
+        expect(parsed_body['pagination']['previous']['href']).to include('order_by=-name')
+        expect(parsed_body['pagination']['previous']['href']).to include('per_page=2')
+        expect(parsed_body['pagination']['previous']['href']).to include('page=2')
       end
     end
 
@@ -139,7 +139,7 @@ RSpec.describe AppsV3Controller, type: :controller do
 
         expect(response).to have_http_status(:bad_request)
 
-        expect(parsed_body['errors'].first['detail']).to match(/Invalid label_selector value/)
+        expect(parsed_body['errors'].first['detail']).to include('Invalid label_selector value')
       end
     end
   end
@@ -1663,8 +1663,8 @@ RSpec.describe AppsV3Controller, type: :controller do
 
       expect(parsed_body['pagination']['previous']).to be_nil
       expect(parsed_body['pagination']['next']['href']).to start_with("#{link_prefix}/v3/apps/#{app_model.guid}/builds")
-      expect(parsed_body['pagination']['next']['href']).to match(/per_page=1/)
-      expect(parsed_body['pagination']['next']['href']).to match(/page=2/)
+      expect(parsed_body['pagination']['next']['href']).to include('per_page=1')
+      expect(parsed_body['pagination']['next']['href']).to include('page=2')
       expect(parsed_body['pagination']['next']['href']).to match(/states=#{VCAP::CloudController::BuildModel::STAGED_STATE}/)
     end
 

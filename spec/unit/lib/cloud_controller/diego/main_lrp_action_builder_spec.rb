@@ -289,10 +289,10 @@ module VCAP::CloudController
               actions = MainLRPActionBuilder.build(process, lrp_builder, ssh_key).codependent_action.actions.map(&:run_action)
               ssh_action = actions.find { |action| action.path == '/tmp/lifecycle/diego-sshd' }
 
-              expect(ssh_action.args).not_to include(match(/-allowedCiphers=/))
-              expect(ssh_action.args).not_to include(match(/-allowedHostKeyAlgorithms=/))
-              expect(ssh_action.args).not_to include(match(/-allowedKeyExchanges=/))
-              expect(ssh_action.args).not_to include(match(/-allowedMACs=/))
+              expect(ssh_action.args).not_to include(include('-allowedCiphers='))
+              expect(ssh_action.args).not_to include(include('-allowedHostKeyAlgorithms='))
+              expect(ssh_action.args).not_to include(include('-allowedKeyExchanges='))
+              expect(ssh_action.args).not_to include(include('-allowedMACs='))
             end
           end
 
@@ -313,9 +313,9 @@ module VCAP::CloudController
               ssh_action = actions.find { |action| action.path == '/tmp/lifecycle/diego-sshd' }
 
               expect(ssh_action.args).to include('-allowedCiphers=cipher-1')
-              expect(ssh_action.args).not_to include(match(/-allowedHostKeyAlgorithms=/))
-              expect(ssh_action.args).not_to include(match(/-allowedKeyExchanges=/))
-              expect(ssh_action.args).not_to include(match(/-allowedMACs=/))
+              expect(ssh_action.args).not_to include(include('-allowedHostKeyAlgorithms='))
+              expect(ssh_action.args).not_to include(include('-allowedKeyExchanges='))
+              expect(ssh_action.args).not_to include(include('-allowedMACs='))
             end
           end
 
@@ -332,10 +332,10 @@ module VCAP::CloudController
               actions = MainLRPActionBuilder.build(process, lrp_builder, ssh_key).codependent_action.actions.map(&:run_action)
               ssh_action = actions.find { |action| action.path == '/tmp/lifecycle/diego-sshd' }
 
-              expect(ssh_action.args).not_to include(match(/-allowedCiphers=/))
-              expect(ssh_action.args).not_to include(match(/-allowedHostKeyAlgorithms=/))
-              expect(ssh_action.args).not_to include(match(/-allowedKeyExchanges=/))
-              expect(ssh_action.args).not_to include(match(/-allowedMACs=/))
+              expect(ssh_action.args).not_to include(include('-allowedCiphers='))
+              expect(ssh_action.args).not_to include(include('-allowedHostKeyAlgorithms='))
+              expect(ssh_action.args).not_to include(include('-allowedKeyExchanges='))
+              expect(ssh_action.args).not_to include(include('-allowedMACs='))
             end
           end
         end
