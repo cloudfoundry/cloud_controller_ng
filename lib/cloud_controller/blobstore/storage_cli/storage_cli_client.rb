@@ -207,42 +207,26 @@ module CloudController
         t = Time.now.utc
         emitted = false
         capture3_called = false
+        exit_code = nil
+        success = false
         begin
           flags = additional_flags
           logger.debug("running storage-cli: #{@cli_path} -s #{@storage_type} -c #{@config_file} #{flags.join(' ')} #{command} #{args.join(' ')}")
           capture3_called = true
           stdout, stderr, status = Open3.capture3(@cli_path, '-s', @storage_type, '-c', @config_file, *flags, command, *args)
+          exit_code = resolve_exit_code(status)
+          success = status.success? || (allow_exit_code_three && status.exitstatus == 3)
         rescue StandardError => e
           duration = Time.now.utc - t
           # -1: spawn failure (binary missing/permission); -3: setup error before capture3 (e.g. config load)
           pre_spawn_code = capture3_called ? -1 : -3
           safe_emit_metrics(command, pre_spawn_code, duration, 'spawn error')
-          emitted = true # set before logger.error so a logging failure can't trigger a second metric
-          logger.error("storage_cli.call.error #{command}#{log_message_arg_suffix(command, args)}",
-                       log_fields(command, args, blob_size: blob_size).merge('duration_seconds' => duration, 'error' => e.inspect))
+          emitted = true # set before safe_log so a logging failure can't trigger a second metric
+          safe_log(:error, "storage_cli.call.error #{command}#{log_message_arg_suffix(command, args)}",
+                   log_fields(command, args, blob_size: blob_size).merge('duration_seconds' => duration, 'error' => e.inspect))
           raise BlobstoreError.new(e.inspect)
         ensure
-          unless emitted
-            duration = Time.now.utc - t
-            if status
-              exit_code = resolve_exit_code(status)
-              success = status.success? || (allow_exit_code_three && status.exitstatus == 3)
-              metric_exit_code = allow_exit_code_three && exit_code == 3 ? 0 : exit_code
-              safe_emit_metrics(command, metric_exit_code, duration, 'run_cli', blob_size: blob_size)
-              logger.info("storage_cli.call.finish #{command}#{log_message_arg_suffix(command, args)}",
-                          log_fields(command, args, blob_size: blob_size).merge('duration_seconds' => duration,
-                                                                                'exit_code' => exit_code,
-                                                                                'success' => success))
-            else
-              mid_exec_code = mid_execution_exit_code(capture3_called)
-              safe_emit_metrics(command, mid_exec_code, duration, 'run_cli no status')
-              logger.error("storage_cli.call.error #{command}#{log_message_arg_suffix(command, args)}",
-                           log_fields(command, args, blob_size: blob_size).merge('duration_seconds' => duration,
-                                                                                 'exit_code' => mid_exec_code,
-                                                                                 'error' => $!.inspect)) # rubocop:disable Style/SpecialGlobalVars
-            end
-            true
-          end
+          emit_and_log_cli_result(command, args, status, exit_code, success, capture3_called, allow_exit_code_three, t, blob_size) unless emitted
         end
 
         stderr.split("\n").each { |line| logger.info("[INFO] storage-cli: #{line}") }
@@ -250,6 +234,31 @@ module CloudController
         raise "storage-cli #{command} failed with exit code #{exit_code.inspect}, output: '#{stdout}', error: '#{stderr}'" unless success
 
         [stdout, status]
+      end
+
+      def safe_log(level, message, fields)
+        logger.public_send(level, message, fields)
+      rescue StandardError
+        nil
+      end
+
+      def emit_and_log_cli_result(command, args, status, exit_code, success, capture3_called, allow_exit_code_three, start_time, blob_size)
+        duration = Time.now.utc - start_time
+        if status
+          metric_exit_code = allow_exit_code_three && exit_code == 3 ? 0 : exit_code
+          safe_emit_metrics(command, metric_exit_code, duration, 'run_cli', blob_size: blob_size)
+          safe_log(:info, "storage_cli.call.finish #{command}#{log_message_arg_suffix(command, args)}",
+                   log_fields(command, args, blob_size: blob_size).merge('duration_seconds' => duration,
+                                                                         'exit_code' => exit_code,
+                                                                         'success' => success))
+        else
+          mid_exec_code = mid_execution_exit_code(capture3_called)
+          safe_emit_metrics(command, mid_exec_code, duration, 'run_cli no status')
+          safe_log(:error, "storage_cli.call.error #{command}#{log_message_arg_suffix(command, args)}",
+                   log_fields(command, args, blob_size: blob_size).merge('duration_seconds' => duration,
+                                                                         'exit_code' => mid_exec_code,
+                                                                         'error' => $!.inspect)) # rubocop:disable Style/SpecialGlobalVars
+        end
       end
 
       def log_message_arg_suffix(command, args)

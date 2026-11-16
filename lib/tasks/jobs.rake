@@ -34,6 +34,7 @@ namespace :jobs do
     RakeConfig.context = :api
     VCAP::CloudController::ExecutionContext::API_PUMA_WORKER.set_process_type_env
 
+    require 'cloud_controller/metrics/custom_process_id'
     require 'prometheus/client/data_stores/direct_file_store'
     prometheus_dir = File.join(RakeConfig.config.get(:directories, :tmpdir), 'prometheus')
     FileUtils.mkdir_p(prometheus_dir)
