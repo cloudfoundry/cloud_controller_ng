@@ -389,6 +389,40 @@ module VCAP::CloudController::Metrics
         allow(redis).to receive(:decr).with('metrics:cc.requests.outstanding.gauge').and_return(-1)
         expect(redis_store.decrement_request_outstanding_gauge).to eq(-1)
       end
+
+      context 'when valkey is unreachable' do
+        before do
+          allow(redis).to receive(:incr).and_raise(Redis::CannotConnectError.new('connect(2) for valkey.sock'))
+          allow(redis).to receive(:decr).and_raise(Redis::TimeoutError)
+        end
+
+        it 'does not raise when incrementing, returning nil' do
+          expect(redis_store.increment_request_outstanding_gauge).to be_nil
+        end
+
+        it 'does not raise when decrementing, returning nil' do
+          expect(redis_store.decrement_request_outstanding_gauge).to be_nil
+        end
+
+        it 'logs the redis error' do
+          logger = instance_double(Steno::Logger, error: nil)
+          allow(Steno).to receive(:logger).and_return(logger)
+
+          redis_store.increment_request_outstanding_gauge
+
+          expect(logger).to have_received(:error).with(/Redis error: Redis::CannotConnectError/)
+        end
+      end
+
+      context 'when Redis raises a command error' do
+        before do
+          allow(redis).to receive(:decr).and_raise(Redis::CommandError)
+        end
+
+        it 'fails open and returns nil' do
+          expect(redis_store.decrement_request_outstanding_gauge).to be_nil
+        end
+      end
     end
   end
 end
