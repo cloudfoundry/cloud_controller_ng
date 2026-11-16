@@ -19,6 +19,14 @@ module VCAP::CloudController
       expect { ConfigSchemas::WorkerSchema.validate(worker_config) }.not_to raise_error
     end
 
+    it 'passes the configured token validity to managed client registration' do
+      TestConfig.override(service_account_provisioning: settings.merge(token_validity_in_seconds: 900))
+      expect(ServiceAccountProvision).to receive(:new).with(anything, identity_ca_ref: 'diego-instance-identity', allowed_resources_ref: nil,
+                                                                     token_validity_in_seconds: 900).and_call_original
+
+      locator.service_account_provisioner
+    end
+
     it 'validates provisioning configuration for API-hosted local workers too' do
       api_config = Config.read_file('config/cloud_controller.yml').merge(service_account_provisioning: settings.except(:client_id))
       expect { ConfigSchemas::ApiSchema.validate(api_config) }.to raise_error(Membrane::SchemaValidationError, /client_id => Missing key/)

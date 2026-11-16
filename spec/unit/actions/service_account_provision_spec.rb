@@ -204,6 +204,52 @@ module VCAP::CloudController
       expect { ServiceAccountProvision.new(clients, identity_ca: 'inline-ca') }.to raise_error(ArgumentError)
     end
 
+    [60, 900].each do |validity|
+      it "registers operator token validity #{validity} seconds" do
+        allow(clients).to receive(:get).and_raise(CF::UAA::NotFound)
+        expect(clients).to receive(:add).with(:client, registration.merge('access_token_validity' => validity))
+
+        ServiceAccountProvision.new(clients, identity_ca_ref: 'diego-instance-identity', token_validity_in_seconds: validity).provision(account)
+      end
+    end
+
+    [0, -1, 1.5, '900', nil].each do |validity|
+      it "rejects invalid token validity #{validity.inspect}" do
+        expect do
+          ServiceAccountProvision.new(clients, identity_ca_ref: 'diego-instance-identity', token_validity_in_seconds: validity)
+        end.to raise_error(ArgumentError, /positive integer/)
+      end
+    end
+
+    it 'updates only token validity on an otherwise matching managed registration' do
+      existing = registration.merge('access_token_validity' => 60, 'additional-description' => 'retain me')
+      allow(clients).to receive(:get).and_return(existing)
+      expect(clients).to receive(:put).with(:client, existing.merge('access_token_validity' => 900))
+      expect(clients).not_to receive(:add)
+
+      ServiceAccountProvision.new(clients, identity_ca_ref: 'diego-instance-identity', token_validity_in_seconds: 900).provision(account)
+
+      expect(account.reload.status).to eq('ready')
+    end
+
+    it 'does not update validity when another registration field collides' do
+      allow(clients).to receive(:get).and_return(registration.merge('access_token_validity' => 60, 'cf_service_account_guid' => SecureRandom.uuid))
+      expect(clients).not_to receive(:put)
+
+      expect { action.provision(account) }.to raise_error(ServiceAccountProvision::Conflict, 'client identity collision')
+    end
+
+    it 'permits disabling after operator token validity changes without updating the client' do
+      account.update(enabled: false)
+      allow(clients).to receive(:get).and_return(registration.merge('access_token_validity' => 900))
+      expect(clients).not_to receive(:put)
+      expect(clients).to receive(:delete).with(:client, account.client_id)
+
+      action.deprovision(account)
+
+      expect(account.reload.status).to eq('disabled')
+    end
+
     [nil, '', ' '].each do |reference|
       it "requires a nonblank trust bundle reference (#{reference.inspect})" do
         expect { ServiceAccountProvision.new(clients, identity_ca_ref: reference) }.
