@@ -80,6 +80,10 @@ staging has no account identity. Independent instance credentials remain intact.
 The managed client is secretless, client_credentials-only, bearer policy explicitly
 false for certificate binding, TTL 300, named CA bundle reference, exact SAN and
 required owning-org claim. CN/OU mappings provide instance/app/space/org attribution.
+Mappings use `cf.instance_guid`, `cf.app_guid`, `cf.space_guid` and `cf.org_guid`,
+which UAA emits as fields of a nested `cf` object. The owning-org requirement uses
+the same `cf.org_guid` mapping key. This implements the nested-claim proposal in
+[RFC amendment #1709](https://github.com/cloudfoundry/community/pull/1709).
 Binding does not create a CAPI user. CAPI users and their explicit resource roles
 are independently managed; the existing CAPI authentication flow can lazily create
 a roleless OAuth user on its first API request. OAuth authorities alone do not
