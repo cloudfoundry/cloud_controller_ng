@@ -16,12 +16,12 @@ module VCAP::CloudController
         'tls-client-auth-ca-ref' => 'diego-instance-identity',
         'tls_client_auth_san_dns' => account.certificate_dns_san,
         'tls_client_certificate_bound_access_tokens' => false,
-        'tls-client-auth-required-claims' => { 'org_guid' => account.organization.guid },
+        'tls-client-auth-required-claims' => { 'cf.org_guid' => account.organization.guid },
         'tls-client-auth-claim-mappings' => [
-          { 'field' => 'subject_cn', 'claim' => 'cf_instance_guid' },
-          { 'field' => 'subject_ou', 'pattern' => '^app:(.+)$', 'claim' => 'app_guid' },
-          { 'field' => 'subject_ou', 'pattern' => '^space:(.+)$', 'claim' => 'space_guid' },
-          { 'field' => 'subject_ou', 'pattern' => '^organization:(.+)$', 'claim' => 'org_guid' }
+          { 'field' => 'subject_cn', 'claim' => 'cf.instance_guid' },
+          { 'field' => 'subject_ou', 'pattern' => '^app:(.+)$', 'claim' => 'cf.app_guid' },
+          { 'field' => 'subject_ou', 'pattern' => '^space:(.+)$', 'claim' => 'cf.space_guid' },
+          { 'field' => 'subject_ou', 'pattern' => '^organization:(.+)$', 'claim' => 'cf.org_guid' }
         ],
         'cf_service_account_guid' => account.guid
       }

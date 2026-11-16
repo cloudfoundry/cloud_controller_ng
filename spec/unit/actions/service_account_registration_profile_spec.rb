@@ -24,12 +24,12 @@ module VCAP::CloudController
 
       profile = {
         'tls_client_certificate_bound_access_tokens' => false,
-        'tls-client-auth-required-claims' => { 'org_guid' => org.guid },
+        'tls-client-auth-required-claims' => { 'cf.org_guid' => org.guid },
         'tls-client-auth-claim-mappings' => [
-          { 'field' => 'subject_cn', 'claim' => 'cf_instance_guid' },
-          { 'field' => 'subject_ou', 'pattern' => '^app:(.+)$', 'claim' => 'app_guid' },
-          { 'field' => 'subject_ou', 'pattern' => '^space:(.+)$', 'claim' => 'space_guid' },
-          { 'field' => 'subject_ou', 'pattern' => '^organization:(.+)$', 'claim' => 'org_guid' }
+          { 'field' => 'subject_cn', 'claim' => 'cf.instance_guid' },
+          { 'field' => 'subject_ou', 'pattern' => '^app:(.+)$', 'claim' => 'cf.app_guid' },
+          { 'field' => 'subject_ou', 'pattern' => '^space:(.+)$', 'claim' => 'cf.space_guid' },
+          { 'field' => 'subject_ou', 'pattern' => '^organization:(.+)$', 'claim' => 'cf.org_guid' }
         ]
       }
       expect(clients).to have_received(:add).with(:client, hash_including(profile))
