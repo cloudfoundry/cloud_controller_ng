@@ -19,6 +19,7 @@ content:
           description: Amount of disk to allocate for the task in MB
         log_rate_limit_in_bytes_per_second:
           type: integer
+          format: int64
           description: Amount of log rate limit to allocate for the task in bytes per second
         droplet_guid:
           type: string

@@ -23,6 +23,7 @@ content:
               description: Total instances of all the started processes allowed in an organization
             log_rate_limit_in_bytes_per_second:
               type: [integer, "null"]
+              format: int64
               description: Total log rate limit allowed for all the started processes and running tasks in an organization
             per_app_tasks:
               type: [integer, "null"]
