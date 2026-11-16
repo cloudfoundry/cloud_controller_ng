@@ -133,24 +133,24 @@ module VCAP::CloudController::Metrics
         end
         @prefix = 'metrics'
         @request_outstanding_gauge_key = "#{@prefix}:cc.requests.outstanding.gauge"
-        tolerate_connection_errors { @redis.set(@request_outstanding_gauge_key, 0) }
+        fail_open { @redis.set(@request_outstanding_gauge_key, 0) }
       end
 
       def increment_request_outstanding_gauge
-        tolerate_connection_errors { @redis.incr(@request_outstanding_gauge_key) }
+        fail_open { @redis.incr(@request_outstanding_gauge_key) }
       end
 
       def decrement_request_outstanding_gauge
-        tolerate_connection_errors { @redis.decr(@request_outstanding_gauge_key) }
+        fail_open { @redis.decr(@request_outstanding_gauge_key) }
       end
 
       private
 
-      # A metrics write must never fail a user request; swallow connection errors (e.g. valkey socket gone during shutdown).
-      def tolerate_connection_errors
+      # on any Redis error (eg valkey unreachable) log it and carry on.
+      def fail_open
         yield
-      rescue Redis::BaseConnectionError => e
-        logger.warn("statsd_updater.redis_store.connection_error: #{e.class}: #{e.message}")
+      rescue Redis::BaseError => e
+        logger.error("Redis error: #{e.class} - #{e.message}")
         nil
       end
 

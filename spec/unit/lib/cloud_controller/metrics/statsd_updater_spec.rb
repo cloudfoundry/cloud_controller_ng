@@ -414,23 +414,23 @@ module VCAP::CloudController::Metrics
           expect(redis_store.decrement_request_outstanding_gauge).to be_nil
         end
 
-        it 'logs the connection error' do
-          logger = instance_double(Steno::Logger, warn: nil)
+        it 'logs the redis error' do
+          logger = instance_double(Steno::Logger, error: nil)
           allow(Steno).to receive(:logger).and_return(logger)
 
           redis_store.increment_request_outstanding_gauge
 
-          expect(logger).to have_received(:warn).with(/Redis::CannotConnectError/)
+          expect(logger).to have_received(:error).with(/Redis error: Redis::CannotConnectError/)
         end
       end
 
-      context 'when Redis raises a non-connection error' do
+      context 'when Redis raises a command error' do
         before do
           allow(redis).to receive(:decr).and_raise(Redis::CommandError)
         end
 
-        it 'propagates the error' do
-          expect { redis_store.decrement_request_outstanding_gauge }.to raise_error(Redis::CommandError)
+        it 'fails open and returns nil' do
+          expect(redis_store.decrement_request_outstanding_gauge).to be_nil
         end
       end
     end
