@@ -3,13 +3,15 @@ module VCAP::CloudController
     class Conflict < StandardError; end
 
     # identity_ca_ref names an operator-defined UAA trust bundle containing the instance identity CA.
-    # CA rotation changes the bundle's contents in UAA; registered clients never change.
-    def initialize(clients, identity_ca_ref:, allowed_resources_ref: nil)
+    # CA rotation changes the bundle's contents in UAA, not the registered reference.
+    def initialize(clients, identity_ca_ref:, allowed_resources_ref: nil, token_validity_in_seconds: 300)
       raise ArgumentError.new('identity_ca_ref must name a UAA trust bundle') if identity_ca_ref.blank?
+      raise ArgumentError.new('token_validity_in_seconds must be a positive integer') unless token_validity_in_seconds.is_a?(Integer) && token_validity_in_seconds.positive?
 
       @clients = clients
       @identity_ca_ref = identity_ca_ref
       @allowed_resources_ref = allowed_resources_ref
+      @token_validity_in_seconds = token_validity_in_seconds
     end
 
     def provision(account)
@@ -27,6 +29,8 @@ module VCAP::CloudController
             existing = existing_client(account.client_id)
             if existing
               raise Conflict.new('client identity collision') unless matching_registration?(existing, desired)
+
+              @clients.put(:client, existing.merge('access_token_validity' => @token_validity_in_seconds)) if existing['access_token_validity'] != @token_validity_in_seconds
             else
               @clients.add(:client, desired)
             end
@@ -79,6 +83,8 @@ module VCAP::CloudController
       return false unless tls_keys.sort == desired.keys.grep(/\Atls[-_]/).sort
 
       desired.all? do |key, value|
+        next true if key == 'access_token_validity'
+
         actual = existing[key]
         actual = [] if key == 'scope' && !existing.key?(key)
         actual = [] if key == 'scope' && actual == ['uaa.none']
@@ -106,7 +112,7 @@ module VCAP::CloudController
         'authorized_grant_types' => ['client_credentials'],
         'authorities' => %w[cloud_controller.read cloud_controller.write],
         'scope' => [],
-        'access_token_validity' => 300,
+        'access_token_validity' => @token_validity_in_seconds,
         'tls-client-auth-ca-ref' => @identity_ca_ref,
         'tls_client_auth_san_dns' => account.certificate_dns_san,
         'tls_client_certificate_bound_access_tokens' => false,

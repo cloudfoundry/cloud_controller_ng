@@ -21,10 +21,31 @@ module VCAP::CloudController
 
     it 'passes the configured token validity to managed client registration' do
       TestConfig.override(service_account_provisioning: settings.merge(token_validity_in_seconds: 900))
-      expect(ServiceAccountProvision).to receive(:new).with(anything, identity_ca_ref: 'diego-instance-identity', allowed_resources_ref: nil,
-                                                                     token_validity_in_seconds: 900).and_call_original
+      expected_settings = { identity_ca_ref: 'diego-instance-identity', allowed_resources_ref: nil, token_validity_in_seconds: 900 }
+      expect(ServiceAccountProvision).to receive(:new).with(anything, **expected_settings).and_call_original
 
       locator.service_account_provisioner
+    end
+
+    it 'refreshes an expired management token when updating validity' do
+      existing = ServiceAccountProvision.new(double, identity_ca_ref: 'diego-instance-identity').send(:registration, account)
+      TestConfig.override(service_account_provisioning: settings.merge(token_validity_in_seconds: 900))
+      UaaTokenCache.set_token(settings[:client_id], 'bearer expired-token')
+      WebMock::API.stub_request(:get, "#{uaa_url}/oauth/clients/#{account.client_id}").
+        to_return(headers: headers, body: existing.to_json)
+      WebMock::API.stub_request(:put, "#{uaa_url}/oauth/clients/#{account.client_id}").
+        with(headers: { 'Authorization' => 'bearer expired-token' }).
+        to_return(status: 401, headers: headers, body: { error: 'invalid_token' }.to_json)
+      WebMock::API.stub_request(:post, "#{uaa_url}/oauth/token").
+        to_return(headers: headers, body: { access_token: 'fresh-token', token_type: 'bearer', expires_in: 300 }.to_json)
+      update = WebMock::API.stub_request(:put, "#{uaa_url}/oauth/clients/#{account.client_id}").
+               with(headers: { 'Authorization' => 'bearer fresh-token' }) { |request| Oj.strict_load(request.body)['access_token_validity'] == 900 }.
+               to_return(headers: headers, body: existing.merge('access_token_validity' => 900).to_json)
+
+      locator.service_account_provisioner.provision(account)
+
+      expect(update).to have_been_requested.once
+      expect(account.reload.status).to eq('ready')
     end
 
     it 'validates provisioning configuration for API-hosted local workers too' do

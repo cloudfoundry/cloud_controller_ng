@@ -239,6 +239,19 @@ module VCAP::CloudController
       expect { action.provision(account) }.to raise_error(ServiceAccountProvision::Conflict, 'client identity collision')
     end
 
+    it 'retains a failed state after a validity update error and reconciles on retry' do
+      allow(clients).to receive(:get).and_return(registration.merge('access_token_validity' => 60))
+      allow(clients).to receive(:put).and_raise('UAA unavailable')
+
+      expect { action.provision(account) }.to raise_error('UAA unavailable')
+      expect(account.reload.status).to eq('failed')
+      allow(clients).to receive(:put)
+
+      action.provision(account)
+
+      expect(account.reload.status).to eq('ready')
+    end
+
     it 'permits disabling after operator token validity changes without updating the client' do
       account.update(enabled: false)
       allow(clients).to receive(:get).and_return(registration.merge('access_token_validity' => 900))
@@ -286,6 +299,19 @@ module VCAP::CloudController
         expect(account.reload.status).to eq('ready')
         expect(User.where(guid: account.client_id).count).to eq(0)
         expect(WebMock::API.a_request(:post, "#{uaa_url}/oauth/clients")).not_to have_been_made
+      end
+
+      it 'updates managed token validity through the UAA client library' do
+        existing = registration.merge('access_token_validity' => 60)
+        WebMock::API.stub_request(:get, client_url).to_return(headers: response_headers, body: existing.to_json)
+        update = WebMock::API.stub_request(:put, client_url).
+                 with { |request| Oj.strict_load(request.body).except('id') == registration }.
+                 to_return(headers: response_headers, body: registration.to_json)
+
+        action.provision(account)
+
+        expect(update).to have_been_requested.once
+        expect(account.reload.status).to eq('ready')
       end
 
       [

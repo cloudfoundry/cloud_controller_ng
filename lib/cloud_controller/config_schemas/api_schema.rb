@@ -34,6 +34,7 @@ module VCAP::CloudController
           optional(:service_account_creation_limit) => Integer,
           optional(:service_account_token_endpoint) => String,
           optional(:service_account_provisioning) => {
+            optional(:token_validity_in_seconds) => Integer,
             client_id: String,
             client_secret: String,
             identity_ca_ref: String

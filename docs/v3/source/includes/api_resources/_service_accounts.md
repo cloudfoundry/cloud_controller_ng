@@ -78,7 +78,7 @@ Instances retain launch identity through renewal; tasks capture desired assignme
 staging has no account identity. Independent instance credentials remain intact.
 
 The managed client is secretless, client_credentials-only, bearer policy explicitly
-false for certificate binding, TTL 300, named CA bundle reference, exact SAN and
+false for certificate binding, default TTL 300 seconds, named CA bundle reference, exact SAN and
 required owning-org claim. CN/OU mappings provide instance/app/space/org attribution.
 Mappings use `cf.instance_guid`, `cf.app_guid`, `cf.space_guid` and `cf.org_guid`,
 which UAA emits as fields of a nested `cf` object. The owning-org requirement uses
@@ -87,7 +87,9 @@ the same `cf.org_guid` mapping key. This implements the nested-claim proposal in
 Binding does not create a CAPI user. CAPI users and their explicit resource roles
 are independently managed; the existing CAPI authentication flow can lazily create
 a roleless OAuth user on its first API request. OAuth authorities alone do not
-grant resource access. Any registration difference is a collision, not adopted/reconciled.
+grant resource access. Identity/trust/authority registration differences are collisions;
+an operator token-validity change alone is reconciled on the next provisioning or
+enable operation without replacing the client or modifying independent CAPI roles.
 
 Disable removes the managed registration asynchronously, stopping new token
 issuance when effective. Existing JWTs, certificate routes and external sessions
@@ -130,6 +132,14 @@ BOSH `cc.service_accounts` properties:
   Inline CA certificates are unsupported. Rotate named bundle contents in UAA.
 - Worker-only optional `allowed_resources_ref`: requires UAA named-resource-policy
   support (#4125). Leave unset until supported; CAPI does not copy audience lists.
+- Worker-only `token_validity_in_seconds`: positive integer, default 300. Operators
+  may choose shorter or longer durations; developers cannot override it. Existing
+  managed clients receive the value on their next provisioning/enable reconciliation,
+  not immediately on configuration deployment. Disable/delete still work when only
+  validity differs. Already-issued tokens are unaffected. UAA must enforce the
+  authenticating certificate expiry cap and any additional UAA token policy limits;
+  CAPI registration does not itself enforce the certificate-expiry cap. This follows
+  the configurable-lifetime proposal in RFC amendment #1709.
 
 Accounts use only prefix-qualified identities and org ownership. The schema does
 not include migration paths for earlier unpublished proposal models. Deletion

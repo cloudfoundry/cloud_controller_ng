@@ -325,7 +325,8 @@ module CloudController
         ca_file: config.get(:uaa, :ca_file)
       )
       register(:service_account_provisioner,
-               ServiceAccountProvision.new(clients, identity_ca_ref: settings[:identity_ca_ref], allowed_resources_ref: settings[:allowed_resources_ref]))
+               ServiceAccountProvision.new(clients, identity_ca_ref: settings[:identity_ca_ref], allowed_resources_ref: settings[:allowed_resources_ref],
+                                                    token_validity_in_seconds: settings.fetch(:token_validity_in_seconds, 300)))
     end
 
     def uaa_issuer_discovery

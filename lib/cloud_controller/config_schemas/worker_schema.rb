@@ -30,6 +30,7 @@ module VCAP::CloudController
           },
 
           optional(:service_account_provisioning) => {
+            optional(:token_validity_in_seconds) => Integer,
             client_id: String,
             client_secret: String,
             identity_ca_ref: String,
