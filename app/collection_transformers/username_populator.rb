@@ -11,8 +11,8 @@ module VCAP::CloudController
       client_ids = users.select(&:is_oauth_client).map(&:guid)
       accounts = ServiceAccountModel.for_client_ids(client_ids).all
       account_names = accounts.to_h { |account| [account.client_id, account.name] }
-      human_users = users.reject { |user| user.is_oauth_client && account_names.key?(user.guid) }
-      username_mapping = human_users.empty? ? {} : uaa_client.usernames_for_ids(human_users.collect(&:guid))
+      users_for_uaa_lookup = users.reject { |user| user.is_oauth_client && account_names.key?(user.guid) }
+      username_mapping = users_for_uaa_lookup.empty? ? {} : uaa_client.usernames_for_ids(users_for_uaa_lookup.collect(&:guid))
       users.each { |user| user.username = user.is_oauth_client && account_names.key?(user.guid) ? account_names[user.guid] : username_mapping[user.guid] }
     end
   end
