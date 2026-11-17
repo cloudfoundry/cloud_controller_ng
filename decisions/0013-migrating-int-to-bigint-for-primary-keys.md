@@ -2,7 +2,19 @@
 Date: 2025-04-04
 
 ## Status
-Draft :construction:
+Implemented :white_check_mark:
+
+## Update — November 2026: Migration Implemented
+The PostgreSQL migration has been implemented for `events`, `delayed_jobs`, `jobs`, `app_usage_events`, and `service_usage_events`:
+
+- **2025-05-05** — [`375620fcbb`](https://github.com/cloudfoundry/cloud_controller_ng/commit/375620fcbb13cd0e7ce57b6faf6f8429bb86e15d) (#4281): Step 1 for `events`, reusable migration helpers, the `skip_bigint_id_migration` opt-out flag, and the `db:bigint_backfill` Rake task.
+- **2025-07-23** — [`49c37e2595`](https://github.com/cloudfoundry/cloud_controller_ng/commit/49c37e25950912af7cbb58d449e0703ec4aa8853) (#4406): Steps 3a and 3b for `events`.
+- **2025-08-06** — [`747efd5026`](https://github.com/cloudfoundry/cloud_controller_ng/commit/747efd5026a93f021150c179cb5599657edefa0e) (#4480): Step 1 for the other four tables.
+- **2025-10-13** — [`ccfba1e076`](https://github.com/cloudfoundry/cloud_controller_ng/commit/ccfba1e0762a4a23752c9cef2ddf8e632479caff) (#4591): Steps 3a and 3b for the other four tables.
+- **2025-10-14** — [`72024efc25`](https://github.com/cloudfoundry/cloud_controller_ng/commit/72024efc25d0cfa542ab5b7c7c83e7af3be8977a) (#4605): Follow-up fix for the shared helper import.
+
+Unlike the original outline below, steps 3a and 3b are separate migration files. The `CHECK` constraint is added as `NOT VALID` and validated separately with a longer timeout and less restrictive locks; the column switch remains transactional.
+Backfilling relies on cleanup or the manual Rake task rather than an automatically scheduled job. Down migrations are provided for testing and explicitly should not be executed in production.
 
 ## Context
 The primary key `id` columns in all database tables use the integer type, which has a maximum value of 2,147,483,647.
