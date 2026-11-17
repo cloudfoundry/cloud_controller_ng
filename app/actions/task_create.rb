@@ -28,7 +28,6 @@ module VCAP::CloudController
           name: use_requested_name_or_generate_name(message),
           app: app,
           service_account_guid: app.service_account_guid,
-          service_account_snapshot: true,
           state: TaskModel::PENDING_STATE,
           droplet: droplet,
           command: command(message, template_process),

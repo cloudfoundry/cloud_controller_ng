@@ -569,7 +569,7 @@ module VCAP::CloudController
             config.config_hash[:service_accounts_enabled] = true
             account = ServiceAccountModel.create(name: 'payments-worker', space: app.space, status: 'ready')
             app.update(service_account: account)
-            task.update(service_account_guid: account.guid, service_account_snapshot: true)
+            task.update(service_account_guid: account.guid)
             expect(task_recipe_builder.build_app_task(config, task).certificate_properties.service_account.name).to eq(account.name)
           end
 

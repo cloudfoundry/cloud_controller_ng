@@ -49,8 +49,8 @@ module VCAP::CloudController
           space.organization.add_user(principal)
           space.add_auditor(principal)
           app.update(service_account: account)
-          process = create(:process_model, app: app, state: ProcessModel::STARTED, service_account_guid: account.guid, service_account_snapshot: true)
-          task = create(:task_model, app: app, state: TaskModel::RUNNING_STATE, service_account_guid: account.guid, service_account_snapshot: true)
+          process = create(:process_model, app: app, state: ProcessModel::STARTED, service_account_guid: account.guid)
+          task = create(:task_model, app: app, state: TaskModel::RUNNING_STATE, service_account_guid: account.guid)
           allow(clients).to receive(:get).and_return(provisioner.send(:registration, account))
           allow(clients).to receive(:delete) do
             expect(AppModel.first(guid: app.guid)).to be_nil

@@ -14,7 +14,7 @@ module VCAP::CloudController
             runners(config).runner_for_process(process).stop
           end
 
-          process.update(state: ProcessModel::STARTED, revision: revision_to_set, service_account_guid: process.app.service_account_guid, service_account_snapshot: true)
+          process.update(state: ProcessModel::STARTED, revision: revision_to_set, service_account_guid: process.app.service_account_guid)
           runners(config).runner_for_process(process).start
         end
       end

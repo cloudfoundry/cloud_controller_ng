@@ -48,7 +48,7 @@ module VCAP::CloudController::Diego
                             service_account_token_endpoint: 'https://uaa.example.test/oauth/token/mtls')
         account = VCAP::CloudController::ServiceAccountModel.create(name: 'payments-worker', space: app.space, status: 'ready')
         app.update(service_account: account)
-        task.update(service_account_guid: account.guid, service_account_snapshot: true)
+        task.update(service_account_guid: account.guid)
         env = TaskEnvironment.new(app, task, space, { 'VCAP_SERVICE_ACCOUNT' => 'injected' }).build
         expect(env['VCAP_SERVICE_ACCOUNT']).to include(name: account.name, client_id: account.client_id)
       end

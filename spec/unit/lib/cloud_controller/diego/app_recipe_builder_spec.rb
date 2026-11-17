@@ -365,7 +365,7 @@ module VCAP::CloudController
             it 'keeps the launch identity in rebuilt LRPs after desired unbind' do
               space.organization.update(service_account_prefix: 'recipe-team')
               account = ServiceAccountModel.create(name: 'payments-worker', space: space, status: 'ready')
-              process.update(service_account_guid: account.guid, service_account_snapshot: true)
+              process.update(service_account_guid: account.guid)
               app_model.update(service_account: nil)
               expect(builder.build_app_lrp.certificate_properties.service_account.name).to eq(account.name)
             end

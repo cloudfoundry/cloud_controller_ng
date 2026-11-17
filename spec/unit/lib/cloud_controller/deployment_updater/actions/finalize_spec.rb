@@ -116,7 +116,7 @@ module VCAP::CloudController
       finalize_action.call
 
       expect(deployment.reload.state).to eq(DeploymentModel::DEPLOYED_STATE)
-      expect(old_worker_process.reload.runtime_service_account_guid).to eq(account.guid)
+      expect(old_worker_process.reload.service_account_guid).to eq(account.guid)
     end
 
     it 'puts the deployment into its finished DEPLOYED_STATE' do

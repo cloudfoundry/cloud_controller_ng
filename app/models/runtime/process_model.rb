@@ -312,14 +312,9 @@ module VCAP::CloudController
           raise validation_failed_error
         end
         self.service_account_guid = app.service_account_guid
-        self.service_account_snapshot = true
       end
       set_new_version if version_needs_to_be_updated?
       super
-    end
-
-    def runtime_service_account_guid
-      service_account_snapshot ? service_account_guid : nil
     end
 
     # rubocop:disable Metrics/CyclomaticComplexity

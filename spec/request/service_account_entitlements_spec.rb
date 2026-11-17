@@ -61,8 +61,8 @@ module VCAP::CloudController
       delete "#{path}/#{target.guid}", nil, headers
       expect(last_response.status).to eq(409)
       app.update(service_account: nil)
-      process = create(:process_model, app: app, state: ProcessModel::STARTED, service_account_guid: account.guid, service_account_snapshot: true)
-      process.update(service_account_guid: account.guid, service_account_snapshot: true)
+      process = create(:process_model, app: app, state: ProcessModel::STARTED, service_account_guid: account.guid)
+      process.update(service_account_guid: account.guid)
       delete "#{path}/#{target.guid}", nil, headers
       expect(last_response.status).to eq(409)
       process.destroy

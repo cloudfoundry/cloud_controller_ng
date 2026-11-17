@@ -43,7 +43,7 @@ module VCAP::CloudController
             CloudController::DependencyLocator.instance.register(:bbs_apps_client, bbs_apps_client)
             account = ServiceAccountModel.create(name: 'blocked-worker', space: blocked_process.space, status: 'ready')
             blocked_process.app.update(service_account: account)
-            blocked_process.update(service_account_guid: account.guid, service_account_snapshot: true)
+            blocked_process.update(service_account_guid: account.guid)
             account.update(enabled: false)
             allow(bbs_transport).to receive_messages(
               desired_lrp_scheduling_infos: ::Diego::Bbs::Models::DesiredLRPSchedulingInfosResponse.new,
@@ -55,7 +55,7 @@ module VCAP::CloudController
             allow(AppRecipeBuilder).to receive(:new) do |config:, process:|
               recipe = double(:identity_recipe)
               allow(recipe).to receive(:build_app_lrp) do
-                properties = ServiceAccountIdentity.new(process.app, config, account_guid: process.runtime_service_account_guid).certificate_properties
+                properties = ServiceAccountIdentity.new(process.app, config, account_guid: process.service_account_guid).certificate_properties
                 ::Diego::Bbs::Models::DesiredLRP.new(process_guid: ProcessGuid.from_process(process), certificate_properties: properties)
               end
               recipe
