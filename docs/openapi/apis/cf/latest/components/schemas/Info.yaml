@@ -1,0 +1,58 @@
+type: object
+properties:
+  build:
+    type: string
+    description: The Cloud Controller build number, as configured by the platform operator; blank when it is not configured
+  cli_version:
+    type: object
+    description: Minimum and recommended versions of the Cloud Foundry CLI for use with this API
+    properties:
+      minimum:
+        type: string
+        description: Minimum version of the CF CLI to work with the API; blank when it is not configured
+      recommended:
+        type: string
+        description: Minimum recommended version of the CF CLI; blank when it is not configured
+  custom:
+    type: object
+    additionalProperties: true
+    description: Custom attribute keys and values configured by the platform operator; empty when none are configured
+  description:
+    type: string
+    description: A description of the platform, as configured by the platform operator; blank when it is not configured
+  name:
+    type: string
+    description: The name of the platform, as configured by the platform operator; blank when it is not configured
+  version:
+    type: integer
+    description: The version of the platform, as configured by the platform operator; `0` when it is not configured
+  osbapi_version:
+    type: string
+    description: The version of the Open Service Broker API supported by this platform; blank when it cannot be determined
+  rate_limits:
+    type: object
+    description: The request rate limits applied to UAA-authenticated endpoints
+    properties:
+      enabled:
+        type: boolean
+        description: Whether rate limiting is enabled for UAA-authenticated endpoints per user or client
+      general_limit:
+        type: integer
+        description: The number of requests that a user or client is allowed to make over the reset interval for all endpoints that do not have a custom limit
+      reset_interval_in_minutes:
+        type: integer
+        description: The interval in minutes after which a user's available API requests will be reset
+  links:
+    type: object
+    description: Links to related resources
+    properties:
+      self:
+        allOf:
+          - $ref: './Link.yaml'
+          - description: Link to the current endpoint
+      support:
+        allOf:
+          - $ref: './Link.yaml'
+          - description: Link to the support address for the platform; blank when it is not configured
+description: |-
+  Descriptive information about the Cloud Controller and the platform it is running on.

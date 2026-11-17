@@ -1,0 +1,87 @@
+type: object
+properties:
+  type:
+    type: string
+    description: Process type; a unique identifier for processes belonging to an app
+  index:
+    type: integer
+    description: The zero-based index of running instances
+  instance_guid:
+    type: string
+    description: The unique identifier of the instance
+  state:
+    type: string
+    enum: ["RUNNING", "CRASHED", "STARTING", "STOPPING", "DOWN"]
+    description: The state of the instance; valid values are `RUNNING`, `CRASHED`, `STARTING`, `STOPPING`, `DOWN`
+  routable:
+    type: [boolean, 'null']
+    description: Whether or not the instance is routable (determined by the readiness check of the app). If app readiness checks and routability are unsupported by Diego, this will return as `null`.
+  usage:
+    type: object
+    description: Object containing actual usage data for the instance; the value is `{}` when usage data is unavailable
+    properties:
+      time:
+        type: string
+        format: date-time
+        description: The time when the usage was requested
+      cpu:
+        type: number
+        description: The current cpu usage of the instance
+      cpu_entitlement:
+        type: [number, 'null']
+        description: The current cpu usage relative to the instance's cpu entitlement; the value is `null` when cpu entitlement data is unavailable
+      mem:
+        type: integer
+        description: The current memory usage of the instance
+      disk:
+        type: integer
+        description: The current disk usage of the instance
+      log_rate:
+        type: integer
+        description: The current logging usage of the instance
+  host:
+    type: string
+    description: The host the instance is running on
+  instance_internal_ip:
+    type: string
+    description: The internal IP address of the instance
+  instance_ports:
+    type: [array, 'null']
+    description: JSON array of port mappings between the network-exposed port used to communicate with the app (`external`) and port opened to the running process that it can listen on (`internal`). Clients shall interprete `0` and `null` as non-existing port.
+    items:
+      type: object
+      properties:
+        external:
+          type: [integer, 'null']
+          description: The network-exposed port used to communicate with the app
+        internal:
+          type: [integer, 'null']
+          description: The port opened to the running process that it can listen on
+        external_tls_proxy_port:
+          type: [integer, 'null']
+          description: The network-exposed port of the TLS proxy in front of the app
+        internal_tls_proxy_port:
+          type: [integer, 'null']
+          description: The port of the TLS proxy in front of the running process
+  uptime:
+    type: integer
+    description: The uptime in seconds for the instance
+  mem_quota:
+    type: [integer, 'null']
+    description: The current maximum memory allocated for the instance; the value is `null` when memory quota data is unavailable
+  disk_quota:
+    type: [integer, 'null']
+    description: The current maximum disk allocated for the instance; the value is `null` when disk quota data is unavailable
+  log_rate_limit:
+    type: [integer, 'null']
+    description: The current maximum log rate allocated for the instance; the value `-1` is unlimited, the value is `null` when the log_rate_limit is unavailable
+  fds_quota:
+    type: integer
+    description: The maximum file descriptors the instance is allowed to use
+  isolation_segment:
+    type: [string, 'null']
+    description: The current isolation segment that the instance is running on; the value is `null` when the instance is not placed on a particular isolation segment
+  details:
+    type: [string, 'null']
+    description: Information about errors placing the instance; the value is `null` if there are no placement errors
+description: 'The process stats object provides information about the status of an individual instance of a process'

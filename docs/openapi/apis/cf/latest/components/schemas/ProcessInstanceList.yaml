@@ -1,0 +1,18 @@
+type: object
+properties:
+  resources:
+    type: array
+    items:
+      $ref: './ProcessInstance.yaml'
+    description: The instances of the process
+  links:
+    type: object
+    description: Links to related resources
+    properties:
+      self:
+        $ref: './Link.yaml'
+        description: The URL to get the instances for this process
+      process:
+        $ref: './Link.yaml'
+        description: The URL to get the process these instances belong to
+description: 'A list of process instances (experimental)'

@@ -1,0 +1,6 @@
+type: object
+properties:
+  type:
+    type: string
+    description: Type of the process belonging to the app to route traffic to
+description: The process of the app to route traffic to

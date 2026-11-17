@@ -2,12 +2,19 @@ type: object
 properties:
   name:
     type: string
-    description: The name of the app feature
+    description: Name of the app feature
+    enum:
+      - ssh
+      - revisions
+      - service-binding-k8s
+      - file-based-vcap-services
   description:
     type: [string, "null"]
-    description: The description of the app feature
+    description: Description of the app feature
   enabled:
     type: boolean
     description: Denotes whether or not the app feature is enabled
-description: >
+description: |-
   App features are used to manage whether optional capabilities are enabled for a given application.
+  See the App Features section for the list of supported features and for how service binding files are
+  derived from `VCAP_SERVICES`.

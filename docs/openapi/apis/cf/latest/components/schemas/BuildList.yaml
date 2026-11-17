@@ -2,7 +2,10 @@ type: object
 properties:
   pagination:
     $ref: './Pagination.yaml'
+    description: Pagination information for the list of builds
   resources:
     type: array
+    description: The list of builds
     items:
       $ref: './Build.yaml'
+description: A paginated list of builds

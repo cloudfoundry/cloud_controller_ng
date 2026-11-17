@@ -29,21 +29,33 @@ allOf:
         description: The log rate in bytes per second allocated per instance
       health_check:
         $ref: './HealthCheck.yaml'
+        description: The health check to perform on the process
       readiness_health_check:
-        $ref: './HealthCheck.yaml'
+        $ref: './ReadinessHealthCheck.yaml'
+        description: The readiness health check to perform on the process
+      process_instances:
+        type: array
+        items:
+          $ref: './ProcessInstance.yaml'
+        description: The instances of the process; this key is only present when `process_instances` is requested via the `embed` query parameter (experimental)
       relationships:
         type: object
+        description: Relationships to other resources
         properties:
           app:
             $ref: './RelationshipToOne.yaml'
+            description: The app the process belongs to
           revision:
             oneOf:
               - $ref: './RelationshipToOne.yaml'
               - type: 'null'
+            description: The app revision the process is currently running
       metadata:
         $ref: './Metadata.yaml'
+        description: Labels and annotations applied to the process
       links:
         type: object
+        description: Links to related resources
         properties:
           self:
             $ref: './Link.yaml'
@@ -60,4 +72,7 @@ allOf:
           stats:
             $ref: './Link.yaml'
             description: The URL to get the stats for this process
+          process_instances:
+            $ref: './Link.yaml'
+            description: The URL to get the instances for this process
 description: 'A process defines the runnable units of an app'

@@ -4,18 +4,19 @@ content:
   application/json:
     schema:
       type: object
+      description: Request schema for creating an organization
       properties:
         name:
           type: string
-          description: Organization name
+          description: Organization name; must be unique (case-insensitive)
         suspended:
           type: boolean
           description: Whether an organization is suspended or not
         metadata:
           $ref: ../schemas/Metadata.yaml
+          description: Labels and annotations applied to the organization
       required:
         - name
-      description: Request schema for creating an organization
     examples:
       default:
         summary: default

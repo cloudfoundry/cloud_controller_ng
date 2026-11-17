@@ -2,10 +2,14 @@ type: object
 properties:
   enabled:
     type: boolean
-    description: Whether SSH is enabled for the app
+    description: Denotes whether the application's runtime environment will accept ssh connections
   reason:
     type: string
-    description: If SSH is disabled, describes whether it is disabled globally, at the space level, or at the app level
+    description: If ssh is disabled, describes whether it is disabled globally, at the space level, or at the app level
 required:
   - enabled
-description: 'SSH enabled status for an app'
+description: |-
+  Whether an application's runtime environment will accept ssh connections.
+  If ssh is disabled,
+  the `reason` field will describe
+  whether it is disabled globally, at the space level, or at the app level.

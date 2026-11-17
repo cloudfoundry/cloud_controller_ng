@@ -2,7 +2,10 @@ type: object
 properties:
   pagination:
     $ref: './Pagination.yaml'
+    description: Pagination information for the list of packages
   resources:
     type: array
+    description: The list of packages
     items:
       $ref: './Package.yaml'
+description: A paginated list of packages

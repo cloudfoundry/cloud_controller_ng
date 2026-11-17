@@ -1,0 +1,9 @@
+type: object
+properties:
+  guid:
+    type: string
+    format: uuid
+    description: Unique identifier for the app to route traffic to
+  process:
+    $ref: './RouteDestinationAppProcess.yaml'
+description: The app to route traffic to

@@ -4,28 +4,32 @@ allOf:
   - properties:
       operation:
         type: string
-        description: The type of operation the job is performing
+        description: Current desired operation of the job on a model
       state:
         type: string
-        description: The current state of the job
+        description: |-
+          State of the job; valid values are `PROCESSING`, `POLLING`, `COMPLETE`, or `FAILED`
+
+          > **Note:** `POLLING` happens during asynchronous services operations that require polling the last operation from the service broker.
         enum:
           - PROCESSING
+          - POLLING
           - COMPLETE
           - FAILED
-          - POLLING
       errors:
         type: array
-        description: Any errors encountered during job execution
+        description: Array of errors that occurred while processing the job
         items:
           $ref: './Error.yaml'
       warnings:
         type: array
-        description: Any warnings encountered during job execution
+        description: Array of warnings that occurred while processing the job
         items:
           $ref: './Warning.yaml'
       links:
         type: object
         additionalProperties: true
+        description: Links to related resources
         properties:
           self:
             $ref: './Link.yaml'

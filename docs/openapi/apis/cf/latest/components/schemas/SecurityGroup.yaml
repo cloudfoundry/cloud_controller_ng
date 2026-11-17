@@ -5,68 +5,43 @@ allOf:
       name:
         type: string
         description: Name of the security group
+      rules:
+        type: array
+        items:
+          $ref: './SecurityGroupRule.yaml'
+        description: Rules that will be applied by this security group
       globally_enabled:
         type: object
         properties:
           running:
             type: boolean
-            description: Whether the security group is globally enabled for running apps
+            description: Specifies whether the group should be applied globally to all running applications
           staging:
             type: boolean
-            description: Whether the security group is globally enabled for staging apps
-      rules:
-        type: array
-        items:
-          type: object
-          properties:
-            protocol:
-              type: string
-              description: Protocol for the rule
-            destination:
-              type: string
-              description: Destination for the rule
-            ports:
-              type: string
-              description: Ports for the rule
-            type:
-              type: integer
-              description: Type for ICMP rules
-            code:
-              type: integer
-              description: Code for ICMP rules
-            description:
-              type: string
-              description: Description of the rule
-        description: Rules for the security group
-      running_spaces:
+            description: Specifies whether the group should be applied globally to all staging applications
+        description: Object that controls if the group is applied globally to the lifecycle of all applications
+      relationships:
         type: object
         properties:
-          data:
-            type: array
-            items:
-              $ref: './Relationship.yaml'
-        description: Spaces where this security group is applied to running apps
-      staging_spaces:
-        type: object
-        properties:
-          data:
-            type: array
-            items:
-              $ref: './Relationship.yaml'
-        description: Spaces where this security group is applied to staging apps
+          running_spaces:
+            $ref: './RelationshipToMany.yaml'
+            description: A relationship to the spaces where the security_group is applied to applications during runtime
+          staging_spaces:
+            $ref: './RelationshipToMany.yaml'
+            description: A relationship to the spaces where the security_group is applied to applications during staging
+        description: Relationships for the security group
       links:
         type: object
         properties:
           self:
             $ref: './Link.yaml'
-          running_spaces:
-            $ref: './Link.yaml'
-          staging_spaces:
-            $ref: './Link.yaml'
-      metadata:
-        $ref: './Metadata.yaml'
+            description: The URL of this security group
+        description: Links to related resources
     required:
     - name
     - globally_enabled
     - rules
+    - relationships
     - links
+description: |-
+  A collection of egress traffic rules that can be applied to the staging or running state of applications.

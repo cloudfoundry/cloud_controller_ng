@@ -1,10 +1,13 @@
 get:
-    summary: Get V3 API root
+    summary: V3 API Root
     description: |-
-      Returns the V3 API root endpoint information.
+      This endpoint returns links to all the resources available on the v3 API.
+
+      **Authentication:** No authentication required.
     operationId: getV3ApiRoot
     tags:
       - Root
+    security: []
     responses:
       '200':
         description: OK
@@ -21,10 +24,22 @@ get:
                       allOf:
                         - $ref: '../components/schemas/Link.yaml'
                         - description: Link to the current endpoint
+                    app_usage_events:
+                      allOf:
+                        - $ref: '../components/schemas/Link.yaml'
+                        - description: Link to the app usage events endpoint
                     apps:
                       allOf:
                         - $ref: '../components/schemas/Link.yaml'
                         - description: Link to the apps endpoint
+                    audit_events:
+                      allOf:
+                        - $ref: '../components/schemas/Link.yaml'
+                        - description: Link to the audit events endpoint
+                    buildpacks:
+                      allOf:
+                        - $ref: '../components/schemas/Link.yaml'
+                        - description: Link to the buildpacks endpoint
                     builds:
                       allOf:
                         - $ref: '../components/schemas/Link.yaml'
@@ -41,6 +56,10 @@ get:
                       allOf:
                         - $ref: '../components/schemas/Link.yaml'
                         - description: Link to the droplets endpoint
+                    environment_variable_groups:
+                      allOf:
+                        - $ref: '../components/schemas/Link.yaml'
+                        - description: Link to the environment variable groups endpoint
                     feature_flags:
                       allOf:
                         - $ref: '../components/schemas/Link.yaml'
@@ -57,6 +76,10 @@ get:
                       allOf:
                         - $ref: '../components/schemas/Link.yaml'
                         - description: Link to the organizations endpoint
+                    organization_quotas:
+                      allOf:
+                        - $ref: '../components/schemas/Link.yaml'
+                        - description: Link to the organization quotas endpoint
                     packages:
                       allOf:
                         - $ref: '../components/schemas/Link.yaml'
@@ -65,6 +88,10 @@ get:
                       allOf:
                         - $ref: '../components/schemas/Link.yaml'
                         - description: Link to the processes endpoint
+                    resource_matches:
+                      allOf:
+                        - $ref: '../components/schemas/Link.yaml'
+                        - description: Link to the resource matches endpoint
                     roles:
                       allOf:
                         - $ref: '../components/schemas/Link.yaml'
@@ -84,7 +111,12 @@ get:
                     service_instances:
                       allOf:
                         - $ref: '../components/schemas/Link.yaml'
-                        - description: Link to the service instances endpoint
+                        - type: object
+                          properties:
+                            experimental:
+                              type: boolean
+                              description: Indicates that the resource is experimental and subject to change
+                          description: Link to the service instances endpoint
                     service_offerings:
                       allOf:
                         - $ref: '../components/schemas/Link.yaml'
@@ -93,10 +125,18 @@ get:
                       allOf:
                         - $ref: '../components/schemas/Link.yaml'
                         - description: Link to the service plans endpoint
+                    service_usage_events:
+                      allOf:
+                        - $ref: '../components/schemas/Link.yaml'
+                        - description: Link to the service usage events endpoint
                     spaces:
                       allOf:
                         - $ref: '../components/schemas/Link.yaml'
                         - description: Link to the spaces endpoint
+                    space_quotas:
+                      allOf:
+                        - $ref: '../components/schemas/Link.yaml'
+                        - description: Link to the space quotas endpoint
                     stacks:
                       allOf:
                         - $ref: '../components/schemas/Link.yaml'
@@ -109,6 +149,74 @@ get:
                       allOf:
                         - $ref: '../components/schemas/Link.yaml'
                         - description: Link to the users endpoint
+            examples:
+              default:
+                summary: default
+                value:
+                  links:
+                    self:
+                      href: https://api.example.org/v3
+                    app_usage_events:
+                      href: https://api.example.org/v3/app_usage_events
+                    apps:
+                      href: https://api.example.org/v3/apps
+                    audit_events:
+                      href: https://api.example.org/v3/audit_events
+                    buildpacks:
+                      href: https://api.example.org/v3/buildpacks
+                    builds:
+                      href: https://api.example.org/v3/builds
+                    deployments:
+                      href: https://api.example.org/v3/deployments
+                    domains:
+                      href: https://api.example.org/v3/domains
+                    droplets:
+                      href: https://api.example.org/v3/droplets
+                    environment_variable_groups:
+                      href: https://api.example.org/v3/environment_variable_groups
+                    feature_flags:
+                      href: https://api.example.org/v3/feature_flags
+                    info:
+                      href: https://api.example.org/v3/info
+                    isolation_segments:
+                      href: https://api.example.org/v3/isolation_segments
+                    organizations:
+                      href: https://api.example.org/v3/organizations
+                    organization_quotas:
+                      href: https://api.example.org/v3/organization_quotas
+                    packages:
+                      href: https://api.example.org/v3/packages
+                    processes:
+                      href: https://api.example.org/v3/processes
+                    resource_matches:
+                      href: https://api.example.org/v3/resource_matches
+                    roles:
+                      href: https://api.example.org/v3/roles
+                    routes:
+                      href: https://api.example.org/v3/routes
+                    security_groups:
+                      href: https://api.example.org/v3/security_groups
+                    service_brokers:
+                      href: https://api.example.org/v3/service_brokers
+                    service_instances:
+                      href: https://api.example.org/v3/service_instances
+                      experimental: true
+                    service_offerings:
+                      href: https://api.example.org/v3/service_offerings
+                    service_plans:
+                      href: https://api.example.org/v3/service_plans
+                    service_usage_events:
+                      href: https://api.example.org/v3/service_usage_events
+                    spaces:
+                      href: https://api.example.org/v3/spaces
+                    space_quotas:
+                      href: https://api.example.org/v3/space_quotas
+                    stacks:
+                      href: https://api.example.org/v3/stacks
+                    tasks:
+                      href: https://api.example.org/v3/tasks
+                    users:
+                      href: https://api.example.org/v3/users
       '404':
         $ref: '../components/responses/NotFound.yaml'
       '500':
