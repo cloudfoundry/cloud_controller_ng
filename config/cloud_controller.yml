@@ -87,6 +87,9 @@ broker_client_max_async_poll_duration_minutes: 10080
 broker_client_async_poll_exponential_backoff_rate: 1.0
 broker_client_max_async_poll_interval_seconds: 86400
 
+broker_egress_allowed_private_destinations: []
+broker_egress_blocked_nat64_prefixes: []
+
 broker_client_response_parser:
   log_errors: true
   log_validators: true

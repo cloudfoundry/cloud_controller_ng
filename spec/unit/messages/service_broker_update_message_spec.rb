@@ -4,10 +4,15 @@ require 'rspec/collection_matchers'
 require 'messages/service_broker_update_message'
 require 'messages/validators/url_validator'
 require 'messages/validators/authentication_validator'
+require 'messages/validators/broker_egress_validator'
 
 module VCAP::CloudController
   RSpec.describe ServiceBrokerUpdateMessage do
     subject { ServiceBrokerUpdateMessage }
+
+    before do
+      allow_any_instance_of(VCAP::CloudController::Validators::BrokerEgressValidator).to receive(:validate)
+    end
 
     let(:valid_body) do
       {
@@ -103,6 +108,34 @@ module VCAP::CloudController
           it 'is not valid' do
             expect(message).not_to be_valid
             expect(message.errors_on(:url)).to include('must be a string')
+          end
+        end
+
+        context 'when url uses http' do
+          let(:request_body) { valid_body.merge(url: 'http://the-best-broker.com') }
+
+          before do
+            allow_any_instance_of(VCAP::CloudController::Validators::BrokerEgressValidator).to receive(:validate).and_call_original
+            expect(Socket).not_to receive(:getaddrinfo)
+          end
+
+          it 'is not valid without resolving DNS' do
+            expect(message).not_to be_valid
+            expect(message.errors_on(:url)).to include('url must use https')
+          end
+        end
+
+        context 'when url carries credentials' do
+          let(:request_body) { valid_body.merge(url: 'https://admin:hunter2@the-best-broker.com') }
+
+          before do
+            allow_any_instance_of(VCAP::CloudController::Validators::BrokerEgressValidator).to receive(:validate).and_call_original
+          end
+
+          it 'does not run egress validation or reflect the credential from it' do
+            expect(Socket).not_to receive(:getaddrinfo)
+            expect(message).not_to be_valid
+            expect(message.errors_on(:url).join).not_to include('url must use https')
           end
         end
 

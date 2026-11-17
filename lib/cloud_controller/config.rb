@@ -14,10 +14,14 @@ require 'cloud_controller/config_schemas/deployment_updater_schema'
 require 'cloud_controller/config_schemas/rotate_database_key_schema'
 require 'cloud_controller/config_schemas/blobstore_benchmarks_schema'
 require 'utils/hash_utils'
+require 'services/service_brokers/v2/broker_egress_policy'
 
 module VCAP::CloudController
   class Config
     class InvalidConfigPath < StandardError
+    end
+
+    class InvalidBrokerEgressConfig < StandardError
     end
 
     class << self
@@ -45,12 +49,24 @@ module VCAP::CloudController
 
         schema_class = schema_class_for_context(context, config)
         schema_class.validate(config)
+        validate_broker_egress!(config)
 
         hash = merge_defaults(config)
         @instance = new(hash, context:)
       end
 
       private
+
+      def validate_broker_egress!(config)
+        return unless config.key?(:broker_egress_allowed_private_destinations) || config.key?(:broker_egress_blocked_nat64_prefixes)
+
+        VCAP::Services::ServiceBrokers::V2::BrokerEgressPolicy.validate_configuration!(
+          config.fetch(:broker_egress_allowed_private_destinations, []),
+          config.fetch(:broker_egress_blocked_nat64_prefixes, [])
+        )
+      rescue VCAP::Services::ServiceBrokers::V2::BrokerEgressPolicy::InvalidConfiguration => e
+        raise InvalidBrokerEgressConfig.new(e.message)
+      end
 
       def deep_symbolize_keys_except_in_arrays(hash)
         return hash unless hash.is_a? Hash

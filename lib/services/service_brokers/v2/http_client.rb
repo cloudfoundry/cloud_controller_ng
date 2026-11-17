@@ -1,4 +1,6 @@
 require 'httpclient'
+require 'services/service_brokers/v2/broker_url'
+require 'services/service_brokers/v2/broker_egress_policy'
 
 module VCAP::Services
   module ServiceBrokers::V2
@@ -20,6 +22,7 @@ module VCAP::Services
         api_info_path = VCAP::CloudController::Config.config.get(:temporary_enable_v2) ? '/v2/info' : '/'
         @header_api_info_location = "#{VCAP::CloudController::Config.config.get(:external_domain)}#{api_info_path}"
         @logger = logger || Steno.logger('cc.service_broker.v2.http_client')
+        @egress_policy = BrokerEgressPolicy.from_config
       end
 
       def get(path, user_guid: nil)
@@ -43,7 +46,7 @@ module VCAP::Services
 
       private
 
-      attr_reader :auth_username, :auth_password, :verify_mode, :broker_client_timeout, :header_api_info_location, :logger
+      attr_reader :auth_username, :auth_password, :verify_mode, :broker_client_timeout, :header_api_info_location, :logger, :egress_policy
 
       def uri_for(path)
         URI(url + path)
@@ -58,8 +61,12 @@ module VCAP::Services
         client.connect_timeout = broker_client_timeout
         client.receive_timeout = broker_client_timeout
         client.send_timeout = broker_client_timeout
+        client.proxy = nil
 
-        opts = { body: body, header: {}, follow_redirect: true }
+        broker_url = BrokerUrl.parse!(uri.to_s)
+        client.broker_connection_context = { broker_url: broker_url, policy: egress_policy }
+
+        opts = { body: body, header: {}, follow_redirect: false }
 
         client.default_header = default_headers
         opts[:header]['Content-Type'] = options[:content_type] if options[:content_type]

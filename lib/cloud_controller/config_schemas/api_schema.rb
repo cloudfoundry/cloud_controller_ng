@@ -262,6 +262,8 @@ module VCAP::CloudController
           broker_client_max_async_poll_duration_minutes: Integer,
           broker_client_async_poll_exponential_backoff_rate: Numeric,
           broker_client_max_async_poll_interval_seconds: Integer,
+          optional(:broker_egress_allowed_private_destinations) => Array,
+          optional(:broker_egress_blocked_nat64_prefixes) => Array,
           optional(:broker_client_response_parser) => {
             log_errors: bool,
             log_validators: bool,

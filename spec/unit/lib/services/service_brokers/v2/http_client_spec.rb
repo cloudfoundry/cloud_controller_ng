@@ -8,8 +8,8 @@ module VCAP::Services::ServiceBrokers::V2
     let(:plan_id) { Sham.guid }
     let(:service_id) { Sham.guid }
     let(:instance_id) { Sham.guid }
-    let(:url) { 'http://broker.example.com' }
-    let(:full_url) { "http://broker.example.com#{path}" }
+    let(:url) { 'https://broker.example.com' }
+    let(:full_url) { "https://broker.example.com#{path}" }
     let(:basic_auth) { [auth_username, auth_password] }
     let(:path) { '/the/path' }
     let(:fake_logger) { nil }
@@ -27,6 +27,12 @@ module VCAP::Services::ServiceBrokers::V2
 
     before do
       allow(VCAP::Request).to receive(:current_id).and_return(request_id)
+      # Stub egress policy so unit tests don't need real DNS or real IPs
+      allow_any_instance_of(BrokerEgressPolicy).to receive(:resolve_and_validate!).and_return(
+        BrokerEgressPolicy::ValidatedDestination.new(
+          origin: 'https://broker.example.com', port: 443, addresses: ['93.184.216.34']
+        ).freeze
+      )
     end
 
     shared_examples 'a basic successful request' do
@@ -108,6 +114,8 @@ module VCAP::Services::ServiceBrokers::V2
                    :connect_timeout= => nil,
                    :receive_timeout= => nil,
                    :send_timeout= => nil,
+                   :proxy= => nil,
+                   :broker_connection_context= => nil,
                    :set_auth => nil,
                    :default_header= => nil,
                    :default_header => {},
@@ -315,6 +323,8 @@ module VCAP::Services::ServiceBrokers::V2
                :connect_timeout= => nil,
                :receive_timeout= => nil,
                :send_timeout= => nil,
+               :proxy= => nil,
+               :broker_connection_context= => nil,
                :set_auth => nil,
                :default_header= => nil,
                :default_header => {},
@@ -391,22 +401,18 @@ module VCAP::Services::ServiceBrokers::V2
     end
 
     shared_examples 'client that follows redirects' do
-      let(:another_url) { "http://another-broker.example.com#{path}" }
+      let(:another_url) { "https://another-broker.example.com#{path}" }
 
       before do
         stub_request(http_method, full_url).
           with(basic_auth:).
           to_return(status: 301, body: {}.to_json, headers: { Location: another_url })
-
-        stub_request(http_method, another_url).
-          with(basic_auth:).
-          to_return(status: 200, body: '')
       end
 
-      it 'follows redirects' do
-        request
+      it 'does not follow the redirect (returns 301 to caller)' do
+        expect(request.code).to eq(301)
 
-        expect(a_request(http_method, another_url)).to have_been_made
+        expect(a_request(http_method, another_url)).not_to have_been_made
       end
     end
 
@@ -426,7 +432,7 @@ module VCAP::Services::ServiceBrokers::V2
 
         it 'makes the correct GET http request' do
           make_request
-          expect(a_request(:get, 'http://broker.example.com/the/path').with(basic_auth:)).to have_been_made
+          expect(a_request(:get, 'https://broker.example.com/the/path').with(basic_auth:)).to have_been_made
         end
 
         it 'does not set a Content-Type header' do
@@ -495,7 +501,7 @@ module VCAP::Services::ServiceBrokers::V2
 
         it 'makes the correct PUT http request' do
           make_request
-          expect(a_request(:put, 'http://broker.example.com/the/path').with(basic_auth:)).to have_been_made
+          expect(a_request(:put, 'https://broker.example.com/the/path').with(basic_auth:)).to have_been_made
         end
 
         it 'sets the Content-Type header to application/json' do
@@ -591,7 +597,7 @@ module VCAP::Services::ServiceBrokers::V2
 
         it 'makes the correct PATCH http request' do
           make_request
-          expect(a_request(:patch, 'http://broker.example.com/the/path').with(basic_auth:)).to have_been_made
+          expect(a_request(:patch, 'https://broker.example.com/the/path').with(basic_auth:)).to have_been_made
         end
 
         it 'sets the Content-Type header to application/json' do
@@ -660,7 +666,7 @@ module VCAP::Services::ServiceBrokers::V2
 
         it 'makes the correct DELETE http request' do
           make_request
-          expect(a_request(:delete, 'http://broker.example.com/the/path?key1=value1&key2=value2').with(basic_auth:)).to have_been_made
+          expect(a_request(:delete, 'https://broker.example.com/the/path?key1=value1&key2=value2').with(basic_auth:)).to have_been_made
         end
 
         it 'does not set a Content-Type header' do
@@ -685,7 +691,7 @@ module VCAP::Services::ServiceBrokers::V2
 
         it 'logs query parameters' do
           make_request
-          expect(fake_logger).to have_received(:info).with('request', url: 'http://broker.example.com/the/path?key1=value1&key2=value2', method: :delete)
+          expect(fake_logger).to have_received(:info).with('request', url: 'https://broker.example.com/the/path?key1=value1&key2=value2', method: :delete)
         end
 
         it_behaves_like 'a basic successful request'
@@ -695,7 +701,7 @@ module VCAP::Services::ServiceBrokers::V2
 
       describe 'handling errors' do
         include_examples 'broker communication errors' do
-          let(:full_url) { "http://broker.example.com#{path}?#{message.to_query}" }
+          let(:full_url) { "https://broker.example.com#{path}?#{message.to_query}" }
           let(:request) { client.delete(path, message) }
         end
       end
@@ -705,7 +711,81 @@ module VCAP::Services::ServiceBrokers::V2
       end
 
       it_behaves_like 'client that maps status codes to status code messages' do
-        let(:full_url) { "http://broker.example.com#{path}?#{message.to_query}" }
+        let(:full_url) { "https://broker.example.com#{path}?#{message.to_query}" }
+        let(:request) { client.delete(path, message) }
+      end
+    end
+
+    shared_examples 'egress policy errors' do
+      context 'when egress policy raises DestinationDenied' do
+        before do
+          stub_request(http_method, full_url).to_raise(SocketError.new('resolution failed: blocked: 169.254.169.254 is in a denied range'))
+        end
+
+        it 'raises ServiceBrokerApiUnreachable' do
+          expect { request }.to raise_error(Errors::ServiceBrokerApiUnreachable)
+        end
+
+        it 'does not include credential values in the error message' do
+          expect { request }.to raise_error(Errors::ServiceBrokerApiUnreachable) do |e|
+            expect(e.message).not_to include(auth_password)
+            expect(e.message).not_to include(auth_username)
+          end
+        end
+      end
+
+      context 'when egress policy raises ResolutionFailed with :timeout' do
+        before do
+          stub_request(http_method, full_url).to_raise(SocketError.new('resolution failed: timeout'))
+        end
+
+        it 'raises ServiceBrokerApiUnreachable (not HttpClientTimeout)' do
+          expect { request }.to raise_error(Errors::ServiceBrokerApiUnreachable)
+        end
+      end
+
+      context 'when egress policy raises ResolutionFailed with :capacity_exhausted' do
+        before do
+          stub_request(http_method, full_url).to_raise(SocketError.new('resolution failed: capacity_exhausted'))
+        end
+
+        it 'raises ServiceBrokerApiUnreachable' do
+          expect { request }.to raise_error(Errors::ServiceBrokerApiUnreachable)
+        end
+      end
+    end
+
+    describe '#get' do
+      include_examples 'egress policy errors' do
+        let(:http_method) { :get }
+        let(:request) { client.get(path) }
+      end
+    end
+
+    describe '#put egress errors' do
+      let(:message) { { key: 'value' } }
+
+      include_examples 'egress policy errors' do
+        let(:http_method) { :put }
+        let(:request) { client.put(path, message) }
+      end
+    end
+
+    describe '#patch egress errors' do
+      let(:message) { { key: 'value' } }
+
+      include_examples 'egress policy errors' do
+        let(:http_method) { :patch }
+        let(:request) { client.patch(path, message) }
+      end
+    end
+
+    describe '#delete egress errors' do
+      let(:message) { { key: 'value' } }
+
+      include_examples 'egress policy errors' do
+        let(:http_method) { :delete }
+        let(:full_url) { "https://broker.example.com#{path}?#{message.to_query}" }
         let(:request) { client.delete(path, message) }
       end
     end

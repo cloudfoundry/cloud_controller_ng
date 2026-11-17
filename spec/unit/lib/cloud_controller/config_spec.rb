@@ -105,6 +105,60 @@ module VCAP::CloudController
       end
     end
 
+    describe 'broker egress configuration' do
+      let(:base) { YAMLConfig.safe_load_file('config/cloud_controller.yml') }
+      let(:valid_exception) { { 'origin' => 'https://broker.internal:8443', 'cidrs' => ['10.0.0.0/24'] } }
+
+      %i[api worker].each do |context_name|
+        context "in the #{context_name} context" do
+          let(:config_context) { context_name }
+
+          def load_egress_config(extra)
+            Config.load_from_hash(base.merge(extra), context: config_context)
+          end
+
+          it 'treats omitted settings as empty policy defaults' do
+            config = Config.load_from_hash(base.except('broker_egress_allowed_private_destinations', 'broker_egress_blocked_nat64_prefixes'), context: config_context)
+            expect(config.get(:broker_egress_allowed_private_destinations)).to be_nil
+            expect(config.get(:broker_egress_blocked_nat64_prefixes)).to be_nil
+            policy = VCAP::Services::ServiceBrokers::V2::BrokerEgressPolicy.from_config(config)
+            expect(policy).to be_a(VCAP::Services::ServiceBrokers::V2::BrokerEgressPolicy)
+          end
+
+          it 'accepts explicit empty lists' do
+            config = load_egress_config(broker_egress_allowed_private_destinations: [], broker_egress_blocked_nat64_prefixes: [])
+            expect(config.get(:broker_egress_allowed_private_destinations)).to eq([])
+            expect(config.get(:broker_egress_blocked_nat64_prefixes)).to eq([])
+          end
+
+          it 'accepts valid settings' do
+            config = load_egress_config(broker_egress_allowed_private_destinations: [valid_exception], broker_egress_blocked_nat64_prefixes: ['2001:db8::/96'])
+            expect(config.get(:broker_egress_allowed_private_destinations)).to eq([valid_exception])
+          end
+
+          it 'raises explicitly for malformed exceptions' do
+            [
+              [{ 'origin' => 'http://broker.internal', 'cidrs' => ['10.0.0.0/8'] }],
+              [{ 'origin' => 'https://broker.internal', 'cidrs' => ['8.8.8.0/24'] }],
+              [{ 'origin' => 'https://broker.internal', 'cidrs' => [] }],
+              ['nonsense'],
+              [valid_exception, valid_exception]
+            ].each do |entries|
+              expect { load_egress_config(broker_egress_allowed_private_destinations: entries) }.to raise_error(Config::InvalidBrokerEgressConfig)
+            end
+          end
+
+          it 'raises explicitly for malformed NAT64 prefixes' do
+            expect { load_egress_config(broker_egress_blocked_nat64_prefixes: ['2001:db8::/47']) }.to raise_error(Config::InvalidBrokerEgressConfig)
+          end
+
+          it 'rejects non-array values via the schema' do
+            expect { load_egress_config(broker_egress_blocked_nat64_prefixes: 'x') }.to raise_error(Membrane::SchemaValidationError)
+          end
+        end
+      end
+    end
+
     describe '.load_from_file' do
       it 'raises if the file does not exist' do
         expect do

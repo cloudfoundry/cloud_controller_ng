@@ -22,14 +22,14 @@ module VCAP::Services::ServiceBrokers
       let(:broker) do
         VCAP::CloudController::ServiceBroker.new(
           name: 'Cool Broker',
-          broker_url: 'http://broker.example.com',
+          broker_url: 'https://broker.example.com',
           auth_username: 'cc',
           auth_password: 'auth1234'
         )
       end
 
       before do
-        stub_request(:get, 'http://broker.example.com/v2/catalog').with(basic_auth:).to_return(body: '{}')
+        stub_request(:get, 'https://broker.example.com/v2/catalog').with(basic_auth:).to_return(body: '{}')
         allow(VCAP::Services::SSO::DashboardClientManager).to receive(:new).and_return(client_manager)
         allow(V2::Catalog).to receive(:new).and_return(catalog)
         allow(catalog).to receive(:services).and_return([])
@@ -50,7 +50,7 @@ module VCAP::Services::ServiceBrokers
         expect(broker).to eq(VCAP::CloudController::ServiceBroker.last)
 
         expect(broker.name).to eq('Cool Broker')
-        expect(broker.broker_url).to eq('http://broker.example.com')
+        expect(broker.broker_url).to eq('https://broker.example.com')
         expect(broker.auth_username).to eq('cc')
         expect(broker.auth_password).to eq('auth1234')
         expect(broker).to be_exists
@@ -59,7 +59,7 @@ module VCAP::Services::ServiceBrokers
       it 'fetches the catalog' do
         registration.create
 
-        expect(a_request(:get, 'http://broker.example.com/v2/catalog').with(basic_auth:)).to have_been_requested
+        expect(a_request(:get, 'https://broker.example.com/v2/catalog').with(basic_auth:)).to have_been_requested
       end
 
       it 'resets errors before saving' do
@@ -160,7 +160,7 @@ module VCAP::Services::ServiceBrokers
 
         context 'because the catalog fetch failed' do
           before do
-            stub_request(:get, 'http://broker.example.com/v2/catalog').with(basic_auth:).to_return(status: 500)
+            stub_request(:get, 'https://broker.example.com/v2/catalog').with(basic_auth:).to_return(status: 500)
           end
 
           it "raises an error, even though we'd rather it not" do
@@ -319,7 +319,7 @@ module VCAP::Services::ServiceBrokers
       let(:old_broker_host) { 'broker.example.com' }
       let!(:broker) do
         create(:service_broker, name: 'Cool Broker',
-                                broker_url: "http://#{old_broker_host}",
+                                broker_url: "https://#{old_broker_host}",
                                 auth_username: 'cc',
                                 auth_password: 'auth1234')
       end
@@ -330,7 +330,7 @@ module VCAP::Services::ServiceBrokers
       let(:body) { '{}' }
 
       before do
-        stub_request(:get, "http://#{new_broker_host}/v2/catalog").with(basic_auth:).to_return(status:, body:)
+        stub_request(:get, "https://#{new_broker_host}/v2/catalog").with(basic_auth:).to_return(status:, body:)
         allow(VCAP::Services::SSO::DashboardClientManager).to receive(:new).and_return(client_manager)
         allow(V2::Catalog).to receive(:new).and_return(catalog)
         allow(catalog).to receive(:services).and_return([])
@@ -339,7 +339,7 @@ module VCAP::Services::ServiceBrokers
         allow(client_manager).to receive(:has_warnings?).and_return(false)
 
         broker.name = new_name
-        broker.broker_url = "http://#{new_broker_host}"
+        broker.broker_url = "https://#{new_broker_host}"
       end
 
       it 'returns itself' do
@@ -362,7 +362,7 @@ module VCAP::Services::ServiceBrokers
 
       context 'when only the name is updated' do
         before do
-          broker.broker_url = "http://#{old_broker_host}"
+          broker.broker_url = "https://#{old_broker_host}"
           broker.name = new_name
         end
 
@@ -370,29 +370,29 @@ module VCAP::Services::ServiceBrokers
           registration.update
 
           expect(broker.name).to eq new_name
-          expect(a_request(:get, "http://#{old_broker_host}/v2/catalog").with(basic_auth:)).not_to have_been_requested
-          expect(a_request(:get, "http://#{new_broker_host}/v2/catalog").with(basic_auth:)).not_to have_been_requested
+          expect(a_request(:get, "https://#{old_broker_host}/v2/catalog").with(basic_auth:)).not_to have_been_requested
+          expect(a_request(:get, "https://#{new_broker_host}/v2/catalog").with(basic_auth:)).not_to have_been_requested
         end
       end
 
       context 'when the name and another field is updated' do
         before do
-          stub_request(:get, 'http://something-url.com/v2/catalog').with(basic_auth:).to_return(body: '{}')
+          stub_request(:get, 'https://something-url.com/v2/catalog').with(basic_auth:).to_return(body: '{}')
         end
 
         it 'fetches the catalog' do
           broker.name = 'something-else'
-          broker.broker_url = 'http://something-url.com'
+          broker.broker_url = 'https://something-url.com'
           registration.update
 
-          expect(a_request(:get, 'http://something-url.com/v2/catalog').with(basic_auth:)).to have_been_requested
+          expect(a_request(:get, 'https://something-url.com/v2/catalog').with(basic_auth:)).to have_been_requested
         end
       end
 
       it 'fetches the catalog' do
         registration.update
 
-        expect(a_request(:get, "http://#{new_broker_host}/v2/catalog").with(basic_auth:)).to have_been_requested
+        expect(a_request(:get, "https://#{new_broker_host}/v2/catalog").with(basic_auth:)).to have_been_requested
       end
 
       it 'syncs services and plans' do

@@ -3,6 +3,7 @@ require 'messages/basic_credentials_message'
 require 'messages/authentication_message'
 require 'messages/validators/url_validator'
 require 'messages/validators/authentication_validator'
+require 'messages/validators/broker_egress_validator'
 require 'messages/mixins/authentication_message_mixin'
 require 'utils/hash_utils'
 
@@ -21,6 +22,7 @@ module VCAP::CloudController
 
     validates :url, string: true
     validates_with UrlValidator
+    validates_with BrokerEgressValidator, if: ->(r) { r.errors[:url].empty? }
 
     validates :authentication, hash: true
     validates_with AuthenticationValidator, if: ->(record) { record.authentication.is_a? Hash }
