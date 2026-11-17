@@ -90,6 +90,16 @@ module VCAP::CloudController
         expect(task.reload.service_account_guid).to eq(account.guid)
       end
 
+      it 'keeps a task created without an account unbound after the app receives one' do
+        app.space.organization.update(service_account_prefix: 'task-team')
+        task = task_create_action.create(app, message, user_audit_info)
+        account = ServiceAccountModel.create(name: 'payments-worker', space: app.space, status: 'ready')
+
+        app.update(service_account: account)
+
+        expect(task.reload.service_account_guid).to be_nil
+      end
+
       it "sets the task state to 'RUNNING'" do
         task = task_create_action.create(app, message, user_audit_info)
 

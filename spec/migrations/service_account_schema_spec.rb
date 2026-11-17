@@ -12,6 +12,12 @@ RSpec.describe 'Service account schema', isolation: :truncation do
     expect(columns.fetch(:organization_id)[:allow_null]).to be(false)
     expect(columns.fetch(:identity_prefix)[:allow_null]).to be(false)
     expect(db.schema(:service_account_names).to_h).to have_key(:deleted_at)
+    %i[processes tasks].each do |table|
+      launch_columns = db.schema(table).to_h
+      expect(launch_columns).to have_key(:service_account_guid)
+      expect(launch_columns.fetch(:service_account_guid)[:allow_null]).to be(true)
+      expect(launch_columns).not_to have_key(:service_account_snapshot)
+    end
     expect(db.indexes(:service_account_space_entitlements).values).to include(
       hash_including(columns: %i[space_guid service_account_guid])
     )
