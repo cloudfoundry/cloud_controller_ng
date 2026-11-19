@@ -9,7 +9,7 @@ require 'actions_pb'
 
 descriptor_data = "\n\rsidecar.proto\x12\x10\x64iego.bbs.models\x1a\ractions.proto\"W\n\x07Sidecar\x12(\n\x06\x61\x63tion\x18\x01 \x01(\x0b\x32\x18.diego.bbs.models.Action\x12\x0f\n\x07\x64isk_mb\x18\x02 \x01(\x05\x12\x11\n\tmemory_mb\x18\x03 \x01(\x05\x62\x06proto3"
 
-pool = Google::Protobuf::DescriptorPool.generated_pool
+pool = ::Google::Protobuf::DescriptorPool.generated_pool
 pool.add_serialized_file(descriptor_data)
 
 module Diego

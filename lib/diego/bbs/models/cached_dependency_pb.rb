@@ -7,7 +7,7 @@ require 'google/protobuf'
 
 descriptor_data = "\n\x17\x63\x61\x63hed_dependency.proto\x12\x10\x64iego.bbs.models\"\x95\x01\n\x10\x43\x61\x63hedDependency\x12\x0c\n\x04name\x18\x01 \x01(\t\x12\x0c\n\x04\x66rom\x18\x02 \x01(\t\x12\n\n\x02to\x18\x03 \x01(\t\x12\x11\n\tcache_key\x18\x04 \x01(\t\x12\x12\n\nlog_source\x18\x05 \x01(\t\x12\x1a\n\x12\x63hecksum_algorithm\x18\x06 \x01(\t\x12\x16\n\x0e\x63hecksum_value\x18\x07 \x01(\tb\x06proto3"
 
-pool = Google::Protobuf::DescriptorPool.generated_pool
+pool = ::Google::Protobuf::DescriptorPool.generated_pool
 pool.add_serialized_file(descriptor_data)
 
 module Diego

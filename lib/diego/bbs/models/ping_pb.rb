@@ -7,7 +7,7 @@ require 'google/protobuf'
 
 descriptor_data = "\n\nping.proto\x12\x10\x64iego.bbs.models\"!\n\x0cPingResponse\x12\x11\n\tavailable\x18\x01 \x01(\x08\x62\x06proto3"
 
-pool = Google::Protobuf::DescriptorPool.generated_pool
+pool = ::Google::Protobuf::DescriptorPool.generated_pool
 pool.add_serialized_file(descriptor_data)
 
 module Diego

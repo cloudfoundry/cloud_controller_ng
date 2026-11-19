@@ -7,7 +7,7 @@ require 'google/protobuf'
 
 descriptor_data = "\n\x16\x63heck_definition.proto\x12\x10\x64iego.bbs.models\"\x81\x01\n\x0f\x43heckDefinition\x12\'\n\x06\x63hecks\x18\x01 \x03(\x0b\x32\x17.diego.bbs.models.Check\x12\x12\n\nlog_source\x18\x02 \x01(\t\x12\x31\n\x10readiness_checks\x18\x03 \x03(\x0b\x32\x17.diego.bbs.models.Check\"g\n\x05\x43heck\x12-\n\ttcp_check\x18\x01 \x01(\x0b\x32\x1a.diego.bbs.models.TCPCheck\x12/\n\nhttp_check\x18\x02 \x01(\x0b\x32\x1b.diego.bbs.models.HTTPCheck\"I\n\x08TCPCheck\x12\x0c\n\x04port\x18\x01 \x01(\r\x12\x1a\n\x12\x63onnect_timeout_ms\x18\x02 \x01(\x04\x12\x13\n\x0binterval_ms\x18\x03 \x01(\x04\"X\n\tHTTPCheck\x12\x0c\n\x04port\x18\x01 \x01(\r\x12\x1a\n\x12request_timeout_ms\x18\x02 \x01(\x04\x12\x0c\n\x04path\x18\x03 \x01(\t\x12\x13\n\x0binterval_ms\x18\x04 \x01(\x04\x62\x06proto3"
 
-pool = Google::Protobuf::DescriptorPool.generated_pool
+pool = ::Google::Protobuf::DescriptorPool.generated_pool
 pool.add_serialized_file(descriptor_data)
 
 module Diego

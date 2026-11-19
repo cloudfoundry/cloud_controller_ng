@@ -7,7 +7,7 @@ require 'google/protobuf'
 
 descriptor_data = "\n\x1b\x65nvironment_variables.proto\x12\x10\x64iego.bbs.models\"2\n\x13\x45nvironmentVariable\x12\x0c\n\x04name\x18\x01 \x01(\t\x12\r\n\x05value\x18\x02 \x01(\tb\x06proto3"
 
-pool = Google::Protobuf::DescriptorPool.generated_pool
+pool = ::Google::Protobuf::DescriptorPool.generated_pool
 pool.add_serialized_file(descriptor_data)
 
 module Diego
