@@ -7,7 +7,7 @@ require 'google/protobuf'
 
 descriptor_data = "\n\x11metric_tags.proto\x12\x10\x64iego.bbs.models\"\xa7\x01\n\x0eMetricTagValue\x12\x0e\n\x06static\x18\x01 \x01(\t\x12>\n\x07\x64ynamic\x18\x02 \x01(\x0e\x32-.diego.bbs.models.MetricTagValue.DynamicValue\"E\n\x0c\x44ynamicValue\x12\x17\n\x13\x44ynamicValueInvalid\x10\x00\x12\t\n\x05INDEX\x10\x01\x12\x11\n\rINSTANCE_GUID\x10\x02\x62\x06proto3"
 
-pool = Google::Protobuf::DescriptorPool.generated_pool
+pool = ::Google::Protobuf::DescriptorPool.generated_pool
 pool.add_serialized_file(descriptor_data)
 
 module Diego

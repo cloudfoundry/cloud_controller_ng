@@ -7,7 +7,7 @@ require 'google/protobuf'
 
 descriptor_data = "\n\x11image_layer.proto\x12\x10\x64iego.bbs.models\"\xd4\x03\n\nImageLayer\x12\x0c\n\x04name\x18\x01 \x01(\t\x12\x0b\n\x03url\x18\x02 \x01(\t\x12\x18\n\x10\x64\x65stination_path\x18\x03 \x01(\t\x12\x35\n\nlayer_type\x18\x04 \x01(\x0e\x32!.diego.bbs.models.ImageLayer.Type\x12:\n\nmedia_type\x18\x05 \x01(\x0e\x32&.diego.bbs.models.ImageLayer.MediaType\x12\x46\n\x10\x64igest_algorithm\x18\x06 \x01(\x0e\x32,.diego.bbs.models.ImageLayer.DigestAlgorithm\x12\x14\n\x0c\x64igest_value\x18\x07 \x01(\t\"I\n\x0f\x44igestAlgorithm\x12\x1a\n\x16\x44igestAlgorithmInvalid\x10\x00\x12\n\n\x06SHA256\x10\x01\x12\x0e\n\x06SHA512\x10\x02\x1a\x02\x08\x01\"<\n\tMediaType\x12\x14\n\x10MediaTypeInvalid\x10\x00\x12\x07\n\x03TGZ\x10\x01\x12\x07\n\x03TAR\x10\x02\x12\x07\n\x03ZIP\x10\x03\"7\n\x04Type\x12\x14\n\x10LayerTypeInvalid\x10\x00\x12\n\n\x06SHARED\x10\x01\x12\r\n\tEXCLUSIVE\x10\x02\x62\x06proto3"
 
-pool = Google::Protobuf::DescriptorPool.generated_pool
+pool = ::Google::Protobuf::DescriptorPool.generated_pool
 pool.add_serialized_file(descriptor_data)
 
 module Diego

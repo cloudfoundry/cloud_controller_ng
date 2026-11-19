@@ -7,7 +7,7 @@ require 'google/protobuf'
 
 descriptor_data = "\n\x14log_rate_limit.proto\x12\x10\x64iego.bbs.models\"(\n\x0cLogRateLimit\x12\x18\n\x10\x62ytes_per_second\x18\x01 \x01(\x03\x62\x06proto3"
 
-pool = Google::Protobuf::DescriptorPool.generated_pool
+pool = ::Google::Protobuf::DescriptorPool.generated_pool
 pool.add_serialized_file(descriptor_data)
 
 module Diego

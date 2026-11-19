@@ -9,7 +9,7 @@ require 'error_pb'
 
 descriptor_data = "\n\x0c\x64omain.proto\x12\x10\x64iego.bbs.models\x1a\x0b\x65rror.proto\"J\n\x0f\x44omainsResponse\x12&\n\x05\x65rror\x18\x01 \x01(\x0b\x32\x17.diego.bbs.models.Error\x12\x0f\n\x07\x64omains\x18\x02 \x03(\t\">\n\x14UpsertDomainResponse\x12&\n\x05\x65rror\x18\x01 \x01(\x0b\x32\x17.diego.bbs.models.Error\"2\n\x13UpsertDomainRequest\x12\x0e\n\x06\x64omain\x18\x01 \x01(\t\x12\x0b\n\x03ttl\x18\x02 \x01(\rb\x06proto3"
 
-pool = Google::Protobuf::DescriptorPool.generated_pool
+pool = ::Google::Protobuf::DescriptorPool.generated_pool
 pool.add_serialized_file(descriptor_data)
 
 module Diego
