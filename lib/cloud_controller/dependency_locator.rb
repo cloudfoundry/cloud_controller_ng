@@ -207,11 +207,9 @@ module CloudController
     def blobstore_url_generator
       connection_options = {
         blobstore_host: config.get(:internal_service_hostname),
-        blobstore_external_port: config.get(:external_port),
         blobstore_tls_port: config.get(:tls_port),
         user: config.get(:staging, :auth, :user),
-        password: config.get(:staging, :auth, :password),
-        mtls: !!config.get(:tls_port)
+        password: config.get(:staging, :auth, :password)
       }
 
       Blobstore::UrlGenerator.new(
@@ -226,9 +224,7 @@ module CloudController
     def droplet_url_generator
       VCAP::CloudController::Diego::DropletUrlGenerator.new(
         internal_service_hostname: config.get(:internal_service_hostname),
-        external_port: config.get(:external_port),
-        tls_port: config.get(:tls_port),
-        mtls: !!config.get(:tls_port)
+        tls_port: config.get(:tls_port)
       )
     end
 
