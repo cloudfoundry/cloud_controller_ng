@@ -13,7 +13,7 @@ module VCAP::CloudController
     it_behaves_like 'custom-stack lifecycle updates', 'cnb', 'docker://registry.example.com/team/buildpack:latest'
 
     describe '#create_lifecycle_data_model' do
-      let!(:app) { create(:app_model) }
+      let!(:app) { create(:app_model, :no_lifecycle_data) }
 
       it 'creates CNBLifecycleDataModel' do
         expect do
