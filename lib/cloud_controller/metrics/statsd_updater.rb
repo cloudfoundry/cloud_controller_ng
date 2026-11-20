@@ -133,15 +133,29 @@ module VCAP::CloudController::Metrics
         end
         @prefix = 'metrics'
         @request_outstanding_gauge_key = "#{@prefix}:cc.requests.outstanding.gauge"
-        @redis.set(@request_outstanding_gauge_key, 0)
+        fail_open { @redis.set(@request_outstanding_gauge_key, 0) }
       end
 
       def increment_request_outstanding_gauge
-        @redis.incr(@request_outstanding_gauge_key)
+        fail_open { @redis.incr(@request_outstanding_gauge_key) }
       end
 
       def decrement_request_outstanding_gauge
-        @redis.decr(@request_outstanding_gauge_key)
+        fail_open { @redis.decr(@request_outstanding_gauge_key) }
+      end
+
+      private
+
+      # on any Redis error (eg valkey unreachable) log it and carry on.
+      def fail_open
+        yield
+      rescue Redis::BaseError => e
+        logger.error("Redis error: #{e.class} - #{e.message}")
+        nil
+      end
+
+      def logger
+        @logger ||= Steno.logger('cc.metrics.statsd_updater.redis_store')
       end
     end
   end
