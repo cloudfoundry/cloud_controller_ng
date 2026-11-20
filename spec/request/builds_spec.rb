@@ -373,6 +373,7 @@ RSpec.describe 'Builds' do
   describe 'GET /v3/builds' do
     let(:build) do
       create(:build_model,
+             :no_lifecycle_data,
              package: package,
              app: app_model,
              created_by_user_name: 'bob the builder',
@@ -384,6 +385,7 @@ RSpec.describe 'Builds' do
     end
     let!(:second_build) do
       create(:build_model,
+             :no_lifecycle_data,
              package: second_package,
              app: app_model,
              created_at: build.created_at - 1.day,
@@ -588,6 +590,7 @@ RSpec.describe 'Builds' do
   describe 'GET /v3/builds/:guid' do
     let(:build) do
       create(:build_model,
+             :no_lifecycle_data,
              package: package,
              app: app_model,
              staging_memory_in_mb: 123,

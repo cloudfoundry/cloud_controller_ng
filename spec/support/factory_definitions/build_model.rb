@@ -36,5 +36,12 @@ FactoryBot.define do
       state { VCAP::CloudController::BuildModel::STAGING_STATE }
       association :app, factory: %i[app_model cnb]
     end
+
+    # For specs that create the lifecycle data themselves (e.g.
+    # #create_lifecycle_data_model); avoids a colliding pre-existing row.
+    trait :no_lifecycle_data do
+      lifecycle_type { VCAP::CloudController::BuildpackLifecycleDataModel::LIFECYCLE_TYPE }
+      lifecycle { :none }
+    end
   end
 end

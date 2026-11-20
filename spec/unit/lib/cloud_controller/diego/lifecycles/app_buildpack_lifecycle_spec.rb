@@ -13,7 +13,7 @@ module VCAP::CloudController
     it_behaves_like 'custom-stack lifecycle updates', 'buildpack', 'https://example.com/buildpack.zip'
 
     describe '#create_lifecycle_data_model' do
-      let!(:app) { create(:app_model) }
+      let!(:app) { create(:app_model, :no_lifecycle_data) }
 
       it 'creates BuildpackLifecycleDataModel' do
         expect do
@@ -192,7 +192,7 @@ module VCAP::CloudController
       context 'when credentials are provided' do
         let(:creds) { { 'git.example.com' => { 'username' => 'u', 'password' => 'p' } } }
         let(:lifecycle_request_data) { { buildpacks: ['http://git.example.com/acme/bp.git'], credentials: creds } }
-        let!(:app) { create(:app_model) }
+        let!(:app) { create(:app_model, :no_lifecycle_data) }
 
         it 'stores credentials on the lifecycle data model' do
           lifecycle.create_lifecycle_data_model(app)

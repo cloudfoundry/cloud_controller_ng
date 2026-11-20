@@ -37,6 +37,13 @@ FactoryBot.define do
       lifecycle { :cnb }
     end
 
+    # For specs that create the lifecycle data themselves (e.g.
+    # #create_lifecycle_data_model); avoids a colliding pre-existing row.
+    trait :no_lifecycle_data do
+      lifecycle_type { VCAP::CloudController::BuildpackLifecycleDataModel::LIFECYCLE_TYPE }
+      lifecycle { :none }
+    end
+
     trait :all_fields do
       association :droplet, factory: :droplet_model
       buildpack_cache_sha256_checksum { generate(:guid) }
