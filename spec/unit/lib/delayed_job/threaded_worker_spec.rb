@@ -3,7 +3,7 @@ require 'delayed_job'
 require 'delayed_job/threaded_worker'
 
 RSpec.describe Delayed::ThreadedWorker do
-  let(:options) { { num_threads: 2, sleep_delay: 0.1, grace_period_seconds: 2 } }
+  let(:options) { { num_threads: 2, sleep_delay: 0.1, grace_period_seconds: 0.5 } }
   let(:worker) { Delayed::ThreadedWorker.new(options) }
   let(:worker_name) { 'instance_name' }
 
