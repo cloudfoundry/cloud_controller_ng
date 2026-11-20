@@ -14,9 +14,27 @@ module VCAP::CloudController
         end
 
         def perform
-          Steno.logger('cc.background').info("Packing the app bits for package '#{@package_guid}'")
+          start_time = Time.now
+          logger.info('package_upload.job.start', {
+                        package_guid: @package_guid,
+                        package_zip_path_present: @package_zip_path.present?,
+                        fingerprint_count: @fingerprints.size
+                      })
 
           CloudController::Packager::PackageUploadHandler.new(@package_guid, @package_zip_path, @fingerprints).pack
+
+          logger.info('package_upload.job.done', {
+                        package_guid: @package_guid,
+                        duration_ms: elapsed_ms(start_time)
+                      })
+        rescue StandardError => e
+          logger.info('package_upload.job.failed', {
+                        package_guid: @package_guid,
+                        duration_ms: elapsed_ms(start_time),
+                        error_class: e.class.name,
+                        error: e.message
+                      })
+          raise
         end
 
         def job_name_in_configuration
@@ -33,6 +51,16 @@ module VCAP::CloudController
 
         def resource_type
           'package'
+        end
+
+        private
+
+        def logger
+          Steno.logger('cc.background')
+        end
+
+        def elapsed_ms(start_time)
+          ((Time.now - start_time) * 1000).round
         end
       end
     end

@@ -16,7 +16,8 @@ module VCAP::CloudController
     end
 
     def match_resources
-      before_match_log
+      count_by_size = resource_count_by_filesize
+      before_match_log(count_by_size)
 
       time_by_bucket = FILE_SIZE_GROUPS.keys.index_with do |_key|
         0
@@ -26,11 +27,19 @@ module VCAP::CloudController
       resources_by_filesize.each do |name, resources|
         resources.each do |resource|
           start_time = Time.now
-          known_resources << resource if resource_pool.resource_known?(resource)
-          time_by_bucket[name] += Time.now - start_time
+          exists = resource_pool.resource_known?(resource)
+          duration = Time.now - start_time
+          known_resources << resource if exists
+          time_by_bucket[name] += duration
+          logger.debug('resource_match.exists.call', {
+                         sha1: resource['sha1'],
+                         size: resource['size'],
+                         exists: exists,
+                         duration_seconds: duration.round(4)
+                       })
         end
       end
-      after_match_log(time_by_bucket)
+      after_match_log(time_by_bucket, known_resources.count, count_by_size)
       known_resources
     end
 
@@ -50,19 +59,25 @@ module VCAP::CloudController
       end
     end
 
-    def before_match_log
+    def before_match_log(count_by_size)
       logger.info('starting resource matching', {
                     total_resources_to_match: allowed_resources.count,
-                    resource_count_by_size: resource_count_by_filesize
+                    resource_count_by_size: count_by_size
                   })
     end
 
-    def after_match_log(time_by_bucket)
+    def after_match_log(time_by_bucket, cache_hits, count_by_size)
       total_time = time_by_bucket.sum { |_bucket, count| count }
+      total = allowed_resources.count
+      cache_misses = total - cache_hits
       logger.info('done matching resources', {
-                    total_resources_to_match: allowed_resources.count,
+                    total_resources_to_match: total,
+                    cache_hits: cache_hits,
+                    cache_misses: cache_misses,
+                    cache_hit_rate: total > 0 ? (cache_hits.to_f / total).round(4) : 0,
+                    avg_resource_match_time: total > 0 ? "#{(total_time / total).round(4)} seconds" : '0 seconds',
                     total_resource_match_time: "#{total_time.to_f.round(2)} seconds",
-                    resource_count_by_size: resource_count_by_filesize,
+                    resource_count_by_size: count_by_size,
                     resource_match_time_by_size: time_by_bucket.transform_values { |count| "#{count.to_f.round(2)} seconds" }
                   })
     end
