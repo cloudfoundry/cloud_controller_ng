@@ -8,7 +8,7 @@ module CloudController
     RSpec.describe ErrorHandlingClient do
       subject(:client) { ErrorHandlingClient.new(wrapped_client) }
       let(:wrapped_client) { Blobstore::NullClient.new }
-      let(:logger) { instance_double(Steno::Logger, error: nil) }
+      let(:logger) { instance_double(Steno::Logger, error: nil, info: nil) }
 
       before do
         allow(Steno).to receive(:logger).and_return(logger)

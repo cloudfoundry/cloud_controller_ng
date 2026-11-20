@@ -28,7 +28,7 @@ module CloudController
           allow(StorageCliClient).to receive(:new).and_return(storage_cli_client_mock)
           ClientProvider.provide(options:, directory_key:, root_dir:, resource_type:)
           expect(StorageCliClient).to have_received(:new).with(directory_key: directory_key, resource_type: resource_type, root_dir: root_dir,
-                                                               min_size: 100, max_size: 1000)
+                                                               min_size: 100, max_size: 1000, metrics_updater: anything)
         end
 
         it 'raises an error if provider is not provided' do
