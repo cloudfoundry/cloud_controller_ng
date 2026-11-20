@@ -1,30 +1,35 @@
-require 'spec_helper'
+require 'migration_spec_helper'
 
 RSpec.describe 'fill role_guid and timestamps for organizations_managers table', isolation: :truncation, type: :migration do
   let(:role_table) { :organizations_managers }
   let(:filename) { '20191218001028_fill_guid_and_timestamps_for_organizations_managers.rb' }
 
   let(:db) { Sequel::Model.db }
-  let(:user) { create(:user) }
-  let(:user_2) { create(:user) }
-  let(:user_3) { create(:user) }
-  let(:organization) { create(:organization) }
+  let(:quota_def_id) do
+    db[:quota_definitions].insert(guid: SecureRandom.uuid, name: "quota-#{SecureRandom.uuid}",
+                                  non_basic_services_allowed: false, total_services: -1, memory_limit: 0, total_routes: -1)
+  end
+  let(:org_id) do
+    db[:organizations].insert(guid: SecureRandom.uuid, name: "org-#{SecureRandom.uuid}",
+                              quota_definition_id: quota_def_id)
+  end
+  let(:user_id)   { db[:users].insert(guid: SecureRandom.uuid) }
+  let(:user_2_id) { db[:users].insert(guid: SecureRandom.uuid) }
+  let(:user_3_id) { db[:users].insert(guid: SecureRandom.uuid) }
   let(:tmp_migrations_dir) { Dir.mktmpdir }
 
   before do
     FileUtils.cp(File.join(DBMigrator::SEQUEL_MIGRATIONS, filename), tmp_migrations_dir)
-    [user, user_2].each do |user|
-      db[role_table].insert({ user_id: user.id, organization_id: organization.id })
-    end
-
-    db[role_table].insert({ user_id: user_3.id, organization_id: organization.id, role_guid: 'existing-role-guid' })
+    db[role_table].insert({ user_id: user_id, organization_id: org_id })
+    db[role_table].insert({ user_id: user_2_id, organization_id: org_id })
+    db[role_table].insert({ user_id: user_3_id, organization_id: org_id, role_guid: 'existing-role-guid' })
   end
 
   it 'fills in columns of the organizations_managers table' do
     Sequel::Migrator.run(db, tmp_migrations_dir, table: :my_fake_table)
-    role = db[role_table].first(user_id: user.id)
-    role_2 = db[role_table].first(user_id: user_2.id)
-    role_3 = db[role_table].first(user_id: user_3.id)
+    role   = db[role_table].first(user_id: user_id)
+    role_2 = db[role_table].first(user_id: user_2_id)
+    role_3 = db[role_table].first(user_id: user_3_id)
 
     expect(role[:role_guid]).to be_a_guid
     expect(role_2[:role_guid]).to be_a_guid

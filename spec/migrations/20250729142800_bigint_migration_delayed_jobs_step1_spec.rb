@@ -1,4 +1,4 @@
-require 'spec_helper'
+require 'migration_spec_helper'
 require 'migrations/helpers/bigint_migration_step1_shared_context'
 
 RSpec.describe 'bigint migration - delayed_jobs table - step1', isolation: :truncation, type: :migration do
