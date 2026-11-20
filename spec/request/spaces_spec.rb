@@ -160,6 +160,7 @@ RSpec.describe 'Spaces' do
           'created_at' => iso8601,
           'updated_at' => iso8601,
           'name' => org.name,
+          'service_account_prefix' => org.service_account_prefix,
           'suspended' => false,
           'metadata' => {
             'labels' => {},
@@ -414,6 +415,7 @@ RSpec.describe 'Spaces' do
                                                 'created_at' => iso8601,
                                                 'updated_at' => iso8601,
                                                 'name' => org1.name,
+                                                'service_account_prefix' => org1.service_account_prefix,
                                                 'suspended' => false,
                                                 'metadata' => {
                                                   'labels' => {},
@@ -440,6 +442,7 @@ RSpec.describe 'Spaces' do
                                                 'created_at' => iso8601,
                                                 'updated_at' => iso8601,
                                                 'name' => org2.name,
+                                                'service_account_prefix' => org2.service_account_prefix,
                                                 'suspended' => false,
                                                 'metadata' => {
                                                   'labels' => {},

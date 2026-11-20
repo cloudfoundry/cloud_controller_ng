@@ -7,6 +7,7 @@ module VCAP::CloudController
 
     ORG_NAME_REGEX = /\A[[:alnum:][:punct:][:print:]]+\Z/
     ORG_STATUS_VALUES = VALID_STATUSES
+    SERVICE_ACCOUNT_PREFIX_REGEX = /\A[a-z0-9][a-z0-9-]{1,61}[a-z0-9]\z/
 
     one_to_many :spaces
 
@@ -205,12 +206,21 @@ module VCAP::CloudController
 
       validate_quota
 
+      # Unique insertion serializes allocation; reservations survive org deletion.
+      # rubocop:disable Rails/SkipsModelValidations -- Atomic Sequel dataset reservation, not an ActiveRecord model.
+      db[:service_account_prefixes].insert(prefix: service_account_prefix) if service_account_prefix && (new? || column_changed?(:service_account_prefix))
+      # rubocop:enable Rails/SkipsModelValidations
+
       super
     end
 
     def around_save
       yield
     rescue Sequel::UniqueConstraintViolation => e
+      if e.message.include?('service_account_prefixes_prefix_unique') || e.message.include?('organizations_service_account_prefix_unique')
+        errors.add(:service_account_prefix, :unique)
+        raise validation_failed_error
+      end
       raise e unless e.message.include?('organizations_name_index')
 
       errors.add(:name, :unique)
@@ -221,6 +231,8 @@ module VCAP::CloudController
       validates_presence :name
       validates_format ORG_NAME_REGEX, :name
       validates_includes ORG_STATUS_VALUES, :status, allow_missing: true
+      validates_format SERVICE_ACCOUNT_PREFIX_REGEX, :service_account_prefix, allow_nil: true
+      errors.add(:service_account_prefix, :immutable) if !new? && column_changed?(:service_account_prefix) && initial_value(:service_account_prefix)
 
       return unless column_changed?(:default_isolation_segment_guid)
 

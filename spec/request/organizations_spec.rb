@@ -68,6 +68,7 @@ module VCAP::CloudController
               'labels' => { 'freaky' => 'friday' },
               'annotations' => { 'make' => 'subaru', 'model' => 'xv crosstrek', 'color' => 'orange' }
             },
+            'service_account_prefix' => nil,
             'suspended' => false
           }
         )
@@ -98,6 +99,7 @@ module VCAP::CloudController
             },
             'metadata' => { 'labels' => {}, 'annotations' => {} },
             'relationships' => { 'quota' => { 'data' => { 'guid' => created_org.quota_definition.guid } } },
+            'service_account_prefix' => nil,
             'suspended' => true
           }
         )
@@ -133,6 +135,7 @@ module VCAP::CloudController
                 'labels' => { 'freaky' => 'friday' },
                 'annotations' => { 'make' => 'subaru', 'model' => 'xv crosstrek', 'color' => 'orange' }
               },
+              'service_account_prefix' => nil,
               'suspended' => false
             }
           )
@@ -284,6 +287,7 @@ module VCAP::CloudController
                   'labels' => {},
                   'annotations' => {}
                 },
+                'service_account_prefix' => nil,
                 'suspended' => false
               },
               {
@@ -304,6 +308,7 @@ module VCAP::CloudController
                   'labels' => {},
                   'annotations' => {}
                 },
+                'service_account_prefix' => nil,
                 'suspended' => false
               }
             ]
@@ -409,6 +414,7 @@ module VCAP::CloudController
                   'labels' => {},
                   'annotations' => {}
                 },
+                'service_account_prefix' => nil,
                 'suspended' => false
               },
               {
@@ -429,6 +435,7 @@ module VCAP::CloudController
                   'labels' => {},
                   'annotations' => {}
                 },
+                'service_account_prefix' => nil,
                 'suspended' => false
               }
             ]
@@ -1157,6 +1164,7 @@ module VCAP::CloudController
             'labels' => {},
             'annotations' => {}
           },
+          'service_account_prefix' => nil,
           'suspended' => false
         }
       end
@@ -1216,6 +1224,7 @@ module VCAP::CloudController
               'labels' => { 'freaky' => 'thursday' },
               'annotations' => { 'quality' => 'p sus' }
             },
+            'service_account_prefix' => nil,
             'suspended' => false
           }
 
@@ -1266,6 +1275,7 @@ module VCAP::CloudController
             'created_at' => iso8601,
             'updated_at' => iso8601,
             'metadata' => { 'labels' => {}, 'annotations' => {} },
+            'service_account_prefix' => nil,
             'suspended' => true
           }
 
@@ -1311,6 +1321,7 @@ module VCAP::CloudController
                 'labels' => { 'animal' => 'horse' },
                 'annotations' => {}
               },
+              'service_account_prefix' => nil,
               'suspended' => false
             }
 

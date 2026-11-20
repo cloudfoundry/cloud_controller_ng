@@ -12,7 +12,7 @@ module VCAP::CloudController
       proc { |a| a.requested?(key) }
     end
 
-    register_allowed_keys %i[name apps services routes domains]
+    register_allowed_keys %i[name apps services routes domains service_accounts]
     validates_with NoAdditionalKeysValidator
 
     validates :name,
@@ -24,6 +24,20 @@ module VCAP::CloudController
     validate :services_validator, if: key_requested?(:services)
     validate :routes_validator, if: key_requested?(:routes)
     validate :domains_validator, if: key_requested?(:domains)
+    validate :service_accounts_validator, if: key_requested?(:service_accounts)
+
+    def service_accounts_limits_message
+      @service_accounts_limits_message ||= ServiceAccountsLimitsMessage.new(service_accounts&.deep_symbolize_keys)
+    end
+
+    delegate :total_service_accounts, to: :service_accounts_limits_message
+
+    def service_accounts_validator
+      return unless validates_hash(service_accounts, :service_accounts)
+      return if service_accounts_limits_message.valid?
+
+      service_accounts_limits_message.errors.full_messages.each { |message| errors.add(:service_accounts, message:) }
+    end
 
     # Apps validations
     delegate :total_memory_in_mb, :per_process_memory_in_mb, :total_instances, :per_app_tasks, :log_rate_limit_in_bytes_per_second, to: :apps_limits_message
@@ -106,5 +120,11 @@ module VCAP::CloudController
     validates :total_domains,
               numericality: { only_integer: true, greater_than_or_equal_to: 0 },
               allow_nil: true
+  end
+
+  class ServiceAccountsLimitsMessage < BaseMessage
+    register_allowed_keys [:total_service_accounts]
+    validates_with NoAdditionalKeysValidator
+    validates :total_service_accounts, numericality: { only_integer: true, greater_than_or_equal_to: 0 }, allow_nil: true
   end
 end

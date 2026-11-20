@@ -118,6 +118,8 @@ module VCAP::Services::ServiceBrokers::V2
       body = body.compact
       body[:parameters] = arbitrary_parameters if arbitrary_parameters.present?
 
+      add_service_account_context(body, binding)
+
       begin
         response = @http_client.put(path, body, user_guid:)
       rescue Errors::HttpClientTimeout => e
@@ -365,6 +367,20 @@ module VCAP::Services::ServiceBrokers::V2
         organization_annotations: hashified_public_annotations(service_instance.organization.annotations),
         space_annotations: hashified_public_annotations(service_instance.space.annotations)
       }
+    end
+
+    def add_service_account_context(body, binding)
+      return unless binding.respond_to?(:service_account_guid) && binding.service_account_guid
+
+      account = VCAP::CloudController::ServiceAccountModel.first(guid: binding.service_account_guid)
+      raise VCAP::CloudController::ServiceAccountProvision::Conflict.new('captured service account not found') unless account
+
+      unless account.enabled && account.status == 'ready' && account.entitled_to?(binding.app.space)
+        raise VCAP::CloudController::ServiceAccountProvision::Conflict.new('service account is not ready for a broker binding')
+      end
+
+      issuer = CloudController::DependencyLocator.instance.uaa_issuer_discovery.issuer
+      body[:context][:service_account] = { issuer: issuer, subject: account.client_id }
     end
 
     def async_response?(response)

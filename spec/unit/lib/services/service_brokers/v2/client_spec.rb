@@ -1438,6 +1438,39 @@ module VCAP::Services::ServiceBrokers::V2
         allow(http_client).to receive(:put).and_return(response)
       end
 
+      it 'hands the ready assigned account issuer and subject to the broker in platform context' do
+        app.space.organization.update(service_account_prefix: 'broker-team')
+        account = VCAP::CloudController::ServiceAccountModel.create(name: 'broker-worker', space: app.space, status: 'ready')
+        app.update(service_account: account)
+        stub_request(:get, 'https://uaa.service.cf.internal/.well-known/openid-configuration').to_return(body: { issuer: UAAIssuer::ISSUER }.to_json)
+
+        client.bind(binding)
+
+        context = hash_including(service_account: { issuer: UAAIssuer::ISSUER, subject: account.client_id })
+        expect(http_client).to have_received(:put).with(anything, hash_including(context: context), anything)
+      end
+
+      it 'uses shared issuer discovery across broker client instances' do
+        app.space.organization.update(service_account_prefix: 'broker-team')
+        account = VCAP::CloudController::ServiceAccountModel.create(name: 'broker-worker', space: app.space, status: 'ready')
+        app.update(service_account: account)
+        discovery = double(:issuer_discovery, issuer: 'https://shared-issuer.example.test/oauth/token')
+        allow(CloudController::DependencyLocator.instance).to receive(:uaa_issuer_discovery).and_return(discovery)
+
+        client.bind(binding)
+        described_class.new(client_attrs).bind(binding)
+
+        expect(discovery).to have_received(:issuer).twice
+        expected_context = hash_including(service_account: { issuer: 'https://shared-issuer.example.test/oauth/token', subject: account.client_id })
+        expect(http_client).to have_received(:put).with(anything, hash_including(context: expected_context), anything).twice
+      end
+
+      it 'fails closed rather than sending a credential-only bind when its captured account is missing' do
+        binding.update(service_account_guid: SecureRandom.uuid)
+        expect { client.bind(binding) }.to raise_error(VCAP::CloudController::ServiceAccountProvision::Conflict, /not found/)
+        expect(http_client).not_to have_received(:put)
+      end
+
       it 'makes a put request with correct path' do
         client.bind(binding)
 

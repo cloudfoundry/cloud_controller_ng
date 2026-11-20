@@ -268,7 +268,7 @@ module VCAP::CloudController
       raise CloudController::Errors::ApiError.new_from_details('AssociationNotEmpty', 'spaces', Organization.table_name) if org.spaces_dataset.any? && !recursive_delete?
 
       space_delete_action = SpaceDelete.new(UserAuditInfo.from_context(SecurityContext), @services_event_repository)
-      delete_action = V2::OrganizationDelete.new(space_delete_action)
+      delete_action = V2::OrganizationDelete.new(space_delete_action, UserAuditInfo.from_context(SecurityContext))
 
       deletion_job = VCAP::CloudController::Jobs::DeleteActionJob.new(Organization, guid, delete_action)
       response = run_or_enqueue_deletion_job(deletion_job)

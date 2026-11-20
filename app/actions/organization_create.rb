@@ -14,6 +14,7 @@ module VCAP::CloudController
       Organization.db.transaction do
         org = VCAP::CloudController::Organization.create(
           name: message.name,
+          service_account_prefix: message.service_account_prefix,
           status: message.suspended ? Organization::SUSPENDED : Organization::ACTIVE
         )
 
@@ -29,6 +30,7 @@ module VCAP::CloudController
     private
 
     def validation_error!(error, message)
+      error!("Service account prefix '#{message.service_account_prefix}' is already reserved.") if error.errors.on(:service_account_prefix)&.include?(:unique)
       error!("Organization '#{message.name}' already exists.") if error.errors.on(:name)&.include?(:unique)
       error!(error.message)
     end

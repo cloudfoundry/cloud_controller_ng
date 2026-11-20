@@ -304,6 +304,15 @@ module VCAP::CloudController
     end
 
     def before_save
+      if being_started?
+        account = app.service_account
+        account&.lock!
+        if account && !account.entitled_to?(app.space)
+          errors.add(:service_account, 'must be entitled to the app space')
+          raise validation_failed_error
+        end
+        self.service_account_guid = app.service_account_guid
+      end
       set_new_version if version_needs_to_be_updated?
       super
     end

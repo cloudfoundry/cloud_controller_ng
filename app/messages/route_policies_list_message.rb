@@ -30,7 +30,7 @@ module VCAP::CloudController
     def sources_format_valid
       return unless sources.is_a?(Array)
 
-      invalid = sources.reject { |s| s.is_a?(String) && RoutePolicy::SOURCE_REGEX.match?(s) }
+      invalid = sources.reject { |s| s.is_a?(String) && (RoutePolicy::SOURCE_REGEX.match?(s) || RoutePolicy::SERVICE_ACCOUNT_SOURCE_REGEX.match?(s)) }
       return if invalid.empty?
 
       errors.add(:sources, "contains invalid source format: #{invalid.join(', ')}")

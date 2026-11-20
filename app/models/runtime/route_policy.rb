@@ -1,6 +1,7 @@
 module VCAP::CloudController
   class RoutePolicy < Sequel::Model(:route_policies)
     SOURCE_REGEX = /\A(cf:(app|space|org):[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}|cf:any)\z/
+    SERVICE_ACCOUNT_SOURCE_REGEX = /\Acf:svc:([a-z0-9][a-z0-9-]{1,61}[a-z0-9]):([a-z0-9][a-z0-9-]{1,61}[a-z0-9])\z/
 
     many_to_one :route,
                 class: 'VCAP::CloudController::Route',
@@ -14,13 +15,21 @@ module VCAP::CloudController
     add_association_dependencies annotations: :destroy
 
     def source
+      if source_type == 'svc'
+        account = ServiceAccountModel.first(guid: source_guid)
+        return "cf:svc:#{account.identity_prefix}:#{account.name}" if account
+      end
       source_guid.to_s.empty? ? 'cf:any' : "cf:#{source_type}:#{source_guid}"
     end
 
     def source=(val)
       return if val.nil?
 
-      if val == 'cf:any'
+      if (identity = val.match(SERVICE_ACCOUNT_SOURCE_REGEX))
+        account = ServiceAccountModel.first(identity_prefix: identity[1], name: identity[2])
+        self.source_type = 'svc'
+        self.source_guid = account&.guid
+      elsif val == 'cf:any'
         self.source_type = 'any'
         self.source_guid = ''
       else
@@ -33,6 +42,7 @@ module VCAP::CloudController
     def validate
       validates_presence :source_type
       validates_presence :route_id
+      errors.add(:source, 'service account not found') if source_type == 'svc' && source_guid.nil?
       validate_cf_any_exclusivity
     end
 

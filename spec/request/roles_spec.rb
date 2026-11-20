@@ -1410,6 +1410,7 @@ order_by=-created_at&created_ats[lt]=2028-05-26T18:47:01Z&guids=#{organization_a
           created_at: iso8601,
           updated_at: iso8601,
           name: org.name,
+          service_account_prefix: org.service_account_prefix,
           suspended: false,
           relationships: {
             quota: {
@@ -1540,6 +1541,7 @@ order_by=-created_at&created_ats[lt]=2028-05-26T18:47:01Z&guids=#{organization_a
             created_at: iso8601,
             updated_at: iso8601,
             name: another_org.name,
+            service_account_prefix: another_org.service_account_prefix,
             suspended: false,
             relationships: {
               quota: {
@@ -1748,6 +1750,7 @@ order_by=-created_at&created_ats[lt]=2028-05-26T18:47:01Z&guids=#{organization_a
           created_at: iso8601,
           updated_at: iso8601,
           name: org.name,
+          service_account_prefix: org.service_account_prefix,
           suspended: false,
           relationships: {
             quota: {

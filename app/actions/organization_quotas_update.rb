@@ -18,6 +18,7 @@ module VCAP::CloudController
         quota.lock!
 
         quota.name = message.name if message.requested? :name
+        quota.total_service_accounts = message.total_service_accounts || QuotaDefinition::UNLIMITED if message.service_accounts_limits_message.requested?(:total_service_accounts)
 
         quota.memory_limit = memory_limit(message) if message.apps_limits_message.requested? :total_memory_in_mb
         quota.instance_memory_limit = instance_memory_limit(message) if message.apps_limits_message.requested? :per_process_memory_in_mb

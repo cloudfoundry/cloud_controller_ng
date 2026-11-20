@@ -1,4 +1,5 @@
 require 'utils/workpool'
+require 'cloud_controller/diego/service_account_identity'
 
 module VCAP::CloudController
   module Diego
@@ -69,7 +70,7 @@ module VCAP::CloudController
         invalid_lrps = 0
         exceptions.each do |e|
           error_name = e.is_a?(CloudController::Errors::ApiError) ? e.name : e.class.name
-          if error_name == 'RunnerInvalidRequest'
+          if error_name == 'RunnerInvalidRequest' || e.is_a?(ServiceAccountIdentity::NotReady)
             logger.info('synced-invalid-desired-lrps', error: error_name, error_message: e.message)
             invalid_lrps += 1
           elsif error_name == 'RunnerError' && e.message['the requested resource already exists']

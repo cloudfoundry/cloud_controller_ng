@@ -1,5 +1,6 @@
 require 'actions/v3/service_instance_delete'
 require 'jobs/v3/delete_service_instance_job'
+require 'repositories/service_account_event_repository'
 
 module VCAP::CloudController
   class SpaceDelete
@@ -76,7 +77,7 @@ module VCAP::CloudController
     end
 
     def delete_apps(space_model)
-      AppDelete.new(@user_audit_info).delete(space_model.app_models)
+      AppDelete.new(@user_audit_info).delete(space_model.app_models_dataset.all)
     end
 
     def delete_service_brokers(space_model)

@@ -9,7 +9,7 @@ module VCAP::CloudController
       let(:user_audit_info) { UserAuditInfo.new(user_guid: user.guid, user_email: user_email) }
       let(:space_delete) { SpaceDelete.new(user_audit_info, services_event_repository) }
 
-      subject(:org_delete) { V2::OrganizationDelete.new(space_delete) }
+      subject(:org_delete) { V2::OrganizationDelete.new(space_delete, user_audit_info) }
       describe '#delete' do
         let!(:org_1) { create(:organization) }
         let!(:org_2) { create(:organization) }
