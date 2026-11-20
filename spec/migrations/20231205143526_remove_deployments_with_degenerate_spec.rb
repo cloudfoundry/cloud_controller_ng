@@ -20,7 +20,7 @@ RSpec.describe 'migration to clean up degenerate records from deployments record
 
       expect { db[:deployments].where(guid: 'degenerate_guid').delete }.to raise_error(Sequel::ForeignKeyConstraintViolation)
 
-      expect { Sequel::Migrator.run(db, migrations_path, target: current_migration_index, allow_missing_migration_files: true) }.not_to raise_error
+      expect { run_migration }.not_to raise_error
 
       expect(db[:deployments].where(status_reason: 'DEGENERATE').count).to eq(0)
 
@@ -33,6 +33,17 @@ RSpec.describe 'migration to clean up degenerate records from deployments record
       expect(db[:deployment_processes].first(guid: 'deployed_process_guid')).not_to be_nil
       expect(db[:deployment_annotations].first(guid: 'deployed_annotation_guid')).not_to be_nil
       expect(db[:deployment_labels].first(guid: 'deployed_label_guid')).not_to be_nil
+
+      # Up migration idempotency - no degenerate records left to remove
+      test_up_migration_idempotency
+      expect(db[:deployments].where(status_reason: 'DEGENERATE').count).to eq(0)
+
+      # Down migration is intentionally a no-op (deleted rows cannot be recovered)
+      expect { revert_migration }.not_to raise_error
+      expect(db[:deployments].first(guid: 'degenerate_guid')).to be_nil
+
+      test_down_migration_idempotency
+      expect(db[:deployments].first(guid: 'degenerate_guid')).to be_nil
     end
   end
 end

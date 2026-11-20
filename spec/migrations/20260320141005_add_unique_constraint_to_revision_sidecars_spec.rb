@@ -18,7 +18,7 @@ RSpec.describe 'add unique constraint to revision sidecar types', isolation: :tr
     expect(db[:revision_sidecars].where(name: 'app', revision_guid: revision_guid).count).to eq(2)
 
     # run the migration
-    Sequel::Migrator.run(db, migrations_path, target: current_migration_index, allow_missing_migration_files: true)
+    run_migration
 
     # verify duplicates are removed and constraint is enforced
     expect(db[:revision_sidecars].where(name: 'app', revision_guid: revision_guid).count).to eq(1)
@@ -26,13 +26,17 @@ RSpec.describe 'add unique constraint to revision sidecar types', isolation: :tr
     expect { db[:revision_sidecars].insert(guid: SecureRandom.uuid, name: 'app', command: 'command', revision_guid: revision_guid) }.to raise_error(Sequel::UniqueConstraintViolation)
 
     # running the migration again should not cause any errors
-    expect { Sequel::Migrator.run(db, migrations_path, target: current_migration_index, allow_missing_migration_files: true) }.not_to raise_error
+    test_up_migration_idempotency
 
     # roll back the migration
-    Sequel::Migrator.run(db, migrations_path, target: current_migration_index - 1, allow_missing_migration_files: true)
+    revert_migration
 
     # verify constraint is removed and duplicates can be re-inserted
     expect(db.indexes(:revision_sidecars)).not_to include(:revision_sidecars_revision_guid_name_index)
     expect { db[:revision_sidecars].insert(guid: SecureRandom.uuid, name: 'app', command: 'command', revision_guid: revision_guid) }.not_to raise_error
+
+    # rolling back the migration again should not cause any errors
+    test_down_migration_idempotency
+    expect(db.indexes(:revision_sidecars)).not_to include(:revision_sidecars_revision_guid_name_index)
   end
 end
