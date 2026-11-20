@@ -62,7 +62,7 @@ module VCAP::CloudController
     end
 
     def self.from_params(params, to_array_keys, fields: [])
-      opts = params.dup
+      opts = params.with_indifferent_access
       to_array_keys.each do |attribute|
         to_array! opts, attribute
       end
