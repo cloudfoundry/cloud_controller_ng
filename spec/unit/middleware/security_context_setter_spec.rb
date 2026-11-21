@@ -1,10 +1,12 @@
 require 'spec_helper'
 require 'security_context_setter'
+require 'cloud_controller/security/admin_token_network_policy'
 
 module CloudFoundry
   module Middleware
     RSpec.describe SecurityContextSetter do
-      let(:middleware) { SecurityContextSetter.new(app, security_context_configurer) }
+      let(:policy) { VCAP::CloudController::Security::AdminTokenNetworkPolicy.new }
+      let(:middleware) { SecurityContextSetter.new(app, security_context_configurer, policy) }
       let(:app) { double(:app, call: [200, {}, 'a body']) }
       let(:path_info) { '/v2/foo' }
       let(:env) do
@@ -33,6 +35,32 @@ module CloudFoundry
         it 'adds the X-USER-GUID header' do
           _, header, = middleware.call(env)
           expect(header).to eq({ 'X-USER-GUID' => 'user-id-1' })
+        end
+
+        context 'with administrative token network policy enabled' do
+          let(:policy) { VCAP::CloudController::Security::AdminTokenNetworkPolicy.new({ enabled: true, allowed_cidrs: ['192.0.2.0/24'] }) }
+          let(:middleware) { SecurityContextSetter.new(app, security_context_configurer, policy) }
+          let(:token_information) { { 'user_id' => 'user-id-1', 'scope' => ['cloud_controller.admin'] } }
+
+          it 'denies before calling downstream middleware or creating users and clears validated context' do
+            status, headers, body = middleware.call(env.merge('REMOTE_ADDR' => '198.51.100.1'))
+            expect(status).to eq(403)
+            expect(headers).not_to include('X-USER-GUID')
+            expect(Oj.load(body.first)['error_code']).to eq('CF-NotAuthorized')
+            expect(app).not_to have_received(:call)
+            expect(VCAP::CloudController::SecurityContext.token).to be_nil
+          end
+
+          it 'allows validated administrative tokens from allowed addresses' do
+            expect(middleware.call(env.merge('REMOTE_ADDR' => '192.0.2.1')).first).to eq(200)
+            expect(app).to have_received(:call)
+          end
+
+          it 'applies the same policy to v3 requests' do
+            status, _, body = middleware.call(env.merge('PATH_INFO' => '/v3/apps', 'REMOTE_ADDR' => '198.51.100.1'))
+            expect(status).to eq(403)
+            expect(Oj.load(body.first)['errors'].first['title']).to eq('CF-NotAuthorized')
+          end
         end
 
         context 'when given a UAA user token' do
@@ -230,6 +258,20 @@ module CloudFoundry
                 with(anything, alternate_reference_time: 123).and_return(token_decoder)
 
               middleware.call(upload_env)
+            end
+
+            context 'with administrative token network policy enabled' do
+              let(:policy) { VCAP::CloudController::Security::AdminTokenNetworkPolicy.new({ enabled: true, allowed_cidrs: ['192.0.2.0/24'] }) }
+              let(:token_information) { { 'user_id' => 'user-id-1', 'scope' => ['cloud_controller.admin'] } }
+
+              it 'denies administrative tokens even when relaxed expiry decoding succeeds' do
+                expect(VCAP::CloudController::UaaTokenDecoder).to receive(:new).
+                  with(anything, alternate_reference_time: 123).and_return(token_decoder)
+
+                expect(middleware.call(upload_env.merge('REMOTE_ADDR' => '198.51.100.1')).first).to eq(403)
+                expect(app).not_to have_received(:call)
+                expect(VCAP::CloudController::SecurityContext.token).to be_nil
+              end
             end
           end
 
