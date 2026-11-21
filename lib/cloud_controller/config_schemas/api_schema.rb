@@ -8,6 +8,12 @@ module VCAP::CloudController
       define_schema do
         {
           external_port: Integer,
+          optional(:admin_token_network_policy) => {
+            enabled: bool,
+            allowed_cidrs: [String],
+            optional(:trusted_proxies) => [String],
+            optional(:additional_protected_scopes) => [String]
+          },
           external_domain: String,
           temporary_disable_deployments: bool,
           optional(:temporary_disable_v2_staging) => bool,

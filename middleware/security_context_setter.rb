@@ -10,9 +10,11 @@ module CloudFoundry
         ]
       )
 
-      def initialize(app, security_context_configurer)
+      def initialize(app, security_context_configurer, admin_token_network_policy)
         @app                         = app
         @security_context_configurer = security_context_configurer
+        @admin_token_network_policy = admin_token_network_policy
+        raise ArgumentError.new('Administrative token network policy is required') unless @admin_token_network_policy
       end
 
       def call(env)
@@ -32,6 +34,11 @@ module CloudFoundry
         security_context_configurer.configure_token_only(header_token)
 
         if VCAP::CloudController::SecurityContext.valid_token?
+          unless @admin_token_network_policy.allowed?(VCAP::CloudController::SecurityContext.token, env)
+            logger.warn('Administrative token network policy denied request')
+            VCAP::CloudController::SecurityContext.clear
+            return [403, { 'Content-Type' => 'application/json', 'Cache-Control' => 'no-store' }, [error_message(env, 'NotAuthorized')]]
+          end
           env['cf.user_guid'] = id_from_token
           env['cf.user_name'] = VCAP::CloudController::SecurityContext.token['user_name']
           ::VCAP::Request.user_guid = id_from_token
@@ -76,7 +83,7 @@ module CloudFoundry
 
         if version == '/v2'
           ErrorPresenter.new(api_error, Rails.env.test?, V2ErrorHasher.new(api_error)).to_json
-        elsif version == '/v3'
+        else
           ErrorPresenter.new(api_error, Rails.env.test?, V3ErrorHasher.new(api_error)).to_json
         end
       end

@@ -13,12 +13,14 @@ require 'zipkin'
 require 'block_v3_only_roles'
 require 'below_min_cli_warning'
 require 'user_context_setter'
+require 'cloud_controller/security/admin_token_network_policy'
 
 module VCAP::CloudController
   class RackAppBuilder
     def build(config, request_metrics, request_logs)
       token_decoder = VCAP::CloudController::UaaTokenDecoder.new(config.get(:uaa))
       configurer = VCAP::CloudController::Security::SecurityContextConfigurer.new(token_decoder)
+      admin_token_network_policy = admin_token_network_policy(config)
 
       concurrency_rate_limiter_config = concurrency_rate_limiter_config(config)
       rate_limiter_config = rate_limiter_config(config)
@@ -31,7 +33,7 @@ module VCAP::CloudController
         use CloudFoundry::Middleware::VcapRequestContextSetter
         use CloudFoundry::Middleware::BelowMinCliWarning if config.get(:warn_if_below_min_cli_version)
         use CloudFoundry::Middleware::NewRelicCustomAttributes if config.get(:newrelic_enabled)
-        use CloudFoundry::Middleware::SecurityContextSetter, configurer
+        use CloudFoundry::Middleware::SecurityContextSetter, configurer, admin_token_network_policy
         use CloudFoundry::Middleware::Zipkin
 
         use CloudFoundry::Middleware::ConcurrencyRateLimiter, concurrency_rate_limiter_config if config.get(:concurrency_rate_limiter, :enabled)
@@ -62,6 +64,13 @@ module VCAP::CloudController
     end
 
     private
+
+    def admin_token_network_policy(config)
+      Security::AdminTokenNetworkPolicy.new(
+        config.get(:admin_token_network_policy) || {},
+        nginx_socket: config.get(:nginx, :use_nginx) ? config.get(:nginx, :instance_socket) : nil
+      )
+    end
 
     def access_log(config)
       return unless !config.get(:nginx, :use_nginx) && config.get(:logging, :file)
