@@ -27,7 +27,7 @@ gem 'sequel', '~> 5.110'
 gem 'sequel_pg', require: 'sequel'
 gem 'sinatra', '~> 4.2'
 gem 'sinatra-contrib'
-gem 'statsd-instrument', '~> 4.0'
+gem 'statsd-instrument', '~> 4.1'
 gem 'talentbox-delayed_job_sequel', '~> 4.4.0'
 gem 'uri', '~> 1.1'
 
