@@ -246,6 +246,19 @@ module VCAP::CloudController::Metrics
         expect(statsd_client).to have_received(:gauge).with('cc.requests.outstanding.gauge', 4)
         expect(statsd_client).to have_received(:increment).with('cc.requests.outstanding')
       end
+
+      context 'when the store returns nil (eg valkey unreachable)' do
+        before do
+          allow(store).to receive(:increment_request_outstanding_gauge).and_return(nil)
+        end
+
+        it 'does not send the gauge metric' do
+          updater.start_request
+
+          expect(statsd_client).not_to have_received(:gauge).with('cc.requests.outstanding.gauge', anything)
+          expect(statsd_client).to have_received(:increment).with('cc.requests.outstanding')
+        end
+      end
     end
 
     describe '#complete_request' do
@@ -277,6 +290,21 @@ module VCAP::CloudController::Metrics
 
         updater.complete_request(400)
         expect(statsd_client).to have_received(:increment).with('cc.http_status.4XX')
+      end
+
+      context 'when the store returns nil (eg valkey unreachable)' do
+        before do
+          allow(store).to receive(:decrement_request_outstanding_gauge).and_return(nil)
+        end
+
+        it 'does not send the gauge metric but still records the other metrics' do
+          updater.complete_request(status)
+
+          expect(statsd_client).not_to have_received(:gauge).with('cc.requests.outstanding.gauge', anything)
+          expect(statsd_client).to have_received(:increment).with('cc.requests.outstanding', -1)
+          expect(statsd_client).to have_received(:increment).with('cc.requests.completed')
+          expect(statsd_client).to have_received(:increment).with('cc.http_status.2XX')
+        end
       end
     end
 

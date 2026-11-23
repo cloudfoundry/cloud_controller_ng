@@ -81,13 +81,15 @@ module VCAP::CloudController::Metrics
 
     def start_request
       @statsd.increment('cc.requests.outstanding')
-      @statsd.gauge('cc.requests.outstanding.gauge', store.increment_request_outstanding_gauge)
+      outstanding_gauge = store.increment_request_outstanding_gauge
+      @statsd.gauge('cc.requests.outstanding.gauge', outstanding_gauge) unless outstanding_gauge.nil?
     end
 
     def complete_request(status)
       http_status_code = "#{status.to_s[0]}XX"
       http_status_metric = "cc.http_status.#{http_status_code}"
-      @statsd.gauge('cc.requests.outstanding.gauge', store.decrement_request_outstanding_gauge)
+      outstanding_gauge = store.decrement_request_outstanding_gauge
+      @statsd.gauge('cc.requests.outstanding.gauge', outstanding_gauge) unless outstanding_gauge.nil?
       @statsd.increment('cc.requests.outstanding', -1)
       @statsd.increment('cc.requests.completed')
       @statsd.increment(http_status_metric)
