@@ -21,7 +21,7 @@ module VCAP::CloudController
 
       DropletModel.db.transaction do
         droplet.save
-        droplet.buildpack_lifecycle_data = VCAP::CloudController::BuildpackLifecycleDataModel.create(
+        VCAP::CloudController::BuildpackLifecycleDataModel.create(
           droplet:
         )
       end

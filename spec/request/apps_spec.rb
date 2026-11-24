@@ -1881,6 +1881,7 @@ RSpec.describe 'Apps' do
     let(:app_model) { create(:app_model, space: space, name: 'my-app') }
     let(:build) do
       create(:build_model,
+             :no_lifecycle_data,
              package: package,
              app: app_model,
              staging_memory_in_mb: 123,
@@ -1892,6 +1893,7 @@ RSpec.describe 'Apps' do
     end
     let!(:second_build) do
       create(:build_model,
+             :no_lifecycle_data,
              package: package,
              app: app_model,
              staging_memory_in_mb: 123,
