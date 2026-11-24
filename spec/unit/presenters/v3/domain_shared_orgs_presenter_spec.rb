@@ -4,7 +4,6 @@ require 'presenters/v3/domain_shared_orgs_presenter'
 module VCAP::CloudController::Presenters::V3
   RSpec.describe DomainSharedOrgsPresenter do
     let(:visible_org_guids) { [] }
-    let(:visible_org_ids_query) { VCAP::CloudController::Organization.where(guid: visible_org_guids).select(:id) }
     let(:all_orgs_visible) { false }
 
     describe '#to_hash' do
@@ -17,7 +16,7 @@ module VCAP::CloudController::Presenters::V3
       subject do
         DomainSharedOrgsPresenter.new(
           domain,
-          visible_org_ids_query:,
+          visible_org_guids:,
           all_orgs_visible:
         ).to_hash
       end

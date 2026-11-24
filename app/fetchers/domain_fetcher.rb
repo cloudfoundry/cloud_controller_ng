@@ -3,7 +3,7 @@ require 'fetchers/base_list_fetcher'
 module VCAP::CloudController
   class DomainFetcher < BaseListFetcher
     class << self
-      def fetch_all_for_orgs(readable_org_ids)
+      def fetch_all_for_orgs(readable_org_ids, eager_loaded_associations: [])
         shared_domain_ids = Domain.where(owning_organization_id: nil).select(:id)
         owned_domain_ids  = Domain.where(owning_organization_id: readable_org_ids).select(:id)
         shared_private_domain_ids = Domain.dataset.db[:organizations_private_domains].where(
@@ -14,11 +14,13 @@ module VCAP::CloudController
                          union(owned_domain_ids, all: true, from_self: false).
                          union(shared_private_domain_ids, all: true, from_self: false)
 
-        Domain.where(id: all_domain_ids).qualify
+        dataset = Domain.where(id: all_domain_ids).qualify
+        dataset = dataset.eager(eager_loaded_associations) if eager_loaded_associations.any?
+        dataset
       end
 
-      def fetch(message, readable_org_ids)
-        dataset = fetch_all_for_orgs(readable_org_ids)
+      def fetch(message, readable_org_ids, eager_loaded_associations: [])
+        dataset = fetch_all_for_orgs(readable_org_ids, eager_loaded_associations:)
         filter(message, dataset)
       end
 
