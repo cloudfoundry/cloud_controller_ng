@@ -81,13 +81,15 @@ module VCAP::CloudController::Metrics
 
     def start_request
       @statsd.increment('cc.requests.outstanding')
-      @statsd.gauge('cc.requests.outstanding.gauge', store.increment_request_outstanding_gauge)
+      outstanding_gauge = store.increment_request_outstanding_gauge
+      @statsd.gauge('cc.requests.outstanding.gauge', outstanding_gauge) unless outstanding_gauge.nil?
     end
 
     def complete_request(status)
       http_status_code = "#{status.to_s[0]}XX"
       http_status_metric = "cc.http_status.#{http_status_code}"
-      @statsd.gauge('cc.requests.outstanding.gauge', store.decrement_request_outstanding_gauge)
+      outstanding_gauge = store.decrement_request_outstanding_gauge
+      @statsd.gauge('cc.requests.outstanding.gauge', outstanding_gauge) unless outstanding_gauge.nil?
       @statsd.increment('cc.requests.outstanding', -1)
       @statsd.increment('cc.requests.completed')
       @statsd.increment(http_status_metric)
@@ -133,15 +135,29 @@ module VCAP::CloudController::Metrics
         end
         @prefix = 'metrics'
         @request_outstanding_gauge_key = "#{@prefix}:cc.requests.outstanding.gauge"
-        @redis.set(@request_outstanding_gauge_key, 0)
+        fail_open { @redis.set(@request_outstanding_gauge_key, 0) }
       end
 
       def increment_request_outstanding_gauge
-        @redis.incr(@request_outstanding_gauge_key)
+        fail_open { @redis.incr(@request_outstanding_gauge_key) }
       end
 
       def decrement_request_outstanding_gauge
-        @redis.decr(@request_outstanding_gauge_key)
+        fail_open { @redis.decr(@request_outstanding_gauge_key) }
+      end
+
+      private
+
+      # on any Redis error (eg valkey unreachable) log it and carry on.
+      def fail_open
+        yield
+      rescue Redis::BaseError => e
+        logger.error("Redis error: #{e.class} - #{e.message}")
+        nil
+      end
+
+      def logger
+        @logger ||= Steno.logger('cc.metrics.statsd_updater.redis_store')
       end
     end
   end

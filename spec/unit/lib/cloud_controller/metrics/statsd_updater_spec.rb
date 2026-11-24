@@ -246,6 +246,19 @@ module VCAP::CloudController::Metrics
         expect(statsd_client).to have_received(:gauge).with('cc.requests.outstanding.gauge', 4)
         expect(statsd_client).to have_received(:increment).with('cc.requests.outstanding')
       end
+
+      context 'when the store returns nil (eg valkey unreachable)' do
+        before do
+          allow(store).to receive(:increment_request_outstanding_gauge).and_return(nil)
+        end
+
+        it 'does not send the gauge metric' do
+          updater.start_request
+
+          expect(statsd_client).not_to have_received(:gauge).with('cc.requests.outstanding.gauge', anything)
+          expect(statsd_client).to have_received(:increment).with('cc.requests.outstanding')
+        end
+      end
     end
 
     describe '#complete_request' do
@@ -277,6 +290,21 @@ module VCAP::CloudController::Metrics
 
         updater.complete_request(400)
         expect(statsd_client).to have_received(:increment).with('cc.http_status.4XX')
+      end
+
+      context 'when the store returns nil (eg valkey unreachable)' do
+        before do
+          allow(store).to receive(:decrement_request_outstanding_gauge).and_return(nil)
+        end
+
+        it 'does not send the gauge metric but still records the other metrics' do
+          updater.complete_request(status)
+
+          expect(statsd_client).not_to have_received(:gauge).with('cc.requests.outstanding.gauge', anything)
+          expect(statsd_client).to have_received(:increment).with('cc.requests.outstanding', -1)
+          expect(statsd_client).to have_received(:increment).with('cc.requests.completed')
+          expect(statsd_client).to have_received(:increment).with('cc.http_status.2XX')
+        end
       end
     end
 
@@ -388,6 +416,40 @@ module VCAP::CloudController::Metrics
       it 'decrements the gauge in Redis' do
         allow(redis).to receive(:decr).with('metrics:cc.requests.outstanding.gauge').and_return(-1)
         expect(redis_store.decrement_request_outstanding_gauge).to eq(-1)
+      end
+
+      context 'when valkey is unreachable' do
+        before do
+          allow(redis).to receive(:incr).and_raise(Redis::CannotConnectError.new('connect(2) for valkey.sock'))
+          allow(redis).to receive(:decr).and_raise(Redis::TimeoutError)
+        end
+
+        it 'does not raise when incrementing, returning nil' do
+          expect(redis_store.increment_request_outstanding_gauge).to be_nil
+        end
+
+        it 'does not raise when decrementing, returning nil' do
+          expect(redis_store.decrement_request_outstanding_gauge).to be_nil
+        end
+
+        it 'logs the redis error' do
+          logger = instance_double(Steno::Logger, error: nil)
+          allow(Steno).to receive(:logger).and_return(logger)
+
+          redis_store.increment_request_outstanding_gauge
+
+          expect(logger).to have_received(:error).with(/Redis error: Redis::CannotConnectError/)
+        end
+      end
+
+      context 'when Redis raises a command error' do
+        before do
+          allow(redis).to receive(:decr).and_raise(Redis::CommandError)
+        end
+
+        it 'fails open and returns nil' do
+          expect(redis_store.decrement_request_outstanding_gauge).to be_nil
+        end
       end
     end
   end
