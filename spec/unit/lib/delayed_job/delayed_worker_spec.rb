@@ -8,6 +8,10 @@ RSpec.describe CloudController::DelayedWorker do
   let(:delayed_worker) { instance_double(Delayed::Worker, start: nil) }
   let(:threaded_worker) { instance_double(Delayed::ThreadedWorker, start: nil) }
 
+  # start_working mutates these global Delayed::Worker attributes; snapshot and
+  # restore them so they don't leak across examples.
+  worker_settings = %i[destroy_failed_jobs max_attempts max_run_time sleep_delay logger read_ahead]
+
   before do
     allow(RakeConfig).to receive(:config).and_return(TestConfig.config_instance)
     allow(BackgroundJobEnvironment).to receive(:new).with(anything).and_return(environment)
@@ -15,9 +19,13 @@ RSpec.describe CloudController::DelayedWorker do
     allow(delayed_worker).to receive(:name=).with(anything)
     allow(Delayed::ThreadedWorker).to receive(:new).and_return(threaded_worker)
     allow(threaded_worker).to receive(:name=).with(anything)
+
+    @original_worker_settings = worker_settings.index_with { |setting| Delayed::Worker.send(setting) }
   end
 
   after do
+    @original_worker_settings.each { |setting, value| Delayed::Worker.send(:"#{setting}=", value) }
+
     VCAP::AppLogEmitter.instance_variable_set(:@emitter, nil)
     VCAP::AppLogEmitter.instance_variable_set(:@logger, nil)
   end
