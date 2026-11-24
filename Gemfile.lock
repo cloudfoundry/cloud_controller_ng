@@ -476,6 +476,7 @@ DEPENDENCIES
   oj
   openapi_first
   openssl (>= 3.2)
+  ostruct
   parallel_tests
   pg
   prometheus-client
