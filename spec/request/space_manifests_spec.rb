@@ -909,6 +909,164 @@ Cannot use loadbalancing value 'unsupported-lb-algorithm' for Route 'https://#{r
       end
     end
 
+    describe 'manifest secret redaction' do
+      before do
+        allow(VCAP::AppLogEmitter).to receive(:emit)
+      end
+
+      def apply_secret_manifest(manifest)
+        post "/v3/spaces/#{space.guid}/actions/apply_manifest", manifest, yml_headers(user_header)
+        expect(last_response.status).to eq(202), last_response.body
+
+        job_guid = VCAP::CloudController::PollableJobModel.last.guid
+        Delayed::Worker.new.work_off
+        job = VCAP::CloudController::PollableJobModel.find(guid: job_guid)
+        expect(job).to be_complete, job.cf_api_error
+      end
+
+      def expect_redacted_manifest_outputs(app, expected_manifest, passwords)
+        audit_events = VCAP::CloudController::Event.where(type: 'audit.app.apply_manifest', actee: app.guid).all
+        expect(audit_events.length).to eq(1)
+        audit_event = audit_events.first
+        audit_yaml = audit_event.metadata.dig('request', 'manifest')
+
+        expect(YAML.safe_load(audit_yaml)).to eq('applications' => [expected_manifest])
+        expect(audit_event.metadata.to_json).not_to include(*passwords)
+        expect(VCAP::AppLogEmitter).to have_received(:emit).with(app.guid, a_string_including('Applied manifest to app', audit_yaml))
+        passwords.each do |password|
+          expect(VCAP::AppLogEmitter).not_to have_received(:emit).with(app.guid, a_string_including(password))
+        end
+      end
+
+      %w[cnb-credentials credentials].each do |credential_key|
+        context "CNB with #{credential_key}" do
+          let(:app1_model) { create(:app_model, :cnb, name: 'cnb-app', space: space) }
+          let(:yml_manifest) do
+            <<~YML
+              applications:
+              - name: #{app1_model.name}
+                lifecycle: cnb
+                #{credential_key}:
+                  registry.example.com:
+                    username: user
+                    password: cnb-secret
+            YML
+          end
+
+          before do
+            create(:feature_flag, name: 'diego_cnb', enabled: true, error_message: nil)
+          end
+
+          it 'hides directly submitted credentials in audit events and app logs while retaining staging credentials' do
+            apply_secret_manifest(yml_manifest)
+
+            expect_redacted_manifest_outputs(app1_model, {
+                                               'name' => 'cnb-app', 'lifecycle' => 'cnb', credential_key => '[PRIVATE DATA HIDDEN]'
+                                             }, ['cnb-secret'])
+            expect(app1_model.reload.lifecycle_data.credentials).to eq('registry.example.com' => { 'username' => 'user', 'password' => 'cnb-secret' })
+          end
+        end
+      end
+
+      context 'buildpack with unified credentials' do
+        let(:yml_manifest) do
+          <<~YML
+            applications:
+            - name: #{app1_model.name}
+              lifecycle: buildpack
+              credentials:
+                git.example.com:
+                  username: user
+                  password: buildpack-secret
+          YML
+        end
+
+        it 'hides directly submitted credentials in audit events and app logs while retaining staging credentials' do
+          apply_secret_manifest(yml_manifest)
+
+          expect_redacted_manifest_outputs(app1_model, {
+                                             'name' => 'Tryggvi', 'lifecycle' => 'buildpack', 'credentials' => '[PRIVATE DATA HIDDEN]'
+                                           }, ['buildpack-secret'])
+          expect(app1_model.reload.lifecycle_data.credentials).to eq('git.example.com' => { 'username' => 'user', 'password' => 'buildpack-secret' })
+        end
+      end
+
+      context 'plural buildpack URLs' do
+        let(:buildpack) { create(:buildpack, stack: app1_model.lifecycle_data.stack) }
+        let(:yml_manifest) do
+          <<~YML
+            applications:
+            - name: #{app1_model.name}
+              buildpacks:
+              - https://user:buildpack-secret@git.example.com/bp.git
+              - https://user:second-buildpack-secret@git.example.com/bp2.git
+              - #{buildpack.name}
+          YML
+        end
+
+        it 'obfuscates each credential-bearing URL in audit events and app logs without changing staging URLs' do
+          apply_secret_manifest(yml_manifest)
+
+          expect_redacted_manifest_outputs(app1_model, {
+                                             'name' => 'Tryggvi',
+                                             'buildpacks' => ['https://***:***@git.example.com/bp.git', 'https://***:***@git.example.com/bp2.git', buildpack.name]
+                                           }, %w[buildpack-secret second-buildpack-secret])
+          expect(app1_model.reload.lifecycle_data.buildpacks).to eq([
+            'https://user:buildpack-secret@git.example.com/bp.git', 'https://user:second-buildpack-secret@git.example.com/bp2.git', buildpack.name
+          ])
+        end
+      end
+
+      context 'multiple apps' do
+        let(:app1_model) { create(:app_model, :docker, name: 'docker-app', space: space) }
+        let(:app2_model) { create(:app_model, :cnb, name: 'cnb-app', space: space) }
+        let(:yml_manifest) do
+          <<~YML
+            applications:
+            - name: #{app1_model.name}
+              docker:
+                image: registry.example.com/shadowed:latest
+                password: shadowed-docker-secret
+              Docker:
+                image: registry.example.com/app:latest
+                username: user
+                password: docker-secret
+            - name: #{app2_model.name}
+              lifecycle: cnb
+              cnb_credentials:
+                registry.example.com:
+                  password: shadowed-cnb-secret
+              cnbCredentials:
+                registry.example.com:
+                  username: user
+                  password: cnb-secret
+          YML
+        end
+
+        before do
+          create(:feature_flag, name: 'diego_docker', enabled: true, error_message: nil)
+          create(:feature_flag, name: 'diego_cnb', enabled: true, error_message: nil)
+        end
+
+        it 'redacts each app in its audit event and app-log payload' do
+          apply_secret_manifest(yml_manifest)
+
+          aggregate_failures 'per-app redaction' do
+            expect_redacted_manifest_outputs(app1_model, {
+                                               'name' => 'docker-app',
+                                               'docker' => { 'image' => 'registry.example.com/shadowed:latest', 'password' => '***' },
+                                               'Docker' => { 'image' => 'registry.example.com/app:latest', 'username' => 'user', 'password' => '***' }
+                                             }, %w[docker-secret cnb-secret shadowed-docker-secret shadowed-cnb-secret])
+            expect_redacted_manifest_outputs(app2_model, {
+                                               'name' => 'cnb-app', 'lifecycle' => 'cnb',
+                                               'cnb_credentials' => '[PRIVATE DATA HIDDEN]', 'cnbCredentials' => '[PRIVATE DATA HIDDEN]'
+                                             }, %w[docker-secret cnb-secret shadowed-docker-secret shadowed-cnb-secret])
+            expect(app2_model.reload.lifecycle_data.credentials).to eq('registry.example.com' => { 'username' => 'user', 'password' => 'cnb-secret' })
+          end
+        end
+      end
+    end
+
     context 'yaml anchors' do
       let(:yml_manifest) do
         <<~YML
@@ -1054,7 +1212,7 @@ Cannot use loadbalancing value 'unsupported-lb-algorithm' for Route 'https://#{r
             { op: 'add', path: '/applications/0/services', value: [
               'service-without-name-label',
               { name: 'service1',
-                parameters: { foo: 'bar' } }
+                parameters: '[PRIVATE DATA HIDDEN]' }
             ] }
           )
         }
@@ -1106,6 +1264,55 @@ Cannot use loadbalancing value 'unsupported-lb-algorithm' for Route 'https://#{r
         end
 
         it_behaves_like 'permissions for single object endpoint', ALL_PERMISSIONS
+      end
+    end
+
+    context 'when the diff includes secrets' do
+      let(:user) { make_developer_for_space(space) }
+
+      before do
+        create(:feature_flag, name: 'diego_docker', enabled: true)
+      end
+
+      it 'hides Docker passwords and service parameters in parent additions' do
+        manifest = { 'applications' => [{
+          'name' => 'new-docker-app',
+          'docker' => { 'image' => 'registry.example.com/app', 'username' => 'user', 'password' => 'request-docker-secret' },
+          'services' => [{ 'name' => 'service', 'parameters' => { 'password' => 'request-service-secret' } }]
+        }] }
+
+        post "/v3/spaces/#{space.guid}/manifest_diff", manifest.to_yaml, yml_headers(user_header)
+
+        expect(last_response).to have_status_code(201)
+        expect(Oj.load(last_response.body)['diff']).to include(
+          { 'op' => 'add', 'path' => '/applications/0/docker',
+            'value' => { 'image' => 'registry.example.com/app', 'username' => 'user', 'password' => '***' } },
+          { 'op' => 'add', 'path' => '/applications/0/services', 'value' => [{ 'name' => 'service', 'parameters' => '[PRIVATE DATA HIDDEN]' }] }
+        )
+        expect(last_response.body).not_to include('request-docker-secret', 'request-service-secret')
+      end
+    end
+
+    [true, false].each do |visibility|
+      context "when environment variable visibility is #{visibility}" do
+        let(:user) { make_developer_for_space(space) }
+
+        before do
+          create(:feature_flag, name: 'env_var_visibility', enabled: visibility)
+          app1_model.update(environment_variables: { 'token' => 'stored-env-secret' })
+        end
+
+        it 'returns the environment change with masked values' do
+          manifest = { 'applications' => [{ 'name' => app1_model.name, 'env' => { 'token' => 'submitted-env-secret' } }] }
+
+          post "/v3/spaces/#{space.guid}/manifest_diff", manifest.to_yaml, yml_headers(user_header)
+
+          expect(last_response).to have_status_code(201)
+          expect(Oj.load(last_response.body)).to eq('diff' => [
+            { 'op' => 'replace', 'path' => '/applications/0/env/token', 'value' => '[PRIVATE DATA HIDDEN]', 'was' => '[PRIVATE DATA HIDDEN]' }
+          ])
+          expect(app1_model.reload.environment_variables).to eq('token' => 'stored-env-secret')
+        end
       end
     end
 

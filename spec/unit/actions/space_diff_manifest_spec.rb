@@ -130,6 +130,48 @@ module VCAP::CloudController
         end
       end
 
+      context 'when the manifest adds Docker credentials' do
+        let(:app1_model) { create(:app_model, :docker, name: 'app-1', space: space) }
+        let(:app_manifests) do
+          [{ 'name' => app1_model.name, 'docker' => { 'image' => 'registry.example.com/app', 'username' => 'user', 'password' => 'docker-secret' } }]
+        end
+
+        it 'redacts the password inside a whole-object addition' do
+          expect(subject).to eq([
+            { 'op' => 'add', 'path' => '/applications/0/docker',
+              'value' => { 'image' => 'registry.example.com/app', 'username' => 'user', 'password' => '***' } }
+          ])
+        end
+
+        context 'when the app already has a Docker package' do
+          let(:package) { create(:package_model, :docker, app: app1_model, docker_username: 'user', docker_password: 'stored-docker-secret') }
+
+          before do
+            app1_model.update(droplet: create(:droplet_model, app: app1_model, package: package))
+            app_manifests.first['docker']['image'] = package.image
+          end
+
+          it 'redacts a password leaf addition without changing stored credentials' do
+            expect(subject).to eq([{ 'op' => 'add', 'path' => '/applications/0/docker/password', 'value' => '***' }])
+            expect(package.reload.docker_password).to eq('stored-docker-secret')
+          end
+        end
+      end
+
+      context 'when a new app has credential-bearing buildpack URLs' do
+        let(:app_manifests) do
+          [{ 'name' => 'new-app', 'buildpacks' => ['https://user:url-secret@git.example.com/bp', 'https://user:malformed-secret@git.example.com/bad path'] }]
+        end
+
+        it 'obfuscates parsed URL userinfo and preserves invalid URLs inside a whole-array addition' do
+          expect(subject).to include(
+            { 'op' => 'add', 'path' => '/applications/0/buildpacks',
+              'value' => ['https://***:***@git.example.com/bp', 'https://user:malformed-secret@git.example.com/bad path'] }
+          )
+          expect(subject.to_json).not_to include('url-secret')
+        end
+      end
+
       context 'when the submitted manifest has credentials embedded in a buildpack URL' do
         before do
           app1_model.lifecycle_data.update(buildpacks: ['https://git.example.com/greendale/community-buildpack'], stack: process1.stack.name)
@@ -221,22 +263,97 @@ module VCAP::CloudController
             'service-without-name-label',
             {
               'name' => 'foo',
-              'parameters' => { 'baz' => 'qux' }
+              'parameters' => { 'nested' => { 'password' => 'service-secret' }, 'arbitrary' => ['parameter-secret'] }
             }
           ]
         end
 
-        it 'returns the correct diff' do
+        it 'censors the whole parameter map inside the array addition' do
           expect(subject).to eq([
             { 'op' => 'add', 'path' => '/applications/0/services', 'value' => [
               'service-without-name-label',
               {
                 'name' => 'foo',
-                'parameters' => { 'baz' => 'qux' }
+                'parameters' => '[PRIVATE DATA HIDDEN]'
               }
             ] }
           ])
         end
+      end
+
+      context 'when environment variables change' do
+        let(:stored_env) { { 'nested' => { 'changed' => 'old-env-secret', 'deleted' => ['deleted-env-secret'] }, 'unchanged' => 'same-env-secret' } }
+        let(:submitted_env) { { 'nested' => { 'changed' => 'new-env-secret', 'added' => ['added-env-secret'] }, 'unchanged' => 'same-env-secret' } }
+        let(:app_manifests) { [{ 'name' => app1_model.name, 'env' => submitted_env }] }
+
+        before do
+          app1_model.update(environment_variables: stored_env)
+        end
+
+        [true, false].each do |visibility|
+          context "when environment variable visibility is #{visibility}" do
+            before do
+              create(:feature_flag, name: 'env_var_visibility', enabled: visibility)
+            end
+
+            it 'preserves nested operations while masking both sides of the diff' do
+              expect(subject).to contain_exactly(
+                { 'op' => 'replace', 'path' => '/applications/0/env/nested/changed', 'value' => '[PRIVATE DATA HIDDEN]', 'was' => '[PRIVATE DATA HIDDEN]' },
+                { 'op' => 'remove', 'path' => '/applications/0/env/nested/deleted', 'was' => '[PRIVATE DATA HIDDEN]' },
+                { 'op' => 'add', 'path' => '/applications/0/env/nested/added', 'value' => '[PRIVATE DATA HIDDEN]' }
+              )
+            end
+
+            context 'when env is empty' do
+              let(:submitted_env) { {} }
+
+              it 'retains removals without exposing the previous values' do
+                expect(subject).to contain_exactly(
+                  { 'op' => 'remove', 'path' => '/applications/0/env/nested', 'was' => '[PRIVATE DATA HIDDEN]' },
+                  { 'op' => 'remove', 'path' => '/applications/0/env/unchanged', 'was' => '[PRIVATE DATA HIDDEN]' }
+                )
+              end
+            end
+
+            context 'when env is unchanged' do
+              let(:submitted_env) { stored_env.deep_dup }
+
+              it 'returns an empty diff' do
+                expect(subject).to eq([])
+              end
+            end
+
+            context 'when no environment variables were stored' do
+              let(:stored_env) { {} }
+
+              it 'masks the whole env addition' do
+                expect(subject).to eq([{ 'op' => 'add', 'path' => '/applications/0/env', 'value' => '[PRIVATE DATA HIDDEN]' }])
+              end
+            end
+          end
+        end
+      end
+
+      it 'does not mutate input manifests or model data while normalizing and redacting' do
+        app1_model.update(environment_variables: { 'secret' => { 'nested' => 'stored-env-secret' } })
+        default_manifest['applications'][0].merge!(
+          'memory' => '2G',
+          'env' => { 'secret' => { 'nested' => 'submitted-env-secret' } },
+          'docker' => { 'password' => 'docker-secret' },
+          'services' => [{ 'name' => 'service', 'parameters' => { 'password' => 'service-secret' } }],
+          'sidecars' => [{ 'name' => 'sidecar', 'memory' => '1G' }]
+        )
+        default_manifest['applications'][0]['processes'][0]['memory'] = '2G'
+        original_manifests = app_manifests.deep_dup
+        original_app_values = app1_model.values.deep_dup
+        original_process_values = process1.values.deep_dup
+
+        subject
+
+        expect(app_manifests).to eq(original_manifests)
+        expect(app1_model.values).to eq(original_app_values)
+        expect(app1_model.reload.environment_variables).to eq('secret' => { 'nested' => 'stored-env-secret' })
+        expect(process1.reload.values).to eq(original_process_values)
       end
 
       context 'when there is a removal inside the processes hash' do

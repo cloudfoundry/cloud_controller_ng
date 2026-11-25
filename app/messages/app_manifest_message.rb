@@ -54,14 +54,33 @@ module VCAP::CloudController
       new(parsed_yaml, underscore_keys(parsed_yaml.deep_symbolize_keys))
     end
 
+    # underscore also normalizes hyphens and camel/acronym casing.
+    def self.normalize_key(key)
+      key.to_s.underscore.to_sym
+    end
+
+    def self.redact_sensitive_value(key, value)
+      case normalize_key(key)
+      when :env, :credentials, :cnb_credentials
+        Presenters::Censorship::PRIVATE_DATA_HIDDEN
+      when :buildpacks, :buildpack
+        obfuscate_buildpack_urls(value)
+      when :services
+        redact_service_parameters(value)
+      when :docker
+        redact_docker_password(value)
+      else
+        value
+      end
+    end
+
     def self.underscore_keys(hash)
       hash.each_with_object({}) do |(key, val), memo|
-        new_key = key.to_s.underscore.to_sym
-        memo[new_key] = if key == :processes && val.is_a?(Array)
-                          val.map { |process| underscore_keys(process) }
-                        else
-                          val
-                        end
+        memo[normalize_key(key)] = if key == :processes && val.is_a?(Array)
+                                     val.map { |process| underscore_keys(process) }
+                                   else
+                                     val
+                                   end
       end
     end
 
@@ -127,13 +146,7 @@ module VCAP::CloudController
     end
 
     def audit_hash
-      result = original_yaml.dup
-      result['env'] = Presenters::Censorship::PRIVATE_DATA_HIDDEN if result.key?('env')
-      result['credentials'] = Presenters::Censorship::PRIVATE_DATA_HIDDEN if result.key?('credentials')
-      result['cnb-credentials'] = Presenters::Censorship::PRIVATE_DATA_HIDDEN if result.key?('cnb-credentials')
-      obfuscate_buildpack_urls(result)
-      redact_service_parameters(result)
-      result
+      original_yaml.deep_dup.to_h { |key, value| [key, self.class.redact_sensitive_value(key, value)] }
     end
 
     def app_lifecycle_hash
@@ -166,18 +179,27 @@ module VCAP::CloudController
 
     attr_reader :original_yaml
 
-    def obfuscate_buildpack_urls(result)
-      result['buildpack'] = CloudController::UrlSecretObfuscator.obfuscate(result['buildpack']) if result['buildpack']
-      result['buildpacks'] = result['buildpacks'].map { |b| CloudController::UrlSecretObfuscator.obfuscate(b) } if result['buildpacks']
+    private_class_method def self.obfuscate_buildpack_urls(value)
+      return value.map { |buildpack| obfuscate_buildpack_urls(buildpack) } if value.is_a?(Array)
+      return value unless value.is_a?(String)
+
+      CloudController::UrlSecretObfuscator.obfuscate(value)
     end
 
-    def redact_service_parameters(result)
-      return unless result['services']
+    private_class_method def self.redact_service_parameters(services)
+      return services.map { |service| redact_service_parameters(service) } if services.is_a?(Array)
+      return services unless services.is_a?(Hash)
 
-      result['services'] = result['services'].map do |svc|
-        next svc unless svc.is_a?(Hash) && svc.key?('parameters')
+      services.to_h do |key, value|
+        [key, key.to_s == 'parameters' ? Presenters::Censorship::PRIVATE_DATA_HIDDEN : value]
+      end
+    end
 
-        svc.merge('parameters' => Presenters::Censorship::PRIVATE_DATA_HIDDEN)
+    private_class_method def self.redact_docker_password(docker)
+      return docker unless docker.is_a?(Hash)
+
+      docker.to_h do |key, value|
+        [key, key.to_s == 'password' ? Presenters::Censorship::REDACTED_CREDENTIAL : value]
       end
     end
 

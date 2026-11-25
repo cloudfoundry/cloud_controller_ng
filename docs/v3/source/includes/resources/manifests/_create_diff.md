@@ -47,6 +47,16 @@ provided manifest and the current state of a space.
 
 Currently, this endpoint can only diff [version 1](#the-manifest-schema) manifests.
 
+Docker passwords and userinfo in parsed buildpack URLs are redacted with
+`***`. Credential maps (`credentials` and `cnb-credentials`) and entire service
+binding `parameters` maps are replaced with `[PRIVATE DATA HIDDEN]`, including
+when they appear inside added objects or arrays. Buildpack URL values that cannot
+be parsed by Ruby's URI library are returned unchanged.
+
+Environment differences are reported, but any `value` and `was` fields in those
+operations are always replaced with `[PRIVATE DATA HIDDEN]`. To read environment
+values, use the dedicated [get environment](#get-environment-for-an-app) endpoint.
+
 ##### The diff object
 
 The diff object format is inspired by the [JSON Patch

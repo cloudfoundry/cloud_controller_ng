@@ -11,7 +11,7 @@ module VCAP::CloudController
       'sidecars' => 'name'
     }.freeze
 
-    REDACTED_KEYS = %w[credentials cnb-credentials].freeze
+    REDACTED_KEYS = %w[env credentials cnb-credentials].freeze
 
     class << self
       # rubocop:todo Metrics/CyclomaticComplexity
@@ -20,7 +20,7 @@ module VCAP::CloudController
 
         recognized_top_level_keys = AppManifestMessage.allowed_keys.map(&:to_s).map(&:dasherize)
 
-        app_manifests = normalize_units(app_manifests)
+        app_manifests = normalize_units(app_manifests.deep_dup)
         app_manifests.each_with_index do |manifest_app_hash, index|
           manifest_app_hash = filter_manifest_app_hash(manifest_app_hash)
           existing_app = space.app_models.find { |app| app.name == manifest_app_hash['name'] }
@@ -59,7 +59,8 @@ module VCAP::CloudController
             # To preserve backwards compability, we've decided to skip diffs that satisfy this conditon
             next if !nested_attribute_exists && %w[disk_quota disk-quota memory].include?(key)
 
-            value = obfuscate_buildpack_urls(value) if %w[buildpack buildpacks].include?(key)
+            # Compare env before masking so unchanged values do not produce a diff.
+            value = AppManifestMessage.redact_sensitive_value(key, value) unless key == 'env'
 
             key_diffs = JsonDiff.diff(
               existing_value,
@@ -89,13 +90,6 @@ module VCAP::CloudController
       def redact_credentials(diff)
         diff['value'] = Presenters::Censorship::PRIVATE_DATA_HIDDEN if diff.key?('value')
         diff['was'] = Presenters::Censorship::PRIVATE_DATA_HIDDEN if diff.key?('was')
-      end
-
-      def obfuscate_buildpack_urls(buildpacks)
-        return CloudController::UrlSecretObfuscator.obfuscate(buildpacks) if buildpacks.is_a?(String)
-        return buildpacks unless buildpacks.is_a?(Array)
-
-        buildpacks.map { |bp| bp.is_a?(String) ? CloudController::UrlSecretObfuscator.obfuscate(bp) : bp }
       end
 
       # rubocop:todo Metrics/CyclomaticComplexity
