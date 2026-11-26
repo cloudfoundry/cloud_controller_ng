@@ -1,3 +1,4 @@
+require 'ostruct'
 require 'messages/metadata_base_message'
 require 'messages/validators/bits_data_validator'
 require 'messages/validators/docker_data_validator'

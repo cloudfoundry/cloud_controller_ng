@@ -1,3 +1,5 @@
+require 'ostruct'
+
 module VCAP::CloudController
   module Jobs
     module Services
