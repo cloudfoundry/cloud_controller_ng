@@ -1,4 +1,3 @@
-# rubocop:disable Metrics/BlockLength
 Sequel.migration do
   no_transaction # required for concurrently option on postgres
 
@@ -39,4 +38,3 @@ Sequel.migration do
     end
   end
 end
-# rubocop:enable Metrics/BlockLength
