@@ -3,7 +3,7 @@ require 'presenters/v3/domain_shared_orgs_presenter'
 
 module VCAP::CloudController::Presenters::V3
   RSpec.describe DomainSharedOrgsPresenter do
-    let(:visible_org_guids) { [] }
+    let(:visible_org_guids_for_shared_orgs) { Set.new }
     let(:all_orgs_visible) { false }
 
     describe '#to_hash' do
@@ -16,7 +16,7 @@ module VCAP::CloudController::Presenters::V3
       subject do
         DomainSharedOrgsPresenter.new(
           domain,
-          visible_org_guids:,
+          visible_org_guids_for_shared_orgs:,
           all_orgs_visible:
         ).to_hash
       end
@@ -36,7 +36,7 @@ module VCAP::CloudController::Presenters::V3
           end
 
           context 'when user is a regular user' do
-            let(:visible_org_guids) { %w[org2 org3] }
+            let(:visible_org_guids_for_shared_orgs) { Set.new(%w[org2 org3]) }
 
             it 'presents the shared orgs that are visible to a user' do
               expect(subject[:data]).to contain_exactly(
@@ -64,7 +64,7 @@ module VCAP::CloudController::Presenters::V3
           let(:shared_org_2) { create(:organization, guid: 'org3') }
           let(:shared_org_3) { create(:organization, guid: 'org4') }
 
-          let(:visible_org_guids) { [] }
+          let(:visible_org_guids_for_shared_orgs) { Set.new }
 
           before do
             shared_org_1.add_private_domain(domain)

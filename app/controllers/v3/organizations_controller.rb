@@ -152,12 +152,14 @@ class OrganizationsV3Controller < ApplicationController
     readable_org_ids = Organization.where(id: org.id).where(id: permission_queryer.readable_org_ids_for_domains_query).select(:id)
     domains = DomainFetcher.fetch(message, readable_org_ids, eager_loaded_associations: Presenters::V3::DomainPresenter.associated_resources)
 
+    paginated_result = SequelPaginator.new.get_page(domains, message.try(:pagination_options))
+
     render status: :ok, json: Presenters::V3::PaginatedListPresenter.new(
       presenter: Presenters::V3::DomainPresenter,
-      paginated_result: SequelPaginator.new.get_page(domains, message.try(:pagination_options)),
+      paginated_result: paginated_result,
       path: "/v3/organizations/#{org.guid}/domains",
       message: message,
-      extra_presenter_args: presenter_args
+      extra_presenter_args: presenter_args(paginated_result:)
     )
   end
 
@@ -269,11 +271,16 @@ class OrganizationsV3Controller < ApplicationController
     dataset
   end
 
-  def presenter_args
-    if permission_queryer.can_read_globally?
-      { all_orgs_visible: true }
-    else
-      { visible_org_guids: permission_queryer.readable_org_guids }
-    end
+  def presenter_args(paginated_result: nil)
+    return { all_orgs_visible: true } if permission_queryer.can_read_globally?
+
+    # all readable org guids
+    return { visible_org_guids_for_shared_orgs: permission_queryer.readable_org_guids.to_set } if paginated_result.nil?
+
+    # only readable org guids relevant to the current page
+    shared_org_ids = paginated_result.records.flat_map { |domain| domain.shared_organizations.map(&:id) }.uniq
+    return { visible_org_guids_for_shared_orgs: Set.new } if shared_org_ids.empty?
+
+    { visible_org_guids_for_shared_orgs: permission_queryer.readable_org_guids_query.where(id: shared_org_ids).select_map(:guid).to_set }
   end
 end
