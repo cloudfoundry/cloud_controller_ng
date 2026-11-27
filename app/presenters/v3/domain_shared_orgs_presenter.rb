@@ -6,10 +6,10 @@ module VCAP::CloudController::Presenters::V3
   class DomainSharedOrgsPresenter < BasePresenter
     def initialize(
       resource,
-      visible_org_guids: [],
+      visible_org_guids_for_shared_orgs: Set.new,
       all_orgs_visible: false
     )
-      @visible_org_guids = visible_org_guids
+      @visible_org_guids_for_shared_orgs = visible_org_guids_for_shared_orgs
       @all_orgs_visible = all_orgs_visible
 
       super(resource)
@@ -23,11 +23,11 @@ module VCAP::CloudController::Presenters::V3
 
     private
 
-    attr_reader :visible_org_guids, :all_orgs_visible
+    attr_reader :visible_org_guids_for_shared_orgs, :all_orgs_visible
 
     def shared_org_guids
       orgs = domain.shared_organizations
-      orgs = orgs.select { |org| visible_org_guids.include?(org.guid) } unless all_orgs_visible
+      orgs = orgs.select { |org| visible_org_guids_for_shared_orgs.include?(org.guid) } unless all_orgs_visible
       orgs.map { |org| { guid: org.guid } }
     end
 

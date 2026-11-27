@@ -581,6 +581,58 @@ module VCAP::CloudController
           end
         end
 
+        context 'when resolving shared organization visibility' do
+          let(:readable_org_guids_query) { /SELECT .guid. FROM .organizations. WHERE/i }
+
+          before do
+            org.add_manager(user)
+          end
+
+          it 'restricts the visibility query to shared organizations on the current page' do
+            organization2.add_private_domain(owned_private_domain)
+            owned_private_domain.update(created_at: Time.utc(2020, 1, 1))
+            shared_private_domain.update(created_at: Time.utc(2020, 1, 2))
+            domain_guids = "#{owned_private_domain.guid},#{shared_private_domain.guid}"
+            page_visibility_query = /SELECT .guid. FROM .organizations. WHERE.*AND \(.id. IN \(#{organization2.id}\)\)/i
+
+            expect do
+              get "/v3/organizations/#{org.guid}/domains?guids=#{domain_guids}&per_page=1&order_by=created_at", nil, user_header
+            end.to have_queried_db_times(page_visibility_query, 1)
+
+            expect(last_response.status).to eq(200)
+            expect(parsed_response['pagination']['total_results']).to eq(2)
+            expect(parsed_response['resources'].pluck('guid')).to contain_exactly(owned_private_domain.guid)
+            expect(parsed_response['resources'].first.dig('relationships', 'shared_organizations', 'data')).to eq([{ 'guid' => organization2.guid }])
+          end
+
+          it 'skips the visibility query when the page contains only public domains' do
+            expect do
+              get "/v3/organizations/#{org.guid}/domains?guids=#{shared_domain.guid}", nil, user_header
+            end.to have_queried_db_times(readable_org_guids_query, 0)
+
+            expect(last_response.status).to eq(200)
+            expect(parsed_response['resources'].pluck('guid')).to contain_exactly(shared_domain.guid)
+          end
+
+          it 'skips the visibility query when the page is empty' do
+            expect do
+              get "/v3/organizations/#{org.guid}/domains?guids=missing-domain", nil, user_header
+            end.to have_queried_db_times(readable_org_guids_query, 0)
+
+            expect(last_response.status).to eq(200)
+            expect(parsed_response['resources']).to be_empty
+          end
+
+          it 'does not present shared organizations the user cannot read' do
+            inaccessible_organization.add_private_domain(shared_private_domain)
+
+            get "/v3/organizations/#{org.guid}/domains?guids=#{shared_private_domain.guid}", nil, user_header
+
+            expect(last_response.status).to eq(200)
+            expect(parsed_response['resources'].first.dig('relationships', 'shared_organizations', 'data')).to eq([{ 'guid' => org.guid }])
+          end
+        end
+
         context 'without filters' do
           let(:api_call) { ->(user_headers) { get "/v3/organizations/#{org.guid}/domains", nil, user_headers } }
           let(:expected_codes_and_responses) do

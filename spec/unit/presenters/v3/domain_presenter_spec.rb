@@ -3,7 +3,7 @@ require 'presenters/v3/domain_presenter'
 
 module VCAP::CloudController::Presenters::V3
   RSpec.describe DomainPresenter do
-    let(:visible_org_guids) { [] }
+    let(:visible_org_guids_for_shared_orgs) { Set.new }
     let(:all_orgs_visible) { false }
 
     describe '.associated_resources' do
@@ -16,7 +16,7 @@ module VCAP::CloudController::Presenters::V3
 
     describe '#to_hash' do
       subject do
-        DomainPresenter.new(domain, visible_org_guids:, all_orgs_visible:).to_hash
+        DomainPresenter.new(domain, visible_org_guids_for_shared_orgs:, all_orgs_visible:).to_hash
       end
 
       context 'when the domain is public (shared)' do
@@ -123,7 +123,7 @@ module VCAP::CloudController::Presenters::V3
           end
 
           context 'when user is a regular user' do
-            let(:visible_org_guids) { %w[org2 org3] }
+            let(:visible_org_guids_for_shared_orgs) { Set.new(%w[org2 org3]) }
 
             it 'presents the shared orgs that are visible to a user' do
               expect(subject[:relationships]).to match({
