@@ -34,20 +34,9 @@ module VCAP::CloudController::Metrics
       it_behaves_like 'metric registration based on execution context', VCAP::CloudController::ExecutionContext::DEPLOYMENT_UPDATER,
                       [PrometheusUpdater::DB_CONNECTION_POOL_METRICS, PrometheusUpdater::VITAL_METRICS]
 
-      it 'skips metric registration when execution context is nil and PROCESS_TYPE is unset' do
+      it 'raises error when execution context is nil' do
         allow(VCAP::CloudController::ExecutionContext).to receive(:from_process_type_env).and_return(nil)
-        allow(ENV).to receive(:fetch).with('PROCESS_TYPE', nil).and_return(nil)
-
-        expect { updater }.not_to raise_error
-        expect(prom_client.metrics).to be_empty
-      end
-
-      it 'skips metric registration when execution context is nil even if PROCESS_TYPE is set' do
-        allow(VCAP::CloudController::ExecutionContext).to receive(:from_process_type_env).and_return(nil)
-        allow(ENV).to receive(:fetch).with('PROCESS_TYPE', nil).and_return('mystery')
-
-        expect { updater }.not_to raise_error
-        expect(prom_client.metrics).to be_empty
+        expect { updater }.to raise_error('Could not register Prometheus metrics: Unexpected execution context: nil')
       end
 
       context 'when execution context is set' do

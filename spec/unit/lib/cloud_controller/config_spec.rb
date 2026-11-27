@@ -82,6 +82,35 @@ module VCAP::CloudController
     end
 
     describe '.load_from_hash' do
+      %i[api worker clock deployment_updater blobstore_benchmarks].each do |context|
+        it "accepts a dedicated storage-cli logging level in #{context}" do
+          config_hash = YAMLConfig.safe_load_file('config/cloud_controller.yml')
+          config_hash['storage_cli_logging_level'] = 'warn'
+
+          loaded_config = Config.load_from_hash(config_hash, context: context)
+
+          expect(loaded_config.get(:storage_cli_logging_level)).to eq('warn')
+        end
+      end
+
+      it 'rejects an invalid storage-cli logging level' do
+        config_hash = YAMLConfig.safe_load_file('config/cloud_controller.yml')
+        config_hash['storage_cli_logging_level'] = 'invalid'
+
+        expect do
+          Config.load_from_hash(config_hash, context: :api)
+        end.to raise_error(Membrane::SchemaValidationError)
+      end
+
+      it 'accepts a null storage-cli logging level to inherit global logging' do
+        config_hash = YAMLConfig.safe_load_file('config/cloud_controller.yml')
+        config_hash['storage_cli_logging_level'] = nil
+
+        loaded_config = Config.load_from_hash(config_hash, context: :api)
+
+        expect(loaded_config.get(:storage_cli_logging_level)).to be_nil
+      end
+
       it 'raises error if an empty hash is provided' do
         expect do
           Config.load_from_hash({}, context: :api)

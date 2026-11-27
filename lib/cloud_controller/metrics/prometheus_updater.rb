@@ -73,8 +73,8 @@ module VCAP::CloudController::Metrics
     ].freeze
 
     STORAGE_CLI_OPERATIONS_TOTAL_DOCSTRING =
-      'Total storage-cli subprocess invocations by operation and exit_code. ' \
-      'exit_code=0: success; exit_code=3: not-found (expected for exists); ' \
+      'Total storage-cli operation attempts by operation and exit_code, including local skips and pre-spawn failures. ' \
+      'Non-negative values are process exit statuses; expected exists exit_code=3 is recorded as 0. ' \
       'exit_code=-1: spawn failure (binary missing or permission denied) after setup succeeds; ' \
       'exit_code=-2: process exited with neither exitstatus nor termsig (platform anomaly); ' \
       'exit_code=-3: pre-spawn StandardError (config load, flags, or source file read failure); ' \
@@ -87,7 +87,7 @@ module VCAP::CloudController::Metrics
         docstring: STORAGE_CLI_OPERATIONS_TOTAL_DOCSTRING,
         labels: %i[operation exit_code] },
       { type: :histogram, name: :cc_storage_cli_duration_seconds,
-        docstring: 'Duration of individual storage-cli subprocess invocations. ' \
+        docstring: 'Duration of storage-cli operation attempts, including local skips and pre-spawn failures. ' \
                    'Counts per-retry, not per logical operation.',
         labels: %i[operation exit_code], buckets: STORAGE_CLI_DURATION_BUCKETS },
       { type: :histogram, name: :cc_storage_cli_blob_size_bytes,
@@ -111,8 +111,7 @@ module VCAP::CloudController::Metrics
       @registry = registry
       @execution_context = VCAP::CloudController::ExecutionContext.from_process_type_env
 
-      register_metrics_for_process unless @execution_context.nil?
-      return if @execution_context.nil?
+      register_metrics_for_process
 
       initialize_cc_db_connection_pool_timeouts_total
     end

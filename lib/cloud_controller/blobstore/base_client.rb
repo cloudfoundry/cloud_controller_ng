@@ -10,7 +10,7 @@ module CloudController
 
         begin
           unless File.directory?(source_dir)
-            logger.error('blobstore.cp_r.source_dir_missing', source_dir: source_dir)
+            logger.error('blobstore.cp_r.source_dir_missing', source_dir: source_dir) rescue nil # rubocop:disable Style/RescueModifier
             raise Errno::ENOENT.new(source_dir)
           end
 
@@ -24,14 +24,9 @@ module CloudController
             next unless within_limits?(stat.size)
             next unless stat.mode.to_s(8)[3..5].to_i(8) >= 0o600
 
-            cp_r_digest_file(path, counters)
-            sha1 = counters[:last_sha1]
+            sha1 = cp_r_digest_file(path, counters)
 
-            next unless sha1
-
-            exists = cp_r_check_exists(sha1, counters)
-            next if exists.nil? # exists? raised, already logged
-            next if exists
+            next if cp_r_check_exists(sha1, counters)
 
             cp_r_upload_file(path, sha1, counters)
           end
@@ -50,13 +45,13 @@ module CloudController
       def new_cp_r_counters
         { digest_duration: 0, exists_duration: 0, upload_duration: 0,
           digest_count: 0, exists_count: 0, upload_count: 0,
-          upload_attempts: 0, exists_errors: 0, last_sha1: nil }
+          upload_attempts: 0, exists_errors: 0 }
       end
 
       def cp_r_digest_file(path, counters)
         t = Time.now.utc
         counters[:digest_count] += 1
-        counters[:last_sha1] = Digester.new.digest_path(path)
+        Digester.new.digest_path(path)
       ensure
         counters[:digest_duration] += Time.now.utc - t
       end
@@ -64,11 +59,14 @@ module CloudController
       def cp_r_check_exists(sha1, counters)
         t = Time.now.utc
         counters[:exists_count] += 1
-        exists?(sha1)
-      rescue StandardError => e
+        # A check stays unresolved unless it returns a result, including on cancellation.
         counters[:exists_errors] += 1
-        logger.error('blobstore.cp_r.exists.error', sha1: sha1, error: e.message)
-        nil
+        exists = exists?(sha1)
+        counters[:exists_errors] -= 1
+        exists
+      rescue StandardError => e
+        logger.error('blobstore.cp_r.exists.error', sha1: sha1, error: e.message) rescue nil # rubocop:disable Style/RescueModifier
+        raise
       ensure
         counters[:exists_duration] += Time.now.utc - t
       end
@@ -86,7 +84,7 @@ module CloudController
         logger.info('blobstore.cp_r.digest',
                     files_scanned: ctrs[:digest_count],
                     duration_seconds: ctrs[:digest_duration],
-                    completed: completed)
+                    completed: completed) rescue nil # rubocop:disable Style/RescueModifier
         log_exists_phase(ctrs, completed)
         ua = ctrs[:upload_attempts]
         logger.info('blobstore.cp_r.upload',
@@ -94,7 +92,7 @@ module CloudController
                     files_uploaded: ctrs[:upload_count],
                     files_failed: ua - ctrs[:upload_count],
                     duration_seconds: ctrs[:upload_duration],
-                    completed: completed)
+                    completed: completed) rescue nil # rubocop:disable Style/RescueModifier
       end
 
       def log_exists_phase(ctrs, completed)
@@ -111,9 +109,8 @@ module CloudController
                     cache_hits: hits,
                     cache_misses: attempts,
                     cache_hit_rate: safe_div(hits, resolved),
-                    process_spawns: checks,
                     error_count: errors,
-                    completed: completed)
+                    completed: completed) rescue nil # rubocop:disable Style/RescueModifier
       end
 
       def safe_div(num, denom) = denom.positive? ? num.to_f / denom : 0

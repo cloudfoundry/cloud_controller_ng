@@ -1,4 +1,5 @@
 require 'spec_helper'
+require 'cloud_controller/metrics/custom_process_id'
 
 module VCAP::CloudController
   RSpec.describe Runner do
@@ -296,6 +297,47 @@ module VCAP::CloudController
             expect_any_instance_of(ApiMetricsWebserver).to receive(:start)
 
             subject
+          end
+
+          context 'when a local worker has already opened its metrics' do
+            let(:metrics_tmpdir) { Dir.mktmpdir('startup-metrics') }
+            let(:test_config_overrides) { super().merge(directories: { tmpdir: metrics_tmpdir }) }
+
+            around do |example|
+              original_store = Prometheus::Client.config.data_store
+              original_index = ENV.fetch('INDEX', nil)
+              example.run
+            ensure
+              Prometheus::Client.config.data_store = original_store
+              ENV['INDEX'] = original_index
+              FileUtils.remove_entry(metrics_tmpdir)
+            end
+
+            it 'keeps worker metric writes visible after API startup resets its own metrics' do
+              metrics_dir = File.join(metrics_tmpdir, 'prometheus')
+              Prometheus::Client.config.data_store = Prometheus::Client::DataStores::DirectFileStore.new(dir: metrics_dir)
+              ENV['PROCESS_TYPE'] = 'main'
+              ENV.delete('INDEX')
+              api_registry = Prometheus::Client::Registry.new
+              api_counter = api_registry.counter(:cc_storage_cli_operations_total, docstring: 'Storage CLI operations', labels: %i[operation exit_code])
+              api_counter.increment(by: 3, labels: { operation: 'put', exit_code: '0' })
+
+              ENV['PROCESS_TYPE'] = 'puma_worker'
+              ENV['INDEX'] = '1'
+              worker_registry = Prometheus::Client::Registry.new
+              worker_counter = worker_registry.counter(:cc_storage_cli_operations_total, docstring: 'Storage CLI operations', labels: %i[operation exit_code])
+              worker_counter.increment(labels: { operation: 'put', exit_code: '0' })
+              ENV.delete('INDEX')
+              allow_any_instance_of(ApiMetricsWebserver).to receive(:start)
+
+              subject
+
+              ENV['PROCESS_TYPE'] = 'puma_worker'
+              ENV['INDEX'] = '1'
+              worker_counter.increment(labels: { operation: 'put', exit_code: '0' })
+
+              expect(worker_counter.values).to eq({ { operation: 'put', exit_code: '0' } => 2.0 })
+            end
           end
         end
       end

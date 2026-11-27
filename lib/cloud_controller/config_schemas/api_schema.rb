@@ -1,4 +1,5 @@
 require 'vcap/config'
+require 'steno/logger'
 require 'cloud_controller/resource_pool'
 
 module VCAP::CloudController
@@ -101,6 +102,7 @@ module VCAP::CloudController
           optional(:storage_cli_config_file_resource_pool) => String,
           optional(:storage_cli_config_file_droplets) => String,
           optional(:storage_cli_optional_flags) => String,
+          optional(:storage_cli_logging_level) => enum(*Steno::Logger::LEVELS.keys.map(&:to_s), NilClass),
 
           newrelic_enabled: bool,
 

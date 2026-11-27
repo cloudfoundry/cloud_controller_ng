@@ -106,7 +106,7 @@ module CloudController
         size      = nil
         metric_emitted = false
 
-        logger.info('cp-start', destination_key: destination_key, source_path: source_path, bucket: @directory_key)
+        logger.info('cp-start', destination_key: destination_key, source_path: source_path, bucket: @directory_key) rescue nil # rubocop:disable Style/RescueModifier
 
         begin
           File.open(source_path) do |file|
@@ -137,21 +137,19 @@ module CloudController
           log_entry = 'cp-error'
           raise
         ensure
-          begin
-            logger.info(log_entry,
-                        destination_key: destination_key,
-                        duration_seconds: Time.now.utc - start,
-                        size: size)
-          rescue StandardError => e
-            logger.warn("cp_to_blobstore ensure log failed: #{e.inspect}")
-          end
+          logger.info(log_entry,
+                      destination_key: destination_key,
+                      duration_seconds: Time.now.utc - start,
+                      size: size) rescue nil # rubocop:disable Style/RescueModifier
         end
       end
 
       def safe_emit_metrics(operation, exit_code, duration, context, blob_size: nil)
-        emit_storage_cli_metrics(operation, exit_code, duration, blob_size: blob_size)
+        return if @metrics_updater.nil?
+
+        @metrics_updater.report_storage_cli_metrics(operation: operation, exit_code: exit_code, duration_seconds: duration, blob_size: blob_size)
       rescue StandardError => e
-        logger.warn("emit_storage_cli_metrics failed in #{context}: #{e.inspect}")
+        logger.warn("storage-cli metrics failed in #{context}: #{e.inspect}") rescue nil # rubocop:disable Style/RescueModifier
       end
 
       def cp_file_between_keys(source_key, destination_key)
@@ -211,7 +209,7 @@ module CloudController
         success = false
         begin
           flags = additional_flags
-          logger.debug("running storage-cli: #{@cli_path} -s #{@storage_type} -c #{@config_file} #{flags.join(' ')} #{command} #{args.join(' ')}")
+          cli_logger.debug("running storage-cli: #{@cli_path} -s #{@storage_type} -c #{@config_file} #{flags.join(' ')} #{command} #{args.join(' ')}") rescue nil # rubocop:disable Style/RescueModifier
           capture3_called = true
           stdout, stderr, status = Open3.capture3(@cli_path, '-s', @storage_type, '-c', @config_file, *flags, command, *args)
           exit_code = resolve_exit_code(status)
@@ -221,25 +219,22 @@ module CloudController
           # -1: spawn failure (binary missing/permission); -3: setup error before capture3 (e.g. config load)
           pre_spawn_code = capture3_called ? -1 : -3
           safe_emit_metrics(command, pre_spawn_code, duration, 'spawn error')
-          emitted = true # set before safe_log so a logging failure can't trigger a second metric
-          safe_log(:error, "storage_cli.call.error #{command}#{log_message_arg_suffix(command, args)}",
-                   log_fields(command, args, blob_size: blob_size).merge('duration_seconds' => duration, 'error' => e.inspect))
+          emitted = true # Set before logging so failures cannot trigger a second metric.
+          cli_logger.error("storage_cli.call.error #{command}#{log_message_arg_suffix(command, args)}",
+                           log_fields(command, args, blob_size: blob_size).merge('duration_seconds' => duration, 'error' => e.inspect)) rescue nil # rubocop:disable Style/RescueModifier
           raise BlobstoreError.new(e.inspect)
         ensure
           emit_and_log_cli_result(command, args, status, exit_code, success, capture3_called, allow_exit_code_three, t, blob_size) unless emitted
         end
 
-        stderr.split("\n").each { |line| logger.info("[INFO] storage-cli: #{line}") }
+        stderr_log_level = success ? :info : :error
+        stderr.split("\n").each do |line|
+          cli_logger.public_send(stderr_log_level, "[#{stderr_log_level.upcase}] storage-cli: #{line}") rescue nil # rubocop:disable Style/RescueModifier
+        end
 
         raise "storage-cli #{command} failed with exit code #{exit_code.inspect}, output: '#{stdout}', error: '#{stderr}'" unless success
 
         [stdout, status]
-      end
-
-      def safe_log(level, message, fields)
-        logger.public_send(level, message, fields)
-      rescue StandardError
-        nil
       end
 
       def emit_and_log_cli_result(command, args, status, exit_code, success, capture3_called, allow_exit_code_three, start_time, blob_size)
@@ -247,17 +242,13 @@ module CloudController
         if status
           metric_exit_code = allow_exit_code_three && exit_code == 3 ? 0 : exit_code
           safe_emit_metrics(command, metric_exit_code, duration, 'run_cli', blob_size: blob_size)
-          safe_log(:info, "storage_cli.call.finish #{command}#{log_message_arg_suffix(command, args)}",
-                   log_fields(command, args, blob_size: blob_size).merge('duration_seconds' => duration,
-                                                                         'exit_code' => exit_code,
-                                                                         'success' => success))
+          cli_logger.public_send(success ? :info : :error, "storage_cli.call.finish #{command}#{log_message_arg_suffix(command, args)}",
+                                 log_fields(command, args, blob_size: blob_size).merge('duration_seconds' => duration, 'exit_code' => exit_code, 'success' => success)) rescue nil # rubocop:disable Style/RescueModifier
         else
           mid_exec_code = mid_execution_exit_code(capture3_called)
           safe_emit_metrics(command, mid_exec_code, duration, 'run_cli no status')
-          safe_log(:error, "storage_cli.call.error #{command}#{log_message_arg_suffix(command, args)}",
-                   log_fields(command, args, blob_size: blob_size).merge('duration_seconds' => duration,
-                                                                         'exit_code' => mid_exec_code,
-                                                                         'error' => $!.inspect)) # rubocop:disable Style/SpecialGlobalVars
+          cli_logger.error("storage_cli.call.error #{command}#{log_message_arg_suffix(command, args)}",
+                           log_fields(command, args, blob_size: blob_size).merge('duration_seconds' => duration, 'exit_code' => mid_exec_code, 'error' => $!.inspect)) rescue nil # rubocop:disable Style/RescueModifier, Style/SpecialGlobalVars
         end
       end
 
@@ -363,10 +354,11 @@ module CloudController
         @logger ||= Steno.logger('cc.blobstore.storage_cli_client')
       end
 
-      def emit_storage_cli_metrics(operation, exit_code, duration_seconds, blob_size: nil)
-        return if @metrics_updater.nil?
-
-        @metrics_updater.report_storage_cli_metrics(operation:, exit_code:, duration_seconds:, blob_size:)
+      def cli_logger
+        @cli_logger ||= Steno.logger('cc.blobstore.storage_cli').tap do |log|
+          level = VCAP::CloudController::Config.config.get(:storage_cli_logging_level)
+          log.level = level.to_sym if level
+        end
       end
     end
   end

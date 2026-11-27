@@ -105,6 +105,17 @@ module CloudController
       end
 
       describe '#cp_r_to_blobstore' do
+        it 'preserves traversal errors when phase logging fails' do
+          client
+          error = Errno::EACCES.new('resource traversal denied')
+          allow(Find).to receive(:find).and_raise(error)
+          allow(logger).to receive(:info).and_raise(IOError, 'log sink unavailable')
+
+          expect do
+            client.cp_r_to_blobstore(base_path)
+          end.to(raise_error { |raised| expect(raised).to equal(error) })
+        end
+
         it 'logs completed: false when traversal is interrupted before any files are processed' do
           allow(Find).to receive(:find).and_raise(Errno::EACCES)
 
@@ -128,7 +139,7 @@ module CloudController
           end.not_to raise_error
         end
 
-        it 'continues traversal and increments error_count when exists? raises' do
+        it 'propagates existence check failures and logs incomplete traversal' do
           source_dir = File.join(base_path, 'source')
           FileUtils.mkdir_p(source_dir)
           File.write(File.join(source_dir, 'file1.txt'), 'x' * 100)
@@ -144,10 +155,10 @@ module CloudController
 
           expect do
             client.cp_r_to_blobstore(source_dir)
-          end.not_to raise_error
+          end.to raise_error(StandardError, 'exists failed')
 
           expect(logger).to have_received(:info).with('blobstore.cp_r.exists',
-                                                      hash_including(files_checked: 2, error_count: 1, cache_hits: 0, cache_hit_rate: 0.0, completed: true))
+                                                      hash_including(files_checked: 1, error_count: 1, cache_hits: 0, cache_hit_rate: 0.0, completed: false))
         end
 
         it 'counts a digest attempt even when digest_path raises' do

@@ -30,7 +30,7 @@ module CloudController
         begin
           app_packager.unzip(app_contents_path)
         ensure
-          logger.info('packer.unzip', duration_seconds: Time.now.utc - t)
+          logger.info('packer.unzip', duration_seconds: Time.now.utc - t) rescue nil # rubocop:disable Style/RescueModifier
         end
 
         remove_symlinks(app_contents_path)
@@ -39,7 +39,7 @@ module CloudController
         begin
           global_app_bits_cache.cp_r_to_blobstore(app_contents_path)
         ensure
-          logger.info('packer.resource-cache-upload', duration_seconds: Time.now.utc - t)
+          logger.info('packer.resource-cache-upload', duration_seconds: Time.now.utc - t) rescue nil # rubocop:disable Style/RescueModifier
         end
       end
 
@@ -73,7 +73,7 @@ module CloudController
             download_count += 1
           end
         ensure
-          logger.info('packer.resource-cache-download', duration_seconds: Time.now.utc - t, files_downloaded: download_count, files_attempted: download_attempts)
+          logger.info('packer.resource-cache-download', duration_seconds: Time.now.utc - t, files_downloaded: download_count, files_attempted: download_attempts) rescue nil # rubocop:disable Style/RescueModifier
         end
 
         raise CloudController::Errors::ApiError.new_from_details('ResourceChecksumMismatch') if checksum_mismatch
@@ -82,7 +82,7 @@ module CloudController
         begin
           app_packager.append_dir_contents(cached_resources_dir)
         ensure
-          logger.info('packer.repackage', duration_seconds: Time.now.utc - t)
+          logger.info('packer.repackage', duration_seconds: Time.now.utc - t) rescue nil # rubocop:disable Style/RescueModifier
         end
       end
 

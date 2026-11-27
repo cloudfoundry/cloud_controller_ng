@@ -71,6 +71,17 @@ module CloudController::Packager
         expect(package_blobstore.exists?(blobstore_key)).to be true
       end
 
+      it 'uploads and cleans up successfully when packer logging fails' do
+        allow(Steno.logger('cc.packer')).to receive(:info).and_raise(IOError, 'log sink unavailable')
+
+        expect do
+          packer.send_package_to_blobstore(blobstore_key, uploaded_files_path, cached_files_fingerprints)
+        end.not_to raise_error
+
+        expect(package_blobstore.exists?(blobstore_key)).to be true
+        expect(Dir.exist?(File.join(local_tmp_dir, "local_bits_packer-#{blobstore_key}"))).to be false
+      end
+
       it 'returns the sha1 and sha256 of the uploaded package' do
         sha1_digester = instance_double(Digester, digest_path: 'expected-sha1')
         sha256_digester = instance_double(Digester, digest_path: 'expected-sha256')
@@ -162,6 +173,16 @@ module CloudController::Packager
           expect do
             packer.send_package_to_blobstore(blobstore_key, uploaded_files_path, cached_files_fingerprints)
           end.to raise_error(CloudController::Errors::ApiError, /invalid/)
+        end
+
+        it 'preserves the archive error and cleans up when logging fails' do
+          allow(Steno.logger('cc.packer')).to receive(:info).and_raise(IOError, 'log sink unavailable')
+
+          expect do
+            packer.send_package_to_blobstore(blobstore_key, uploaded_files_path, cached_files_fingerprints)
+          end.to raise_error(CloudController::Errors::ApiError, /invalid/)
+
+          expect(Dir.exist?(File.join(local_tmp_dir, "local_bits_packer-#{blobstore_key}"))).to be false
         end
       end
 
