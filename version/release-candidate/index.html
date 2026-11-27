@@ -11934,6 +11934,16 @@ provided manifest and the current state of a space.</p>
 
 <p>Currently, this endpoint can only diff <a href="#the-manifest-schema">version 1</a> manifests.</p>
 
+<p>Docker passwords and userinfo in parsed buildpack URLs are redacted with
+<code class="prettyprint">***</code>. Credential maps (<code class="prettyprint">credentials</code> and <code class="prettyprint">cnb-credentials</code>) and entire service
+binding <code class="prettyprint">parameters</code> maps are replaced with <code class="prettyprint">[PRIVATE DATA HIDDEN]</code>, including
+when they appear inside added objects or arrays. Buildpack URL values that cannot
+be parsed by Ruby&rsquo;s URI library are returned unchanged.</p>
+
+<p>Environment differences are reported, but any <code class="prettyprint">value</code> and <code class="prettyprint">was</code> fields in those
+operations are always replaced with <code class="prettyprint">[PRIVATE DATA HIDDEN]</code>. To read environment
+values, use the dedicated <a href="#get-environment-for-an-app">get environment</a> endpoint.</p>
+
 <h5 id="the-diff-object">The diff object</h5>
 
 <p>The diff object format is inspired by the <a href="https://tools.ietf.org/html/rfc6902">JSON Patch
