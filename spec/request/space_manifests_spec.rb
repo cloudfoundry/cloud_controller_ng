@@ -918,10 +918,9 @@ Cannot use loadbalancing value 'unsupported-lb-algorithm' for Route 'https://#{r
         post "/v3/spaces/#{space.guid}/actions/apply_manifest", manifest, yml_headers(user_header)
         expect(last_response.status).to eq(202), last_response.body
 
-        job_guid = VCAP::CloudController::PollableJobModel.last.guid
+        job = VCAP::CloudController::PollableJobModel.last
         Delayed::Worker.new.work_off
-        job = VCAP::CloudController::PollableJobModel.find(guid: job_guid)
-        expect(job).to be_complete, job.cf_api_error
+        expect(job.reload).to be_complete, job.cf_api_error
       end
 
       def expect_redacted_manifest_outputs(app, expected_manifest, passwords)
@@ -938,70 +937,42 @@ Cannot use loadbalancing value 'unsupported-lb-algorithm' for Route 'https://#{r
         end
       end
 
-      %w[cnb-credentials credentials].each do |credential_key|
-        context "CNB with #{credential_key}" do
-          let(:app1_model) { create(:app_model, :cnb, name: 'cnb-app', space: space) }
+      [
+        %w[cnb cnb-credentials],
+        %w[cnb credentials],
+        %w[buildpack credentials]
+      ].each do |lifecycle, credential_key|
+        context "#{lifecycle} with #{credential_key}" do
+          let(:app1_model) { create(:app_model, lifecycle.to_sym, name: "#{lifecycle}-app", space: space) }
           let(:yml_manifest) do
-            <<~YML
-              applications:
-              - name: #{app1_model.name}
-                lifecycle: cnb
-                #{credential_key}:
-                  registry.example.com:
-                    username: user
-                    password: cnb-secret
-            YML
+            { 'applications' => [{
+              'name' => app1_model.name, 'lifecycle' => lifecycle,
+              credential_key => { 'registry.example.com' => { 'username' => 'user', 'password' => 'registry-secret' } }
+            }] }.to_yaml
           end
 
           before do
-            create(:feature_flag, name: 'diego_cnb', enabled: true, error_message: nil)
+            create(:feature_flag, name: 'diego_cnb', enabled: true, error_message: nil) if lifecycle == 'cnb'
           end
 
           it 'hides directly submitted credentials in audit events and app logs while retaining staging credentials' do
             apply_secret_manifest(yml_manifest)
 
             expect_redacted_manifest_outputs(app1_model, {
-                                               'name' => 'cnb-app', 'lifecycle' => 'cnb', credential_key => '[PRIVATE DATA HIDDEN]'
-                                             }, ['cnb-secret'])
-            expect(app1_model.reload.lifecycle_data.credentials).to eq('registry.example.com' => { 'username' => 'user', 'password' => 'cnb-secret' })
+                                               'name' => "#{lifecycle}-app", 'lifecycle' => lifecycle, credential_key => '[PRIVATE DATA HIDDEN]'
+                                             }, ['registry-secret'])
+            expect(app1_model.reload.lifecycle_data.credentials).to eq('registry.example.com' => { 'username' => 'user', 'password' => 'registry-secret' })
           end
-        end
-      end
-
-      context 'buildpack with unified credentials' do
-        let(:yml_manifest) do
-          <<~YML
-            applications:
-            - name: #{app1_model.name}
-              lifecycle: buildpack
-              credentials:
-                git.example.com:
-                  username: user
-                  password: buildpack-secret
-          YML
-        end
-
-        it 'hides directly submitted credentials in audit events and app logs while retaining staging credentials' do
-          apply_secret_manifest(yml_manifest)
-
-          expect_redacted_manifest_outputs(app1_model, {
-                                             'name' => 'Tryggvi', 'lifecycle' => 'buildpack', 'credentials' => '[PRIVATE DATA HIDDEN]'
-                                           }, ['buildpack-secret'])
-          expect(app1_model.reload.lifecycle_data.credentials).to eq('git.example.com' => { 'username' => 'user', 'password' => 'buildpack-secret' })
         end
       end
 
       context 'plural buildpack URLs' do
         let(:buildpack) { create(:buildpack, stack: app1_model.lifecycle_data.stack) }
         let(:yml_manifest) do
-          <<~YML
-            applications:
-            - name: #{app1_model.name}
-              buildpacks:
-              - https://user:buildpack-secret@git.example.com/bp.git
-              - https://user:second-buildpack-secret@git.example.com/bp2.git
-              - #{buildpack.name}
-          YML
+          { 'applications' => [{
+            'name' => app1_model.name,
+            'buildpacks' => ['https://user:buildpack-secret@git.example.com/bp.git', 'https://user:second-buildpack-secret@git.example.com/bp2.git', buildpack.name]
+          }] }.to_yaml
         end
 
         it 'obfuscates each credential-bearing URL in audit events and app logs without changing staging URLs' do
@@ -1021,26 +992,14 @@ Cannot use loadbalancing value 'unsupported-lb-algorithm' for Route 'https://#{r
         let(:app1_model) { create(:app_model, :docker, name: 'docker-app', space: space) }
         let(:app2_model) { create(:app_model, :cnb, name: 'cnb-app', space: space) }
         let(:yml_manifest) do
-          <<~YML
-            applications:
-            - name: #{app1_model.name}
-              docker:
-                image: registry.example.com/shadowed:latest
-                password: shadowed-docker-secret
-              Docker:
-                image: registry.example.com/app:latest
-                username: user
-                password: docker-secret
-            - name: #{app2_model.name}
-              lifecycle: cnb
-              cnb_credentials:
-                registry.example.com:
-                  password: shadowed-cnb-secret
-              cnbCredentials:
-                registry.example.com:
-                  username: user
-                  password: cnb-secret
-          YML
+          { 'applications' => [
+            { 'name' => app1_model.name,
+              'docker' => { 'image' => 'registry.example.com/shadowed:latest', 'password' => 'shadowed-docker-secret' },
+              'Docker' => { 'image' => 'registry.example.com/app:latest', 'username' => 'user', 'password' => 'docker-secret' } },
+            { 'name' => app2_model.name, 'lifecycle' => 'cnb',
+              'cnb_credentials' => { 'registry.example.com' => { 'password' => 'shadowed-cnb-secret' } },
+              'cnbCredentials' => { 'registry.example.com' => { 'username' => 'user', 'password' => 'cnb-secret' } } }
+          ] }.to_yaml
         end
 
         before do

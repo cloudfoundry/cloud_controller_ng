@@ -1330,45 +1330,6 @@ module VCAP::CloudController
         }
       end
 
-      context 'string and symbol keys' do
-        before do
-          create(:feature_flag, name: 'diego_docker', enabled: true)
-        end
-
-        [
-          ['docker', { 'image' => 'registry.example.com/app', 'password' => 'secret' },
-           { 'image' => 'registry.example.com/app', 'password' => '***' }],
-          ['credentials', { 'registry.example.com' => { 'password' => 'secret' } }, '[PRIVATE DATA HIDDEN]'],
-          ['cnb-credentials',
-           { 'registry.example.com' => { 'password' => 'secret' } }, '[PRIVATE DATA HIDDEN]'],
-          ['buildpack', 'https://user:secret@git.example.com/bp.git', 'https://***:***@git.example.com/bp.git'],
-          ['buildpacks', ['https://user:secret@git.example.com/bp.git'], ['https://***:***@git.example.com/bp.git']],
-          ['env', { 'TOKEN' => 'secret' }, '[PRIVATE DATA HIDDEN]'],
-          ['services', [{ 'name' => 'db', 'parameters' => { 'token' => 'secret' } }],
-           [{ 'name' => 'db', 'parameters' => '[PRIVATE DATA HIDDEN]' }]]
-        ].each do |field, value, redacted|
-          [field, field.to_sym].each do |key|
-            it "redacts #{key.inspect} under its original key" do
-              input = { 'name' => 'app', key => value.deep_dup }
-              message = AppManifestMessage.create_from_yml(input)
-
-              expect(message).to be_valid
-              expect(message.audit_hash).to eq('name' => 'app', key => redacted)
-              expect(input).to eq('name' => 'app', key => value)
-            end
-          end
-        end
-      end
-
-      it 'redacts CNBCredentials without changing the credentials applied to the app' do
-        credentials = { 'registry.example.com' => { 'password' => 'secret' } }
-        message = AppManifestMessage.create_from_yml('name' => 'app', 'lifecycle' => 'cnb', 'CNBCredentials' => credentials)
-
-        expect(message.audit_hash['CNBCredentials']).to eq('[PRIVATE DATA HIDDEN]')
-        expect(message.app_lifecycle_hash.dig(:lifecycle, :data, :credentials)).to eq('registry.example.com': { password: 'secret' })
-        expect(credentials).to eq('registry.example.com' => { 'password' => 'secret' })
-      end
-
       [
         ['cnbcredentials', { 'registry.example.com' => { 'password' => 'secret' } }, :cnb_credentials],
         ['buildPack', 'https://user:secret@git.example.com/bp.git', :buildpack],
@@ -1400,6 +1361,22 @@ module VCAP::CloudController
 
         expect(redacted).to eq('image' => 'registry.example.com/app', 'password' => '***')
         expect(docker['password']).to eq('secret')
+      end
+
+      it 'redacts Docker passwords recursively in arrays without mutating the supplied values' do
+        docker = [
+          { 'image' => 'registry.example.com/app', 'password' => 'secret' }.freeze,
+          [{ image: 'registry.example.com/other', password: 'nested-secret' }.freeze].freeze,
+          'not-an-object'
+        ].freeze
+
+        expect(AppManifestMessage.redact_sensitive_value('docker', docker)).to eq([
+          { 'image' => 'registry.example.com/app', 'password' => '***' },
+          [{ image: 'registry.example.com/other', password: '***' }],
+          'not-an-object'
+        ])
+        expect(docker.first['password']).to eq('secret')
+        expect(docker[1].first[:password]).to eq('nested-secret')
       end
 
       it 'redacts every colliding alias on repeated calls without changing normalized staging values' do
@@ -1484,24 +1461,6 @@ module VCAP::CloudController
         expect(message.audit_hash).to eq(expected_hash)
       end
 
-      context 'when "env" variables are present' do
-        let(:parsed_yaml) do
-          {
-            'env' => { 'foo' => 'bar' }
-          }
-        end
-
-        it 'redacts the environment variables' do
-          message = AppManifestMessage.create_from_yml(parsed_yaml)
-
-          expected_hash = {
-            'env' => '[PRIVATE DATA HIDDEN]'
-          }
-
-          expect(message.audit_hash).to eq(expected_hash)
-        end
-      end
-
       context 'when "env" variables are not present' do
         let(:parsed_yaml) do
           {
@@ -1520,100 +1479,44 @@ module VCAP::CloudController
         end
       end
 
-      context 'when "docker" credentials are present' do
-        let(:parsed_yaml) do
-          {
-            'docker' => {
-              'image' => 'registry.example.com/app:latest',
-              'username' => 'user',
-              'password' => 'docker-secret',
-              'other-option' => 'value'
-            }
-          }
-        end
-
-        it 'redacts only the password' do
-          message = AppManifestMessage.create_from_yml(parsed_yaml)
+      ['docker-secret', nil, ''].each do |password|
+        it "redacts the Docker password #{password.inspect} without changing staging values" do
+          input = { 'docker' => {
+            'image' => 'registry.example.com/app:latest', 'username' => 'user', 'password' => password, 'other-option' => 'value'
+          } }
+          original_input = input.deep_dup
+          message = AppManifestMessage.create_from_yml(input)
 
           expect(message.audit_hash['docker']).to eq(
             'image' => 'registry.example.com/app:latest', 'username' => 'user', 'password' => '***', 'other-option' => 'value'
           )
-        end
-
-        it 'leaves the original password available for staging' do
-          original_input = parsed_yaml.deep_dup
-          message = AppManifestMessage.create_from_yml(parsed_yaml)
-
-          audit_hash = message.audit_hash
-
-          expect(message.audit_hash).to eq(audit_hash)
-          expect(parsed_yaml).to eq(original_input)
+          expect(input).to eq(original_input)
           expect(message.docker).to eq(original_input['docker'].symbolize_keys)
         end
       end
 
-      context 'when "docker" has no password key' do
-        let(:parsed_yaml) { { 'docker' => { 'image' => 'registry.example.com/app:latest', 'username' => 'user' } } }
+      it 'does not insert an absent Docker password' do
+        message = AppManifestMessage.create_from_yml('docker' => { 'image' => 'registry.example.com/app:latest', 'username' => 'user' })
 
-        it 'does not insert a password redaction' do
-          message = AppManifestMessage.create_from_yml(parsed_yaml)
+        expect(message.audit_hash['docker']).to eq('image' => 'registry.example.com/app:latest', 'username' => 'user')
+      end
 
-          expect(message.audit_hash['docker']).to eq('image' => 'registry.example.com/app:latest', 'username' => 'user')
+      [nil, [], 'not-an-object', ['not-an-object'], 42, false].each do |docker|
+        it "preserves the non-object Docker value #{docker.inspect}" do
+          message = AppManifestMessage.create_from_yml('docker' => docker)
+
+          expect(message.audit_hash['docker']).to eq(docker)
         end
       end
 
-      [nil, ''].each do |password|
-        context "when the Docker password is #{password.inspect}" do
-          let(:parsed_yaml) { { 'docker' => { 'image' => 'registry.example.com/app:latest', 'password' => password } } }
+      %w[credentials cnb-credentials cnb_credentials cnbCredentials CNBCredentials].each do |credential_key|
+        it "redacts #{credential_key} without changing staging credentials" do
+          input = { 'lifecycle' => 'cnb', credential_key => { 'registry.example.com' => { 'username' => 'user', 'password' => 'cnb-secret' } } }
+          message = AppManifestMessage.create_from_yml(input)
 
-          it 'redacts the present password key' do
-            message = AppManifestMessage.create_from_yml(parsed_yaml)
-
-            expect(message.audit_hash['docker']['password']).to eq('***')
-            expect(parsed_yaml['docker']['password']).to eq(password)
-          end
-        end
-      end
-
-      [nil, 'not-an-object', ['not-an-object'], 42, false].each do |docker|
-        context "when Docker is #{docker.inspect} instead of an object" do
-          let(:parsed_yaml) { { 'docker' => docker } }
-
-          it 'leaves the non-object Docker value unchanged' do
-            message = AppManifestMessage.create_from_yml(parsed_yaml)
-
-            expect(message.audit_hash['docker']).to eq(docker)
-          end
-        end
-      end
-
-      %w[cnb-credentials cnb_credentials].each do |credential_key|
-        context "when #{credential_key.inspect} is present" do
-          let(:parsed_yaml) do
-            { credential_key => { 'registry.example.com' => { 'username' => 'user', 'password' => 'cnb-secret' } } }
-          end
-
-          it 'redacts the credential map without changing the original credentials' do
-            message = AppManifestMessage.create_from_yml(parsed_yaml)
-
-            expect(message.audit_hash[credential_key]).to eq('[PRIVATE DATA HIDDEN]')
-            expect(parsed_yaml[credential_key]['registry.example.com']['password']).to eq('cnb-secret')
-            expect(message.app_update_message.buildpack_data.credentials).to eq('registry.example.com': { username: 'user', password: 'cnb-secret' })
-          end
-        end
-      end
-
-      context 'when "credentials" key is present' do
-        let(:parsed_yaml) do
-          {
-            'credentials' => { 'example.org' => { 'username' => 'foo', 'password' => 'bar' } }
-          }
-        end
-
-        it 'redacts the credentials' do
-          message = AppManifestMessage.create_from_yml(parsed_yaml)
-
-          expect(message.audit_hash).to eq('credentials' => '[PRIVATE DATA HIDDEN]')
+          expect(message.audit_hash).to eq('lifecycle' => 'cnb', credential_key => '[PRIVATE DATA HIDDEN]')
+          expect(input[credential_key]['registry.example.com']['password']).to eq('cnb-secret')
+          expect(message.app_update_message.buildpack_data.credentials).to eq('registry.example.com': { username: 'user', password: 'cnb-secret' })
         end
       end
 

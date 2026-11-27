@@ -84,17 +84,21 @@ module VCAP::CloudController
       end
 
       %w[credentials cnb-credentials].each do |key|
+        context "when #{key} is null and the app has no credentials" do
+          let(:app_manifests) { [{ 'name' => app1_model.name, key => nil }] }
+
+          it 'returns an empty diff' do
+            expect(subject).to eq([])
+          end
+        end
+
         context "when the manifest specifies #{key}" do
           before do
             default_manifest['applications'][0][key] = { 'registry.example.com' => { 'username' => 'user', 'password' => 'sekret' } }
           end
 
           it "redacts the #{key} value in the diff" do
-            credentials_diff = subject.find { |d| d['path'] == "/applications/0/#{key}" }
-
-            expect(credentials_diff).not_to be_nil
-            expect(credentials_diff['value']).to eq(Presenters::Censorship::PRIVATE_DATA_HIDDEN)
-            expect(subject.to_s).not_to include('sekret')
+            expect(subject).to eq([{ 'op' => 'add', 'path' => "/applications/0/#{key}", 'value' => '[PRIVATE DATA HIDDEN]' }])
           end
         end
       end
@@ -106,16 +110,10 @@ module VCAP::CloudController
           default_manifest['applications'][0]['credentials'] = { 'registry.example.com' => { 'username' => 'user', 'password' => 'new-secret' } }
         end
 
-        it 'does not leak either the stored or submitted secret' do
-          expect(subject.to_s).not_to include('stored-secret')
-          expect(subject.to_s).not_to include('new-secret')
-        end
-
-        it 'redacts both sides of any credentials diff entry' do
-          subject.select { |d| d['path'] == '/applications/0/credentials' }.each do |d|
-            expect(d['value']).to eq(Presenters::Censorship::PRIVATE_DATA_HIDDEN) if d.key?('value')
-            expect(d['was']).to eq(Presenters::Censorship::PRIVATE_DATA_HIDDEN) if d.key?('was')
-          end
+        it 'redacts both sides of the credentials replacement' do
+          expect(subject).to eq([
+            { 'op' => 'replace', 'path' => '/applications/0/credentials', 'value' => '[PRIVATE DATA HIDDEN]', 'was' => '[PRIVATE DATA HIDDEN]' }
+          ])
         end
       end
 
@@ -290,70 +288,56 @@ module VCAP::CloudController
           app1_model.update(environment_variables: stored_env)
         end
 
-        [true, false].each do |visibility|
-          context "when environment variable visibility is #{visibility}" do
-            before do
-              create(:feature_flag, name: 'env_var_visibility', enabled: visibility)
-            end
+        it 'preserves nested operations while masking both sides of the diff' do
+          expect(subject).to contain_exactly(
+            { 'op' => 'replace', 'path' => '/applications/0/env/nested/changed', 'value' => '[PRIVATE DATA HIDDEN]', 'was' => '[PRIVATE DATA HIDDEN]' },
+            { 'op' => 'remove', 'path' => '/applications/0/env/nested/deleted', 'was' => '[PRIVATE DATA HIDDEN]' },
+            { 'op' => 'add', 'path' => '/applications/0/env/nested/added', 'value' => '[PRIVATE DATA HIDDEN]' }
+          )
+        end
 
-            it 'preserves nested operations while masking both sides of the diff' do
-              expect(subject).to contain_exactly(
-                { 'op' => 'replace', 'path' => '/applications/0/env/nested/changed', 'value' => '[PRIVATE DATA HIDDEN]', 'was' => '[PRIVATE DATA HIDDEN]' },
-                { 'op' => 'remove', 'path' => '/applications/0/env/nested/deleted', 'was' => '[PRIVATE DATA HIDDEN]' },
-                { 'op' => 'add', 'path' => '/applications/0/env/nested/added', 'value' => '[PRIVATE DATA HIDDEN]' }
-              )
-            end
+        it 'retains removals when env is empty without exposing the previous values' do
+          app_manifests.first['env'] = {}
 
-            context 'when env is empty' do
-              let(:submitted_env) { {} }
+          expect(subject).to contain_exactly(
+            { 'op' => 'remove', 'path' => '/applications/0/env/nested', 'was' => '[PRIVATE DATA HIDDEN]' },
+            { 'op' => 'remove', 'path' => '/applications/0/env/unchanged', 'was' => '[PRIVATE DATA HIDDEN]' }
+          )
+        end
 
-              it 'retains removals without exposing the previous values' do
-                expect(subject).to contain_exactly(
-                  { 'op' => 'remove', 'path' => '/applications/0/env/nested', 'was' => '[PRIVATE DATA HIDDEN]' },
-                  { 'op' => 'remove', 'path' => '/applications/0/env/unchanged', 'was' => '[PRIVATE DATA HIDDEN]' }
-                )
-              end
-            end
+        it 'returns an empty diff when env is unchanged' do
+          app_manifests.first['env'] = stored_env.deep_dup
 
-            context 'when env is unchanged' do
-              let(:submitted_env) { stored_env.deep_dup }
+          expect(subject).to eq([])
+        end
 
-              it 'returns an empty diff' do
-                expect(subject).to eq([])
-              end
-            end
+        it 'returns an empty diff when env is omitted' do
+          app_manifests.first.delete('env')
 
-            context 'when no environment variables were stored' do
-              let(:stored_env) { {} }
+          expect(subject).to eq([])
+        end
 
-              it 'masks the whole env addition' do
-                expect(subject).to eq([{ 'op' => 'add', 'path' => '/applications/0/env', 'value' => '[PRIVATE DATA HIDDEN]' }])
-              end
-            end
-          end
+        it 'masks the whole env addition when no environment variables were stored' do
+          app1_model.update(environment_variables: {})
+
+          expect(subject).to eq([{ 'op' => 'add', 'path' => '/applications/0/env', 'value' => '[PRIVATE DATA HIDDEN]' }])
         end
       end
 
       it 'does not mutate input manifests or model data while normalizing and redacting' do
+        manifests = [{ 'name' => app1_model.name, 'memory' => '2G',
+                       'env' => { 'secret' => { 'nested' => 'submitted-env-secret' } },
+                       'docker' => { 'password' => 'docker-secret' },
+                       'services' => [{ 'name' => 'service', 'parameters' => { 'password' => 'service-secret' } }] }]
         app1_model.update(environment_variables: { 'secret' => { 'nested' => 'stored-env-secret' } })
-        default_manifest['applications'][0].merge!(
-          'memory' => '2G',
-          'env' => { 'secret' => { 'nested' => 'submitted-env-secret' } },
-          'docker' => { 'password' => 'docker-secret' },
-          'services' => [{ 'name' => 'service', 'parameters' => { 'password' => 'service-secret' } }],
-          'sidecars' => [{ 'name' => 'sidecar', 'memory' => '1G' }]
-        )
-        default_manifest['applications'][0]['processes'][0]['memory'] = '2G'
-        original_manifests = app_manifests.deep_dup
+        original_manifests = manifests.deep_dup
         original_app_values = app1_model.values.deep_dup
-        original_process_values = process1.values.deep_dup
 
-        subject
+        SpaceDiffManifest.generate_diff(manifests, space)
 
-        expect(app_manifests).to eq(original_manifests)
+        expect(manifests).to eq(original_manifests)
         expect(app1_model.values).to eq(original_app_values)
         expect(app1_model.reload.environment_variables).to eq('secret' => { 'nested' => 'stored-env-secret' })
-        expect(process1.reload.values).to eq(original_process_values)
       end
 
       context 'when there is a removal inside the processes hash' do

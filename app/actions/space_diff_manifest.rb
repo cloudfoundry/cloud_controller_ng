@@ -59,8 +59,8 @@ module VCAP::CloudController
             # To preserve backwards compability, we've decided to skip diffs that satisfy this conditon
             next if !nested_attribute_exists && %w[disk_quota disk-quota memory].include?(key)
 
-            # Compare env before masking so unchanged values do not produce a diff.
-            value = AppManifestMessage.redact_sensitive_value(key, value) unless key == 'env'
+            # Mask these fields after comparison so unchanged values do not produce a diff.
+            value = AppManifestMessage.redact_sensitive_value(key, value) unless REDACTED_KEYS.include?(key)
 
             key_diffs = JsonDiff.diff(
               existing_value,

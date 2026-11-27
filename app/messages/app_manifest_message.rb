@@ -196,11 +196,10 @@ module VCAP::CloudController
     end
 
     private_class_method def self.redact_docker_password(docker)
+      return docker.map { |entry| redact_docker_password(entry) } if docker.is_a?(Array)
       return docker unless docker.is_a?(Hash)
 
-      docker.to_h do |key, value|
-        [key, key.to_s == 'password' ? Presenters::Censorship::REDACTED_CREDENTIAL : value]
-      end
+      docker.to_h { |key, value| [key, key.to_s == 'password' ? Presenters::Censorship::REDACTED_CREDENTIAL : value] }
     end
 
     def manifest_buildpack_message
