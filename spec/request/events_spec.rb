@@ -137,6 +137,45 @@ RSpec.describe 'Events' do
       end
     end
 
+    context 'filtering by type and created_at range' do
+      # Mirrors the GET /v3/audit_events?types=...&created_ats[gt]=...&created_ats[lt]=...
+      # access pattern that the (type, created_at, id) composite index supports.
+      let!(:in_window_event) do
+        create(:event, type: 'audit.app.update', actee: app_model.guid,
+                       space_guid: space.guid, organization_guid: org.guid,
+                       created_at: Time.utc(2026, 11, 4, 12, 0, 0))
+      end
+      let!(:before_window_event) do
+        create(:event, type: 'audit.app.update', actee: app_model.guid,
+                       space_guid: space.guid, organization_guid: org.guid,
+                       created_at: Time.utc(2026, 11, 1, 12, 0, 0))
+      end
+      let!(:after_window_event) do
+        create(:event, type: 'audit.app.update', actee: app_model.guid,
+                       space_guid: space.guid, organization_guid: org.guid,
+                       created_at: Time.utc(2026, 11, 10, 12, 0, 0))
+      end
+      # Same window, different type: must be excluded by the type filter.
+      let!(:other_type_in_window_event) do
+        create(:event, type: 'audit.app.restart', actee: app_model.guid,
+                       space_guid: space.guid, organization_guid: org.guid,
+                       created_at: Time.utc(2026, 11, 4, 13, 0, 0))
+      end
+
+      it 'returns only events of the given type within the created_at window' do
+        get '/v3/audit_events?types=audit.app.update' \
+            '&created_ats[gt]=2026-11-03T00:00:00Z' \
+            '&created_ats[lt]=2026-11-05T00:00:00Z', nil, admin_header
+
+        expect(last_response).to have_status_code(200)
+        returned_guids = parsed_response['resources'].pluck('guid')
+        expect(returned_guids).to contain_exactly(in_window_event.guid)
+        expect(returned_guids).not_to include(before_window_event.guid)
+        expect(returned_guids).not_to include(after_window_event.guid)
+        expect(returned_guids).not_to include(other_type_in_window_event.guid)
+      end
+    end
+
     context 'filtering by target_guid' do
       it 'returns filtered events' do
         get "/v3/audit_events?target_guids=#{app_model.guid}", nil, admin_header
