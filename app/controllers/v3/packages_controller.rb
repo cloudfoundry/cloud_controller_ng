@@ -64,16 +64,18 @@ class PackagesController < ApplicationController
     unprocessable!('Package type must be bits.') unless package.type == 'bits'
     bits_already_uploaded! if package.state != PackageModel::CREATED_STATE
 
-    begin
-      PackageUpload.new.upload_async(
-        message: message,
-        package: package,
-        config: configuration,
-        user_audit_info: user_audit_info
-      )
-    rescue PackageUpload::InvalidPackage => e
-      unprocessable!(e.message)
-    end
+    upload_start_time = Time.now
+    observability_logger.info('package_upload.request.start', package_log_context(package).merge(
+                                                                has_bits_path: message.bits_path.present?,
+                                                                resource_count: message.resources&.size || 0
+                                                              ))
+
+    enqueued_job = enqueue_package_upload(message, package)
+
+    observability_logger.info('package_upload.request.accepted', package_log_context(package).merge(
+                                                                   job_guid: enqueued_job&.guid,
+                                                                   duration_ms: elapsed_ms(upload_start_time)
+                                                                 ))
 
     TelemetryLogger.v3_emit(
       'upload-package',
@@ -94,12 +96,21 @@ class PackagesController < ApplicationController
     unprocessable!('Package type must be bits.') unless package.type == 'bits'
     unprocessable!('Package has no bits to download.') unless package.state == 'READY'
 
+    observability_logger.info('package_download.request.start', package_log_context(package))
+
+    download_start_time = Time.now
     VCAP::CloudController::Repositories::PackageEventRepository.record_app_package_download(
       package,
       user_audit_info
     )
 
     send_package_blob(package)
+
+    observability_logger.info('package_download.request.done', package_log_context(package).merge(
+                                                                 http_status: response.status,
+                                                                 redirected: response.redirect?,
+                                                                 duration_ms: elapsed_ms(download_start_time)
+                                                               ))
   end
 
   def show
@@ -220,5 +231,29 @@ class PackagesController < ApplicationController
 
   def unprocessable_source_package!
     unprocessable!('Source package is invalid. Ensure it exists and you have access to it.')
+  end
+
+  def enqueue_package_upload(message, package)
+    PackageUpload.new.upload_async(
+      message: message,
+      package: package,
+      config: configuration,
+      user_audit_info: user_audit_info
+    )
+  rescue PackageUpload::InvalidPackage => e
+    observability_logger.info('package_upload.request.failed', package_log_context(package).merge(error: e.message))
+    unprocessable!(e.message)
+  end
+
+  def observability_logger
+    @observability_logger ||= Steno.logger('cc.api.packages')
+  end
+
+  def package_log_context(package)
+    { package_guid: package.guid, app_guid: package.app_guid, user_guid: current_user.guid }
+  end
+
+  def elapsed_ms(start_time)
+    ((Time.now - start_time) * 1000).round
   end
 end

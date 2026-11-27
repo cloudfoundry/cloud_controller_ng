@@ -68,6 +68,7 @@ module VCAP::CloudController
             Timecop.freeze(2.seconds.from_now)
             true
           end
+          expect(Steno.logger('cc.resource_pool')).to receive(:debug).exactly(6).times.with('resource_match.exists.call', hash_including(:sha1, :size, :exists, :duration_seconds))
           expect(Steno.logger('cc.resource_pool')).to receive(:info).once.with('starting resource matching', {
                                                                                  total_resources_to_match: 6,
                                                                                  resource_count_by_size: {
@@ -82,6 +83,10 @@ module VCAP::CloudController
 
           expect(Steno.logger('cc.resource_pool')).to receive(:info).once.with('done matching resources', {
                                                                                  total_resources_to_match: 6,
+                                                                                 cache_hits: 6,
+                                                                                 cache_misses: 0,
+                                                                                 cache_hit_rate: 1.0,
+                                                                                 avg_resource_match_time: '2.0 seconds',
                                                                                  total_resource_match_time: '12.0 seconds',
                                                                                  resource_count_by_size: {
                                                                                    '1KB or less': 0,
