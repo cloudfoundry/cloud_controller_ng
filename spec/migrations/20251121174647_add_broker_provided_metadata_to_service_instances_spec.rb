@@ -26,7 +26,7 @@ RSpec.describe 'migration to add broker_provided_metadata column to service_inst
       expect(db[:service_instances].columns).not_to include(:broker_provided_metadata)
 
       # Run migration
-      Sequel::Migrator.run(db, migrations_path, target: current_migration_index, allow_missing_migration_files: true)
+      run_migration
 
       # Verify column was added
       expect(db[:service_instances].columns).to include(:broker_provided_metadata)
@@ -56,6 +56,10 @@ RSpec.describe 'migration to add broker_provided_metadata column to service_inst
       )
       instance_with_metadata = db[:service_instances].first(guid: 'test-service-instance-with-metadata')
       expect(instance_with_metadata[:broker_provided_metadata]).to eq(metadata_json)
+
+      # Down migration
+      expect { revert_migration }.not_to raise_error
+      expect(db[:service_instances].columns).not_to include(:broker_provided_metadata)
     end
   end
 end

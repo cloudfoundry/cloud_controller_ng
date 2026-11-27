@@ -43,10 +43,31 @@ RSpec.describe 'migration to streamline changes to annotation_key_prefix', isola
         expect(db[table.to_sym].columns).to include(:key)
         expect(db[table.to_sym].columns).not_to include(:key_name)
       end
-      expect { Sequel::Migrator.run(db, migrations_path, target: current_migration_index, allow_missing_migration_files: true) }.not_to raise_error
+      expect { run_migration }.not_to raise_error
       annotation_tables.each do |table|
         expect(db[table.to_sym].columns).not_to include(:key)
         expect(db[table.to_sym].columns).to include(:key_name)
+      end
+
+      # Up migration idempotency - column already renamed
+      test_up_migration_idempotency
+      annotation_tables.each do |table|
+        expect(db[table.to_sym].columns).not_to include(:key)
+        expect(db[table.to_sym].columns).to include(:key_name)
+      end
+
+      # Down migration - column renamed back
+      expect { revert_migration }.not_to raise_error
+      annotation_tables.each do |table|
+        expect(db[table.to_sym].columns).to include(:key)
+        expect(db[table.to_sym].columns).not_to include(:key_name)
+      end
+
+      # Down migration idempotency - column already renamed back
+      test_down_migration_idempotency
+      annotation_tables.each do |table|
+        expect(db[table.to_sym].columns).to include(:key)
+        expect(db[table.to_sym].columns).not_to include(:key_name)
       end
     end
   end

@@ -1,10 +1,17 @@
+require_relative 'migration_context'
+
 module RuboCop
   module Cop
     module Migration
       class TooManyMigrationRuns < Base
+        include MigrationContext
+
+        MIGRATION_HELPERS = %i[run_migration revert_migration test_up_migration_idempotency test_down_migration_idempotency].freeze
+
         def on_new_investigation
           return unless processed_source.ast
 
+          @includes_migration_context = includes_migration_context?
           definitions = extract_migrator_definitions
           call_count = count_migrator_calls(definitions)
 
@@ -38,7 +45,7 @@ module RuboCop
         end
 
         def extract_migrator_method(node, method_names)
-          return unless contains_migrator_run?(node)
+          return unless contains_migration_run?(node)
 
           method_names << node.method_name
         end
@@ -54,12 +61,12 @@ module RuboCop
           when :let, :let!
             extract_named_migrator(node, definitions[:let_names])
           when :before, :after, :around
-            definitions[:before_after_blocks].add(node.object_id) if contains_migrator_run?(node)
+            definitions[:before_after_blocks].add(node.object_id) if contains_migration_run?(node)
           end
         end
 
         def extract_named_migrator(node, names)
-          return unless contains_migrator_run?(node)
+          return unless contains_migration_run?(node)
 
           first_arg = node.send_node.first_argument
           names << first_arg.value if first_arg&.sym_type?
@@ -84,18 +91,23 @@ module RuboCop
           end
 
           if in_before_after_block
-            # Count direct Migrator.run calls inside before/after/around blocks
-            migrator_run_call?(node)
+            # Count migration runs inside before/after/around blocks
+            migration_run_call?(node)
           else
-            # Count direct calls (not in definitions) or helper invocations
-            direct_migrator_call?(node) || helper_migration_call?(node, definitions)
+            # Count direct calls (not in definitions) or local wrapper invocations
+            direct_migration_call?(node) || local_migration_wrapper_call?(node, definitions)
           end
         end
 
-        def direct_migrator_call?(node)
-          return false unless migrator_run_call?(node)
+        def direct_migration_call?(node)
+          return false unless migration_run_call?(node)
 
           !inside_definition?(node)
+        end
+
+        def migration_run_call?(node)
+          migrator_run_call?(node) ||
+            (@includes_migration_context && MIGRATION_HELPERS.include?(node.method_name) && (node.receiver.nil? || node.receiver.self_type?))
         end
 
         def migrator_run_call?(node)
@@ -113,28 +125,28 @@ module RuboCop
           false
         end
 
-        def helper_migration_call?(node, definitions)
+        def local_migration_wrapper_call?(node, definitions)
           method = node.method_name
           definitions[:subject_names].include?(method) ||
             definitions[:let_names].include?(method) ||
             definitions[:method_names].include?(method)
         end
 
-        def contains_migrator_run?(node)
-          node.each_descendant(:send).any? { |send_node| migrator_run_call?(send_node) }
+        def contains_migration_run?(node)
+          node.each_descendant(:send).any? { |send_node| migration_run_call?(send_node) }
         end
 
         def inside_definition?(node)
           node.each_ancestor(:def, :block).any? do |ancestor|
             case ancestor.type
             when :def
-              contains_migrator_run?(ancestor)
+              contains_migration_run?(ancestor)
             when :block
               next false unless ancestor.send_node
 
               method = ancestor.send_node.method_name
               if %i[subject let let!].include?(method)
-                contains_migrator_run?(ancestor)
+                contains_migration_run?(ancestor)
               else
                 %i[before after around].include?(method)
               end

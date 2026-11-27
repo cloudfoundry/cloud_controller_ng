@@ -17,7 +17,7 @@ RSpec.describe 'migration to add file-based service binding feature columns to a
       expect(check_constraint_exists?(db)).to be(false) if check_constraint_supported?(db)
 
       # === UP MIGRATION ===
-      expect { Sequel::Migrator.run(db, migrations_path, target: current_migration_index, allow_missing_migration_files: true) }.not_to raise_error
+      expect { run_migration }.not_to raise_error
 
       # Verify both columns were added
       expect(db[:apps].columns).to include(:service_binding_k8s_enabled)
@@ -45,13 +45,13 @@ RSpec.describe 'migration to add file-based service binding feature columns to a
       end
 
       # Test up migration idempotency: running migration again should not fail
-      expect { Sequel::Migrator.run(db, migrations_path, target: current_migration_index, allow_missing_migration_files: true) }.not_to raise_error
+      test_up_migration_idempotency
       expect(db[:apps].columns).to include(:service_binding_k8s_enabled)
       expect(db[:apps].columns).to include(:file_based_vcap_services_enabled)
       expect(check_constraint_exists?(db)).to be(true) if check_constraint_supported?(db)
 
       # === DOWN MIGRATION ===
-      expect { Sequel::Migrator.run(db, migrations_path, target: current_migration_index - 1, allow_missing_migration_files: true) }.not_to raise_error
+      expect { revert_migration }.not_to raise_error
 
       # Verify columns were removed
       expect(db[:apps].columns).not_to include(:service_binding_k8s_enabled)
@@ -59,7 +59,7 @@ RSpec.describe 'migration to add file-based service binding feature columns to a
       expect(check_constraint_exists?(db)).to be(false)
 
       # Test down migration idempotency: running rollback again should not fail
-      expect { Sequel::Migrator.run(db, migrations_path, target: current_migration_index - 1, allow_missing_migration_files: true) }.not_to raise_error
+      test_down_migration_idempotency
       expect(db[:apps].columns).not_to include(:service_binding_k8s_enabled)
       expect(db[:apps].columns).not_to include(:file_based_vcap_services_enabled)
       expect(check_constraint_exists?(db)).to be(false)

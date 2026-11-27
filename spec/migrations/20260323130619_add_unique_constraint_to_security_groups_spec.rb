@@ -20,7 +20,7 @@ RSpec.describe 'add unique constraint to security_groups', isolation: :truncatio
     db[:staging_security_groups_spaces].insert(staging_security_group_id: duplicate_id, staging_space_id: space.id)
 
     # run the migration
-    Sequel::Migrator.run(db, migrations_path, target: current_migration_index, allow_missing_migration_files: true)
+    run_migration
 
     # verify duplicates and their join table references are removed, surviving group intact
     expect(db[:security_groups].where(name: 'sec1').count).to eq(1)
@@ -35,14 +35,24 @@ RSpec.describe 'add unique constraint to security_groups', isolation: :truncatio
     expect { db[:security_groups].insert(guid: SecureRandom.uuid, name: 'sec1') }.to raise_error(Sequel::UniqueConstraintViolation)
 
     # running the migration again should not cause any errors
-    expect { Sequel::Migrator.run(db, migrations_path, target: current_migration_index, allow_missing_migration_files: true) }.not_to raise_error
+    test_up_migration_idempotency
+    expect(db[:security_groups].where(name: 'sec1').count).to eq(1)
+    expect(db[:security_groups].where(name: 'sec1').first[:id]).to eq(surviving_id)
+    expect(db[:security_groups_spaces].where(security_group_id: surviving_id, space_id: space.id).count).to eq(1)
+    expect(db[:staging_security_groups_spaces].where(staging_security_group_id: surviving_id, staging_space_id: space.id).count).to eq(1)
+    expect(db.indexes(:security_groups)).to include(:security_groups_name_index)
 
     # roll back the migration
-    Sequel::Migrator.run(db, migrations_path, target: current_migration_index - 1, allow_missing_migration_files: true)
+    revert_migration
 
     # verify constraint is removed and duplicates can be re-inserted
     expect(db.indexes(:security_groups)).not_to include(:security_groups_name_index)
     expect(db.indexes(:security_groups)).to include(:sg_name_index)
     expect { db[:security_groups].insert(guid: SecureRandom.uuid, name: 'sec1') }.not_to raise_error
+
+    # rolling back the migration again should not cause any errors
+    test_down_migration_idempotency
+    expect(db.indexes(:security_groups)).not_to include(:security_groups_name_index)
+    expect(db.indexes(:security_groups)).to include(:sg_name_index)
   end
 end
