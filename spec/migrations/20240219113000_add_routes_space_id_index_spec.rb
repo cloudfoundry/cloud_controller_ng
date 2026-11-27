@@ -6,7 +6,22 @@ RSpec.describe 'migration to add the routes_space_id index', isolation: :truncat
     let(:migration_filename) { '20240219113000_add_routes_space_id_index.rb' }
   end
 
-  it 'succeeds' do
-    Sequel::Migrator.run(db, migrations_path, target: current_migration_index, allow_missing_migration_files: true)
+  # The migration body is a no-op on MySQL, so only exercise it on PostgreSQL.
+  it 'adds and removes the index and is idempotent' do
+    skip if db.database_type != :postgres
+
+    expect(db.indexes(:routes)).not_to include(:routes_space_id_index)
+
+    expect { run_migration }.not_to raise_error
+    expect(db.indexes(:routes)).to include(:routes_space_id_index)
+
+    test_up_migration_idempotency
+    expect(db.indexes(:routes)).to include(:routes_space_id_index)
+
+    expect { revert_migration }.not_to raise_error
+    expect(db.indexes(:routes)).not_to include(:routes_space_id_index)
+
+    test_down_migration_idempotency
+    expect(db.indexes(:routes)).not_to include(:routes_space_id_index)
   end
 end

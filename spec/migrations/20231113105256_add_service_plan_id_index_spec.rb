@@ -6,7 +6,16 @@ RSpec.describe 'migration to add the service_plan_id index', isolation: :truncat
     let(:migration_filename) { '20231113105256_add_service_plan_id_index.rb' }
   end
 
-  it 'succeeds' do
-    Sequel::Migrator.run(db, migrations_path, target: current_migration_index, allow_missing_migration_files: true)
+  # The migration body is a no-op on MySQL, so only exercise it on PostgreSQL.
+  it 'adds and removes the index' do
+    skip if db.database_type != :postgres
+
+    expect(db.indexes(:service_plan_visibilities)).not_to include(:spv_service_plan_id_index)
+
+    expect { run_migration }.not_to raise_error
+    expect(db.indexes(:service_plan_visibilities)).to include(:spv_service_plan_id_index)
+
+    expect { revert_migration }.not_to raise_error
+    expect(db.indexes(:service_plan_visibilities)).not_to include(:spv_service_plan_id_index)
   end
 end

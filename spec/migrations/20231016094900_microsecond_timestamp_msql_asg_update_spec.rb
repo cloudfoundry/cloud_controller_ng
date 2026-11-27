@@ -26,7 +26,7 @@ RSpec.describe 'migration to enable microsecond precision on asg last updated ta
       end
 
       # Change TIMESTAMP to TIMESTAMP(6)
-      expect { Sequel::Migrator.run(db, migrations_path, target: current_migration_index, allow_missing_migration_files: true) }.not_to raise_error
+      expect { run_migration }.not_to raise_error
 
       # the migration shouldn't add accuracy to previously inserted values
       t1_post_migration = ds.first(id: 1)
@@ -38,6 +38,25 @@ RSpec.describe 'migration to enable microsecond precision on asg last updated ta
 
       expect(t2[:last_update].to_datetime.subsec).not_to eq(0)
       expect(t2[:last_update].to_datetime.rfc3339(6)).to eq(dt_with_fractional_seconds.rfc3339(6))
+
+      # The up/down bodies only change the column type on MySQL, so the re-run and revert
+      # precision assertions below are only meaningful there.
+      next unless db.database_type == :mysql
+
+      # Up migration idempotency - microsecond precision retained
+      test_up_migration_idempotency
+      ds.insert(id: 3, last_update: dt_with_fractional_seconds)
+      expect(ds.first(id: 3)[:last_update].to_datetime.subsec).not_to eq(0)
+
+      # Down migration - precision reverted to seconds
+      expect { revert_migration }.not_to raise_error
+      ds.insert(id: 4, last_update: dt_with_fractional_seconds)
+      expect(ds.first(id: 4)[:last_update].to_datetime.subsec).to eq(0)
+
+      # Down migration idempotency - still seconds precision
+      test_down_migration_idempotency
+      ds.insert(id: 5, last_update: dt_with_fractional_seconds)
+      expect(ds.first(id: 5)[:last_update].to_datetime.subsec).to eq(0)
     end
   end
 end
