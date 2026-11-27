@@ -71,6 +71,17 @@ module CloudController::Packager
         expect(package_blobstore.exists?(blobstore_key)).to be true
       end
 
+      it 'uploads and cleans up successfully when packer logging fails' do
+        allow(Steno.logger('cc.packer')).to receive(:info).and_raise(IOError, 'log sink unavailable')
+
+        expect do
+          packer.send_package_to_blobstore(blobstore_key, uploaded_files_path, cached_files_fingerprints)
+        end.not_to raise_error
+
+        expect(package_blobstore.exists?(blobstore_key)).to be true
+        expect(Dir.exist?(File.join(local_tmp_dir, "local_bits_packer-#{blobstore_key}"))).to be false
+      end
+
       it 'returns the sha1 and sha256 of the uploaded package' do
         sha1_digester = instance_double(Digester, digest_path: 'expected-sha1')
         sha256_digester = instance_double(Digester, digest_path: 'expected-sha256')
@@ -162,6 +173,16 @@ module CloudController::Packager
           expect do
             packer.send_package_to_blobstore(blobstore_key, uploaded_files_path, cached_files_fingerprints)
           end.to raise_error(CloudController::Errors::ApiError, /invalid/)
+        end
+
+        it 'preserves the archive error and cleans up when logging fails' do
+          allow(Steno.logger('cc.packer')).to receive(:info).and_raise(IOError, 'log sink unavailable')
+
+          expect do
+            packer.send_package_to_blobstore(blobstore_key, uploaded_files_path, cached_files_fingerprints)
+          end.to raise_error(CloudController::Errors::ApiError, /invalid/)
+
+          expect(Dir.exist?(File.join(local_tmp_dir, "local_bits_packer-#{blobstore_key}"))).to be false
         end
       end
 
@@ -367,6 +388,28 @@ module CloudController::Packager
             end.to raise_error(StandardError)
           end
         end
+      end
+
+      it 'logs timing for each phase' do
+        logger = instance_double(Steno::Logger)
+        allow(Steno).to receive(:logger).and_return(logger)
+        allow(logger).to receive(:info)
+        allow(logger).to receive(:debug)
+        allow(VCAP::CloudController::FeatureFlag).to receive(:disabled?).with(:resource_matching).and_return(false)
+        global_app_bits_cache.instance_variable_set(:@logger, logger)
+        package_blobstore.instance_variable_set(:@logger, logger)
+
+        packer.send_package_to_blobstore(blobstore_key, uploaded_files_path, cached_files_fingerprints)
+
+        expect(logger).to have_received(:info).with('packer.unzip', hash_including(:duration_seconds))
+        expect(logger).to have_received(:info).with('blobstore.cp_r.digest', hash_including(:duration_seconds, :files_scanned))
+        expect(logger).to have_received(:info).with('blobstore.cp_r.exists', hash_including(:duration_seconds, :files_checked))
+        expect(logger).to have_received(:info).with('blobstore.cp_r.upload', hash_including(:duration_seconds, :files_uploaded))
+        expect(logger).to have_received(:info).with('packer.resource-cache-upload', hash_including(:duration_seconds))
+        expect(logger).to have_received(:info).with('packer.resource-cache-download', hash_including(:duration_seconds, :files_downloaded, :files_attempted))
+        expect(logger).to have_received(:info).with('packer.repackage', hash_including(:duration_seconds))
+        expect(logger).to have_received(:info).with('packer.final-upload', hash_including(:duration_seconds, :blobstore_key))
+        expect(logger).to have_received(:info).with('packer.pack', hash_including(:duration_seconds, :blobstore_key))
       end
     end
   end

@@ -123,8 +123,10 @@ module VCAP::CloudController
       prometheus_dir = File.join(@config.get(:directories, :tmpdir), 'prometheus')
       FileUtils.mkdir_p(prometheus_dir)
 
-      # Resetting metrics on startup
+      # Local worker files may already be open; reset only API files here.
       Dir["#{prometheus_dir}/*.bin"].each do |file_path|
+        next if File.basename(file_path).include?('___index-')
+
         File.unlink(file_path)
       end
 

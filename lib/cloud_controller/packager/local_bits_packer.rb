@@ -20,10 +20,16 @@ module CloudController
 
         Dir.mkdir(local_bits_packer_path)
 
+        pack_start = Time.now.utc
         begin
           complete_package_path = match_resources_and_validate_package(local_bits_packer_path, uploaded_package_zip, cached_files_fingerprints)
 
-          package_blobstore.cp_to_blobstore(complete_package_path, blobstore_key)
+          t = Time.now.utc
+          begin
+            package_blobstore.cp_to_blobstore(complete_package_path, blobstore_key)
+          ensure
+            logger.info('packer.final-upload', duration_seconds: Time.now.utc - t, blobstore_key: blobstore_key) rescue nil # rubocop:disable Style/RescueModifier
+          end
 
           {
             sha1: Digester.new.digest_path(complete_package_path),
@@ -31,6 +37,7 @@ module CloudController
           }
         ensure
           FileUtils.remove_dir(local_bits_packer_path)
+          logger.info('packer.pack', duration_seconds: Time.now.utc - pack_start, blobstore_key: blobstore_key) rescue nil # rubocop:disable Style/RescueModifier
         end
       end
 

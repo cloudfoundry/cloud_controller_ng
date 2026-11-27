@@ -1,4 +1,5 @@
 require 'vcap/config'
+require 'steno/logger'
 
 module VCAP::CloudController
   module ConfigSchemas
@@ -19,6 +20,7 @@ module VCAP::CloudController
           optional(:storage_cli_config_file_resource_pool) => String,
           optional(:storage_cli_config_file_droplets) => String,
           optional(:storage_cli_optional_flags) => String,
+          optional(:storage_cli_logging_level) => enum(*Steno::Logger::LEVELS.keys.map(&:to_s), NilClass),
 
           readiness_port: {
             deployment_updater: Integer

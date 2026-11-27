@@ -16,7 +16,7 @@ module CloudController
         config_double = instance_double(VCAP::CloudController::Config)
         allow(VCAP::CloudController::Config).to receive(:config).and_return(config_double)
         allow(config_double).to receive(:get).with(:storage_cli_config_file_droplets).and_return(path)
-        allow(Steno).to receive(:logger).and_return(double(info: nil, error: nil, debug: nil))
+        allow(Steno).to receive(:logger).and_return(double(info: nil, error: nil, debug: nil, warn: nil))
       end
 
       describe 'client init' do
@@ -160,7 +160,7 @@ module CloudController
             end
           end
 
-          allow(Steno).to receive(:logger).and_return(double(info: nil, error: nil, debug: nil))
+          allow(Steno).to receive(:logger).and_return(double(info: nil, error: nil, debug: nil, warn: nil))
         end
 
         after do
@@ -283,6 +283,9 @@ module CloudController
           end
 
           it 'returns the default CLI path' do
+            allow(ENV).to receive(:[]).and_call_original
+            allow(ENV).to receive(:[]).with('STORAGE_CLI_PATH').and_return(nil)
+
             expect(client.send(:cli_path)).to eq('/var/vcap/packages/storage-cli/bin/storage-cli')
           end
 
@@ -318,7 +321,7 @@ module CloudController
               tmp_cfg.path
             end
           end
-          allow(Steno).to receive(:logger).and_return(double(info: nil, error: nil, debug: nil))
+          allow(Steno).to receive(:logger).and_return(double(info: nil, error: nil, debug: nil, warn: nil))
         end
 
         after { tmp_cfg.close! }
@@ -348,6 +351,87 @@ module CloudController
             it('returns list with parsed flags') {
               expect(client.send(:additional_flags)).to eq(['-log-level', 'warn', '-log-file', 'some/path/storage-cli.log'])
             }
+          end
+        end
+
+        describe 'dedicated CLI logging level' do
+          let(:configured_level) { 'warn' }
+          let(:inherited_level) { :info }
+          let(:cli_sink) { Steno::Sink::Counter.new }
+          let(:summary_sink) { Steno::Sink::Counter.new }
+          let(:cli_logger) { Steno::Logger.new('cc.blobstore.storage_cli', [cli_sink], level: inherited_level) }
+          let(:summary_logger) { Steno::Logger.new('cc.blobstore.storage_cli_client', [summary_sink], level: :info) }
+          let(:metrics_dir) { Dir.mktmpdir('storage-cli-metrics') }
+          let(:metrics_registry) do
+            Prometheus::Client.config.data_store = Prometheus::Client::DataStores::DirectFileStore.new(dir: metrics_dir)
+            Prometheus::Client::Registry.new
+          end
+          let(:metrics_updater) { VCAP::CloudController::Metrics::PrometheusUpdater.new(registry: metrics_registry) }
+
+          subject(:client) do
+            StorageCliClient.new(directory_key: directory_key, resource_type: resource_type, root_dir: 'bommel', metrics_updater: metrics_updater)
+          end
+
+          around do |example|
+            original_store = Prometheus::Client.config.data_store
+            example.run
+          ensure
+            Prometheus::Client.config.data_store = original_store
+            FileUtils.remove_entry(metrics_dir)
+          end
+
+          before do
+            allow(Steno).to receive(:logger).with('cc.blobstore.storage_cli').and_return(cli_logger)
+            allow(Steno).to receive(:logger).with('cc.blobstore.storage_cli_client').and_return(summary_logger)
+            allow(VCAP::CloudController::Config.config).to receive(:get).with(:storage_cli_logging_level).and_return(configured_level)
+          end
+
+          it 'suppresses successful CLI logs without suppressing upload summaries or metrics' do
+            status = instance_double(Process::Status, success?: true, exitstatus: 0)
+            allow(Open3).to receive(:capture3).and_return(['', 'CLI diagnostic', status])
+
+            Tempfile.create('src') do |source|
+              source.write('application package')
+              source.flush
+              client.cp_to_blobstore(source.path, 'some-key')
+            end
+
+            expect(cli_sink.counts).to be_empty
+            expect(summary_sink.counts).to eq('info' => 2)
+            expect(metrics_registry.get(:cc_storage_cli_operations_total).get(labels: { operation: 'put', exit_code: '0' })).to eq(1.0)
+          end
+
+          it 'keeps failed CLI calls and stderr visible when successful call logs are suppressed' do
+            status = instance_double(Process::Status, success?: false, exitstatus: 1)
+            allow(Open3).to receive(:capture3).and_return(['CLI output', "storage unavailable\nrequest failed", status])
+            allow(cli_sink).to receive(:add_record).and_call_original
+
+            Tempfile.create('src') do |source|
+              source.write('application package')
+              source.flush
+
+              expect do
+                client.cp_to_blobstore(source.path, 'some-key')
+              end.to raise_error(RuntimeError, "storage-cli put failed with exit code 1, output: 'CLI output', error: 'storage unavailable\nrequest failed'")
+            end
+
+            expect(cli_sink.counts).to eq('error' => 3)
+            expect(cli_sink).to have_received(:add_record).with(have_attributes(log_level: :error, message: '[ERROR] storage-cli: storage unavailable'))
+            expect(cli_sink).to have_received(:add_record).with(have_attributes(log_level: :error, message: '[ERROR] storage-cli: request failed'))
+            expect(metrics_registry.get(:cc_storage_cli_operations_total).get(labels: { operation: 'put', exit_code: '1' })).to eq(1.0)
+          end
+
+          context 'when the dedicated level is omitted' do
+            let(:configured_level) { nil }
+            let(:inherited_level) { :warn }
+
+            it 'keeps the inherited logging threshold' do
+              status = instance_double(Process::Status, success?: true, exitstatus: 0)
+              allow(Open3).to receive(:capture3).and_return(['', '', status])
+
+              expect(client.exists?('some-key')).to be true
+              expect(cli_sink.counts).to be_empty
+            end
           end
         end
 
@@ -494,17 +578,88 @@ module CloudController
         end
 
         describe '#run_cli' do
+          let(:logger_double) { instance_double(Steno::Logger, info: nil, error: nil, debug: nil, warn: nil) }
+
           before do
+            allow(Steno).to receive(:logger).and_return(logger_double)
             allow(client).to receive(:additional_flags).and_return([])
+          end
+
+          it 'logs structured finish fields for successful calls' do
+            status = instance_double(Process::Status, success?: true, exitstatus: 0)
+            allow(Open3).to receive(:capture3).and_return(['ok', '', status])
+
+            client.send(:run_cli, 'put', 'src-path', 'dest-key', blob_size: 1024)
+
+            expect(logger_double).to have_received(:info).with('storage_cli.call.finish put src=src-path dest=dest-key', hash_including(
+                                                                                                                           'operation' => 'put',
+                                                                                                                           'bucket' => directory_key,
+                                                                                                                           'resource_type' => resource_type,
+                                                                                                                           'source_path' => 'src-path',
+                                                                                                                           'destination_key' => 'dest-key',
+                                                                                                                           'blob_size' => 1024,
+                                                                                                                           'exit_code' => 0,
+                                                                                                                           'success' => true,
+                                                                                                                           'duration_seconds' => a_kind_of(Float)
+                                                                                                                         ))
+          end
+
+          it 'logs finish fields for failed calls' do
+            status = instance_double(Process::Status, success?: false, exitstatus: 1)
+            allow(Open3).to receive(:capture3).and_return(['', 'error message', status])
+
+            expect do
+              client.send(:run_cli, 'exists', 'arg1')
+            end.to raise_error(RuntimeError, /storage-cli exists failed with exit code 1/)
+
+            expect(logger_double).to have_received(:error).with(
+              'storage_cli.call.finish exists key=arg1',
+              hash_including(
+                'operation' => 'exists',
+                'bucket' => directory_key,
+                'resource_type' => resource_type,
+                'key' => 'arg1',
+                'exit_code' => 1,
+                'success' => false,
+                'duration_seconds' => a_kind_of(Float)
+              )
+            )
+          end
+
+          it 'uses basename of key arg in message text with key= label but keeps full structured key' do
+            status = instance_double(Process::Status, success?: true, exitstatus: 0)
+            allow(Open3).to receive(:capture3).and_return(['ok', '', status])
+
+            long_key = 'app_bits_cache/97/d0/97d004b6ef4a8c8f5e3b6a0f4c1d2e3f7a8b9c00112233445566778899aabbcc'
+            client.send(:run_cli, 'exists', long_key)
+
+            expect(logger_double).to have_received(:info).with(
+              'storage_cli.call.finish exists key=97d004b6ef4a8c8f5e3b6a0f4c1d2e3f7a8b9c00112233445566778899aabbcc',
+              hash_including('key' => long_key, 'success' => true)
+            )
+          end
+
+          it 'labels sign args in message text' do
+            status = instance_double(Process::Status, success?: true, exitstatus: 0)
+            allow(Open3).to receive(:capture3).and_return(['ok', '', status])
+
+            client.send(:run_cli, 'sign', 'abc123def456', 'get', '3600s')
+
+            expect(logger_double).to have_received(:info).with(
+              'storage_cli.call.finish sign key=abc123def456 verb=get expires_in=3600s',
+              hash_including('key' => 'abc123def456', 'verb' => 'get', 'expires_in' => '3600s', 'success' => true)
+            )
           end
 
           it 'returns output and status on success' do
             status = instance_double(Process::Status, success?: true, exitstatus: 0)
-            allow(Open3).to receive(:capture3).and_return(['ok', '', status])
+            allow(Open3).to receive(:capture3).and_return(['ok', 'CLI diagnostic', status])
 
             output, returned_status = client.send(:run_cli, 'list', 'arg1')
             expect(output).to eq('ok')
             expect(returned_status).to eq(status)
+            expect(logger_double).to have_received(:info).with('[INFO] storage-cli: CLI diagnostic')
+            expect(logger_double).not_to have_received(:error)
           end
 
           it 'raises an error on failure' do
@@ -523,12 +678,546 @@ module CloudController
             output, returned_status = client.send(:run_cli, 'list', 'arg1', allow_exit_code_three: true)
             expect(output).to eq('')
             expect(returned_status).to eq(status)
+            expect(logger_double).to have_received(:info).with('[INFO] storage-cli: error message')
+            expect(logger_double).not_to have_received(:error)
+          end
+
+          it 'preserves the CLI failure when stderr logging fails' do
+            status = instance_double(Process::Status, success?: false, exitstatus: 1)
+            allow(Open3).to receive(:capture3).and_return(['CLI output', 'storage unavailable', status])
+            allow(logger_double).to receive(:error).with('[ERROR] storage-cli: storage unavailable').and_raise(IOError, 'log sink unavailable')
+
+            expect do
+              client.send(:run_cli, 'list', 'arg1')
+            end.to raise_error(RuntimeError, "storage-cli list failed with exit code 1, output: 'CLI output', error: 'storage unavailable'")
+
+            expect(logger_double).to have_received(:error).with('[ERROR] storage-cli: storage unavailable')
           end
 
           it 'raises BlobstoreError on Open3 failure' do
             allow(Open3).to receive(:capture3).and_raise(StandardError.new('Open3 error'))
 
             expect { client.send(:run_cli, 'list', 'arg1') }.to raise_error(BlobstoreError, /Open3 error/)
+          end
+
+          it 'reports 128+signal when the storage-cli process is terminated by a signal' do
+            metrics_updater = double('metrics_updater')
+            allow(metrics_updater).to receive(:report_storage_cli_metrics)
+            signal_client = StorageCliClient.new(
+              directory_key: directory_key,
+              resource_type: resource_type,
+              root_dir: 'bommel',
+              metrics_updater: metrics_updater
+            )
+            allow(signal_client).to receive(:additional_flags).and_return([])
+
+            status = instance_double(Process::Status, success?: false, exitstatus: nil, termsig: 9)
+            allow(Open3).to receive(:capture3).and_return(['', '', status])
+
+            expect { signal_client.send(:run_cli, 'get', 'some-key') }.to raise_error(RuntimeError, /exit code 137/)
+            expect(metrics_updater).to have_received(:report_storage_cli_metrics).with(
+              operation: 'get', exit_code: 137, duration_seconds: a_kind_of(Float), blob_size: nil
+            )
+          end
+
+          it 'reports exit_code=-1 when Open3 raises (spawn failure)' do
+            metrics_updater = double('metrics_updater')
+            allow(metrics_updater).to receive(:report_storage_cli_metrics)
+            spawning_client = StorageCliClient.new(
+              directory_key: directory_key,
+              resource_type: resource_type,
+              root_dir: 'bommel',
+              metrics_updater: metrics_updater
+            )
+            allow(spawning_client).to receive(:additional_flags).and_return([])
+            allow(Open3).to receive(:capture3).and_raise(Errno::ENOENT.new('storage-cli binary not found'))
+
+            expect { spawning_client.send(:run_cli, 'get', 'some-key') }.to raise_error(BlobstoreError)
+            expect(metrics_updater).to have_received(:report_storage_cli_metrics).with(
+              operation: 'get', exit_code: -1, duration_seconds: a_kind_of(Float), blob_size: nil
+            )
+            expect(logger_double).to have_received(:error).with('storage_cli.call.error get src=some-key dest=', hash_including(
+                                                                                                                   'operation' => 'get',
+                                                                                                                   'bucket' => directory_key,
+                                                                                                                   'resource_type' => resource_type,
+                                                                                                                   'duration_seconds' => a_kind_of(Float),
+                                                                                                                   'error' => a_string_matching(/Errno::ENOENT/)
+                                                                                                                 ))
+          end
+
+          it 'emits exit_code=-6 and propagates Interrupt from Open3.capture3' do
+            metrics_updater = instance_double(VCAP::CloudController::Metrics::PrometheusUpdater)
+            allow(metrics_updater).to receive(:report_storage_cli_metrics)
+            spawning_client = StorageCliClient.new(
+              directory_key: directory_key,
+              resource_type: resource_type,
+              root_dir: 'bommel',
+              metrics_updater: metrics_updater
+            )
+            allow(spawning_client).to receive(:additional_flags).and_return([])
+            allow(Open3).to receive(:capture3).and_raise(Interrupt)
+
+            expect { spawning_client.send(:run_cli, 'get', 'some-key') }.to raise_error(Interrupt)
+            expect(metrics_updater).to have_received(:report_storage_cli_metrics).with(
+              operation: 'get', exit_code: -6, duration_seconds: a_kind_of(Float), blob_size: nil
+            )
+          end
+
+          it 'emits exit_code=-3 when additional_flags raises (pre-spawn StandardError)' do
+            metrics_updater = instance_double(VCAP::CloudController::Metrics::PrometheusUpdater)
+            allow(metrics_updater).to receive(:report_storage_cli_metrics)
+            spawning_client = StorageCliClient.new(
+              directory_key: directory_key,
+              resource_type: resource_type,
+              root_dir: 'bommel',
+              metrics_updater: metrics_updater
+            )
+            allow(spawning_client).to receive(:additional_flags).and_raise(StandardError.new('config unavailable'))
+
+            expect { spawning_client.send(:run_cli, 'get', 'some-key') }.to raise_error(BlobstoreError, /config unavailable/)
+            expect(metrics_updater).to have_received(:report_storage_cli_metrics).with(
+              operation: 'get', exit_code: -3, duration_seconds: a_kind_of(Float), blob_size: nil
+            )
+          end
+
+          it 'emits exit_code=-5 and propagates Interrupt from additional_flags (pre-spawn signal)' do
+            metrics_updater = instance_double(VCAP::CloudController::Metrics::PrometheusUpdater)
+            allow(metrics_updater).to receive(:report_storage_cli_metrics)
+            spawning_client = StorageCliClient.new(
+              directory_key: directory_key,
+              resource_type: resource_type,
+              root_dir: 'bommel',
+              metrics_updater: metrics_updater
+            )
+            allow(spawning_client).to receive(:additional_flags).and_raise(Interrupt)
+
+            expect { spawning_client.send(:run_cli, 'get', 'some-key') }.to raise_error(Interrupt)
+            expect(metrics_updater).to have_received(:report_storage_cli_metrics).with(
+              operation: 'get', exit_code: -5, duration_seconds: a_kind_of(Float), blob_size: nil
+            )
+          end
+
+          context 'metrics' do
+            let(:metrics_updater) { double('metrics_updater') }
+            let(:client_with_metrics) do
+              StorageCliClient.new(
+                directory_key: directory_key,
+                resource_type: resource_type,
+                root_dir: 'bommel',
+                metrics_updater: metrics_updater
+              )
+            end
+
+            before do
+              allow(client_with_metrics).to receive(:additional_flags).and_return([])
+              allow(metrics_updater).to receive(:report_storage_cli_metrics)
+            end
+
+            it 'reports metrics with operation and exit_code on success' do
+              status = instance_double(Process::Status, success?: true, exitstatus: 0)
+              allow(Open3).to receive(:capture3).and_return(['', '', status])
+
+              client_with_metrics.send(:run_cli, 'get', 'some-key', 'dest-path')
+
+              expect(metrics_updater).to have_received(:report_storage_cli_metrics).with(
+                operation: 'get', exit_code: 0, duration_seconds: a_kind_of(Float), blob_size: nil
+              )
+            end
+
+            it 'passes blob_size for put operations' do
+              status = instance_double(Process::Status, success?: true, exitstatus: 0)
+              allow(Open3).to receive(:capture3).and_return(['', '', status])
+
+              client_with_metrics.send(:run_cli, 'put', 'src', 'dest', blob_size: 1024)
+
+              expect(metrics_updater).to have_received(:report_storage_cli_metrics).with(
+                operation: 'put', exit_code: 0, duration_seconds: a_kind_of(Float), blob_size: 1024
+              )
+            end
+
+            it 'still reports metrics when the command fails' do
+              status = instance_double(Process::Status, success?: false, exitstatus: 1)
+              allow(Open3).to receive(:capture3).and_return(['', 'err', status])
+
+              expect { client_with_metrics.send(:run_cli, 'put', 'src', 'dest') }.to raise_error(RuntimeError)
+              expect(metrics_updater).to have_received(:report_storage_cli_metrics).with(
+                operation: 'put', exit_code: 1, duration_seconds: a_kind_of(Float), blob_size: nil
+              )
+            end
+
+            it 'remaps exit_code 3 to 0 in the metric when allow_exit_code_three is true (not-found is expected, not an error)' do
+              # The log records the actual process exit code (3); the metric uses 0 so that
+              # "exists returned not-found" is indistinguishable from success in dashboards.
+              status = instance_double(Process::Status, success?: false, exitstatus: 3, termsig: nil)
+              allow(Open3).to receive(:capture3).and_return(['', '', status])
+
+              client_with_metrics.send(:run_cli, 'exists', 'some-key', allow_exit_code_three: true)
+
+              expect(metrics_updater).to have_received(:report_storage_cli_metrics).with(
+                operation: 'exists', exit_code: 0, duration_seconds: a_kind_of(Float), blob_size: nil
+              )
+            end
+
+            it 'forwards blob_size to report_storage_cli_metrics even on failure (PrometheusUpdater suppresses the histogram observation)' do
+              status = instance_double(Process::Status, success?: false, exitstatus: 1)
+              allow(Open3).to receive(:capture3).and_return(['', 'err', status])
+
+              # run_cli forwards blob_size to report_storage_cli_metrics regardless of exit_code;
+              # PrometheusUpdater#report_storage_cli_metrics suppresses histogram observation on failure.
+              expect { client_with_metrics.send(:run_cli, 'put', 'src', 'dest', blob_size: 2048) }.to raise_error(RuntimeError)
+              expect(metrics_updater).to have_received(:report_storage_cli_metrics).with(
+                operation: 'put', exit_code: 1, duration_seconds: a_kind_of(Float), blob_size: 2048
+              )
+            end
+
+            it 'does not call metrics_updater when nil' do
+              status = instance_double(Process::Status, success?: true, exitstatus: 0)
+              allow(Open3).to receive(:capture3).and_return(['', '', status])
+              allow(client).to receive(:additional_flags).and_return([])
+
+              expect { client.send(:run_cli, 'get', 'some-key') }.not_to raise_error
+            end
+
+            it 'logs the actual process exit_code in storage_cli.call.finish, not the remapped metric code' do
+              logger_double = double(info: nil, error: nil, debug: nil, warn: nil)
+              allow(Steno).to receive(:logger).and_return(logger_double)
+              # exit code 3 is remapped to 0 in the metric; log should record 3
+              status = instance_double(Process::Status, success?: false, exitstatus: 3, termsig: nil)
+              allow(Open3).to receive(:capture3).and_return(['', '', status])
+
+              client_with_metrics.send(:run_cli, 'exists', 'some-key', allow_exit_code_three: true)
+
+              expect(logger_double).to have_received(:info).with(
+                a_string_starting_with('storage_cli.call.finish'),
+                a_hash_including('exit_code' => 3)
+              )
+            end
+
+            it 'includes blob_size in structured log fields for put operations' do
+              logger_double = double(info: nil, error: nil, debug: nil, warn: nil)
+              allow(Steno).to receive(:logger).and_return(logger_double)
+              status = instance_double(Process::Status, success?: true, exitstatus: 0, termsig: nil)
+              allow(Open3).to receive(:capture3).and_return(['', '', status])
+
+              client_with_metrics.send(:run_cli, 'put', '/tmp/src.zip', 'dest-key', blob_size: 4096)
+
+              expect(logger_double).to have_received(:info).with(
+                a_string_starting_with('storage_cli.call.finish'),
+                a_hash_including('blob_size' => 4096)
+              )
+            end
+
+            it 'uses File.basename in finish log message text for conciseness' do
+              logger_double = double(info: nil, error: nil, debug: nil, warn: nil)
+              allow(Steno).to receive(:logger).and_return(logger_double)
+              status = instance_double(Process::Status, success?: true, exitstatus: 0, termsig: nil)
+              allow(Open3).to receive(:capture3).and_return(['', '', status])
+
+              client_with_metrics.send(:run_cli, 'get', 'ab/cd/fullhash', '/var/vcap/data/dest/fullhash')
+
+              expect(logger_double).to have_received(:info).with(
+                a_string_including('src=fullhash dest=fullhash'),
+                anything
+              )
+            end
+          end
+        end
+
+        describe '#cp_r_to_blobstore' do
+          it 'does not report interrupted existence checks as cache hits' do
+            Dir.mktmpdir('resources') do |source_dir|
+              File.write(File.join(source_dir, 'resource.txt'), 'application resource')
+              cancellation = Interrupt.new('cancelled check')
+              log = instance_double(Steno::Logger, info: nil, error: nil, debug: nil, warn: nil)
+              allow(Steno).to receive(:logger).and_return(log)
+              allow(Open3).to receive(:capture3).and_raise(cancellation)
+
+              expect do
+                client.cp_r_to_blobstore(source_dir)
+              end.to(raise_error { |error| expect(error).to equal(cancellation) })
+
+              expect(log).to have_received(:info).with(
+                'blobstore.cp_r.exists',
+                hash_including(files_checked: 1, cache_hits: 0, cache_hit_rate: 0.0, error_count: 1, completed: false)
+              )
+            end
+          end
+
+          it 'retries and propagates failed resource-cache existence checks' do
+            Dir.mktmpdir('resources') do |source_dir|
+              File.write(File.join(source_dir, 'resource.txt'), 'application resource')
+              allow(Open3).to receive(:capture3).and_raise(IOError, 'storage unavailable')
+              retrying_client = RetryableClient.new(client: client, errors: [StandardError], logger: Steno.logger('cc.blobstore.storage_cli_client'))
+
+              expect do
+                retrying_client.cp_r_to_blobstore(source_dir)
+              end.to raise_error(BlobstoreError, /storage unavailable/)
+
+              expect(Open3).to have_received(:capture3).exactly(3).times
+            end
+          end
+        end
+
+        describe '#cp_to_blobstore' do
+          let(:logger_double) { double(info: nil, error: nil, debug: nil, warn: nil) }
+
+          before do
+            allow(Steno).to receive(:logger).and_return(logger_double)
+            allow(client).to receive(:additional_flags).and_return([])
+          end
+
+          it 'logs cp-finish on success' do
+            source = Tempfile.new('src')
+            source.write('x' * 1025)
+            source.flush
+
+            status = instance_double(Process::Status, success?: true, exitstatus: 0)
+            allow(Open3).to receive(:capture3).and_return(['', '', status])
+
+            client.cp_to_blobstore(source.path, 'some-key')
+
+            expect(logger_double).to have_received(:info).with('cp-finish', a_hash_including(destination_key: 'some-key'))
+          ensure
+            source.close!
+          end
+
+          it 'logs cp-error when run_cli raises' do
+            source = Tempfile.new('src')
+            source.write('x' * 1025)
+            source.flush
+
+            allow(Open3).to receive(:capture3).and_raise(StandardError.new('blobstore unavailable'))
+
+            expect { client.cp_to_blobstore(source.path, 'some-key') }.to raise_error(BlobstoreError)
+            expect(logger_double).to have_received(:info).with('cp-error', a_hash_including(destination_key: 'some-key'))
+          ensure
+            source.close!
+          end
+
+          it 'does not retry cancellation when completion logging and its fallback warning fail' do
+            Tempfile.create('src') do |source|
+              source.write('x' * 1025)
+              source.flush
+              cancellation = Interrupt.new('cancelled upload')
+              allow(Open3).to receive(:capture3).and_raise(cancellation)
+              allow(logger_double).to receive(:info).with('cp-error', anything).and_raise(IOError, 'log sink unavailable')
+              allow(logger_double).to receive(:warn).and_raise(IOError, 'log sink unavailable')
+              retrying_client = RetryableClient.new(client: client, errors: [StandardError], logger: logger_double)
+
+              expect do
+                retrying_client.cp_to_blobstore(source.path, 'some-key')
+              end.to(raise_error { |error| expect(error).to equal(cancellation) })
+
+              expect(Open3).to have_received(:capture3).once
+            end
+          end
+
+          it 'does not retry cancellation when metrics and warning logging fail' do
+            Tempfile.create('src') do |source|
+              source.write('application package')
+              source.flush
+              registry = Prometheus::Client::Registry.new
+              metrics_updater = VCAP::CloudController::Metrics::PrometheusUpdater.new(registry: registry)
+              allow(registry.get(:cc_storage_cli_operations_total)).to receive(:increment).and_raise(IOError, 'metric store unavailable')
+              metrics_client = StorageCliClient.new(directory_key: directory_key, resource_type: resource_type, root_dir: 'bommel', metrics_updater: metrics_updater)
+              cancellation = Interrupt.new('cancelled upload')
+              allow(Open3).to receive(:capture3).and_raise(cancellation)
+              allow(logger_double).to receive(:warn).and_raise(IOError, 'log sink unavailable')
+              retrying_client = RetryableClient.new(client: metrics_client, errors: [StandardError], logger: logger_double)
+
+              expect do
+                retrying_client.cp_to_blobstore(source.path, 'some-key')
+              end.to(raise_error { |error| expect(error).to equal(cancellation) })
+
+              expect(Open3).to have_received(:capture3).once
+            end
+          end
+
+          it 'does not fail or retry successful uploads when all logging fails' do
+            Tempfile.create('src') do |source|
+              source.write('application package')
+              source.flush
+              status = instance_double(Process::Status, success?: true, exitstatus: 0)
+              allow(Open3).to receive(:capture3).and_return(['', 'CLI diagnostic', status])
+              %i[info error debug warn].each do |level|
+                allow(logger_double).to receive(level).and_raise(IOError, 'log sink unavailable')
+              end
+              retrying_client = RetryableClient.new(client: client, errors: [StandardError], logger: logger_double)
+
+              expect do
+                retrying_client.cp_to_blobstore(source.path, 'some-key')
+              end.not_to raise_error
+
+              expect(Open3).to have_received(:capture3).once
+            end
+          end
+
+          it 'logs cp-skip when file is outside size limits' do
+            source = Tempfile.new('src')
+            source.write('x')
+            source.flush
+
+            small_client = StorageCliClient.new(
+              directory_key: directory_key,
+              resource_type: resource_type,
+              root_dir: 'bommel',
+              min_size: 1024
+            )
+            allow(small_client).to receive(:additional_flags).and_return([])
+
+            small_client.cp_to_blobstore(source.path, 'some-key')
+
+            expect(logger_double).to have_received(:info).with('cp-skip', a_hash_including(destination_key: 'some-key'))
+          ensure
+            source.close!
+          end
+
+          it 'emits exit_code=-4 metric when the file is skipped by size limits' do
+            source = Tempfile.new('src')
+            source.write('x')
+            source.flush
+
+            start_time = Time.utc(2026, 10, 16, 12, 0, 0)
+
+            metrics_updater = double('metrics_updater')
+            allow(metrics_updater).to receive(:report_storage_cli_metrics)
+            allow(Time).to receive(:now).and_return(start_time, start_time + 0.125, start_time + 0.250)
+
+            small_client = StorageCliClient.new(
+              directory_key: directory_key,
+              resource_type: resource_type,
+              root_dir: 'bommel',
+              min_size: 1024,
+              metrics_updater: metrics_updater
+            )
+            allow(small_client).to receive(:additional_flags).and_return([])
+
+            small_client.cp_to_blobstore(source.path, 'some-key')
+
+            expect(metrics_updater).to have_received(:report_storage_cli_metrics).with(
+              operation: 'put', exit_code: -4, duration_seconds: 0.125, blob_size: nil
+            )
+            expect(logger_double).to have_received(:info).with('cp-skip', a_hash_including(destination_key: 'some-key', duration_seconds: 0.25))
+          ensure
+            source.close!
+          end
+
+          it 'emits exit_code=-3 metric and logs cp-error when File.open fails (missing source)' do
+            metrics_updater = double('metrics_updater')
+            allow(metrics_updater).to receive(:report_storage_cli_metrics)
+
+            client_with_metrics = StorageCliClient.new(
+              directory_key: directory_key,
+              resource_type: resource_type,
+              root_dir: 'bommel',
+              metrics_updater: metrics_updater
+            )
+            allow(client_with_metrics).to receive(:additional_flags).and_return([])
+            allow(File).to receive(:open).and_raise(Errno::ENOENT.new('no such file'))
+
+            expect { client_with_metrics.cp_to_blobstore('/nonexistent/path', 'some-key') }.to raise_error(Errno::ENOENT)
+            expect(metrics_updater).to have_received(:report_storage_cli_metrics).with(
+              operation: 'put', exit_code: -3, duration_seconds: anything, blob_size: nil
+            )
+            expect(logger_double).to have_received(:info).with('cp-error', a_hash_including(destination_key: 'some-key'))
+          end
+
+          it 'lets Interrupt propagate when File.open is interrupted' do
+            source = Tempfile.new('src')
+            source.write('x' * 1025)
+            source.flush
+
+            metrics_updater = double('metrics_updater')
+            allow(metrics_updater).to receive(:report_storage_cli_metrics)
+
+            client_with_metrics = StorageCliClient.new(
+              directory_key: directory_key,
+              resource_type: resource_type,
+              root_dir: 'bommel',
+              metrics_updater: metrics_updater
+            )
+            allow(client_with_metrics).to receive(:additional_flags).and_return([])
+
+            allow(File).to receive(:open).and_raise(Interrupt)
+
+            expect { client_with_metrics.cp_to_blobstore(source.path, 'some-key') }.to raise_error(Interrupt)
+            expect(metrics_updater).to have_received(:report_storage_cli_metrics).with(
+              operation: 'put', exit_code: -5, duration_seconds: anything, blob_size: nil
+            )
+          ensure
+            source.close!
+          end
+
+          it 'does not double-emit when the subprocess is killed by a signal (cp_to_blobstore defers to run_cli)' do
+            source = Tempfile.new('src')
+            source.write('x' * 1025)
+            source.flush
+
+            metrics_updater = double('metrics_updater')
+            allow(metrics_updater).to receive(:report_storage_cli_metrics)
+
+            client_with_metrics = StorageCliClient.new(
+              directory_key: directory_key,
+              resource_type: resource_type,
+              root_dir: 'bommel',
+              metrics_updater: metrics_updater
+            )
+            allow(client_with_metrics).to receive(:additional_flags).and_return([])
+
+            status = instance_double(Process::Status, success?: false, exitstatus: nil, termsig: 2)
+            allow(Open3).to receive(:capture3).and_return(['', '', status])
+
+            expect { client_with_metrics.cp_to_blobstore(source.path, 'some-key') }.to raise_error(RuntimeError, /exit code 130/)
+            expect(metrics_updater).to have_received(:report_storage_cli_metrics).once
+          ensure
+            source.close!
+          end
+
+          it 'does not double-emit when Open3 raises Interrupt after cli is called' do
+            source = Tempfile.new('src')
+            source.write('x' * 1025)
+            source.flush
+
+            metrics_updater = double('metrics_updater')
+            allow(metrics_updater).to receive(:report_storage_cli_metrics)
+
+            client_with_metrics = StorageCliClient.new(
+              directory_key: directory_key,
+              resource_type: resource_type,
+              root_dir: 'bommel',
+              metrics_updater: metrics_updater
+            )
+            allow(client_with_metrics).to receive(:additional_flags).and_return([])
+            allow(Open3).to receive(:capture3).and_raise(Interrupt)
+
+            expect { client_with_metrics.cp_to_blobstore(source.path, 'some-key') }.to raise_error(Interrupt)
+            expect(metrics_updater).to have_received(:report_storage_cli_metrics).once
+          ensure
+            source.close!
+          end
+
+          it 'logs cp-error and propagates when run_cli raises a fatal exception' do
+            source = Tempfile.new('src')
+            source.write('x' * 1025)
+            source.flush
+
+            metrics_updater = instance_double(VCAP::CloudController::Metrics::PrometheusUpdater)
+            allow(metrics_updater).to receive(:report_storage_cli_metrics)
+
+            client_with_metrics = StorageCliClient.new(
+              directory_key: directory_key,
+              resource_type: resource_type,
+              root_dir: 'bommel',
+              metrics_updater: metrics_updater
+            )
+            allow(client_with_metrics).to receive(:additional_flags).and_return([])
+            allow(Open3).to receive(:capture3).and_raise(NoMemoryError)
+
+            expect { client_with_metrics.cp_to_blobstore(source.path, 'some-key') }.to raise_error(NoMemoryError)
+            expect(logger_double).to have_received(:info).with('cp-error', anything)
+            expect(metrics_updater).to have_received(:report_storage_cli_metrics).once
+          ensure
+            source.close!
           end
         end
       end
